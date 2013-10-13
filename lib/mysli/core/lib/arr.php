@@ -291,16 +291,18 @@ class Arr
     /**
      * Check if array has ALL required keys. Returns true only if all keys are
      * found, and false otherwise.
+     * --
      * @param  array  $input_array
      * @param  array  $keys
+     * --
      * @return boolean
      */
-    public static function has_keys($input_array, $keys)
+    public static function has_keys(array $input_array, array $keys)
     {
         if (self::is_empty($input_array) || self::is_empty($keys))
             { return false; }
 
-        foreach ($keys as $key => $value) {
+        foreach ($keys as $key) {
             if (!isset($input_array[$key])) { return false; }
         }
 
@@ -310,12 +312,14 @@ class Arr
     /**
      * Get particular element out of array, of return default if element doesn't
      * exists, or if passed in array is not valid.
+     * --
      * @param  string  $key
      * @param  array   $input_array
      * @param  mixed   $default
+     * --
      * @return mixed
      */
-    public static function element($key, $input_array, $default=false)
+    public static function element($key, array $input_array, $default=false)
     {
         if (self::is_empty($input_array))
             { return $default; }
@@ -333,12 +337,11 @@ class Arr
      * --
      * @param  mixed $keys        Can be array or string with comma separated keys.
      * @param  array $input_array
-     * @param  mixed $default     Can be string or an array to set default for
-     *                            each key.
+     * @param  mixed $default     Can be array to set default for each key.
      * --
      * @return array
      */
-    public static function elements($keys, $input_array, $default=false)
+    public static function elements($keys, array $input_array, $default=false)
     {
         // If we have string we can covert it to an array
         if (!is_array($keys)) { $keys = Str::explode_trim(',', $keys); }
@@ -357,9 +360,11 @@ class Arr
 
             // If we're having default values as array, we'll check them now
             if (is_array($default)) {
-                $default_current = isset($default[$i])
-                                        ? $default[$i]
-                                        : false;
+                if (isset($default[$key])) {
+                    $default_current = $default[$key];
+                } else {
+                    $default_current = false;
+                }
             }
             else {
                 $default_current = $default;
@@ -377,10 +382,12 @@ class Arr
 
     /**
      * Returns random array element.
+     * --
      * @param  array $input_array
+     * --
      * @return mixed
      */
-    public static function random_element($input_array)
+    public static function random_element(array $input_array)
     {
         if (self::is_empty($input_array)) { return false; }
 
@@ -390,20 +397,30 @@ class Arr
 
     /**
      * Better merge, will keep values in sub-arrays.
+     * --
      * @param   array ...
+     * --
      * @return  array
      */
     public static function merge()
     {
-        $result     = array();
+        $result     = [];
         $all_arrays = func_get_args();
 
         foreach ($all_arrays as $array) {
 
-            # If Is not an array, then we'll just skip it
+            $is_associative = self::is_associative($array);
+
+            // If Is not an array, then we'll just skip it
             if (self::is_empty($array)) { continue; }
 
             foreach ($array as $key => $item) {
+
+                if (!$is_associative) {
+                    $result[] = $item;
+                    continue;
+                }
+
                 if (!isset($result[$key])) {
                     $result[$key] = $item;
                     continue;
@@ -424,7 +441,7 @@ class Arr
 
     /**
      * Will implode only values of array, which results in true, - so, empty,
-     * null, and false elements won't be implded.
+     * null, and false elements won't be imploded.
      * --
      * @param  string $glue
      * @param  array  $pieces
@@ -433,13 +450,20 @@ class Arr
      * --
      * @return string
      */
-    public static function implode_true($glue, $pieces, $default=null)
+    public static function implode_true($glue, array $pieces, $default=null)
     {
-        $new_array = array();
+        $new_array = [];
 
         foreach ($pieces as $piece) {
             if ($piece) {
-                $new_array[] = $piece;
+                if (is_array($piece)) {
+                    $temp = self::implode_true($glue, $piece, false);
+                    if ($temp) {
+                        $new_array[] = $temp;
+                    }
+                } else {
+                    $new_array[] = $piece;
+                }
             }
         }
 
@@ -456,13 +480,14 @@ class Arr
      * ['user' => ['address' => 'My Address']]
      *     ----> user/address
      *     ----> My Address
-     *
+     * --
      * @param   string  $path
      * @param   array   $input_array
      * @param   mixed   $default
+     * --
      * @return  mixed
      */
-    public static function get_by_path($path, $input_array, $default=null)
+    public static function get_by_path($path, array $input_array, $default=null)
     {
         if (self::is_empty($input_array)) { return $default; }
 
@@ -485,10 +510,11 @@ class Arr
      * ['user' => ['address' => 'My Address']]
      *     ----> user/address, 'New Address'
      *     ----> ['user' => ['address' => 'New Address']]
-     *
+     * --
      * @param   string  $path
      * @param   mixed   $value
      * @param   array   $input_array  Passed as reference
+     * --
      * @return  void
      */
     public static function set_by_path($path, $value, &$input_array)
