@@ -1,0 +1,38 @@
+{master('layout.html')}
+
+{$page_id = 'login'}
+{$title   = 'LOGIN'.l()}
+{$before  = '/theme/backend/css/login.css'.stylesheet().headers()}
+
+<div class="box">
+    <h1>{#LOGIN}</h1>
+    <hr>
+    <!-- <div class="messages">
+        <p class="error">Wrong username and/or password.</p>
+        <p class="success">You were successfully logged in!</p>
+        <p class="info">This is an information!</p>
+        <p class="warn">Careful, there's something wrong.</p>
+    </div> -->
+    <form method="post" action="#">
+        <div class="merge">
+            <div class="field">
+                <input type="text" placeholder="{#ENTER_EMAIL}" name="email" />
+            </div>
+            <div class="field">
+                <input type="password" placeholder="{#ENTER_PASSWORD}" name="password" />
+            </div>
+        </div>
+        <div class="field checkbox">
+            <label for="remember_me">
+                <input type="checkbox" id="remember_me" name="remember_me" checked="checked" />
+                {#REMEMBER_ME}
+            </label>
+        </div>
+        <div class="field">
+            <button type="button" class=" half left">{#LOGIN}</button>
+            <div class="half right cancel">
+                <a href="{url()}">{#CANCEL}</a>
+            </div>
+        </div>
+    </form>
+</div>

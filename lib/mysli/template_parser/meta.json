@@ -1,0 +1,11 @@
+{
+    "component"  : "mysli/template_parser",
+    "version"    : "0.1",
+    "essential"  : false,
+    "events"     : null,
+    "depends_on" : {
+        "*/core"    : ">= 0.1"
+    },
+    "maintainer" : "Marko Gajšt <marko@gaj.st>",
+    "description": "Default template parser engine."
+}

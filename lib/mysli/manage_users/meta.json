@@ -1,0 +1,15 @@
+{
+    "component"  : "mysli/manage_users",
+    "version"    : "0.1",
+    "essential"  : false,
+    "events"     : {
+        "*/backend::main_navigation" : "register_on_nav"
+    },
+    "depends_on" : {
+        "*/core"    : ">= 0.1",
+        "*/users"   : ">= 0.1",
+        "*/backend" : ">= 0.1"
+    },
+    "maintainer" : "Marko Gajšt <marko@gaj.st>",
+    "description": "Allows you to manage users!"
+}

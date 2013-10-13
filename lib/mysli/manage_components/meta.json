@@ -1,0 +1,14 @@
+{
+    "component"  : "mysli/manage_components",
+    "version"    : "0.1",
+    "essential"  : true,
+    "events"     : {
+        "*/backend::main_navigation" : "register_on_nav"
+    },
+    "depends_on" : {
+        "*/core"    : ">= 0.1",
+        "*/backend" : ">= 0.1"
+    },
+    "maintainer" : "Marko Gajšt <marko@gaj.st>",
+    "description": "Allows you to enable or disable components!"
+}

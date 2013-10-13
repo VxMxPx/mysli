@@ -1,0 +1,8 @@
+{
+    "component"  : "mysli/core",
+    "version"    : "0.1",
+    "essential"  : true,
+    "depends_on" : null,
+    "maintainer" : "Marko Gajšt <marko@gaj.st>",
+    "description": "Mysli Core."
+}

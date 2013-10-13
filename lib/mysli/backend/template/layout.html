@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{$title} :: Mysli Administration</title>
+    {'/theme/backend/css/main.css'.stylesheet()}
+    {headers()}
+</head>
+<body id="page-{$page_id?:'generic'}">
+    <div class="container">
+        {yield()}
+    </div>
+    {'/theme/backend/js/jquery/jquery-2.0.3.js'.javascript()}
+    {footers()}
+    {raw}
+    <script>
+        var $checkboxes = $('form .field.checkbox'),
+            checkbox    = $('<a href="#" class="checkbox_styled" onselectstart="return false;"></a>');
+
+        $checkboxes
+            .find('input[type=checkbox]').each(function(id, el) {
+                var state = el.checked;
+                el.style.display = 'none';
+                checkbox
+                    .addClass(state ? 'on' : 'off')
+                    .insertAfter(this);
+
+                checkbox
+                    .parent('label')
+                    .on('click keydown', function (e) {
+                        // Only for space
+                        if (e.keyCode !== 32 && typeof e.keyCode !== 'undefined') {
+                            return true;
+                        }
+
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        var state = checkbox.hasClass('on') ? true : false;
+
+                        el.checked = !state;
+
+                        checkbox.removeClass('on off');
+                        checkbox.addClass(!state ? 'on' : 'off');
+                    });
+            });
+    </script>
+    {endraw}
+</body>
+</html>

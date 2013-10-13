@@ -1,0 +1,13 @@
+{
+    "component"  : "mysli/backend",
+    "version"    : "0.1",
+    "essential"  : true,
+    "depends_on" : {
+        "*/core"    : ">= 0.1",
+        "*/jquery"  : ">= 2.0",
+        "mysli/mjs" : ">= 0.1",
+        "*/session" : ">= 0.1"
+    },
+    "maintainer" : "Marko Gajšt <marko@gaj.st>",
+    "description": "Default Mysli Backend."
+}

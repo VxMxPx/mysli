@@ -1,0 +1,10 @@
+{
+    "component"  : "mysli/frontend",
+    "version"    : "0.1",
+    "essential"  : true,
+    "depends_on" : {
+        "*/core" : ">= 0.1"
+    },
+    "maintainer" : "Marko Gajšt <marko@gaj.st>",
+    "description": "Default Mysli Frontend."
+}
