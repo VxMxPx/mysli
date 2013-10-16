@@ -1,145 +1,127 @@
 #!/usr/bin/php
 <?php
 
-/**
- * Print out the message
- * @param  string  $message
- * @param  boolean $new_line
- */
-function out_warn($message, $new_line=true)
-    { out('warn', $message, $new_line); }
-
-function out_error($message, $new_line=true)
-    { out('error', $message, $new_line); }
-
-function out_info($message, $new_line=true)
-    { out('info', $message, $new_line); }
-
-function out_success($message, $new_line=true)
-    { out('success', $message, $new_line); }
-/**
- * Will print out the message
- * --
- * @param   string  $type
- *                      inf -- Regular white message
- *                      err -- Red message
- *                      war -- Yellow message
- *                      ok  -- Green message
- * @param   string  $message
- * @param   boolean $new_line   Should message be in new line
- */
-function out($type, $message, $new_line=true)
+class Dot
 {
-    switch (strtolower($type))
+    private $pubpath;
+    private $libpath;
+    private $datpath;
+
+    public function __construct($libpath, $datpath, $pubpath)
     {
-        case 'error':
-            $color = "\x1b[31;01m";
-            break;
-
-        case 'warn':
-            $color = "\x1b[33;01m";
-            break;
-
-        case 'success':
-            $color = "\x1b[32;01m";
-            break;
-
-        default:
-            $color = null;
+        $this->libpath = $libpath;
+        $this->pubpath = $pubpath;
+        $this->datpath = $datpath;
     }
 
-    echo
-        (!is_null($color) ? $color : ''),
-        $message,
-        "\x1b[39;49;00m";
+    private function get_library($name, array $libraries)
+    {
+        $match_lib   = false;
+        $match_class = false;
 
-    if ($new_line)
-        { echo "\n"; }
+        foreach ($libraries as $lib_name => $lib_meta) {
+            if (preg_match('/.*?\/'.$name.'/i', $lib_name)) {
+                $match_lib = $lib_name;
+                if (isset($lib_meta['class'])) {
+                    $match_class = $lib_meta['class'];
+                } else {
+                    $match_class = explode('/', $lib_name);
+                    $match_class = '\\' . ucfirst($match_class[0]) .
+                                   '\\' . ucfirst($match_class[1]);
+                }
+                break;
+            }
+        }
 
-    flush();
+        if (!$match_lib) {
+            trigger_error(
+                "Library ({$name}) is not enabled, cannot proceed!",
+                E_USER_ERROR);
+        }
+
+        $lib_path = str_replace('/',
+                                DIRECTORY_SEPARATOR,
+                                $this->libpath.'/'.$match_lib.'/'.$name.'.php');
+
+        if (!file_exists($lib_path)) {
+            trigger_error("Cannot find file: `{$lib_path}`", E_USER_ERROR);
+        }
+        include($this->libpath.'/'.$match_lib.'/'.$name.'.php');
+        return $match_class;
+    }
+
+    public function init()
+    {
+        /*
+         * Set the timezone to UTC temporarily.
+         */
+        date_default_timezone_set('UTC');
+
+        /*
+         * How the errors supposed to be reported?
+         */
+        error_reporting(E_ALL);
+        ini_set('display_errors', true);
+
+        /*
+         * I suppose we'll need at least PHP version 5.4, but if you're using only
+         * non-standard components, with backward compatibility, then feel free to
+         * comment this section out.
+         */
+        if (!function_exists('version_compare')) {
+            $this->out_error('The function "version_compare" was not found.');
+            return false;
+        }
+        if (!(version_compare(PHP_VERSION, '5.4.0') >= 0)) {
+            $this->out_error('PHP needs to be at least version 5.4.0 Your version: '
+                        . PHP_VERSION);
+            return false;
+        }
+
+        if (!$this->libpath || !$this->pubpath || !$this->datpath ||
+            !is_dir($this->libpath) || !is_dir($this->pubpath) || !is_dir($this->datpath)) {
+            $this->out_warn("Invalid public or data path.\n".
+                "Data path: {$this->datpath}\n".
+                "Public path: {$this->pubpath}");
+            return false;
+        }
+
+        // Get libraries file
+        $lib_registry = realpath($this->datpath.'/core/libraries.json');
+        if (!$lib_registry || !file_exists($lib_registry)) {
+            trigger_error(
+                "Libraries registry not found ({$lib_registry}), cannot locate core!",
+                E_USER_ERROR);
+        }
+        $libraries = file_get_contents($lib_registry);
+        $libraries = json_decode($libraries, true);
+
+        $core_class = $this->get_library('core', $libraries);
+        $core_class::init($this->pubpath, $this->libpath, $this->datpath);
+
+        $dot_class = $this->get_library('dot', $libraries);
+        return new $dot_class();
+    }
+
 }
 
 /*
- * Set the timezone to UTC temporarily.
+ * Set some basic paths, which will be passed to the core.
+ * pubpath - Public URL accessible path, where index.php is stored.
+ * libpath - Libraries repository.
+ * datpath - Data(base) path, where most of the application specific files will
+ *           be stored. This path shouldn't be accessible through URL!
  */
-date_default_timezone_set('UTC');
-
-/*
- * How the errors supposed to be reported?
- */
-error_reporting(E_ALL);
-ini_set('display_errors', true);
-
-/*
- * I suppose we'll need at least PHP version 5.4, but if you're using only
- * non-standard components, with backward compatibility, then feel free to
- * comment this section out.
- */
-if (!function_exists('version_compare')) {
-    out_error('The function "version_compare" was not found.');
-    die();
-}
-if (!(version_compare(PHP_VERSION, '5.4.0') >= 0)) {
-    out_error('PHP needs to be at least version 5.4.0 Your version: '
-                . PHP_VERSION);
-    die();
-}
-
 if (count($_SERVER['argv']) < 2) {
     $libpath = realpath(dirname(__FILE__));
     $datpath = realpath($libpath.'/../data');
     $pubpath = realpath($libpath.'/../public');
 } else {
-    /*
-     * Set some basic paths, which will be passed to the core.
-     * pubpath - Public URL accessible path, where index.php is stored.
-     * libpath - Libraries repository.
-     * datpath - Data(base) path, where most of the application specific files will
-     *           be stored. This path shouldn't be accessible through URL!
-     */
     $libpath = realpath(dirname(__FILE__));
     $datpath = realpath($libpath.'/'.$_SERVER['argv'][1]);
     $pubpath = realpath($libpath.'/'.$_SERVER['argv'][2]);
 }
 
-if (!$libpath || !$pubpath || !$datpath ||
-    !is_dir($libpath) || !is_dir($pubpath) || !is_dir($datpath)) {
-    out_warn("Invalid public or data path.\n".
-        "Data path: {$datpath}\n".
-        "Public path: {$pubpath}");
-    die();
-}
-
-/*
- * Init & exit the system now...
- * If you want to use another core, then do change the path here.
- */
-$core_path = str_replace('/', DIRECTORY_SEPARATOR, $libpath.'/mysli/core/core.php');
-if (!file_exists($core_path)) {
-    out_error("Cannot find core file: `{$core_path}`");
-    die();
-}
-include($libpath.'/mysli/core/core.php');
-\Mysli\Core::init($pubpath, $libpath, $datpath);
-
-out_info("Hi there! This is an interactive console for the Mysli CMS.");
-
-do {
-    if (function_exists('readline')) {
-        $stdin = readline('>> ');
-        readline_add_history($stdin);
-    }
-    else {
-        echo '>>> ';
-        $stdin = fread(STDIN, 8192);
-    }
-    $stdin = trim($stdin);
-
-    if (in_array(strtolower($stdin), ['exit', 'q'])) {
-        break;
-    }
-
-    echo "\n" . eval('echo dump_r(' . $stdin . ');');
-} while(true);
-
-out_info('Bye now!');
+// Construct, init and run the Dot ---------------------------------------------
+$dot = new Dot($libpath, $datpath, $pubpath);
+$dot->init()->run();
