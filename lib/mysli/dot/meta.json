@@ -1,0 +1,10 @@
+{
+    "component"  : "mysli/dot",
+    "version"    : "0.1",
+    "essential"  : false,
+    "depends_on" : {
+        "*/core"    : ">= 0.1"
+    },
+    "maintainer" : "Marko Gajšt <marko@gaj.st>",
+    "description": "Mysli Command line interface."
+}
