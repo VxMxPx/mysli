@@ -62,11 +62,11 @@ class Core
             'Arr'        => [],
             'Str'        => [],
             'Benchmark'  => [],
-            'Event'      => [datpath('mysli/event/registry.json')],
-            'Cfg'        => [datpath('mysli/cfg/main.json')],
+            'Event'      => [datpath('core/events.json')],
+            'Cfg'        => [datpath('core/cfg.json')],
             'Log'        => [],
             'Cookie'     => [],
-            'Librarian'  => [datpath('mysli/librarian/registry.json')],
+            'Librarian'  => [datpath('core/libraries.json')],
             'Error'      => [],
             'Response'   => [],
             'Request'    => [],
@@ -101,7 +101,8 @@ class Core
 
 
         // In theory we should have timezone now
-        date_default_timezone_set(\Cfg::get('base/timezone', 'UTC'));
+        date_default_timezone_set(\Cfg::get('core/timezone', 'UTC'));
+        ini_set('display_errors', \Cfg::get('core/debug', false));
 
         \Benchmark::set_timer('/mysli/core');
         \Log::info('Hello! | PHP version: ' . PHP_VERSION, __FILE__, __LINE__);

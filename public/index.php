@@ -17,10 +17,14 @@ ini_set('display_errors', true);
  * comment this section out.
  */
 if (!function_exists('version_compare')) {
-    trigger_error('The function "version_compare" was not found.', E_USER_ERROR);
+    trigger_error(
+        'The function "version_compare" was not found.',
+        E_USER_ERROR);
 }
 if (!(version_compare(PHP_VERSION, '5.4.0') >= 0)) {
-    trigger_error('PHP needs to be at least version 5.4.0 Your version: ' . PHP_VERSION, E_USER_ERROR);
+    trigger_error(
+        'PHP needs to be at least version 5.4.0 Your version: ' . PHP_VERSION,
+        E_USER_ERROR);
 }
 
 /*
@@ -34,16 +38,48 @@ $pubpath = realpath(dirname(__FILE__));
 $libpath = realpath($pubpath.'/../lib');
 $datpath = realpath($pubpath.'/../data');
 
+/**
+ * Load libraries registry to locate core!
+ */
+$lib_registry = realpath($datpath.'/core/libraries.json');
+if (!$lib_registry || !file_exists($lib_registry)) {
+    trigger_error(
+        "Libraries registry not found ({$lib_registry}), cannot locate core!",
+        E_USER_ERROR);
+}
+
+$libraries = file_get_contents($lib_registry);
+$libraries = json_decode($libraries, true);
+$core_lib  = false;
+$core_class = false;
+
+foreach ($libraries as $lib_name => $lib_meta) {
+    if (preg_match('/.*?\/core/i', $lib_name)) {
+        $core_lib = $lib_name;
+        if (isset($lib_meta['class'])) {
+            $core_class = $lib_meta['class'];
+        } else {
+            $core_class = explode('/', $lib_name);
+            $core_class = '\\' . ucfirst($core_class[0]) .
+                          '\\' . ucfirst($core_class[1]);
+        }
+        break;
+    }
+}
+
+if (!$core_lib) {
+    trigger_error("Core is not enabled, cannot proceed!", E_USER_ERROR);
+}
+
 /*
  * Init & exit the system now...
- * If you want to use another core, then do change the path here.
  */
-$core_path = str_replace('/', DIRECTORY_SEPARATOR, $libpath.'/mysli/core/core.php');
+$core_path = str_replace('/', DIRECTORY_SEPARATOR, $libpath.'/'.$core_lib.'/core.php');
 if (!file_exists($core_path)) {
     trigger_error("Cannot find core file: `{$core_path}`", E_USER_ERROR);
 }
-include($libpath.'/mysli/core/core.php');
-\Mysli\Core::init($pubpath, $libpath, $datpath);
+include($libpath.'/'.$core_lib.'/core.php');
+$core_class::init($pubpath, $libpath, $datpath);
 dump(Cfg::dump());
-echo \Mysli\Core::as_html();
-exit(\Mysli\Core::terminate());
+echo $core_class::as_html();
+exit($core_class::terminate());
