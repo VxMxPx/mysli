@@ -1,12 +1,12 @@
 {
-    "component"  : "mysli/session",
-    "version"    : "0.1",
-    "essential"  : false,
-    "events"     : null,
-    "depends_on" : {
-        "*/core"  : ">= 0.1",
-        "*/users" : ">= 0.1"
+    "library"       : "mysli/session",
+    "instantiation" : "once",
+    "version"       : "0.1",
+    "essential"     : false,
+    "depends_on"    : {
+        "*/core"    : ">= 0.1",
+        "*/users"   : ">= 0.1"
     },
-    "maintainer" : "Marko Gajšt <marko@gaj.st>",
-    "description": "Basic session functionality."
+    "maintainer"    : "Marko Gajšt <marko@gaj.st>",
+    "description"   : "Basic session functionality."
 }
