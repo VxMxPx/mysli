@@ -99,7 +99,6 @@ class Core
         // Register Class Loader
         spl_autoload_register('Mysli\\Core\\Lib\\Librarian::autoloader');
 
-
         // In theory we should have timezone now
         date_default_timezone_set(\Cfg::get('core/timezone', 'UTC'));
         ini_set('display_errors', \Cfg::get('core/debug', false));
