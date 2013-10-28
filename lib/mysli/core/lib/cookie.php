@@ -19,21 +19,21 @@ class Cookie
     {
         // Expire
         if ($expire === false) {
-            $expire = time() + Cfg::get('cookie/timeout');
+            $expire = time() + Cfg::get('core/cookie/timeout');
         }
 
         // Domain
-        $domain = Cfg::get('cookie/domain');
+        $domain = Cfg::get('core/cookie/domain');
         if (!$domain) { $domain = $_SERVER['SERVER_NAME']; }
 
-        Log::info('Cookie will be set, as: "' . Cfg::get('cookie/prefix') .
+        Log::info('Cookie will be set, as: "' . Cfg::get('core/cookie/prefix') .
                     $name . '", with value: "'  .
                     $value . '", set to expire: "' .
                     ($expire) . '" to domain: "' . $domain . '"',
                     __FILE__, __LINE__);
 
         return setcookie(
-            Cfg::get('cookie/prefix') . $name,
+            Cfg::get('core/cookie/prefix') . $name,
             $value,
             $expire,
             "/",
@@ -49,7 +49,7 @@ class Cookie
      */
     public static function read($key='')
     {
-        $key_prefix = Cfg::get('cookie/prefix') . $key;
+        $key_prefix = Cfg::get('core/cookie/prefix') . $key;
 
         // Is Cookie With Prefix Set?
         if (isset($_COOKIE[$key_prefix]))
@@ -71,16 +71,16 @@ class Cookie
      */
     public static function remove($name)
     {
-       Log::info('Cookie will be unset: `'.Cfg::get('cookie/prefix').$name.'`.', __FILE__, __LINE__);
+       Log::info('Cookie will be unset: `'.Cfg::get('core/cookie/prefix').$name.'`.', __FILE__, __LINE__);
 
         // Domain
-        $domain = Cfg::get('cookie/domain');
+        $domain = Cfg::get('core/cookie/domain');
         if (!$domain) {
             $domain = $_SERVER['SERVER_NAME'];
         }
 
        return setcookie(
-            Cfg::get('cookie/prefix') . $name,
+            Cfg::get('core/cookie/prefix') . $name,
             '',
             time() - 3600,
             "/",
