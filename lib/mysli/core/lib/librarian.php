@@ -95,12 +95,16 @@ class Librarian
 
     /**
      * Is particular dependency satisfied (e.g. is enabled and version match)
+     * If yes it will return string will full dependency's name otherwise false.
+     * This can be used to get (enabled) library full name. Example:
+     * * /core => mysli/core.
+     * --
      * @param  string  $library Can be * /core, etc...
      * @param  mixed   $version If not float, it will be converted
      * --
-     * @return boolean
+     * @return string  || boolean
      */
-    public static function is_satisfied($library, $version)
+    public static function get_satisfied($library, $version)
     {
         // Convert to proper regular expression
         $library = str_replace(['*', '/'], ['.*?', '\/'], $library);
@@ -114,19 +118,29 @@ class Librarian
             if (preg_match($library, $enabled_key)) {
                 switch ($version_operator) {
                     case '>=':
-                        return $version >= floatval($enabled_lib['version']);
+                        return $version >= floatval($enabled_lib['version'])
+                                    ? $enabled_lib['library']
+                                    : false;
                         break;
                     case '<=':
-                        return $version <= floatval($enabled_lib['version']);
+                        return $version <= floatval($enabled_lib['version'])
+                                    ? $enabled_lib['library']
+                                    : false;
                         break;
                     case '=':
-                        return $version === floatval($enabled_lib['version']);
+                        return $version === floatval($enabled_lib['version'])
+                                    ? $enabled_lib['library']
+                                    : false;
                         break;
                     case '<':
-                        return $version < floatval($enabled_lib['version']);
+                        return $version < floatval($enabled_lib['version'])
+                                    ? $enabled_lib['library']
+                                    : false;
                         break;
                     case '>':
-                        return $version > floatval($enabled_lib['version']);
+                        return $version > floatval($enabled_lib['version'])
+                                    ? $enabled_lib['library']
+                                    : false;
                         break;
                     default:
                         return false;
@@ -134,6 +148,30 @@ class Librarian
             }
         }
         return false;
+    }
+
+    /**
+     * Construct all dependencies. Will return an array of objects.
+     * --
+     * @param  array $dependencies
+     * --
+     * @return array
+     */
+    public static function dependencies_factory(array $dependencies)
+    {
+        $result = [];
+
+        foreach ($dependencies as $dependency => $version) {
+            $name = substr($dependency, strpos($dependency, '/'));
+            $sdep = self::get_satisfied($dependency, $version);
+            if (!$sdep) {
+                trigger_error('Cannot get dependency for: `' . $dependency .
+                    '` version: `' . $version . '`.', E_USER_ERROR);
+                return;
+            }
+            $result[$name] = self::construct($sdep);
+        }
+        return $result;
     }
 
     /**
@@ -152,7 +190,7 @@ class Librarian
             return [];
         }
         foreach ($details['depends_on'] as $depends => $version) {
-            if (!self::is_satisfied($depends, $version)) {
+            if (!self::get_satisfied($depends, $version)) {
                 $not_satisfied[$depends] = $version;
             }
         }
@@ -313,20 +351,61 @@ class Librarian
      * --
      * @param  string $library
      * --
-     * @return object || false
+     * @return object || string || false
      */
     public static function construct($library)
     {
+        // Check if is enabled?
+        if (!self::is_enabled($library)) {
+            Log::warn('The library is not enabled: `'.$library.'`.', __FILE__, __LINE__);
+            return false;
+        }
+
+        // Check if we have it cached...
+        if (isset(self::$cache[$library]) && is_object(self::$cache[$library])) {
+            Log::info('The library `'.$library.'` was found in cache, will return it now.', __FILE__, __LINE__);
+            return self::$cache[$library];
+        }
+
+        // Get library info
+        $info = self::$libraries[$library];
+
+        // Do we have the index?
+        if (!isset($info['instantiation'])) {
+            Log::warn('The `instantiation` key is missing in meta for: `'.$library.'`.', __FILE__, __LINE__);
+            return false;
+        }
+
+        // Check the instantiation instructions
+        if ($info['instantiation'] === 'never') {
+            Log::info('The library `'.$library.'` instruction is _never_ to be auto instantiated.', __FILE__, __LINE__);
+            return false;
+        }
+
+        // Check if we have class and if not, fetch it ...
         $class = self::id_to_ns($library);
 
         if (!class_exists($class, false)) {
             if (!self::autoloader($class)) {
                 return false;
             }
-            self::$cache[$library] = new $class();
         }
 
-        return self::$cache[$library];
+        // Check if we have manual instruction for instantiation
+        if ($info['instantiation'] === 'manual') {
+            Log::info('The library `'.$library.'` instruction is to be _manually_ instantiated, returned class name.', __FILE__, __LINE__);
+            return $class;
+        }
+
+        // Instantiate class now...
+        $object = new $class(self::dependencies_factory($info['depends_on']));
+
+        // Do we have instruction to be instantiated once?
+        if ($info['instantiation'] === 'once') {
+            self::$cache[$library] = $object;
+        }
+
+        return $object;
     }
 
     /**
@@ -340,16 +419,15 @@ class Librarian
     public static function call($func, $params)
     {
         $lib = self::ns_to_id($func[0]);
+        $obj = self::construct($lib);
 
-        if (!isset(self::$cache[$lib])) {
-            if (!self::construct($lib)) {
-                Log::warn('Cannot call the function: ' . print_r($func, true), __FILE__, __LINE__);
-                return false;
-            }
+        if (!is_object($obj)) {
+            Log::warn('Will not execute: ' . print_r($func, true), __FILE__, __LINE__);
+            return false;
         }
 
-        if (method_exists(self::$cache[$lib], $func[1])) {
-            return call_user_func_array([self::$cache[$lib], $func[1]], $params);
+        if (method_exists($obj, $func[1])) {
+            return call_user_func_array([$obj, $func[1]], $params);
         }
     }
 
