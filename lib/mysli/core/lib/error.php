@@ -64,7 +64,7 @@ class Error
             #log > div > div:last-child  { border-radius: 0 0 4px 4px; border-bottom: none !important; }
         </style>
         <div id=page>
-            <h1>Something went wrong</h1>
+            <h1>Error! :(</h1>
             <div id=log>
                 <pre>{{error_report}}</pre>';
 
