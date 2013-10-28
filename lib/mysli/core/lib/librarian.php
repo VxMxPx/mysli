@@ -4,8 +4,11 @@ namespace Mysli\Core\Lib;
 
 class Librarian
 {
+    // All the libraries available (loaded from init($filename))
     private static $libraries = [];
+    // Libraries filename
     private static $filename  = '';
+    // Constrcuted libraries
     private static $cache     = [];
 
     /**
@@ -261,16 +264,69 @@ class Librarian
     }
 
     /**
+     * Convert namespace to id.
+     * Example: Mysli\Core => mysli/core
+     *          Mysli\ManageUsers => mysli\manage_users
+     * --
+     * @param  string $ns
+     * --
+     * @return string
+     */
+    public static function ns_to_id($ns)
+    {
+        if (strpos($ns, '\\') === false) {
+            return $ns;
+        }
+
+        $id = Str::to_underscore($ns);
+        $id = strtolower($id);
+        $id = str_replace('\\', '/', $id);
+
+        return $id;
+    }
+
+    /**
+     * Convert id to namespace.
+     * Example: mysli/core => Mysli\Core
+     *          mysli/manage_users => Mysli\ManageUsers
+     * --
+     * @param  string $id
+     * --
+     * @return string
+     */
+    public static function id_to_ns($id)
+    {
+        if (strpos($id, '/') === false) {
+            return $id;
+        }
+
+        $ns = Str::to_camelcase($id);
+        $ns = str_replace('/', '\\', $ns);
+
+        return $ns;
+    }
+
+    /**
      * Will construct (if needed) particular library. This will auto-manage all
      * the dependencies needed.
+     * Require library id!
      * --
      * @param  string $library
      * --
-     * @return object
+     * @return object || false
      */
     public static function construct($library)
     {
+        $class = self::id_to_ns($library);
 
+        if (!class_exists($class, false)) {
+            if (!self::autoloader($class)) {
+                return false;
+            }
+            self::$cache[$library] = new $class();
+        }
+
+        return self::$cache[$library];
     }
 
     /**
@@ -283,7 +339,18 @@ class Librarian
      */
     public static function call($func, $params)
     {
-        //dump("I'll call the following things!", $func, $params);
+        $lib = self::ns_to_id($func[0]);
+
+        if (!isset(self::$cache[$lib])) {
+            if (!self::construct($lib)) {
+                Log::warn('Cannot call the function: ' . print_r($func, true), __FILE__, __LINE__);
+                return false;
+            }
+        }
+
+        if (method_exists(self::$cache[$lib], $func[1])) {
+            return call_user_func_array([self::$cache[$lib], $func[1]], $params);
+        }
     }
 
     /**
@@ -295,6 +362,21 @@ class Librarian
      */
     public static function autoloader($class)
     {
-        //dump($class);
+        if (class_exists($class, false)) { return true; }
+
+        $id = self::ns_to_id($class);
+        if (self::is_enabled($id)) {
+            $filename = libpath($id . '/' . substr($id, strrpos($id, '/')) . '.php');
+            if (file_exists($filename)) {
+                include $filename;
+                return true;
+            } else {
+                Log::warn('File not found: `' . $filename . '`.', __FILE__, __LINE__);
+                return false;
+            }
+        } else {
+            Log::warn("Cannot autoload the class: `{$class}`, because the library is not enabled.", __FILE__, __LINE__);
+            return false;
+        }
     }
 }
