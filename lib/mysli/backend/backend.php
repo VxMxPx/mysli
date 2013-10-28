@@ -4,8 +4,12 @@ namespace Mysli;
 
 class Backend
 {
+    public function __construct($dependencies)
+    {
+    }
+
     public function display()
     {
-        echo 'Yay!';
+        \Output::add('Yay!');
     }
 }

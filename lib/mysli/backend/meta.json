@@ -1,11 +1,10 @@
 {
-    "component"     : "mysli/backend",
+    "library"       : "mysli/backend",
     "instantiation" : "once",
     "version"       : "0.1",
     "essential"     : true,
     "depends_on"    : {
         "*/core"    : ">= 0.1",
-        "*/jquery"  : ">= 2.0",
         "mysli/mjs" : ">= 0.1",
         "*/session" : ">= 0.1"
     },
