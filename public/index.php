@@ -80,6 +80,5 @@ if (!file_exists($core_path)) {
 }
 include($libpath.'/'.$core_lib.'/core.php');
 $core_class::init($pubpath, $libpath, $datpath);
-dump(Cfg::dump());
 echo $core_class::as_html();
 exit($core_class::terminate());
