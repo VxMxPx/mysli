@@ -77,7 +77,7 @@ class Error
         // Get error simple type
         $type = isset(self::$map[$errno]) ? self::$map[$errno] : 'war';
 
-        Log::add($errmsg, $type, __FILE__, __LINE__);
+        Log::add($errmsg, $type, $filename, $linenum);
 
         // Fatal error.
         if ($type === 'err')
