@@ -2,7 +2,6 @@
     "library"       : "mysli/session",
     "instantiation" : "once",
     "version"       : "0.1",
-    "essential"     : false,
     "depends_on"    : {
         "*/core"    : ">= 0.1",
         "*/users"   : ">= 0.1"

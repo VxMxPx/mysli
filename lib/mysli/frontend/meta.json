@@ -1,8 +1,7 @@
 {
-    "component"     : "mysli/frontend",
+    "library"       : "mysli/frontend",
     "instantiation" : "once",
     "version"       : "0.1",
-    "essential"     : true,
     "depends_on"    : {
         "*/core"    : ">= 0.1"
     },

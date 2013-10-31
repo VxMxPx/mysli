@@ -1,11 +1,10 @@
 {
-    "component"  : "mysli/users",
-    "version"    : "0.1",
-    "essential"  : false,
-    "events"     : null,
-    "depends_on" : {
-        "*/core"  : ">= 0.1"
+    "library"       : "mysli/users",
+    "instantiation" : "once",
+    "version"       : "0.1",
+    "depends_on"    : {
+        "*/core"    : ">= 0.1"
     },
-    "maintainer" : "Marko Gajšt <marko@gaj.st>",
-    "description": "Basic users collections."
+    "maintainer"    : "Marko Gajšt <marko@gaj.st>",
+    "description"   : "Basic users collections."
 }

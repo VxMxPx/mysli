@@ -1,14 +1,11 @@
 {
-    "component"  : "mysli/manage_settings",
-    "version"    : "0.1",
-    "essential"  : false,
-    "events"     : {
-        "*/backend::main_navigation" : "register_on_nav"
-    },
-    "depends_on" : {
+    "library"       : "mysli/manage_settings",
+    "instantiation" : "once",
+    "version"       : "0.1",
+    "depends_on"    : {
         "*/core"    : ">= 0.1",
         "*/backend" : ">= 0.1"
     },
-    "maintainer" : "Marko Gajšt <marko@gaj.st>",
-    "description": "Allows you to change system settings!"
+    "maintainer"    : "Marko Gajšt <marko@gaj.st>",
+    "description"   : "Allows you to change system settings!"
 }
