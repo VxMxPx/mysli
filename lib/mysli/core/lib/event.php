@@ -135,8 +135,12 @@ class Event
 
         if (!empty($events)) {
             foreach ($events as $call) {
+                if (!is_string($call) && !is_array($call) && is_callable($call)) {
+                    $num += $call($params) ? 1 : 0;
+                    continue;
+                }
                 self::$history[$event][] = 'Call: ' . (is_array($call) ? implode(', ', $call) : $call);
-                $num = $num + (Librarian::call($call, [&$params]) ? 1 : 0);
+                $num += (Librarian::call($call, [&$params]) ? 1 : 0);
             }
         }
 
