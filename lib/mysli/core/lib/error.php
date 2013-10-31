@@ -24,22 +24,24 @@ class Error
     ];
 
     private static $map = [
-        E_ERROR              => 'err',
-        E_WARNING            => 'war',
-        E_PARSE              => 'err',
-        E_NOTICE             => 'war',
-        E_CORE_ERROR         => 'err',
-        E_CORE_WARNING       => 'war',
-        E_COMPILE_ERROR      => 'err',
-        E_COMPILE_WARNING    => 'war',
-        E_USER_ERROR         => 'err',
-        E_USER_WARNING       => 'war',
-        E_USER_NOTICE        => 'war',
-        E_STRICT             => 'war',
-        E_RECOVERABLE_ERROR  => 'err',
-        E_DEPRECATED         => 'war',
-        E_USER_DEPRECATED    => 'war',
+        E_ERROR              => 'error',
+        E_WARNING            => 'warn',
+        E_PARSE              => 'error',
+        E_NOTICE             => 'warn',
+        E_CORE_ERROR         => 'error',
+        E_CORE_WARNING       => 'warn',
+        E_COMPILE_ERROR      => 'error',
+        E_COMPILE_WARNING    => 'warn',
+        E_USER_ERROR         => 'error',
+        E_USER_WARNING       => 'warn',
+        E_USER_NOTICE        => 'warn',
+        E_STRICT             => 'warn',
+        E_RECOVERABLE_ERROR  => 'error',
+        E_DEPRECATED         => 'warn',
+        E_USER_DEPRECATED    => 'warn',
     ];
+
+    private static $log_template = '<div class="log_item log_{type}"><p>{date_time} - {type}</p><code><pre>{message}</pre></code><p>{file} - {line}</p></div>';
 
     private static $template = '
         <!DOCTYPE html>
@@ -48,25 +50,21 @@ class Error
         <title>Fatal Error!</title>
         <style>
             *       { padding: 0; margin: 0; line-height: 1.5em; }
-            ::selection      { background-color: #47c; color: #eee; }
-            ::-moz-selection { background-color: #47c; color: #eee; }
-            body    { background-color: #111; color: #bbb; font-size: 16px; font-family: "Sans", sans-serif; }
-            h1, h2  { font-family: "Serif", serif; font-weight: normal; }
-            h2      { padding-top: 30px; padding-bottom: 4px; margin-bottom: 4px; border-bottom: 1px dotted #ddd; }
-            a       { color: #47c; padding: 2px; }
-            a:hover { background-color: #47c; color: #fff; text-decoration: none; border-radius: 4px; }
-            code    { font-family: "Monospace", monospace; background-color: #f2f2f2; color: #224; }
-            .fade   { color: #555; font-style: italic; }
+            body    { background-color: #112; color: #ddd; font-size: 16px; font-family: "Monospace", monospace; }
+            h1      { font-weight: normal; margin-bottom: 20px; font-size: 32px; }
+            code pre { background-color: #001; padding: 10px; }
+            pre     { white-space: pre-wrap; }
             #page   { width: 800px; margin: 20px auto; padding: 20px; }
-            #log    { padding-top: 10px; margin-top: 5px; }
-            #log > div { box-shadow: 0 0 8px #060606; border-radius: 4px; }
-            #log > div > div:first-child { border-radius: 4px 4px 0 0; }
-            #log > div > div:last-child  { border-radius: 0 0 4px 4px; border-bottom: none !important; }
+            .log_item { width: 100%; margin-bottom: 20px; background-color: #050515; }
+            .log_item > p { color: #778; font-size: 14px; padding: 10px; }
+            .log_item.log_info  { color: #6f6; }
+            .log_item.log_error { color: #f33; }
+            .log_item.log_warn  { color: #fa3; }
         </style>
         <div id=page>
-            <h1>Error! :(</h1>
+            <h1>Fatal Error! :(</h1>
             <div id=log>
-                <pre>{{error_report}}</pre>';
+                {{error_report}}';
 
     public static function handle($errno, $errmsg, $filename, $linenum)
     {
@@ -75,15 +73,15 @@ class Error
         $errmsg = $title . ":\n" . $errmsg;
 
         // Get error simple type
-        $type = isset(self::$map[$errno]) ? self::$map[$errno] : 'war';
+        $type = isset(self::$map[$errno]) ? self::$map[$errno] : 'warn';
 
         Log::add($errmsg, $type, $filename, $linenum);
 
         // Fatal error.
-        if ($type === 'err')
+        if ($type === 'error')
         {
             // Error reporting
-            $error_report = Log::as_string();
+            $error_report = Log::as_html(self::$log_template);
 
             Event::trigger('/mysli/core/lib/error::handle', $error_report);
 
@@ -94,7 +92,7 @@ class Error
                 die(str_replace(
                     array('{{error_report}}', '{{error_no}}'),
                     array($error_report, $errno),
-                    self::$template));
+                    trim(self::$template)));
             }
         }
     }
