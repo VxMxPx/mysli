@@ -100,7 +100,7 @@ class Log
      * @param  mixed  $type       -- array inf|war|err -- or false
      * @param  string $line_break -- \n or <br>
      * --
-     * @return array
+     * @return string
      */
     public static function as_string($type=false, $line_break="\n")
     {
@@ -115,6 +115,42 @@ class Log
 
             $output .= implode($line_break, $out_item);
             $output .= str_repeat($line_break, 2) . str_repeat('-', 75) . $line_break;
+        }
+
+        return $output;
+    }
+
+    /**
+     * Retrun particular type of logs, or all of them, as string html!
+     * --
+     * @param  string  $template
+     * @param  mixed   $type
+     * --
+     * @return string
+     */
+    public static function as_html($template, $type=false)
+    {
+        $output = '';
+        $logs   = self::as_array($type);
+
+        foreach ($logs as $log) {
+            $output .= str_replace(
+                [
+                    '{type}',
+                    '{date_time}',
+                    '{file}',
+                    '{line}',
+                    '{message}'
+                ],
+                [
+                    $log['type'],
+                    $log['date_time'],
+                    $log['file'],
+                    $log['line'],
+                    $log['message']
+                ],
+                $template
+            );
         }
 
         return $output;
