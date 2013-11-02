@@ -2,16 +2,12 @@
 
 namespace Mysli\Core\Lib;
 
-include(__DIR__.'/../../lib/arr.php');
-include(__DIR__.'/../../lib/str.php');
-
-define('CHAR_APOSTROPHE', "'");
-define('CHAR_QUOTE', '"');
-define('CHAR_SPACE', ' ');
-define('CHAR_SLASH', '/');
-define('CHAR_BACKSLASH', '\\');
-define('STRING_CAMELCASE', 'string-camelcase');
-define('STRING_UNDERSCORE', 'string-underscore');
+include(__DIR__.'/../../core.php');
+\Mysli\Core::init(
+    __DIR__.'/public_dummy',
+    __DIR__.'/libraries_dummy',
+    __DIR__.'/data_dummy'
+);
 
 class ArrTest extends \PHPUnit_Framework_TestCase
 {
@@ -551,7 +547,7 @@ class ArrTest extends \PHPUnit_Framework_TestCase
             $bucket[Arr::random_element($input)]++;
         }
         foreach ($bucket as $key => $value) {
-            $this->assertTrue($value > 10, "Expected value for {$key} ({$value}) is more than 10.");
+            $this->assertTrue($value > 8, "Expected value for {$key} ({$value}) is more than 8.");
         }
     }
 
