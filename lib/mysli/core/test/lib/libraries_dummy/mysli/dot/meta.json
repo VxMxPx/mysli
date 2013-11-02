@@ -1,0 +1,10 @@
+{
+    "library"       : "mysli/dot",
+    "instantiation" : "manual",
+    "version"       : "0.1",
+    "depends_on"    : {
+        "*/core"    : ">= 0.1"
+    },
+    "maintainer"    : "Marko Gajšt <marko@gaj.st>",
+    "description"   : "Mysli Command line interface."
+}

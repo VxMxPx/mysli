@@ -1,0 +1,86 @@
+{
+    "mysli/core" : {
+        "library"       : "mysli/core",
+        "instantiation" : "never",
+        "version"       : "0.1",
+        "essential"     : true,
+        "required_by"   : [
+            "mysli/backend",
+            "mysli/frontend",
+            "mysli/dot",
+            "mysli/mjs",
+            "mysli/session",
+            "mysli/users"
+        ],
+        "depends_on"    : null,
+        "maintainer"    : "Marko Gajšt <marko@gaj.st>",
+        "description"   : "Mysli Core."
+    },
+    "mysli/dot" : {
+        "library"       : "mysli/dot",
+        "instantiation" : "once",
+        "version"       : "0.1",
+        "essential"     : false,
+        "depends_on"    : {
+            "*/core"    : ">= 0.1"
+        },
+        "maintainer"    : "Marko Gajšt <marko@gaj.st>",
+        "description"   : "Mysli Command line interface."
+    },
+    "mysli/mjs" : {
+        "library"       : "mysli/mjs",
+        "instantiation" : "once",
+        "version"       : "0.1",
+        "essential"     : false,
+        "depends_on"    : {
+            "*/core"    : ">= 0.1"
+        },
+        "required_by"   : [
+            "mysli/backend"
+        ],
+        "maintainer"    : "Marko Gajšt <marko@gaj.st>",
+        "description"   : "Base Mysli JavaScript Framework"
+    },
+    "mysli/session" : {
+        "library"       : "mysli/session",
+        "instantiation" : "once",
+        "version"       : "0.1",
+        "essential"     : false,
+        "depends_on"    : {
+            "*/core"    : ">= 0.1",
+            "*/users"   : ">= 0.1"
+        },
+        "required_by"   : [
+            "mysli/backend"
+        ],
+        "maintainer"    : "Marko Gajšt <marko@gaj.st>",
+        "description"   : "Basic session functionality."
+    },
+    "mysli/backend" : {
+        "library"       : "mysli/backend",
+        "instantiation" : "once",
+        "version"       : "0.1",
+        "essential"     : true,
+        "required_by"   : [],
+        "depends_on"    : {
+            "*/core"    : ">= 0.1",
+            "mysli/mjs" : ">= 0.1",
+            "*/session" : ">= 0.1"
+        },
+        "maintainer"    : "Marko Gajšt <marko@gaj.st>",
+        "description"   : "Default Mysli Backend."
+    },
+    "mysli/users" : {
+        "library"       : "mysli/users",
+        "instantiation" : "once",
+        "version"       : "0.1",
+        "depends_on"    : {
+            "*/core"    : ">= 0.1"
+        },
+        "required_by"   : [
+            "mysli/session"
+        ],
+        "maintainer"    : "Marko Gajšt <marko@gaj.st>",
+        "description"   : "Basic users collections."
+    }
+}

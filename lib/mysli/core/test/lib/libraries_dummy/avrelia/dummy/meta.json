@@ -1,0 +1,12 @@
+{
+    "library"       : "avrelia/dummy",
+    "instantiation" : "once",
+    "version"       : "1.2",
+    "depends_on"    : {
+        "*/core"      : ">= 0.1",
+        "*/mailer"    : ">= 0.0",
+        "avrelia/sql" : ">= 1.0"
+    },
+    "maintainer"    : "Marko Gajšt <marko@gaj.st>",
+    "description"   : "Avrelia dummy library."
+}
