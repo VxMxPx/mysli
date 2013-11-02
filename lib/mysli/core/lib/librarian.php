@@ -123,29 +123,29 @@ class Librarian
             if (preg_match($library, $enabled_key)) {
                 switch ($version_operator) {
                     case '>=':
-                        return $version >= floatval($enabled_lib['version'])
-                                    ? $enabled_lib['library']
-                                    : false;
+                        return floatval($enabled_lib['version']) >= $version
+                            ? $enabled_lib['library']
+                            : false;
                         break;
                     case '<=':
-                        return $version <= floatval($enabled_lib['version'])
-                                    ? $enabled_lib['library']
-                                    : false;
+                        return floatval($enabled_lib['version']) <= $version
+                            ? $enabled_lib['library']
+                            : false;
                         break;
                     case '=':
-                        return $version === floatval($enabled_lib['version'])
-                                    ? $enabled_lib['library']
-                                    : false;
+                        return floatval($enabled_lib['version']) === $version
+                            ? $enabled_lib['library']
+                            : false;
                         break;
                     case '<':
-                        return $version < floatval($enabled_lib['version'])
-                                    ? $enabled_lib['library']
-                                    : false;
+                        return floatval($enabled_lib['version']) < $version
+                            ? $enabled_lib['library']
+                            : false;
                         break;
                     case '>':
-                        return $version > floatval($enabled_lib['version'])
-                                    ? $enabled_lib['library']
-                                    : false;
+                        return floatval($enabled_lib['version']) > $version
+                            ? $enabled_lib['library']
+                            : false;
                         break;
                     default:
                         return false;
@@ -156,7 +156,8 @@ class Librarian
     }
 
     /**
-     * Construct all dependencies. Will return an array of objects.
+     * Construct dependencies for particular library.
+     * Will return an array of objects.
      * --
      * @param  array $dependencies
      * --
@@ -167,7 +168,7 @@ class Librarian
         $result = [];
 
         foreach ($dependencies as $dependency => $version) {
-            $name = substr($dependency, strpos($dependency, '/'));
+            $name = substr($dependency, strpos($dependency, '/') + 1);
             $sdep = self::get_satisfied($dependency, $version);
             if (!$sdep) {
                 trigger_error(
@@ -187,9 +188,9 @@ class Librarian
      * --
      * @param  string $library
      * --
-     * @return mixed  List of missing things, or true if nothing is missing.
+     * @return array  List of missing things, empty if can enable
      */
-    public static function can_enable($library)
+    public static function need_enabled($library)
     {
         $not_satisfied = [];
         $details = self::get_details($library);
@@ -209,12 +210,16 @@ class Librarian
      * --
      * @param  string $library
      * --
-     * @return mixed  List of dependencies, or true if nothing is dependent.
+     * @return array  List of dependencies, or empty if nothing is dependent.
      */
-    public static function can_disable($library)
+    public static function need_disabled($library)
     {
+        if (!isset(self::$libraries[$library])) {
+            return [];
+        }
+
         return empty(self::$libraries[$library]['required_by'])
-                ? true
+                ? []
                 : self::$libraries[$library]['required_by'];
     }
 
@@ -252,6 +257,38 @@ class Librarian
 
         // Construct and return
         return new $setup_class_name($dependencies);
+    }
+
+    /**
+     * Get all dependencies and dependencies of dependences,
+     * for particular library.
+     * --
+     * @param  string $library
+     * --
+     * @return array
+     */
+    public static function get_dependencies_list($library)
+    {
+        $full_list = [];
+        $dependencies = self::need_enabled();
+
+        if (empty($dependencies)) {
+            return [];
+        }
+
+        foreach ($dependencies as $dependency => $version) {
+            $full_list[$dependency] = $version;
+            $sub_dependencies = self::get_dependencies_list($dependency);
+            if (empty($sub_dependencies)) continue;
+            foreach ($sub_dependencies as $sub_dependency => $sub_version) {
+                if (isset($full_list[$sub_dependency])) {
+                    unset($full_list[$sub_dependency]);
+                }
+                array_merge([$sub_version => $sub_dependency], $full_list);
+            }
+        }
+
+        return $full_list;
     }
 
     /**
