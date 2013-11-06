@@ -13,19 +13,27 @@ class LibrarianTest extends \PHPUnit_Framework_TestCase
 {
     public function test_get_enabled()
     {
+        $libraries = Librarian::get_enabled();
         $this->assertEquals(
-            json_decode(file_get_contents(__DIR__.'/data_dummy/core/libraries.json'), true),
-            Librarian::get_enabled()
+            'mysli/core',
+            $libraries[0]
         );
     }
 
-    public function test_get_disabled_simple()
+    public function test_get_enabled_detailed()
+    {
+        $this->assertEquals(
+            json_decode(file_get_contents(__DIR__.'/data_dummy/core/libraries.json'), true),
+            Librarian::get_enabled(true)
+        );
+    }
+
+    public function test_get_disabled()
     {
         $disabled = Librarian::get_disabled();
-
         $this->assertTrue(is_array($disabled));
         $this->assertTrue(!empty($disabled));
-        $this->assertTrue(isset($disabled['mysli/manage_settings']));
+        $this->assertTrue(in_array('mysli/manage_settings', $disabled));
     }
 
     public function test_get_disabled_detailed()
@@ -54,6 +62,9 @@ class LibrarianTest extends \PHPUnit_Framework_TestCase
         );
     }
 
+    /**
+     * @expectedException Mysli\Core\FileSystemException
+     */
     public function test_get_details_nonexisting()
     {
         $this->assertEquals(
@@ -62,88 +73,127 @@ class LibrarianTest extends \PHPUnit_Framework_TestCase
         );
     }
 
-    public function test_get_satisfied_normal()
+    public function test_resolve_normal()
     {
         $this->assertEquals(
             'mysli/core',
-            Librarian::get_satisfied('mysli/core', '>= 0.1')
+            Librarian::resolve('mysli/core')
         );
     }
 
-    public function test_get_satisfied_regex()
+    public function test_resolve_regex()
     {
         $this->assertEquals(
             'mysli/core',
-            Librarian::get_satisfied('*/core', '= 0.1')
+            Librarian::resolve('*/core')
         );
     }
 
-    public function test_get_satisfied_version_failed()
-    {
-        $this->assertFalse(Librarian::get_satisfied('mysli/core', '> 0.1'));
-        $this->assertFalse(Librarian::get_satisfied('mysli/core', '< 0.1'));
-        $this->assertFalse(Librarian::get_satisfied('mysli/core', '= 0.2'));
-        $this->assertFalse(Librarian::get_satisfied('mysli/core', '>= 0.2'));
-        $this->assertFalse(Librarian::get_satisfied('mysli/core', '<= 0.05'));
-    }
-
-    public function test_get_satisfied_name_failed()
+    public function test_resolve_name_failed()
     {
         $this->assertFalse(
-            Librarian::get_satisfied('vendor/library', '> 0.1')
+            Librarian::resolve('vendor/library')
         );
+    }
+
+    public function test_resolve_all()
+    {
+        $this->assertEquals(
+            [
+                'mysli/users',
+                'avrelia/users'
+            ],
+            Librarian::resolve_all('*/users')
+        );
+    }
+
+    public function test_resolve_all_one_match()
+    {
+        $this->assertEquals(
+            [
+                'avrelia/backend'
+            ],
+            Librarian::resolve_all('avrelia/backend')
+        );
+    }
+
+    public function test_resolve_all_no_match()
+    {
+        $this->assertEquals(
+            [],
+            Librarian::resolve_all('*/non_existant')
+        );
+    }
+
+    public function test_factory()
+    {
+        $object = Librarian::factory('mysli/dot');
+        $this->assertInstanceOf('Mysli\\Dot', $object);
     }
 
     public function test_dependencies_factory()
     {
-        $dependencies_list = Librarian::dependencies_factory([
-            '*/core'    => '>= 0.1',
-            'mysli/mjs' => '>= 0.1',
-            '*/session' => '>= 0.1'
-        ]);
-
-        $this->assertFalse($dependencies_list['core']);
-        $this->assertTrue(
-            is_a($dependencies_list['mjs'], 'Mysli\\Mjs')
-        );
-        $this->assertTrue(
-            is_a($dependencies_list['session'], 'Mysli\\Session')
-        );
-    }
-
-    public function test_need_enabled()
-    {
-        $this->assertEquals(
-            [],
-            Librarian::need_enabled('mysli/frontend')
-        );
-        $this->assertEquals(
-            [
-                '*/mailer'    => '>= 0.0',
-                'avrelia/sql' => '>= 1.0'
-            ],
-            Librarian::need_enabled('avrelia/dummy')
-        );
-    }
-
-    public function test_need_disabled()
-    {
-        $this->assertEquals(
-            [],
-            Librarian::need_disabled('mysli/dot')
-        );
-        $this->assertEquals(
-            [
-                'mysli/backend'
-            ],
-            Librarian::need_disabled('mysli/session')
-        );
+        $dependencies = Librarian::dependencies_factory('mysli/backend');
+        $this->assertFalse($dependencies['core']);
+        $this->assertInstanceOf('Mysli\\Mjs', $dependencies['mjs']);
+        $this->assertInstanceOf('Mysli\\Session', $dependencies['session']);
     }
 
     public function test_construct_setup()
     {
         $setup = Librarian::construct_setup('mysli/mjs');
-        $this->assertTrue(is_a($setup, 'Mysli\\Mjs\\Setup'));
+        $this->assertInstanceOf('Mysli\\Mjs\\Setup', $setup);
     }
 
+    public function test_construct_setup_no_file()
+    {
+        $setup = Librarian::construct_setup('avrelia/dummy');
+        $this->assertFalse($setup);
+    }
+
+    public function test_autoloader()
+    {
+        $users = new \Mysli\Users();
+        $this->assertInstanceOf('Mysli\\Users', $users);
+    }
+
+    public function test_load_existing()
+    {
+        $this->assertTrue(Librarian::load('mysli/users'));
+    }
+
+    public function test_load_non_existing()
+    {
+        $this->assertFalse(Librarian::load('avrelia/non_existant'));
+    }
+
+    public function test_call()
+    {
+        $this->assertEquals(
+            'hi',
+            Librarian::call('mysli/backend', 'say_hi')
+        );
+    }
+
+    public function test_call_params()
+    {
+        $random_numer = rand(0, 100);
+        $this->assertEquals(
+            'The random number is: ' . $random_numer,
+            Librarian::call('mysli/backend', 'say_number', [$random_numer])
+        );
+    }
+
+    public function test_is_enabled()
+    {
+        $this->assertTrue(
+            Librarian::is_enabled('mysli/backend')
+        );
+        $this->assertFalse(
+            Librarian::is_enabled('avrelia/writter')
+        );
+        $this->assertFalse(
+            Librarian::is_enabled('avrelia/non_existant')
+        );
+    }
 }
