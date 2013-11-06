@@ -54,6 +54,15 @@ class Core
         // Include core functions
         include(self::$path . DIRECTORY_SEPARATOR . 'functions.php');
 
+        // Load exception files
+        $exceptions = [
+            'file_system', 'data', 'value'
+        ];
+
+        foreach ($exceptions as $exception_file_name) {
+            include(ds(self::$path, 'exceptions', $exception_file_name . '.php'));
+        }
+
         // Create alias for itself
         class_alias('Mysli\\Core', 'Core', false);
 
@@ -61,6 +70,7 @@ class Core
         $libraries = [
             'Arr'        => [],
             'Str'        => [],
+            'Int'        => [],
             'Benchmark'  => [],
             'Event'      => [datpath('core/events.json')],
             'Cfg'        => [datpath('core/cfg.json')],
