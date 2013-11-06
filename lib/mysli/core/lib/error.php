@@ -81,7 +81,9 @@ class Error
         if ($type === 'error')
         {
             // Error reporting
-            $error_report = Log::as_html(self::$log_template);
+            $error_report = is_cli()
+                ? Log::as_string()
+                : Log::as_html(self::$log_template);
 
             Event::trigger('/mysli/core/lib/error::handle', $error_report);
 
