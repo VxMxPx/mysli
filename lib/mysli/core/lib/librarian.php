@@ -566,7 +566,58 @@ class Librarian
      * --
      * @return array
      */
-    public static function get_dependencies($library, $deep = false) {}
+    public static function get_dependencies($library, $deep = false)
+    {
+        $details = self::get_details($library);
+        if (!is_array($details) || empty($details)) {
+            throw new \Mysli\Core\DataException(
+                "Could not get details for `{$library}`."
+            );
+        }
+
+        $dependencies = [
+            'enabled'  => [],
+            'disabled' => [],
+            'missing'  => []
+        ];
+
+        foreach ($details['depends_on'] as $dependency => $version) {
+            $dependency_resovled = self::resolve($dependency);
+            if (!$dependency_resovled) {
+                $dependencies['missing'][$dependency] = $version;
+            }
+            else {
+                if (self::is_enabled($dependency_resovled)) {
+                    $dependencies['enabled'][$dependency_resovled] = $version;
+                } else {
+                    $dependencies['disabled'][$dependency_resovled] = $version;
+                }
+            }
+        }
+
+        if (!$deep) return $dependencies;
+
+        foreach ($dependencies['disabled'] as $dependency => $version) {
+            $dependency_resovled = self::resolve($dependency);
+            if (!$dependency_resovled) {
+                $dependencies['missing'] = array_merge(
+                    [$dependency => $version],
+                    $dependencies['missing']
+                );
+            } else {
+                if (self::is_enabled($dependency_resovled)) {
+                    $dependencies['enabled'][$dependency_resovled] = $version;
+                } else {
+                    $dependencies = Arr::merge(
+                        self::get_dependencies($dependency_resovled, true),
+                        $dependencies
+                    );
+                }
+            }
+        }
+
+        return $dependencies;
+    }
 
     /**
      * This will get all the dependees (the libraries which requires provided
@@ -579,7 +630,29 @@ class Librarian
      * --
      * @return array
      */
-    public static function get_dependees($library, $deep = false) {}
+    public static function get_dependees($library, $deep = false)
+    {
+        $details = self::get_details($library);
+        if (!is_array($details) || empty($details)) {
+            throw new \Mysli\Core\DataException(
+                "Could not get details for `{$library}`."
+            );
+        }
+
+        if (!$deep) return $details['required_by'];
+
+        $dependees = [];
+
+        foreach ($details['required_by'] as $dependee) {
+            $dependees[] = $dependee;
+            $dependees = Arr::merge(
+                self::get_dependees($dependee, true),
+                $dependees
+            );
+        }
+
+        return $dependees;
+    }
 
     /**
      * Will disable particular library. Please note that this won't resolve

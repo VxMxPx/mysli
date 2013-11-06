@@ -196,4 +196,82 @@ class LibrarianTest extends \PHPUnit_Framework_TestCase
             Librarian::is_enabled('avrelia/non_existant')
         );
     }
+
+    public function test_get_dependencies_simple()
+    {
+        $this->assertEquals(
+            [
+                'enabled' => [
+                    'mysli/mjs'     => '>= 0.1',
+                    'mysli/core'    => '>= 0.1',
+                    'mysli/session' => '>= 0.1'
+                ],
+                'disabled' => [],
+                'missing'  => []
+            ],
+            Librarian::get_dependencies('mysli/backend')
+        );
+    }
+
+    public function test_get_dependencies_disabled()
+    {
+        $this->assertEquals(
+            [
+                'enabled'  => ['mysli/core'     => '>= 0.1'],
+                'disabled' => ['avrelia/reader' => '>= 0.1'],
+                'missing'  => []
+            ],
+            Librarian::get_dependencies('avrelia/backend')
+        );
+    }
+
+    public function test_get_dependencies_missing()
+    {
+        $this->assertEquals(
+            [
+                'enabled'  => ['mysli/core' => '>= 0.1'],
+                'disabled' => [],
+                'missing'  => [
+                    '*/mailer'    => '>= 0.0',
+                    'avrelia/sql' => '>= 1.0'
+                ]
+            ],
+            Librarian::get_dependencies('avrelia/dummy')
+        );
+    }
+
+    public function test_get_dependencies_deep()
+    {
+        $this->assertEquals(
+            [
+                'enabled' => [
+                    'mysli/core'    => '>= 0.1',
+                    'mysli/session' => '>= 0.1'
+                ],
+                'disabled' => [
+                    'avrelia/writter' => '>= 0.1',
+                    'avrelia/users'   => '>= 0.1',
+                    'avrelia/reader'  => '>= 0.1'
+                ],
+                'missing'  => []
+            ],
+            Librarian::get_dependencies('avrelia/backend', true)
+        );
+    }
+
+    public function test_get_dependees()
+    {
+        $this->assertEquals(
+            ['mysli/backend'],
+            Librarian::get_dependees('mysli/session')
+        );
+    }
+
+    public function test_get_dependees_deep()
+    {
+        $this->assertEquals(
+            ['mysli/backend', 'mysli/session'],
+            Librarian::get_dependees('mysli/users', true)
+        );
+    }
 }
