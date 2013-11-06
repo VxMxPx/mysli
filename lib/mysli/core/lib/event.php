@@ -140,7 +140,7 @@ class Event
                     continue;
                 }
                 self::$history[$event][] = 'Call: ' . (is_array($call) ? implode(', ', $call) : $call);
-                $num += (Librarian::call($call, [&$params]) ? 1 : 0);
+                $num += (Librarian::call($call[0], $call[1], [&$params]) ? 1 : 0);
             }
         }
 
