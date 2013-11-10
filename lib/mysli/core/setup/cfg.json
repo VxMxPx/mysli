@@ -1,0 +1,14 @@
+{
+    "core" : {
+        "timezone"  : "GMT",
+        "debug"  : true,
+        "server" : {
+            "url" : null
+        },
+        "cookie" : {
+            "prefix"  : "mysli_",
+            "timeout" : 86400,
+            "domain"  : null
+        }
+    }
+}
