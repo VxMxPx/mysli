@@ -1,0 +1,472 @@
+#!/usr/bin/php
+<?php
+
+namespace Mysli;
+
+class DotBasic
+{
+    protected $command;
+    protected $arguments;
+    protected $libpath;
+
+    public function __construct($libpath, array $arguments)
+    {
+        $this->libpath = rtrim($libpath, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+        $this->command = isset($arguments[1]) ? strtolower($arguments[1]) : false;
+        $this->arguments = array_slice($arguments, 2);
+    }
+
+    public function exec()
+    {
+        if (!$this->command || !in_array($this->command, ['create', 'open'])) {
+            $this->intro();
+        } else {
+            if ($this->command === 'create') {
+                if (count($this->arguments) !== 3) {
+                    $arguments = $this->create_interactive();
+                } else {
+                    $arguments = $this->arguments;
+                }
+                if ($this->create($arguments[0], $arguments[1], $arguments[2])) {
+                    if (count($this->arguments) !== 3) {
+                        if (DotUtil::confirm('Should I open the project?')) {
+                            $this->open($arguments[1], $arguments[2]);
+                        }
+                    }
+                }
+            } elseif ($this->command === 'open') {
+                if (count($this->arguments) !== 2) {
+                    $arguments = $this->open_interactive();
+                } else {
+                    $arguments = $this->arguments;
+                }
+                $this->open($arguments[0], $arguments[1]);
+            }
+        }
+    }
+
+    public function to_camelcase($string, $uc_first=true)
+    {
+        // Convert _
+        if (strpos($string, '_') !== false) {
+            $string = str_replace('_', ' ', $string);
+            $string = ucwords($string);
+            $string = str_replace(' ', '', $string);
+        }
+
+        // Convert backslashes
+        if (strpos($string, '\\') !== false) {
+            $string = str_replace('\\', ' ', $string);
+            $string = ucwords($string);
+            $string = str_replace(' ', '\\', $string);
+        }
+
+        // Convert slashes
+        if (strpos($string, '/') !== false) {
+            $string = str_replace('/', ' ', $string);
+            $string = ucwords($string);
+            $string = str_replace(' ', '/', $string);
+        }
+
+        if (!$uc_first) {
+            $string = lcfirst($string);
+        }
+        else {
+            $string = ucfirst($string);
+        }
+
+        return $string;
+    }
+
+    public function find_core()
+    {
+        $vendors = scandir($this->libpath);
+        $cores   = [];
+        if (!is_array($vendors)) {
+            DotUtil::error('No libraries in folder: ' . $this->libpath);
+            exit(__LINE__);
+        }
+        foreach ($vendors as $vendor) {
+            if (substr($vendor, 0, 1) === '.') continue;
+            if (!is_dir($this->libpath . $vendor)) continue;
+            $libraries = scandir($this->libpath . $vendor);
+            if (!is_array($libraries)) continue;
+            foreach ($libraries as $library) {
+                if ($library === 'core') {
+                    $cores[] = $vendor . '/' . $library;
+                }
+            }
+        }
+
+        return $cores;
+    }
+
+    protected function resolve_path($path)
+    {
+        // We're dealing with absolute path
+        if (substr($path, 1, 1) !== ':' && substr($path, 0, 1) !== '/') {
+            $path = $this->libpath . ltrim($path, '\\/');
+        }
+
+        $existing  = '/';
+        $segments  = explode(DIRECTORY_SEPARATOR, $path);
+        foreach ($segments as $key => &$segment) {
+            if (!is_dir(realpath($existing . $segment))) {
+                break;
+            }
+            $existing = realpath($existing . $segment) . DIRECTORY_SEPARATOR;
+            unset($segments[$key]);
+        }
+        return [$existing, implode('/', $segments)];
+    }
+
+    protected function ask_for_path()
+    {
+        return DotUtil::input('>> ', function ($path) {
+            $path = $this->resolve_path($path);
+            if (!$path[0]) {
+                DotUtil::warn('Invalid path!');
+                return false;
+            }
+            // if (!$path[1] && count(scandir($path[0])) > 2) {
+            //     DotUtil::warn('The directory is not empty, all data will be erased.');
+            //     $answer = DotUtil::input('Continue? [Y/n] ', function ($answer) {
+            //         $answer = strtolower($answer);
+            //         if ($answer === 'y' || empty($answer)) return true;
+            //         if ($answer === 'n') return false;
+            //         return null;
+            //     });
+            // } else
+            if ($path[1]) {
+                DotUtil::warn('The directory will be created: ' . $path[1]);
+            }
+            return $path[1] ? implode('', $path) : $path[0];
+        });
+    }
+
+    public function open_interactive()
+    {
+        DotUtil::plain('Please enter project\'s  public path.');
+        $pubpath = DotUtil::input('>> ', function ($path) {
+            $path = $this->resolve_path($path);
+            $path = $path[0];
+            if (!is_dir($path)) {
+                DotUtil::warn('Invalid path: ' . $path);
+                return null;
+            }
+            if (!file_exists($path . 'index.php')) {
+                DotUtil::warn('Cannot find index.php in: ' . $path);
+                return null;
+            }
+            DotUtil::success('Selected public path is: ' . $path);
+            return $path;
+        });
+        DotUtil::plain('Please enter project\'s data path.');
+        $datpath = DotUtil::input('>> ', function ($path) {
+            $path = $this->resolve_path($path);
+            $path = $path[0];
+            if (!is_dir($path)) {
+                DotUtil::warn('Invalid path: ' . $path);
+                return null;
+            }
+            if (!file_exists($path . 'core' . DIRECTORY_SEPARATOR . 'libraries.json')) {
+                DotUtil::warn('Cannot find core/libraries.json in: ' . $path);
+                return null;
+            }
+            DotUtil::success('Selected data path is: ' . $path);
+            return $path;
+        });
+        return [$pubpath, $datpath];
+    }
+
+    public function create_interactive()
+    {
+        // Select core
+        $cores = $this->find_core();
+        DotUtil::nl();
+        DotUtil::plain('Please enter the number of core you want to use.');
+        array_walk($cores, function ($value, $k) {
+            DotUtil::plain($k . ': ' . $value);
+        });
+        DotUtil::plain('Default is [0]: ' . $cores[0]);
+        $core = DotUtil::input('>> ', function ($input) use ($cores) {
+            if (empty($input)) $input = 0;
+            if (!isset($cores[$input])) {
+                DotUtil::warn('Invalid entry: ' . $input);
+                return null;
+            }
+            return $cores[$input];
+        });
+        DotUtil::success('You\'ve selected: ' . $core);
+        // Enter public path
+        DotUtil::nl();
+        DotUtil::plain('Please enter the absolute public path.');
+        DotUtil::plain('This is the path where _index.html_ and other publicly accessibly files will be saved.');
+        DotUtil::plain('You can enter relative path to the current directory: ' . $this->libpath);
+        $pubpath = $this->ask_for_path();
+        DotUtil::success('The selected public path is: ' . $pubpath);
+        // Enter data path
+        DotUtil::nl();
+        DotUtil::plain('Please enter the absolute data path.');
+        DotUtil::plain('This is the path where all settings and other sensitive data will be saved.');
+        DotUtil::plain('You can enter relative path to the current directory: ' . $this->libpath);
+        $datpath = $this->ask_for_path();
+        if (strpos($datpath, $pubpath) !== false || $datpath === $pubpath) {
+            DotUtil::warn('It\'s not recommended for the data path to be the same as ' .
+                '(or subdirectory of) of the public path.');
+        }
+        DotUtil::success('The selected data path is: ' . $datpath);
+
+        return [$core, $pubpath, $datpath];
+    }
+
+    public function open($pubpath, $datpath)
+    {
+        // Resolve paths (possibly again)
+        $pubpath = $this->resolve_path($pubpath);
+        $pubpath = $pubpath[1] ? implode('', $pubpath) : $pubpath[0];
+        $datpath = $this->resolve_path($datpath);
+        $datpath = $datpath[1] ? implode('', $datpath) : $datpath[0];
+
+        // Find and Construct the appropriate core
+        // DotUtil::exec();
+    }
+
+    public function create($core, $pubpath, $datpath)
+    {
+        // Construct core setup
+        DotUtil::plain('Locating setup for core: ' . $core);
+        $setup_file = realpath($this->libpath . $core . DIRECTORY_SEPARATOR . 'setup.php');
+        if (!file_exists($setup_file)) {
+            DotUtil::error('Cannot find setup file.');
+            return false;
+        }
+        include $setup_file;
+        $core_arr = explode('/', $core);
+        $class_name = $this->to_camelcase($core_arr[0]) . '\\' . $this->to_camelcase($core_arr[1]) . '\\' . 'Setup';
+        if (!class_exists($class_name, false)) {
+            DotUtil::error('Cannot find setup class: ' . $class_name);
+            return false;
+        }
+
+        // Resolve paths (possibly again)
+        $pubpath = $this->resolve_path($pubpath);
+        $pubpath = $pubpath[1] ? implode('', $pubpath) : $pubpath[0];
+        $datpath = $this->resolve_path($datpath);
+        $datpath = $datpath[1] ? implode('', $datpath) : $datpath[0];
+
+        DotUtil::success('Setup class was found: ' . $class_name);
+        $setup = new $class_name($pubpath, $this->libpath, $datpath);
+        if (!method_exists($setup, 'before_enable')) {
+            DotUtil::error('Method was not found: before_enable');
+            return false;
+        }
+
+        if ($setup->before_enable()) {
+            DotUtil::success('Core was successfully enabled.');
+            return true;
+        } else {
+            DotUtil::error('Error when enabling core!');
+            return false;
+        }
+    }
+
+    public function intro()
+    {
+        DotUtil::doc(
+            'Mysli Project: Command Line Interface',
+            'mysli COMMAND [OPTIONS]...',
+            [
+                'create' => [
+                    "Will create new mysli project. No arguments for interactive mode.",
+                    "Alternative usage: mysli create CORE_LIBRARY PUBLIC_PATH DATA_PATH",
+                ],
+                'open'   => [
+                    "Open existing mysli project. No arguments for interactive mode.",
+                    "Alternative usage: mysli open PUBLIC_PATH DATA_PATH",
+                ],
+            ]
+        );
+    }
+}
+
+class DotUtil
+{
+    /**
+     * Capture the cursos - wait for user's input. You must pass in a function,
+     * this will run until function is returning null.
+     * --
+     * @param  string   $title The text displayed for input question.
+     * @param  function $func  Function to be executed for each input,
+     *                         until function is returning null this will run
+     *                         in loop.
+     * --
+     * @return mixed    Value of the function return
+     */
+    public static function input($title, $func)
+    {
+        $result = null;
+
+        do {
+            if (function_exists('readline')) {
+                $stdin = readline($title);
+                readline_add_history($stdin);
+            }
+            else {
+                echo $title;
+                $stdin = fread(STDIN, 8192);
+            }
+            $result = $func($stdin);
+        } while($result === null);
+
+        return $result;
+    }
+
+    /**
+     * Ask user a question to while Y/n is the only possible answer.
+     * --
+     * @param  string  $text
+     * @param  boolean $default
+     * --
+     * @return boolean
+     */
+    public static function confirm($text, $default = true)
+    {
+        $question = $text . ' [' . ($default ? 'Y/n' : 'y/N') . '] ';
+        return self::input(
+            $question,
+            function ($input) use ($default) {
+                $input = strtolower($input);
+                if (empty($input)) {
+                    return $default;
+                }
+                if ($input === 'y') {
+                    return true;
+                }
+                if ($input === 'n') {
+                    return false;
+                }
+            }
+        );
+    }
+
+    /**
+     * Will fill full width of the line with particular character(s).
+     * --
+     * @param  string $character
+     * --
+     * @return void
+     */
+    public static function fill($character)
+    {
+        $width = (int) exec('tput cols');
+        if ($width === 0) { return; }
+        $width = floor($width / strlen($character));
+        self::plain(str_repeat($character, $width));
+    }
+
+    /**
+     * Print out the message
+     * @param  string  $message
+     * @param  boolean $new_line
+     */
+    public static function warn($message, $new_line=true)
+        { return self::out('warn', $message, $new_line); }
+
+    public static function error($message, $new_line=true)
+        { return self::out('error', $message, $new_line); }
+
+    public static function plain($message, $new_line=true)
+        { return self::out('plain', $message, $new_line); }
+
+    public static function success($message, $new_line=true)
+        { return self::out('success', $message, $new_line); }
+
+    /**
+     * Create a new line
+     * @param  integer $num Number of new lines
+     */
+    public static function nl($num=1)
+        { echo str_repeat("\n", (int)$num); }
+
+    /**
+     * Create documentation / help for particular command.
+     */
+    public static function doc($title, $usage, $commands=false)
+    {
+        self::plain($title);
+        self::nl();
+        self::plain('  ' . $usage);
+        self::nl();
+
+        if (!is_array($commands)) { return; }
+
+        // Get longest key, to align with it
+        $longest = 0;
+        foreach ($commands as $key => $command) {
+            if (strlen($key) > $longest) {
+                $longest = strlen($key);
+            }
+        }
+
+        // Print all commands
+        self::plain('Available options:');
+        self::nl();
+        foreach ($commands as $key => $command) {
+            self::plain('  ' . (!is_integer($key) ? $key : ' ') . '  ', false);
+            if (!is_array($command)) {
+                $command = [$command];
+            }
+            foreach ($command as $k => $command_line) {
+                $length = $k > 0 ? $longest + 4 : $longest - strlen($key);
+                self::plain(str_repeat(" ", $length), false);
+                self::plain($command_line);
+            }
+        }
+    }
+
+    /**
+     * Will print out the message
+     * --
+     * @param   string  $type
+     *                      plain   -- Regular white message
+     *                      error   -- Red message
+     *                      warn    -- Yellow message
+     *                      success -- Green message
+     * @param   string  $message
+     * @param   boolean $new_line   Should message be in new line
+     */
+    public static function out($type, $message, $new_line=true)
+    {
+        switch (strtolower($type))
+        {
+            case 'error':
+                $color = "\x1b[31;01m";
+                break;
+
+            case 'warn':
+                $color = "\x1b[33;01m";
+                break;
+
+            case 'success':
+                $color = "\x1b[32;01m";
+                break;
+
+            default:
+                $color = null;
+        }
+
+        echo
+            (!is_null($color) ? $color : ''),
+            $message,
+            "\x1b[39;49;00m";
+
+        if ($new_line)
+            { echo "\n"; }
+
+        flush();
+    }
+}
+
+$dot_basic = new DotBasic(__DIR__, $_SERVER['argv']);
+$dot_basic->exec();
