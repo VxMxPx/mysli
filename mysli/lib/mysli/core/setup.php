@@ -11,10 +11,15 @@ class Setup
 
     public function __construct($pubpath, $libpath, $datpath)
     {
-        $this->pubpath = rtrim($pubpath, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
-        $this->libpath = rtrim($libpath, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
-        $this->datpath = rtrim($datpath, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
-        $this->path    = rtrim(__DIR__, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+        // Load functions
+        if (!function_exists('ds')) {
+            include __DIR__ . DIRECTORY_SEPARATOR . 'functions.php';
+        }
+
+        $this->pubpath = ds($pubpath);
+        $this->libpath = ds($libpath);
+        $this->datpath = ds($datpath);
+        $this->path    = ds(__DIR__);
     }
 
     public function before_enable()
@@ -27,15 +32,21 @@ class Setup
             }
         }
         // Load index.tpl
-        $index_contents = file_get_contents($this->path . 'setup' . DIRECTORY_SEPARATOR . 'index.tpl');
+        $index_contents = file_get_contents(ds($this->path, 'setup', 'index.tpl'));
         // Replace {{LIBPATH}} and {{DATPATH}}
         $index_contents = str_replace(
-            ['{{LIBPATH}}', '{{DATPATH}}'],
-            [$this->libpath, $this->datpath],
+            [
+                '{{LIBPATH}}',
+                '{{DATPATH}}'
+            ],
+            [
+                relative_path($this->libpath, $this->pubpath),
+                relative_path($this->datpath, $this->pubpath)
+            ],
             $index_contents
         );
         // Create index.php
-        file_put_contents($this->pubpath . 'index.php', $index_contents);
+        file_put_contents(ds($this->pubpath, 'index.php'), $index_contents);
 
         // Check if datpath exists
         if (!is_dir($this->datpath)) {
@@ -45,23 +56,23 @@ class Setup
             }
         }
         // Create 'core' folder
-        if (!mkdir($this->datpath . 'core', 0777)) {
+        if (!mkdir(ds($this->datpath, 'core'), 0777)) {
             throw new \Exception('Cannot create core directory!', 3);
 
         }
         file_put_contents(
-            $this->datpath . 'core' . DIRECTORY_SEPARATOR . 'cfg.json',
-            file_get_contents($this->path . 'setup' . DIRECTORY_SEPARATOR . 'cfg.json')
+            ds($this->datpath, 'core', 'cfg.json'),
+            file_get_contents(ds($this->path, 'setup', 'cfg.json'))
         );
         file_put_contents(
-            $this->datpath . 'core' . DIRECTORY_SEPARATOR . 'events.json',
+            ds($this->datpath, 'core', 'events.json'),
             '{}'
         );
-        $meta = json_decode(file_get_contents($this->path . 'meta.json'), true);
+        $meta = json_decode(file_get_contents(ds($this->path, 'meta.json')), true);
         $meta['required_by'] = [];
         $meta = ['mysli/core' => $meta];
         file_put_contents(
-            $this->datpath . 'core' . DIRECTORY_SEPARATOR . 'libraries.json',
+            ds($this->datpath, 'core', 'libraries.json'),
             json_encode($meta)
         );
 

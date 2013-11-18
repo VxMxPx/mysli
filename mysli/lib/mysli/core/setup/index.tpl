@@ -34,7 +34,7 @@ if (!(version_compare(PHP_VERSION, '5.4.0') >= 0)) {
  * datpath - Data(base) path, where most of the application specific files will
  *           be stored. This path shouldn't be accessible through URL!
  */
-$pubpath = realpath(dirname(__FILE__));
+$pubpath = realpath(__DIR__);
 $libpath = realpath('{{LIBPATH}}');
 $datpath = realpath('{{DATPATH}}');
 

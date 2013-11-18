@@ -40,6 +40,29 @@ function ds()
 }
 
 /**
+ * Method to calculate the relative path from $from to $to.
+ * Note: On Windows it does not work when $from and $to are on different drives.
+ * Credit: http://www.php.net/manual/en/function.realpath.php#105876
+ * --
+ * @param  string $to
+ * @param  string $from
+ * @param  string $ps
+ * --
+ * @return string
+ */
+function relative_path($to, $from, $ps = DIRECTORY_SEPARATOR)
+{
+    $ar_from = explode($ps, rtrim($from, $ps));
+    $ar_to = explode($ps, rtrim($to, $ps));
+    while(count($ar_from) && count($ar_to) && ($ar_from[0] == $ar_to[0]))
+    {
+        array_shift($ar_from);
+        array_shift($ar_to);
+    }
+    return str_pad('', count($ar_from) * 3, '..' . $ps) . implode($ps, $ar_to);
+}
+
+/**
  * Output variable as: <pre>print_r($variable)</pre> (this is only for debuging)
  * This will die after dumpign variables on screen.
  */
