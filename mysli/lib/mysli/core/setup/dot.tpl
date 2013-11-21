@@ -91,9 +91,7 @@ if (isset($_SERVER['argv'][1])) {
     }
     $command = isset($_SERVER['argv'][2]) ? $_SERVER['argv'][2] : false;
     if (!$dot->execute($script, $command, array_slice($_SERVER['argv'], 3))) {
-        if (!$dot->get_help($script, $command)) {
-            $dot->list_scripts();
-        }
+        \DotUtil::warn('Cannot find the command: ' . $script);
     }
 } else {
     $dot->list_scripts();
