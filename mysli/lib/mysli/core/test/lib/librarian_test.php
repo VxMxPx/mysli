@@ -81,6 +81,14 @@ class LibrarianTest extends \PHPUnit_Framework_TestCase
         );
     }
 
+    public function test_resolve_disabled_normal()
+    {
+        $this->assertEquals(
+            'mysli/manage_settings',
+            Librarian::resolve('mysli/manage_settings')
+        );
+    }
+
     public function test_resolve_regex()
     {
         $this->assertEquals(
