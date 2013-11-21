@@ -68,6 +68,7 @@ class Dot
             return true;
         } elseif (method_exists($script_obj, 'help_' . $command)) {
             call_user_func([$script_obj, 'help_' . $command]);
+            return true;
         }
         return false;
     }
@@ -76,10 +77,7 @@ class Dot
     {
         $commands = [];
         foreach ($this->scripts_registry as $script => $data) {
-            $commands[] = [
-                $script,
-                $data['description']
-            ];
+            $commands[$script] = $data['description'];
         }
         \DotUtil::doc(
             'Mysli Core :: List of Available Commands',
