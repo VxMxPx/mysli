@@ -34,14 +34,15 @@ class Setup
         // Load index.tpl
         $index_contents = file_get_contents(ds($this->path, 'setup', 'index.tpl'));
         // Replace {{LIBPATH}} and {{DATPATH}}
+        $ds = DIRECTORY_SEPARATOR;
         $index_contents = str_replace(
             [
                 '{{LIBPATH}}',
                 '{{DATPATH}}'
             ],
             [
-                relative_path($this->libpath, $this->pubpath),
-                relative_path($this->datpath, $this->pubpath)
+                '/' . str_replace(DIRECTORY_SEPARATOR, '/', relative_path($this->libpath, $this->pubpath)),
+                '/' . str_replace(DIRECTORY_SEPARATOR, '/', relative_path($this->datpath, $this->pubpath)),
             ],
             $index_contents
         );
@@ -61,6 +62,10 @@ class Setup
 
         }
         file_put_contents(
+            ds($this->datpath, 'core', 'dot.json'),
+            file_get_contents(ds($this->path, 'setup', 'dot.json'))
+        );
+        file_put_contents(
             ds($this->datpath, 'core', 'cfg.json'),
             file_get_contents(ds($this->path, 'setup', 'cfg.json'))
         );
@@ -75,6 +80,24 @@ class Setup
             ds($this->datpath, 'core', 'libraries.json'),
             json_encode($meta)
         );
+
+        // Load dot.tpl
+        $dot_contents = file_get_contents(ds($this->path, 'setup', 'dot.tpl'));
+        // Replace {{LIBPATH}} and {{PUBPATH}}
+        $ds = DIRECTORY_SEPARATOR;
+        $dot_contents = str_replace(
+            [
+                '{{LIBPATH}}',
+                '{{PUBPATH}}'
+            ],
+            [
+                '/' . str_replace(DIRECTORY_SEPARATOR, '/', relative_path($this->libpath, $this->datpath)),
+                '/' . str_replace(DIRECTORY_SEPARATOR, '/', relative_path($this->pubpath, $this->datpath)),
+            ],
+            $dot_contents
+        );
+        // Create index.php
+        file_put_contents(ds($this->datpath, 'dot'), $dot_contents);
 
         return true;
     }

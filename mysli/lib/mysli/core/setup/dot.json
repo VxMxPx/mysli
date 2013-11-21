@@ -1,0 +1,14 @@
+{
+    "libraries" : {
+        "class" : "Mysli\\Core\\Script\\Libraries",
+        "description" : "Libraries management."
+    },
+    "cfg" : {
+        "class" : "Mysli\\Core\\Script\\Cfg",
+        "description" : "Configuration management."
+    },
+    "iactive" : {
+        "class" : "Mysli\\Core\\Script\\Iactive",
+        "description" : "Runs as interactive shell."
+    }
+}

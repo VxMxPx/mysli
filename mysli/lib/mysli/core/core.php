@@ -85,6 +85,10 @@ class Core
             'HTML'       => [],
             'Server'     => [],
         ];
+        if (is_cli()) {
+            $libraries['DotUtil'] = [];
+            $libraries['Dot']     = [];
+        }
         // Those classes won't be aliased
         $keep_namespace = ['Error'];
 

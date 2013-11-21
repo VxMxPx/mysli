@@ -511,7 +511,7 @@ class Librarian
      * --
      * @return string
      */
-    protected static function lib_to_ns($library)
+    public static function lib_to_ns($library)
     {
         if (strpos($library, '/') === false) {
             return $library;
@@ -531,7 +531,7 @@ class Librarian
      * --
      * @return string
      */
-    protected static function ns_to_lib($class)
+    public static function ns_to_lib($class)
     {
         if (strpos($class, '\\') === false) {
             return $class;

@@ -1,181 +1,91 @@
 <?php
 
-namespace Mysli/Core/Lib;
+namespace Mysli\Core\Lib;
 
 class Dot
 {
-    /**
-     * Capture the cursos - wait for user's input. You must pass in a function,
-     * this will run until function is returning null.
-     * --
-     * @param  string   $title The text displayed for input question.
-     * @param  function $func  Function to be executed for each input,
-     *                         until function is returning null this will run
-     *                         in loop.
-     * --
-     * @return mixed    Value of the function return
-     */
-    public static function input($title, $func)
+    protected $scripts_registry;
+    protected $constructed = [];
+
+    public function __construct(array $scripts_registry)
     {
-        $result = null;
-
-        do {
-            if (function_exists('readline')) {
-                $stdin = readline($title);
-                readline_add_history($stdin);
-            }
-            else {
-                echo $title;
-                $stdin = fread(STDIN, 8192);
-            }
-            $result = $func($stdin);
-        } while($result === null);
-
-        return $result;
+        $this->scripts_registry = $scripts_registry;
     }
 
-    /**
-     * Ask user a question to while Y/n is the only possible answer.
-     * --
-     * @param  string  $text
-     * @param  boolean $default
-     * --
-     * @return boolean
-     */
-    public static function confirm($text, $default = true)
-    {
-        $question = $text . ' [' . ($default ? 'Y/n' : 'y/N') . '] ';
-        return self::input(
-            $question,
-            function ($input) use ($default) {
-                $input = strtolower($input);
-                if (empty($input)) {
-                    return $default;
-                }
-                if ($input === 'y') {
-                    return true;
-                }
-                if ($input === 'n') {
-                    return false;
-                }
+    protected function construct_script($script) {
+        if (isset($this->constructed[$script])) {
+            return $this->constructed[$script];
+        }
+        $class = $this->scripts_registry[$script]['class'];
+        $class_array = explode('\\', $class);
+        $library = \Librarian::ns_to_lib($class_array[0] . '\\' . $class_array[1]);
+        if (!class_exists($class, false)) {
+            if (!\Librarian::is_enabled($library)) {
+                \DotUtil::warn('FAILED. Not enabled: ' . $library);
             }
+            $path = \Str::to_underscore($class);
+            $path = str_replace('\\', '/', $path);
+            $path = preg_replace('/\/script\//', '/scripts/', $path);
+            $path = libpath($path . '.php');
+            if (!file_exists($path)) {
+                \DotUtil::warn("Cannot find script: `{$path}`.");
+                return false;
+            }
+            include $path;
+        }
+        if (!class_exists($class, false)) {
+            \DotUtil::warn("Cannot find class: `{$class}` in `{$path}`.");
+            return false;
+        }
+
+        $dependencies = \Librarian::dependencies_factory($library);
+        return new $class($dependencies);
+    }
+
+    public function execute($script, $command, array $arguments = [])
+    {
+        if (!isset($this->scripts_registry[$script])) {
+            \DotUtil::warn('Command not found: ' . $script);
+            return false;
+        }
+        $script_obj = $this->construct_script($script);
+        if (!is_object($script_obj)) {
+            \DotUtil::warn('Could not construct the object!');
+            return false;
+        }
+        if (!$command) {
+            $command = 'index';
+        } elseif ($command === '--help') {
+            if (method_exists($script_obj, 'help_index')) {
+                call_user_func([$script_obj, 'help_index']);
+            } else {
+                \DotUtil::plain("No help found for command `{$script}`.");
+            }
+            return true;
+        }
+        if (method_exists($script_obj, 'action_' . $command)) {
+            call_user_func_array([$script_obj, 'action_' . $command], $arguments);
+            return true;
+        } elseif (method_exists($script_obj, 'help_' . $command)) {
+            call_user_func([$script_obj, 'help_' . $command]);
+        }
+        return false;
+    }
+
+    public function list_scripts()
+    {
+        $commands = [];
+        foreach ($this->scripts_registry as $script => $data) {
+            $commands[] = [
+                $script,
+                $data['description']
+            ];
+        }
+        \DotUtil::doc(
+            'Mysli Core :: List of Available Commands',
+            '<COMMAND> [OPTIONS...]',
+            $commands
         );
-    }
-
-    /**
-     * Will fill full width of the line with particular character(s).
-     * --
-     * @param  string $character
-     * --
-     * @return void
-     */
-    public static function fill($character)
-    {
-        $width = (int) exec('tput cols');
-        if ($width === 0) { return; }
-        $width = floor($width / strlen($character));
-        self::plain(str_repeat($character, $width));
-    }
-
-    /**
-     * Print out the message
-     * @param  string  $message
-     * @param  boolean $new_line
-     */
-    public static function warn($message, $new_line=true)
-        { return self::out('warn', $message, $new_line); }
-
-    public static function error($message, $new_line=true)
-        { return self::out('error', $message, $new_line); }
-
-    public static function plain($message, $new_line=true)
-        { return self::out('plain', $message, $new_line); }
-
-    public static function success($message, $new_line=true)
-        { return self::out('success', $message, $new_line); }
-
-    /**
-     * Create a new line
-     * @param  integer $num Number of new lines
-     */
-    public static function nl($num=1)
-        { echo str_repeat("\n", (int)$num); }
-
-    /**
-     * Create documentation / help for particular command.
-     */
-    public static function doc($title, $usage, $commands=false)
-    {
-        self::plain($title);
-        self::nl();
-        self::plain('  ' . $usage);
-        self::nl();
-
-        if (!is_array($commands)) { return; }
-
-        // Get longest key, to align with it
-        $longest = 0;
-        foreach ($commands as $key => $command) {
-            if (strlen($key) > $longest) {
-                $longest = strlen($key);
-            }
-        }
-
-        // Print all commands
-        self::plain('Available options:');
-        self::nl();
-        foreach ($commands as $key => $command) {
-            self::plain('  ' . (!is_integer($key) ? $key : ' ') . '  ', false);
-            if (!is_array($command)) {
-                $command = [$command];
-            }
-            foreach ($command as $k => $command_line) {
-                $length = $k > 0 ? $longest + 4 : $longest - strlen($key);
-                self::plain(str_repeat(" ", $length), false);
-                self::plain($command_line);
-            }
-        }
-    }
-
-    /**
-     * Will print out the message
-     * --
-     * @param   string  $type
-     *                      plain   -- Regular white message
-     *                      error   -- Red message
-     *                      warn    -- Yellow message
-     *                      success -- Green message
-     * @param   string  $message
-     * @param   boolean $new_line   Should message be in new line
-     */
-    public static function out($type, $message, $new_line=true)
-    {
-        switch (strtolower($type))
-        {
-            case 'error':
-                $color = "\x1b[31;01m";
-                break;
-
-            case 'warn':
-                $color = "\x1b[33;01m";
-                break;
-
-            case 'success':
-                $color = "\x1b[32;01m";
-                break;
-
-            default:
-                $color = null;
-        }
-
-        echo
-            (!is_null($color) ? $color : ''),
-            $message,
-            "\x1b[39;49;00m";
-
-        if ($new_line)
-            { echo "\n"; }
-
-        flush();
+        return true;
     }
 }
