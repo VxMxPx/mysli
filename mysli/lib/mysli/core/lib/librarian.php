@@ -94,7 +94,7 @@ class Librarian
 
                 if (self::is_enabled($library)) continue;
 
-                $disabled[$library] = null;
+                $disabled[$library] = true;
 
                 if (!$details) continue;
 
@@ -182,11 +182,12 @@ class Librarian
             }
         }
 
+        // Disabled?
         if ($limit_to === null || $limit_to === 'disabled') {
             self::get_disabled(false);
             // No regular expression + disabled
             if (!$library_regex) {
-                    if (isset(self::$disabled[$library])) return $library;
+                if (isset(self::$disabled[$library])) return $library;
             }
             else {
                 // Regular expression + disabled
@@ -688,8 +689,14 @@ class Librarian
         foreach ($info['depends_on'] as $dependency => $version) {
             $dependency = self::resolve($dependency, 'enabled');
             if ($dependency) {
-                if (isset(self::$enabled[$dependency]['required_by'][$library])) {
-                    unset(self::$enabled[$dependency]['required_by'][$library]);
+                if (in_array($library, self::$enabled[$dependency]['required_by'])) {
+                    unset(
+                        self::$enabled[$dependency]['required_by'][
+                            array_search(
+                                $library,
+                                self::$enabled[$dependency]['required_by'])
+                        ]
+                    );
                 }
             }
         }
@@ -734,7 +741,7 @@ class Librarian
         foreach ($info['depends_on'] as $dependency => $version) {
             $dependency = self::resolve($dependency, 'enabled');
             if ($dependency) {
-                self::$enabled[$dependency]['required_by'][$library] = $version;
+                self::$enabled[$dependency]['required_by'][] = $library;
             }
         }
 
