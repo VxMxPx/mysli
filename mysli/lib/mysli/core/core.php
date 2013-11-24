@@ -71,6 +71,7 @@ class Core
             'Arr'        => [],
             'Str'        => [],
             'Int'        => [],
+            'FS'         => [],
             'Benchmark'  => [],
             'Event'      => [datpath('core/events.json')],
             'Cfg'        => [datpath('core/cfg.json')],
