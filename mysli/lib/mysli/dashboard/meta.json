@@ -1,5 +1,5 @@
 {
-    "library"       : "mysli/backend",
+    "library"       : "mysli/dashboard",
     "instantiation" : "once",
     "version"       : "0.1",
     "depends_on"    : {
@@ -8,5 +8,5 @@
         "*/session" : ">= 0.1"
     },
     "maintainer"    : "Marko Gajšt <marko@gaj.st>",
-    "description"   : "Default Mysli Backend."
+    "description"   : "Default Mysli Dashboard."
 }

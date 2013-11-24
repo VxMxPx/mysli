@@ -2,7 +2,7 @@
 
 namespace Mysli;
 
-class Backend
+class Dashboard
 {
     public function __construct($dependencies)
     {

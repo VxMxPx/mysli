@@ -3,9 +3,9 @@
     "instantiation" : "once",
     "version"       : "0.1",
     "depends_on"    : {
-        "*/core"    : ">= 0.1",
-        "*/users"   : ">= 0.1",
-        "*/backend" : ">= 0.1"
+        "*/core"      : ">= 0.1",
+        "*/users"     : ">= 0.1",
+        "*/dashboard" : ">= 0.1"
     },
     "maintainer"    : "Marko Gajšt <marko@gaj.st>",
     "description"   : "Allows you to manage users!"
