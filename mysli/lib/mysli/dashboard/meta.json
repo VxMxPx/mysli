@@ -4,7 +4,6 @@
     "version"       : "0.1",
     "depends_on"    : {
         "*/core"    : ">= 0.1",
-        "mysli/mjs" : ">= 0.1",
         "*/session" : ">= 0.1"
     },
     "maintainer"    : "Marko Gajšt <marko@gaj.st>",
