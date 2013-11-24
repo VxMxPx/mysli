@@ -11,13 +11,14 @@ class FS
 
     /**
      * Convert size (from bytes) to nicer (human readable) value (kb, mb)
-     * Return: bytes|KB|MB
+     * Return: bytes|KB|MB|GB
      * --
      * @param   integer $size (bytes)
+     * @param   integer $round_precision
      * --
      * @return  array   [12, 'MB']
      */
-    public static function format_size($size)
+    public static function format_size($size, $round_precision = 4)
     {
         $size = floatval($size);
 
@@ -25,10 +26,16 @@ class FS
             return [$size, 'bytes'];
         }
         elseif ($size < 1048576) {
-            return [round($size/1024), 'KB'];
+            return [round($size/1024, $round_precision), 'KB'];
         }
         else {
-            return [round($size/1048576, 1), 'MB'];
+            $result = round($size/1048576, $round_precision);
+            if ($result > 1024) {
+                $result = [round($result/1024, $round_precision), 'GB'];
+            } else {
+                $result = [$result, 'MB'];
+            }
+            return $result;
         }
     }
 
@@ -51,11 +58,17 @@ class FS
         }
 
         if (rename($old, $new)) {
-            Log::info("File was renamed from: `{$old}`, to `{$new}`.", __FILE__, __LINE__);
+            Log::info(
+                "File was renamed from: `{$old}`, to `{$new}`.",
+                __FILE__, __LINE__
+            );
             return 1;
         }
         else {
-            Log::warn("Error while renaming file: `{$old}`, to `{$new}`.", __FILE__, __LINE__);
+            Log::warn(
+                "Error while renaming file: `{$old}`, to `{$new}`.",
+                __FILE__, __LINE__
+            );
             return 0;
         }
     }
@@ -63,14 +76,52 @@ class FS
     /**
      * Will generate unique prefix for particular file / folder.
      * --
-     * @param  string $filename -- Full path
+     * @param  string $filename      Full path
      * --
-     * @return string New filename + full path.
+     * @return string New filename
      */
     public static function unique_prefix($filename) {
         $destination = dirname($filename);
-        $filename    = filename($filename);
-        return ds($destination, md5(ds($destination, $filename)) . '_' . $filename);
+        $filename    = basename($filename);
+        return md5(ds($destination, $filename)) . '_' . $filename;
+    }
+
+    /**
+     * Return only extension of file, if available, otherwise an empty string.
+     * --
+     * @param  string $filename
+     * --
+     * @return string
+     */
+    public static function file_extension($filename)
+    {
+        $file = basename($filename);
+        if (strpos($file, '.') === false) {
+            return '';
+        }
+        $extension = explode('.', strrev($file), 2);
+        return strrev($extension[0]);
+    }
+
+    /**
+     * Get filename.
+     * --
+     * @param  string  $filename
+     * @param  boolean $extension
+     * --
+     * @return string
+     */
+    public static function file_get_name($filename, $extension = false)
+    {
+        $filename = basename($filename);
+        if (!$extension) {
+            $file_ext = self::file_extension($filename);
+            $file_ext = strlen($file_ext);
+            if ($file_ext > 0) {
+                return substr($filename, 0, ($file_ext + 1) * -1);
+            }
+        }
+        return $filename;
     }
 
     /**
@@ -83,19 +134,30 @@ class FS
      */
     public static function file_unique_name($filename, $divider='_')
     {
-        $destination = dirname($filename);
-        $filename    = filename($filename);
+        $destination  = dirname($filename);
+        $filename     = basename($filename);
+        $new_filename = $filename;
 
-        if (file_exists(ds($destination, $filename)) && !is_dir(ds($destination, $filename))) {
+        if (file_exists(ds($destination, $filename)) &&
+            !is_dir(ds($destination, $filename))
+        ) {
             $ext  = self::file_extension($filename);
             $base = self::file_get_name($filename, false);
             $n    = 2;
             do {
-                $new_filename = $base . $divider . $n . (empty($ext) ? '' : '.' . $ext);
+                $new_filename =
+                    $base .
+                    $divider .
+                    $n .
+                    (empty($ext) ? '' : '.' . $ext);
                 $n++;
             }
-            while(file_exists(ds($destination, $new_filename)) && !is_dir(ds($destination, $new_filename)));
-            Log::info('Generated unique filename: `{$new_filename}`.', __FILE__, __LINE__);
+            while(file_exists(ds($destination, $new_filename)) &&
+                !is_dir(ds($destination, $new_filename)));
+            Log::info(
+                "Generated unique filename: `{$new_filename}`.",
+                __FILE__, __LINE__
+            );
         }
 
         return ds($destination, $new_filename);
@@ -127,15 +189,27 @@ class FS
      * --
      * @return boolean
      */
-    public static function file_create($filename, $empty=false)
+    public static function file_create($filename, $empty = false)
     {
-        if (!file_exists($filename) && $create) {
-            if (!touch($filename)) {
-                Log::error("Could not create file: `{$filename}`.", __FILE__, __LINE__);
+        if (file_exists($filename)) {
+            if (!$empty) { return false; }
+            if (file_put_contents($filename, '') === false) {
+                Log::warn(
+                    "Couldn't remove file's contents: `{$filename}`.",
+                    __FILE__, __LINE__
+                );
                 return false;
-            } else {
-                return true;
             }
+        }
+
+        if (touch($filename)) {
+            return true;
+        } else {
+            Log::error(
+                "Could not touch file: `{$filename}`.",
+                __FILE__, __LINE__
+            );
+            return false;
         }
     }
 
@@ -149,7 +223,7 @@ class FS
      * --
      * @return integer Number of bytes written, or FALSE on failure.
      */
-    public static function file_append($filename, $content, $create=true)
+    public static function file_append($filename, $content, $create = true)
     {
         if ($create) {
             // This works only if file doesn't exists.
@@ -173,7 +247,7 @@ class FS
      * --
      * @return mixed   integer or when error boolean false
      */
-    public static function file_prepend($filename, $content, $create=true)
+    public static function file_prepend($filename, $content, $create = true)
     {
         if ($create) {
             // This works only if file doesn't exists.
@@ -196,7 +270,10 @@ class FS
             }
             return $i;
         } else {
-            Log::error("Could not write to file: `{$filename}`.", __FILE__, __LINE__);
+            Log::error(
+                "Could not write to file: `{$filename}`.",
+                __FILE__, __LINE__
+            );
             return false;
         }
     }
@@ -208,9 +285,9 @@ class FS
      * @param  string  $content
      * @param  boolean $create
      * --
-     * @return boolean
+     * @return mixed   integer or when error boolean false
      */
-    public static function file_replace($filename, $content, $create=true)
+    public static function file_replace($filename, $content, $create = true)
     {
         if ($create) {
             // This works only if file doesn't exists.
@@ -220,7 +297,10 @@ class FS
         if (file_exists($filename)) {
             return file_put_contents($filename, $content);
         } else {
-            Log::error("Could not write to file: `{$filename}`.", __FILE__, __LINE__);
+            Log::error(
+                "Could not write to file: `{$filename}`.",
+                __FILE__, __LINE__
+            );
             return false;
         }
     }
@@ -233,13 +313,14 @@ class FS
      * --
      * @return boolean
      */
-    public static function file_empty($filename, $create=true)
+    public static function file_empty($filename, $create = true)
     {
-        return self::file_replace($filename, '', $create);
+        return self::file_replace($filename, '', $create) !== false;
     }
 
     /**
      * Remove one (or more files).
+     * --
      * @param  mixed $file String or array (when want to remove more files).
      * --
      * @return mixed Integer (number of removed files) or false on error.
@@ -254,18 +335,26 @@ class FS
             return $i;
         }
 
-        return unlink($file);
+        return unlink($file) ? 1 : 0;
     }
 
     /**
      * Copy one of more files.
      * Examples:
-     * $source = '/home/me/my_file.txt', $destination = '/home/me/documents'
-     * $source = '/home/me/my_file.txt', $destination = '/home/me/documents/different_filename.txt'
-     * $source = ['/home/me/my_file.txt', '/home/me/my_file_2.txt'], $destination = '/home/me/documents'
-     * $source = ['/home/me/my_file.txt' => '/home/me/documents/file_1.txt',
-     *            '/home/me/my_file_2.txt' => '/home/me/documents/file_2_new.txt'],
-     *            $destination = null
+     *     $source = '/home/me/my_file.txt',
+     *     $destination = '/home/me/doc'
+     *
+     *     $source = '/home/me/my_file.txt',
+     *     $destination = '/home/me/doc/new_filename.txt'
+     *
+     *     $source = ['/home/me/my_file.txt', '/home/me/my_file_2.txt'],
+     *     $destination = '/home/me/doc'
+     *
+     *     $source = [
+     *         '/home/me/my_file.txt' => '/home/me/doc/file_1.txt',
+     *         '/home/me/my_file_2.txt' => '/home/me/doc/file_2_new.txt'
+     *     ],
+     *     $destination = null
      * --
      * @param  mixed   $source       String or Array
      * @param  string  $destination
@@ -273,8 +362,11 @@ class FS
      * --
      * @return mixed   Integer (number of copied files) or boolean false on error.
      */
-    public static function file_copy($source, $destination=null, $on_exists=FS::REPLACE)
-    {
+    public static function file_copy(
+        $source,
+        $destination = null,
+        $on_exists = FS::REPLACE
+    ) {
         if (is_array($source)) {
             $i = 0;
             foreach ($source as $k => $v) {
@@ -288,17 +380,26 @@ class FS
         }
 
         if (!file_exists($source)) {
-            Log::warn("Source file doesn't exists: `{$source}`.", __FILE__, __LINE__);
+            Log::warn(
+                "Source file doesn't exists: `{$source}`.",
+                __FILE__, __LINE__
+            );
             return false;
         }
 
         if (is_dir($source)) {
-            Log::warn("Cannot copy directory: `{$source}`, user `dir_copy` method!", __FILE__, __LINE__);
+            Log::warn(
+                "Cannot copy directory: `{$source}`, user `dir_copy` method!",
+                __FILE__, __LINE__
+            );
             return false;
         }
 
         if (!is_dir($destination) && !is_dir(dirname($destination))) {
-            Log::warn("Destination isn't directory: `{$destination}`.", __FILE__, __LINE__);
+            Log::warn(
+                "Destination isn't directory: `{$destination}`.",
+                __FILE__, __LINE__
+            );
             return false;
         }
 
@@ -310,34 +411,54 @@ class FS
         if (file_exists($destination)) {
             switch ($on_exists) {
                 case self::EXISTS_IGNORE:
-                    Log::info("File exists: `{$destination}`. Ignoring.", __FILE__, __LINE__);
+                    Log::info(
+                        "File exists: `{$destination}`. Ignoring.",
+                        __FILE__, __LINE__
+                    );
                     return 0;
                     break;
 
                 case self::EXISTS_ERROR:
-                    trigger_error("File exists: `{$destination}`.", E_USER_ERROR);
+                    trigger_error(
+                        "File exists: `{$destination}`.",
+                        E_USER_ERROR
+                    );
                     break;
 
                 case self::EXISTS_REPLACE:
-                    Log::info("File exists: `{$destination}`. It will be replaced.", __FILE__, __LINE__);
+                    Log::info(
+                        "File exists: `{$destination}`. It will be replaced.",
+                        __FILE__, __LINE__
+                    );
                     break;
 
                 case self::EXISTS_RENAME:
-                    Log::info("File exists: `{$destination}`. It will be renamed.", __FILE__, __LINE__);
+                    Log::info(
+                        "File exists: `{$destination}`. It will be renamed.",
+                        __FILE__, __LINE__
+                    );
                     $destination = self::file_unique_name($destination);
                     break;
 
                 default:
-                    trigger_error("Invalid value for \$on_exists: `{$on_exists}`.");
+                    trigger_error(
+                        "Invalid value for \$on_exists: `{$on_exists}`."
+                    );
             }
         }
 
         if (copy($source, $destination)) {
-            Log::info("File was copied: `{$source}`, to: `{$destination}`.", __FILE__, __LINE__);
+            Log::info(
+                "File was copied: `{$source}`, to: `{$destination}`.",
+                __FILE__, __LINE__
+            );
             return 1;
         }
         else {
-            Log::error("Error, can't copy file: `{$source}`, to: `{$destination}`.", __FILE__, __LINE__);
+            Log::error(
+                "Error, can't copy file: `{$source}`, to: `{$destination}`.",
+                __FILE__, __LINE__
+            );
             return false;
         }
     }
@@ -492,40 +613,6 @@ class FS
     }
 
     /**
-     * Return only extension of file, if available, otherwise an empty string.
-     * --
-     * @param  string $filename
-     * --
-     * @return string
-     */
-    public static function file_extension($filename)
-    {
-        $file = self::file_get_name($filename, true);
-        if (strpos($file, '.') === false) {
-            return '';
-        }
-        $extension = explode('.', strrev($file), 1);
-        return strrev($extension[0]);
-    }
-
-    /**
-     * Get filename.
-     * --
-     * @param  string  $filename
-     * @param  boolean $extension
-     * --
-     * @return string
-     */
-    public static function file_get_name($filename, $extension=false)
-    {
-        $filename = basename($filename);
-        if (!$extension) {
-            $filename = substr($filename, 0, -(strlen(self::file_extension($filename))));
-        }
-        return $filename;
-    }
-
-    /**
      * Check if particular file is is stored in publicly accessible directory,
      * and hence is (possibly) accessible through URL.
      * --
@@ -618,8 +705,8 @@ class FS
     public static function dir_create($name, $recursive=true, $mode=0755) {}
     public static function dir_is_writable($directory) {}
     public static function dir_remove($directory) {}
-    public static function dir_copy($source, $destination, $on_exists=FS:REPLACE) {}
-    public static function dir_move($source, $destination, $on_exists=FS:REPLACE) {}
+    public static function dir_copy($source, $destination, $on_exists=self::REPLACE) {}
+    public static function dir_move($source, $destination, $on_exists=self::REPLACE) {}
     public static function dir_is_public($filename) {}
     public static function dir_get_url($filename) {}
 }
