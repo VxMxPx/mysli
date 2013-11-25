@@ -40,14 +40,13 @@ class Server
      * --
      * @return  string
      */
-    public static function get_current_url($with_query=false, $trim=true)
+    public static function get_current_url($with_query = false, $trim = true)
     {
         if (isset($_SERVER['HTTP_HOST'])) {
             $url = (self::is_ssl() ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'];
         } else {
             $url = '';
         }
-
 
         if ($with_query) {
             // Make sure we have ending '/'!
