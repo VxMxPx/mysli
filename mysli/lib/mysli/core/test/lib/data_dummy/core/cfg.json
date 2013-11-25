@@ -3,7 +3,7 @@
         "timezone"  : "Europe/Ljubljana",
         "debug"  : true,
         "server" : {
-            "url" : null
+            "url" : "http:://localhost/"
         },
         "cookie" : {
             "prefix"  : "mysli_",
