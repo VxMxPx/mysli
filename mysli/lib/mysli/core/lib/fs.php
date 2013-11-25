@@ -360,12 +360,12 @@ class FS
      * @param  string  $destination
      * @param  boolean $on_exists
      * --
-     * @return mixed   Integer (number of copied files) or boolean false on error.
+     * @return integer Number of copied files.
      */
     public static function file_copy(
         $source,
         $destination = null,
-        $on_exists = FS::REPLACE
+        $on_exists = self::EXISTS_REPLACE
     ) {
         if (is_array($source)) {
             $i = 0;
@@ -380,27 +380,24 @@ class FS
         }
 
         if (!file_exists($source)) {
-            Log::warn(
+            throw new \Mysli\Core\ValueException(
                 "Source file doesn't exists: `{$source}`.",
-                __FILE__, __LINE__
+                10
             );
-            return false;
         }
 
         if (is_dir($source)) {
-            Log::warn(
-                "Cannot copy directory: `{$source}`, user `dir_copy` method!",
-                __FILE__, __LINE__
+            throw new \Mysli\Core\ValueException(
+                "Cannot copy directory: `{$source}`, use `dir_copy` method!",
+                11
             );
-            return false;
         }
 
         if (!is_dir($destination) && !is_dir(dirname($destination))) {
-            Log::warn(
+            throw new \Mysli\Core\ValueException(
                 "Destination isn't directory: `{$destination}`.",
-                __FILE__, __LINE__
+                12
             );
-            return false;
         }
 
         $source_file = basename($source);
@@ -419,9 +416,9 @@ class FS
                     break;
 
                 case self::EXISTS_ERROR:
-                    trigger_error(
+                    throw new \Mysli\Core\FileSystemException(
                         "File exists: `{$destination}`.",
-                        E_USER_ERROR
+                        10
                     );
                     break;
 
@@ -441,8 +438,9 @@ class FS
                     break;
 
                 default:
-                    trigger_error(
-                        "Invalid value for \$on_exists: `{$on_exists}`."
+                    throw new \Mysli\Core\ValueException(
+                        "Invalid value for \$on_exists: `{$on_exists}`.",
+                        20
                     );
             }
         }
@@ -455,23 +453,30 @@ class FS
             return 1;
         }
         else {
-            Log::error(
+            throw new \Mysli\Core\FileSystemException(
                 "Error, can't copy file: `{$source}`, to: `{$destination}`.",
-                __FILE__, __LINE__
+                11
             );
-            return false;
         }
     }
 
     /**
      * Move one of more files.
      * Examples:
-     * $source = '/home/me/my_file.txt', $destination = '/home/me/documents'
-     * $source = '/home/me/my_file.txt', $destination = '/home/me/documents/different_filename.txt'
-     * $source = ['/home/me/my_file.txt', '/home/me/my_file_2.txt'], $destination = '/home/me/documents'
-     * $source = ['/home/me/my_file.txt' => '/home/me/documents/file_1.txt',
-     *            '/home/me/my_file_2.txt' => '/home/me/documents/file_2_new.txt'],
-     *            $destination = null
+     *     $source = '/home/me/my_file.txt',
+     *     $destination = '/home/me/doc'
+     *
+     *     $source = '/home/me/my_file.txt',
+     *     $destination = '/home/me/doc/new_filename.txt'
+     *
+     *     $source = ['/home/me/my_file.txt', '/home/me/my_file_2.txt'],
+     *     $destination = '/home/me/doc'
+     *
+     *     $source = [
+     *         '/home/me/my_file.txt' => '/home/me/doc/file_1.txt',
+     *         '/home/me/my_file_2.txt' => '/home/me/doc/file_2_new.txt'
+     *     ],
+     *     $destination = null
      * --
      * @param  mixed   $source       String or Array
      * @param  string  $destination
@@ -479,8 +484,11 @@ class FS
      * --
      * @return mixed   Integer (number of copied files) or boolean false on error.
      */
-    public static function file_move($source, $destination, $on_exists=FS::REPLACE)
-    {
+    public static function file_move(
+        $source,
+        $destination,
+        $on_exists = FS::EXISTS_REPLACE
+    ) {
         if (is_array($source)) {
             $i = 0;
             foreach ($source as $k => $v) {
@@ -494,18 +502,24 @@ class FS
         }
 
         if (!file_exists($source)) {
-            Log::warn("Source file doesn't exists: `{$source}`.", __FILE__, __LINE__);
-            return false;
+            throw new \Mysli\Core\ValueException(
+                "Source file doesn't exists: `{$source}`.",
+                10
+            );
         }
 
         if (is_dir($source)) {
-            Log::warn("Cannot move directory: `{$source}`, user `dir_move` method!", __FILE__, __LINE__);
-            return false;
+            throw new \Mysli\Core\ValueException(
+                "Cannot move directory: `{$source}`, use `dir_move` method!",
+                11
+            );
         }
 
         if (!is_dir($destination) && !is_dir(dirname($destination))) {
-            Log::warn("Destination isn't directory: `{$destination}`.", __FILE__, __LINE__);
-            return false;
+            throw new \Mysli\Core\ValueException(
+                "Destination isn't directory: `{$destination}`.",
+                12
+            );
         }
 
         $source_file = basename($source);
@@ -516,35 +530,55 @@ class FS
         if (file_exists($destination)) {
             switch ($on_exists) {
                 case self::EXISTS_IGNORE:
-                    Log::info("File exists: `{$destination}`. Ignoring.", __FILE__, __LINE__);
+                    Log::info(
+                        "File exists: `{$destination}`. Ignoring.",
+                        __FILE__, __LINE__
+                    );
                     return 0;
                     break;
 
                 case self::EXISTS_ERROR:
-                    trigger_error("File exists: `{$destination}`.", E_USER_ERROR);
+                    throw new \Mysli\Core\FileSystemException(
+                        "File exists: `{$destination}`.",
+                        10
+                    );
                     break;
 
                 case self::EXISTS_REPLACE:
-                    Log::info("File exists: `{$destination}`. It will be replaced.", __FILE__, __LINE__);
+                    Log::info(
+                        "File exists: `{$destination}`. It will be replaced.",
+                        __FILE__, __LINE__
+                    );
                     break;
 
                 case self::EXISTS_RENAME:
-                    Log::info("File exists: `{$destination}`. It will be renamed.", __FILE__, __LINE__);
+                    Log::info(
+                        "File exists: `{$destination}`. It will be renamed.",
+                        __FILE__, __LINE__
+                    );
                     $destination = self::file_unique_name($destination);
                     break;
 
                 default:
-                    trigger_error("Invalid value for \$on_exists: `{$on_exists}`.");
+                    throw new \Mysli\Core\ValueException(
+                        "Invalid value for \$on_exists: `{$on_exists}`.",
+                        20
+                    );
             }
         }
 
         if (rename($source, $destination)) {
-            Log::info("File was renamed: `{$source}`, to: `{$destination}`.", __FILE__, __LINE__);
+            Log::info(
+                "File was renamed: `{$source}`, to: `{$destination}`.",
+                __FILE__, __LINE__
+            );
             return 1;
         }
         else {
-            Log::error("Error, can't rename file: `{$source}`, to: `{$destination}`.", __FILE__, __LINE__);
-            return false;
+            throw new \Mysli\Core\FileSystemException(
+                "Error, can't rename file: `{$source}`, to: `{$destination}`.",
+                11
+            );
         }
     }
 
@@ -557,11 +591,12 @@ class FS
      * --
      * @return array
      */
-    public static function file_search($directory, $filter_regex, $deep=true)
+    public static function file_search($directory, $filter_regex, $deep = true)
     {
         if (!is_dir($directory)) {
-            Log::warn("Can't find files, not a valid directory: `{$directory}`.");
-            return [];
+            throw new \Mysli\Core\ValueException(
+                "Can't find files, not a valid directory: `{$directory}`."
+            );
         }
 
         $collection = scandir($directory);
@@ -572,6 +607,7 @@ class FS
         }
 
         foreach ($collection as $file) {
+            if (in_array($file, ['.', '..'])) { continue; }
             // We have directory, should we scan it?
             if (is_dir(ds($directory, $file))) {
                 if (!$deep) continue;
@@ -593,6 +629,7 @@ class FS
      *                         files, e.g. ['/abs/path/file.1', '/abs/path/file.2']
      * --
      * @return mixed           String or array, depends on input!
+     *                         null if file not found
      */
     public static function file_signature($filename)
     {
@@ -636,11 +673,11 @@ class FS
      * --
      * @param  string $filename
      * --
-     * @return string
+     * @return string Full url, or empty if not public
      */
     public static function file_get_uri($filename)
     {
-        if (!file_is_public($filename)) {
+        if (!self::file_is_public($filename)) {
             return '';
         }
 
@@ -660,6 +697,8 @@ class FS
     {
         return Server::url(self::file_get_uri($filename));
     }
+
+    // Directories Methods -----------------------------------------------------
 
     /**
      * Will generate new unique directory name, if the directory already exists.
