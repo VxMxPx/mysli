@@ -5,6 +5,7 @@ namespace Mysli\Core\Lib;
 class FS
 {
     const EXISTS_REPLACE = 'replace';
+    const EXISTS_MERGE   = 'merge';
     const EXISTS_RENAME  = 'rename';
     const EXISTS_ERROR   = 'error';
     const EXISTS_IGNORE  = 'ignore';
@@ -125,42 +126,29 @@ class FS
     }
 
     /**
-     * Will generate new unique filename, if the file already exists.
+     * Will generate new unique file / dir name, if the file/dir already exists.
      * --
      * @param  string $filename    Full path.
      * @param  string $divider     E.g. file.txt => file_2.txt when divider is _
      * --
-     * @return string              New filename + full path.
+     * @return string              /absolute/path/to/file
      */
-    public static function file_unique_name($filename, $divider='_')
+    public static function unique_name($filename, $divider = '_')
     {
-        $destination  = dirname($filename);
+        $directory    = dirname($filename);
         $filename     = basename($filename);
         $new_filename = $filename;
+        $ext          = self::file_extension($filename);
+        $ext          = empty($ext) ? '' : '.' . $ext;
+        $base         = self::file_get_name($filename, false);
+        $n            = 2;
 
-        if (file_exists(ds($destination, $filename)) &&
-            !is_dir(ds($destination, $filename))
-        ) {
-            $ext  = self::file_extension($filename);
-            $base = self::file_get_name($filename, false);
-            $n    = 2;
-            do {
-                $new_filename =
-                    $base .
-                    $divider .
-                    $n .
-                    (empty($ext) ? '' : '.' . $ext);
-                $n++;
-            }
-            while(file_exists(ds($destination, $new_filename)) &&
-                !is_dir(ds($destination, $new_filename)));
-            Log::info(
-                "Generated unique filename: `{$new_filename}`.",
-                __FILE__, __LINE__
-            );
+        while (file_exists(ds($directory, $new_filename))) {
+            $new_filename = $base . $divider . $n . $ext;
+            $n++;
         }
 
-        return ds($destination, $new_filename);
+        return ds($directory, $new_filename);
     }
 
     /**
@@ -434,7 +422,7 @@ class FS
                         "File exists: `{$destination}`. It will be renamed.",
                         __FILE__, __LINE__
                     );
-                    $destination = self::file_unique_name($destination);
+                    $destination = self::unique_name($destination);
                     break;
 
                 default:
@@ -556,7 +544,7 @@ class FS
                         "File exists: `{$destination}`. It will be renamed.",
                         __FILE__, __LINE__
                     );
-                    $destination = self::file_unique_name($destination);
+                    $destination = self::unique_name($destination);
                     break;
 
                 default:
@@ -599,7 +587,7 @@ class FS
             );
         }
 
-        $collection = scandir($directory);
+        $collection = array_diff(scandir($directory), ['.','..']);
         $matched    = [];
 
         if (!is_array($collection) || empty($collection)) {
@@ -607,7 +595,6 @@ class FS
         }
 
         foreach ($collection as $file) {
-            if (in_array($file, ['.', '..'])) { continue; }
             // We have directory, should we scan it?
             if (is_dir(ds($directory, $file))) {
                 if (!$deep) continue;
@@ -701,51 +688,139 @@ class FS
     // Directories Methods -----------------------------------------------------
 
     /**
-     * Will generate new unique directory name, if the directory already exists.
-     * --
-     * @param  string $dirname  Full path.
-     * @param  string $divider  E.g. /files => /files_2 when divider is _
-     * --
-     * @return string           New dirname + full path.
-     */
-    public static function dir_unique_name($dirname, $divider='_')
-    {
-        $destination = dirname($filename);
-        $dirname     = filename($dirname);
-
-        if (file_exists(ds($destination, $dirname)) && is_dir(ds($destination, $dirname))) {
-            $n = 2;
-            do {
-                $new_dirname = $base . $divider . $n;
-                $n++;
-            }
-            while(file_exists(ds($destination, $new_dirname)) && !is_dir(ds($destination, $new_dirname)));
-            Log::info('Generated unique dirname: `{$new_dirname}`.', __FILE__, __LINE__);
-        }
-
-        return ds($destination, $new_dirname);
-    }
-
-    /**
-     * Will produce md5 signature for the whole directory (and sub directories
-     * if deep is true).
+     * Get signatures of all files in the directory +
+     * sub directories if $deep is true.
      * --
      * @param  string  $directory
      * @param  boolean $deep
      * --
-     * @return string
+     * @return array
      */
-    public static function dir_signature($directory, $deep=true)
+    public static function dir_signatures($directory, $deep = true)
     {
+        $result = [];
+        $files = array_diff(scandir($directory), ['.','..']);
+        foreach ($files as $file) {
+            $filename = ds($directory, $file);
+            if (is_dir($filename)) {
+                $result = array_merge($result, self::dir_signatures($filename));
+            } else {
+                $result[$filename] = self::file_signature($filename);
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * Check if there are some files in the directory.
+     * --
+     * @param  string $directory
+     * --
+     * @return boolean
+     */
+    public static function dir_is_empty($directory)
+    {
+        if (!is_readable($directory)) {
+            throw new \Mysli\Core\FileSystemException(
+                'The directory is not readable!', 1
+            );
+        }
+
+        $handle = opendir($directory);
+        while (false !== ($entry = readdir($handle))) {
+            if ($entry != '.' && $entry != '..') {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Removed directory.
+     * If force is true, then it will removed non empty directories also.
+     * Note: directory need to exists,
+     * string cannot be empty and cannot be '/'.
+     * --
+     * @param  string  $directory
+     * @param  boolean $force
+     * --
+     * @return integer
+     */
+    public static function dir_remove($directory, $force = true)
+    {
+        if (!$directory || empty($directory) || trim($directory) === '/') {
+            throw new \Mysli\Core\ValueException(
+                'Directory cannot be empty or /.', 1
+            );
+        }
+
+        if (!file_exists($directory) || !is_dir($directory)) {
+            throw new \Mysli\Core\ValueException(
+                'Directory doesn\'t exists: ' . $directory, 2
+            );
+        }
+
+        if (!self::dir_is_empty($directory)) {
+            if (!$force) {
+                throw new \Mysli\Core\ValueException(
+                    'Directory is not empty, please use $force flag.', 3
+                );
+            }
+            $files = array_diff(scandir($directory), ['.','..']);
+            foreach ($files as $file) {
+                $filename = ds($directory, $file);
+                if (is_dir($filename)) {
+                    self::dir_remove($filename, true);
+                    continue;
+                }
+                if (!unlink($filename)) {
+                    throw new \Mysli\Core\FileSystemException(
+                        'Could not remove file: ' . $filename, 1);
+                }
+            }
+        }
+
+        return rmdir($directory);
+    }
+
+    /**
+     * Will copy directory (plus all the content to the destination).
+     * The destination directory will be created.
+     * --
+     * @param  string  $source
+     * @param  string  $destination
+     * @param  integer $on_exists
+     * --
+     * @return integer Number of copied files.
+     */
+    public static function dir_copy(
+        $source,
+        $destination,
+        $on_exists = self::EXISTS_MERGE
+    ) {
 
     }
 
-    public static function dir_signatures($directory, $deep=true) {}
-    public static function dir_create($name, $recursive=true, $mode=0755) {}
-    public static function dir_is_writable($directory) {}
-    public static function dir_remove($directory) {}
-    public static function dir_copy($source, $destination, $on_exists=self::REPLACE) {}
-    public static function dir_move($source, $destination, $on_exists=self::REPLACE) {}
+    /**
+     * Will move directory (plus all the content to the destination).
+     * The destination directory will be created.
+     * --
+     * @param  string  $source
+     * @param  string  $destination
+     * @param  integer $on_exists
+     * --
+     * @return integer Number of copied files.
+     */
+    public static function dir_move(
+        $source,
+        $destination,
+        $on_exists = self::EXISTS_MERGE
+    ) {
+
+    }
+
     public static function dir_is_public($filename) {}
+
     public static function dir_get_url($filename) {}
 }
