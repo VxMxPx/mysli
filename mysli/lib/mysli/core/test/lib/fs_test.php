@@ -11,6 +11,24 @@ include(__DIR__.'/../../core.php');
 
 class FsTest extends \PHPUnit_Framework_TestCase
 {
+    public function __construct()
+    {
+        $dir = datpath('fs');
+        if (!file_exists($dir) || !is_dir($dir)) {
+            trigger_error(
+                'Expecting following directory to exists: ' . $dir,
+                E_USER_ERROR
+            );
+        }
+        $files = scandir($dir);
+        if (count($files) > 2) {
+            trigger_error(
+                'Expecting testing directory to be empty: '. $dir,
+                E_USER_ERROR
+            );
+        }
+    }
+
     // Test Format Size --------------------------------------------------------
     public function test_format_size()
     {
@@ -131,7 +149,7 @@ class FsTest extends \PHPUnit_Framework_TestCase
     }
 
     // Test File Unqiue Name ---------------------------------------------------
-    public function test_file_unique_name()
+    public function test_unique_name()
     {
         $file1 = datpath('fs/lorem.txt');
         $file2 = datpath('fs/lorem_2.txt');
@@ -142,21 +160,39 @@ class FsTest extends \PHPUnit_Framework_TestCase
         $this->assertFileExists($file2);
         $this->assertEquals(
             datpath('fs/lorem_3.txt'),
-            \FS::file_unique_name($file1)
+            \FS::unique_name($file1)
         );
 
         unlink($file1);
         unlink($file2);
     }
 
-    public function test_file_unique_name_non_existing()
+    public function test_unique_name_directory()
+    {
+        $dir1 = datpath('fs/lorem.txt');
+        $dir2 = datpath('fs/lorem_2.txt');
+        mkdir($dir1);
+        mkdir($dir2);
+
+        $this->assertFileExists($dir1);
+        $this->assertFileExists($dir2);
+        $this->assertEquals(
+            datpath('fs/lorem_3.txt'),
+            \FS::unique_name($dir1)
+        );
+
+        rmdir($dir1);
+        rmdir($dir2);
+    }
+
+    public function test_unique_name_non_existing()
     {
         $filename = datpath('fs/non.txt');
 
         $this->assertFalse(file_exists($filename));
         $this->assertEquals(
             $filename,
-            \FS::file_unique_name($filename)
+            \FS::unique_name($filename)
         );
     }
 
@@ -866,12 +902,15 @@ class FsTest extends \PHPUnit_Framework_TestCase
             datpath('fs'),
             '/(.*?)\.jpe?g/i'
         );
-        foreach ($results as $k => $result) {
-            $this->assertStringEndsWith(
-                $endings[$k],
-                $result
-            );
+        // Remove path information
+        foreach ($results as &$result) {
+            $result = substr($result, strlen(datpath('fs')) + 1);
         }
+
+        foreach ($endings as $file) {
+            $this->assertTrue(in_array($file, $results), 'File not found: ' . $file);
+        }
+
         foreach ($files as $file) {
             $file_sub = datpath('fs/test/' . $file);
             $file = datpath('fs/' . $file);
@@ -940,4 +979,84 @@ class FsTest extends \PHPUnit_Framework_TestCase
         );
         unlink($file);
     }
+
+    // Dir Get Signatures
+    public function test_dir_signatures()
+    {
+        $file1 = datpath('fs/lorem_1.txt');
+        $file2 = datpath('fs/lorem_2.txt');
+        file_put_contents($file1, 'Lorem ipsum.');
+        file_put_contents($file2, '12345 67890.');
+        $this->assertFileExists($file1);
+        $this->assertFileExists($file2);
+        $this->assertEquals(
+            '4e9a74ac6861b061fd45db860c6247ca.7c33b1ed131f9e3e7d6f7583b4556df8',
+            implode('.', \FS::dir_signatures(datpath('fs')))
+        );
+        unlink($file1);
+        unlink($file2);
+    }
+
+    public function test_dir_signatures_sub_dir()
+    {
+        $file1 = datpath('fs/lorem_1.txt');
+        $dir   = datpath('fs/dir1');
+        $file2 = datpath('fs/dir1/lorem_2.txt');
+        mkdir($dir);
+        file_put_contents($file1, 'Lorem ipsum.');
+        file_put_contents($file2, '12345 67890.');
+        $this->assertFileExists($file1);
+        $this->assertFileExists($file2);
+        $this->assertEquals(
+            '7c33b1ed131f9e3e7d6f7583b4556df8.4e9a74ac6861b061fd45db860c6247ca',
+            implode('.', \FS::dir_signatures(datpath('fs', true)))
+        );
+        unlink($file1);
+        unlink($file2);
+        rmdir($dir);
+    }
+
+    // Dir Is Empry ------------------------------------------------------------
+    public function test_dir_is_empty()
+    {
+        $file = datpath('fs/file.txt');
+        file_put_contents($file, 'Lorem.');
+        $this->assertFalse(\FS::dir_is_empty(datpath('fs')));
+        unlink($file);
+    }
+
+    public function test_dir_is_empty_true()
+    {
+        $this->assertTrue(
+            \FS::dir_is_empty(datpath('fs')),
+            'Check if the directory is empty: ' . datpath('fs')
+        );
+    }
+
+    // Dir Remove --------------------------------------------------------------
+    public function test_dir_remove()
+    {
+        mkdir(datpath('fs/dir1/sub/1'), 0777, true);
+        mkdir(datpath('fs/dir1/sub/2'), 0777, true);
+        file_put_contents(datpath('fs/dir1/file'), 'Lorem ipsum.');
+        file_put_contents(datpath('fs/dir1/sub/file'), 'Another ipsum.');
+        file_put_contents(datpath('fs/dir1/sub/1/file'), '3rd ipsum.');
+        file_put_contents(datpath('fs/dir1/sub/2/file'), '4th ipsum.');
+
+        $this->assertTrue(\FS::dir_remove(datpath('fs/dir1')));
+        $this->assertFalse(file_exists(datpath('fs/dir1')));
+    }
+
+    // Dir Copy ----------------------------------------------------------------
+    // public function test_dir_copy()
+    // {
+    //     mkdir(datpath('fs/dir1/sub/1'), 0777, true);
+    //     mkdir(datpath('fs/dir1/sub/2'), 0777, true);
+    //     file_put_contents(datpath('fs/dir1/file'), 'Lorem ipsum.');
+    //     file_put_contents(datpath('fs/dir1/sub/file'), 'Another ipsum.');
+    //     file_put_contents(datpath('fs/dir1/sub/1/file'), '3rd ipsum.');
+    //     file_put_contents(datpath('fs/dir1/sub/2/file'), '4th ipsum.');
+
+    //     \FS::dir_copy(datpath('fs/dir1'), datpath('fs/dir2'));
+    // }
 }
