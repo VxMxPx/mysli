@@ -3,7 +3,7 @@ Mysli
 
 Mysli CMS / Framework
 
-Work in progress... 
+Work in progress...
 
 Task-list 11/2013:
 
@@ -17,7 +17,7 @@ Task-list 11/2013:
 [x] JS Panels
 [ ] Auth libraries
 [ ] Content editing libraries
-[~] FS library finish + tests
+[x] FS library finish + tests
 [ ] Core: CCI
 [ ] Core: Validator
 ```
