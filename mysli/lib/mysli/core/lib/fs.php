@@ -583,7 +583,7 @@ class FS
     {
         if (!is_dir($directory)) {
             throw new \Mysli\Core\ValueException(
-                "Can't find files, not a valid directory: `{$directory}`."
+                "Can't find files, not a valid directory: `{$directory}`.", 30
             );
         }
 
@@ -644,7 +644,7 @@ class FS
      * --
      * @return boolean
      */
-    public static function file_is_public($filename)
+    public static function is_public($filename)
     {
         $public_length = strlen(pubpath());
         if (ds(substr($filename, 0, $public_length)) !== pubpath()) {
@@ -662,9 +662,9 @@ class FS
      * --
      * @return string Full url, or empty if not public
      */
-    public static function file_get_uri($filename)
+    public static function get_uri($filename)
     {
-        if (!self::file_is_public($filename)) {
+        if (!self::is_public($filename)) {
             return '';
         }
 
@@ -680,9 +680,9 @@ class FS
      * --
      * @return string
      */
-    public static function file_get_url($filename)
+    public static function get_url($filename)
     {
-        return Server::url(self::file_get_uri($filename));
+        return Server::url(self::get_uri($filename));
     }
 
     // Directories Methods -----------------------------------------------------
@@ -722,7 +722,7 @@ class FS
     {
         if (!is_readable($directory)) {
             throw new \Mysli\Core\FileSystemException(
-                'The directory is not readable!', 1
+                'The directory is not readable!', 30
             );
         }
 
@@ -751,20 +751,20 @@ class FS
     {
         if (!$directory || empty($directory) || trim($directory) === '/') {
             throw new \Mysli\Core\ValueException(
-                'Directory cannot be empty or /.', 1
+                'Directory cannot be empty or /.', 40
             );
         }
 
         if (!file_exists($directory) || !is_dir($directory)) {
             throw new \Mysli\Core\ValueException(
-                'Directory doesn\'t exists: ' . $directory, 2
+                'Directory doesn\'t exists: ' . $directory, 41
             );
         }
 
         if (!self::dir_is_empty($directory)) {
             if (!$force) {
                 throw new \Mysli\Core\ValueException(
-                    'Directory is not empty, please use $force flag.', 3
+                    'Directory is not empty, please use $force flag.', 42
                 );
             }
             $files = array_diff(scandir($directory), ['.','..']);
@@ -776,7 +776,8 @@ class FS
                 }
                 if (!unlink($filename)) {
                     throw new \Mysli\Core\FileSystemException(
-                        'Could not remove file: ' . $filename, 1);
+                        'Could not remove file: ' . $filename, 40
+                    );
                 }
             }
         }
@@ -788,18 +789,106 @@ class FS
      * Will copy directory (plus all the content to the destination).
      * The destination directory will be created.
      * --
-     * @param  string  $source
+     * @param  string  $source Options:
      * @param  string  $destination
      * @param  integer $on_exists
+     *     EXISTS_REPLACE // Delete destination if exists
+     *     EXISTS_MERGE   // Merge source + destination
+     *     EXISTS_RENAME  // Rename (new) destination
+     *     EXISTS_ERROR   // Throw exception
+     *     EXISTS_IGNORE  // Skip quietly
      * --
-     * @return integer Number of copied files.
+     * @return mixed      True || Null: ignore || Integer: number of skipped files.
      */
     public static function dir_copy(
         $source,
         $destination,
         $on_exists = self::EXISTS_MERGE
     ) {
+        if (!file_exists($source)) {
+            throw new \Mysli\Core\ValueException(
+                "Source doesn't exists: `{$source}`.", 1
+            );
+        }
 
+        if (!is_dir($source)) {
+            throw new \Msyli\Core\ValueException(
+                "Not a valid directory: `{$source}`.", 2
+            );
+        }
+
+        if (file_exists($destination)) {
+            switch ($on_exists) {
+                case self::EXISTS_REPLACE:
+                    if (!is_dir($destination)) {
+                        unlink($destination);
+                    } else {
+                        self::dir_remove($destination, true);
+                    }
+                    if (file_exists($destination)) {
+                        throw new \Mysli\Core\FileSystemException(
+                            "Cannot delete destination: `{$destination}`", 2
+                        );
+                    }
+                    break;
+
+                case self::EXISTS_MERGE:
+                    # Pass through...
+                    break;
+
+                case self::EXISTS_RENAME:
+                    $destination = self::unique_name($destination);
+                    break;
+
+                case self::EXISTS_ERROR:
+                    throw new \Mysli\Core\FileSystemException(
+                        "Directory exists: `{$destination}`.", 3
+                    );
+                    break;
+
+                case self::EXISTS_IGNORE:
+                    return null;
+                    break;
+
+                default:
+                    throw new \Mysli\Core\ValueException(
+                        "Invalid value for \$on_exists: `{$on_exists}`.", 3
+                    );
+            }
+        }
+
+        if (!file_exists($destination)) {
+            if (!mkdir($destination, 0777, true)) {
+                throw new \Mysli\Core\FileSystemException(
+                    "Couldn't create the directory: `{$destination}`.", 1
+                );
+            }
+        }
+
+        $files = array_diff(scandir($source), ['.', '..']);
+        $skipped = 0; // Number of skipped files
+
+        foreach ($files as $file) {
+            $filename = ds($source, $file);
+            if (is_dir($filename)) {
+                $count = self::dir_copy(
+                    $filename,
+                    ds($destination, $file),
+                    $on_exists
+                );
+                $skipped += $count === true ? 0 : $count;
+            } else {
+                if (!copy($filename, ds($destination, $file))) {
+                    \Log::warn(
+                        "Couldn't copy, will skip: `{$filename}`.",
+                        __FILE__, __LINE__
+                    );
+                    $skipped++;
+                }
+            }
+        }
+
+        return $skipped > 0 ? $skipped : true;
     }
 
     /**
@@ -809,18 +898,24 @@ class FS
      * @param  string  $source
      * @param  string  $destination
      * @param  integer $on_exists
+     *     EXISTS_REPLACE // Delete destination if exists
+     *     EXISTS_MERGE   // Merge source + destination
+     *     EXISTS_RENAME  // Rename (new) destination
+     *     EXISTS_ERROR   // Throw exception
+     *     EXISTS_IGNORE  // Skip quietly
      * --
-     * @return integer Number of copied files.
+     * @return boolean
      */
     public static function dir_move(
         $source,
         $destination,
         $on_exists = self::EXISTS_MERGE
     ) {
-
+        if (self::dir_copy($source, $destination, $on_exists) === true) {
+            self::dir_remove($source, true);
+            return true;
+        } else {
+            return false;
+        }
     }
-
-    public static function dir_is_public($filename) {}
-
-    public static function dir_get_url($filename) {}
 }

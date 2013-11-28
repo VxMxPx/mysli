@@ -938,44 +938,44 @@ class FsTest extends \PHPUnit_Framework_TestCase
         unlink($file2);
     }
 
-    // File Is Public ----------------------------------------------------------
-    public function test_file_is_public_not()
+    // Is Public ---------------------------------------------------------------
+    public function test_is_public_not()
     {
         $file = datpath('fs/my-file.txt');
         file_put_contents($file, '1234');
-        $this->assertFalse(\FS::file_is_public($file));
+        $this->assertFalse(\FS::is_public($file));
         unlink($file);
     }
 
-    public function test_file_is_public_true()
+    public function test_is_public_true()
     {
         $file = pubpath('test.txt');
         file_put_contents($file, '1234');
-        $this->assertTrue(\FS::file_is_public($file));
+        $this->assertTrue(\FS::is_public($file));
         unlink($file);
     }
 
     // File Get Uri ------------------------------------------------------------
-    public function test_file_get_uri()
+    public function test_get_uri()
     {
         $file = pubpath('test.txt');
         file_put_contents($file, '1234');
         $this->assertEquals(
             'test.txt',
-            \FS::file_get_uri($file)
+            \FS::get_uri($file)
         );
         unlink($file);
     }
 
     // File Get Url ------------------------------------------------------------
-    public function test_file_get_url()
+    public function test_get_url()
     {
         $file = pubpath('test.txt');
         file_put_contents($file, '1234');
         $this->assertEquals(
             // This url is set in data_dummy/core/cfg.json
             'http:://localhost/test.txt',
-            \FS::file_get_url($file)
+            \FS::get_url($file)
         );
         unlink($file);
     }
@@ -1048,15 +1048,131 @@ class FsTest extends \PHPUnit_Framework_TestCase
     }
 
     // Dir Copy ----------------------------------------------------------------
-    // public function test_dir_copy()
-    // {
-    //     mkdir(datpath('fs/dir1/sub/1'), 0777, true);
-    //     mkdir(datpath('fs/dir1/sub/2'), 0777, true);
-    //     file_put_contents(datpath('fs/dir1/file'), 'Lorem ipsum.');
-    //     file_put_contents(datpath('fs/dir1/sub/file'), 'Another ipsum.');
-    //     file_put_contents(datpath('fs/dir1/sub/1/file'), '3rd ipsum.');
-    //     file_put_contents(datpath('fs/dir1/sub/2/file'), '4th ipsum.');
+    public function test_dir_copy()
+    {
+        $src = datpath('fs/dir1');
+        $dest = datpath('fs/dir2');
 
-    //     \FS::dir_copy(datpath('fs/dir1'), datpath('fs/dir2'));
-    // }
+        mkdir(ds($src, 'sub/1'), 0777, true);
+        mkdir(ds($src, 'sub/2'), 0777, true);
+        file_put_contents(ds($src, 'file'), 'Lorem ipsum.');
+        file_put_contents(ds($src, 'sub/file'), 'Another ipsum.');
+        file_put_contents(ds($src, 'sub/1/file'), '3rd ipsum.');
+        file_put_contents(ds($src, 'sub/2/file'), '4th ipsum.');
+
+        $this->assertTrue(
+            \FS::dir_copy(
+                $src,
+                $dest
+            )
+        );
+
+        $this->assertFileExists($dest);
+        $this->assertEquals(
+            file_get_contents(ds($src, 'sub/2/file')),
+            file_get_contents(ds($dest, 'sub/2/file'))
+        );
+
+        \FS::dir_remove($src);
+        \FS::dir_remove($dest);
+    }
+
+    public function test_dir_copy_merge()
+    {
+        $src = datpath('fs/dir1');
+        $dest = datpath('fs/dir2');
+
+        mkdir(ds($src, 'sub/1'), 0777, true);
+        mkdir(ds($src, 'sub/2'), 0777, true);
+        mkdir(ds($dest, 'sub/1'), 0777, true);
+        mkdir(ds($dest, 'sub/2'), 0777, true);
+        file_put_contents(ds($src, 'file'), 'Lorem ipsum.');
+        file_put_contents(ds($dest, 'file'), 'Ipsum lorem.');
+        file_put_contents(ds($src, 'sub/file'), 'Another ipsum.');
+        file_put_contents(ds($src, 'sub/1/file'), '3rd ipsum.');
+        file_put_contents(ds($src, 'sub/2/file'), '4th ipsum.');
+
+        $this->assertTrue(
+            \FS::dir_copy(
+                $src,
+                $dest,
+                \FS::EXISTS_MERGE
+            )
+        );
+
+        $this->assertFileExists($dest);
+        $this->assertEquals(
+            file_get_contents(ds($src, 'file')),
+            file_get_contents(ds($dest, 'file'))
+        );
+
+        \FS::dir_remove($src);
+        \FS::dir_remove($dest);
+    }
+
+    public function test_dir_copy_rename()
+    {
+        $src = datpath('fs/dir1');
+        $dest = datpath('fs/dir2');
+        $dest_rn = datpath('fs/dir2_2');
+
+        mkdir(ds($src, 'sub/1'), 0777, true);
+        mkdir(ds($src, 'sub/2'), 0777, true);
+        mkdir(ds($dest, 'sub/1'), 0777, true);
+        file_put_contents(ds($src, 'file'), 'Lorem ipsum.');
+        file_put_contents(ds($src, 'sub/file'), 'Another ipsum.');
+        file_put_contents(ds($src, 'sub/1/file'), '3rd ipsum.');
+        file_put_contents(ds($src, 'sub/2/file'), '4th ipsum.');
+
+        $this->assertTrue(
+            \FS::dir_copy(
+                $src,
+                $dest,
+                \FS::EXISTS_RENAME
+            )
+        );
+
+        $this->assertFileExists($dest_rn);
+        $this->assertEquals(
+            file_get_contents(ds($src, 'file')),
+            file_get_contents(ds($dest_rn, 'file'))
+        );
+
+        \FS::dir_remove($src);
+        \FS::dir_remove($dest);
+        \FS::dir_remove($dest_rn);
+    }
+
+    public function test_dir_copy_replace()
+    {
+        $src = datpath('fs/dir1');
+        $dest = datpath('fs/dir2');
+
+        mkdir(ds($src, 'sub/1'), 0777, true);
+        mkdir(ds($src, 'sub/2'), 0777, true);
+        mkdir(ds($dest, 'sub/1'), 0777, true);
+        file_put_contents(ds($dest, 'file_special'), 'Ipsum lorem.');
+        file_put_contents(ds($src, 'file'), 'Lorem ipsum.');
+        file_put_contents(ds($src, 'sub/file'), 'Another ipsum.');
+        file_put_contents(ds($src, 'sub/1/file'), '3rd ipsum.');
+        file_put_contents(ds($src, 'sub/2/file'), '4th ipsum.');
+
+        $this->assertTrue(
+            \FS::dir_copy(
+                $src,
+                $dest,
+                \FS::EXISTS_REPLACE
+            )
+        );
+
+        $this->assertFileExists($dest);
+        $this->assertFalse(file_exists(ds($dest, 'file_special')));
+        $this->assertEquals(
+            file_get_contents(ds($src, 'file')),
+            file_get_contents(ds($dest, 'file'))
+        );
+
+        \FS::dir_remove($src);
+        \FS::dir_remove($dest);
+    }
 }
