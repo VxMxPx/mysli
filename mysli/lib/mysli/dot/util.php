@@ -1,8 +1,8 @@
 <?php
 
-namespace Mysli\Core\Lib;
+namespace Mysli\Dot;
 
-class DotUtil
+class Util
 {
     /**
      * Capture the cursos - wait for user's input. You must pass in a function,

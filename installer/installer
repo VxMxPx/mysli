@@ -66,18 +66,49 @@ $datpath = resolve_path($datpath, __DIR__ . DIRECTORY_SEPARATOR);
 $datpath = $datpath[1] ? implode('', $datpath) : $datpath[0];
 
 print_line('Setup class was found: ' . $class_name);
-$setup = new $class_name($pubpath, $libpath, $datpath);
+$setup = new $class_name([
+    'pubpath' => $pubpath,
+    'libpath' => $libpath,
+    'datpath' => $datpath
+]);
 if (!method_exists($setup, 'before_enable')) {
     print_line('Method was not found: before_enable');
     exit(1);
 }
 
-if ($setup->before_enable()) {
-    print_line('Core was successfully enabled.');
-    exit(0);
-} else {
+if (!$setup->before_enable()) {
     print_line('Error when enabling core!');
     exit(1);
 }
 
-exit(1);
+print_line('Core was successfully enabled.');
+$setup->after_enable();
+
+// Construct Core
+print_line('Locating for core: ' . $core);
+$core_file = realpath($libpath . DIRECTORY_SEPARATOR . $core . DIRECTORY_SEPARATOR . 'core.php');
+if (!file_exists($core_file)) {
+    print_line('Cannot find core file.');
+    exit(1);
+}
+include $core_file;
+$core_class_name = to_camelcase($core_arr[0]) . '\\' . to_camelcase($core_arr[1]);
+if (!class_exists($core_class_name, false)) {
+    print_line('Cannot find core class: ' . $core_class_name);
+    exit(1);
+}
+$core = new $core_class_name($pubpath, $libpath, $datpath);
+$dot_lib = $core->librarian->resolve('*/dot');
+$dot_dependencies = $core->librarian->get_dependencies($dot_lib);
+if (!empty($dot_dependencies['missing']) || !empty($dot_dependencies['disabled'])) {
+    print_line('Cannot enable DOT libraray. Command line interface will not be available.');
+    exit(6);
+}
+if (!$core->librarian->enable($dot_lib)) {
+    print_line('Failed to enable DOT.');
+    exit(6);
+} else {
+    print_line('DOT was successfully enabled.');
+}
+
+exit(0);

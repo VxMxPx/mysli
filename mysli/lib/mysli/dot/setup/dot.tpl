@@ -79,20 +79,9 @@ $core_path = str_replace('/', DIRECTORY_SEPARATOR, $libpath.'/'.$core_lib.'/core
 if (!file_exists($core_path)) {
     trigger_error("Cannot find core file: `{$core_path}`", E_USER_ERROR);
 }
-include($libpath.'/'.$core_lib.'/core.php');
-$core_class::init($pubpath, $libpath, $datpath);
+include($core_path);
+$core = new $core_class($pubpath, $libpath, $datpath);
 
 // Dot execution
-$dot = new \Dot(json_decode(file_get_contents(datpath('core/dot.json')), true));
-if (isset($_SERVER['argv'][1])) {
-    $script  = $_SERVER['argv'][1];
-    if ($script === '--help') {
-        $dot->list_scripts();
-    }
-    $command = isset($_SERVER['argv'][2]) ? $_SERVER['argv'][2] : false;
-    if (!$dot->execute($script, $command, array_slice($_SERVER['argv'], 3))) {
-        \DotUtil::warn('Cannot find the command: ' . $script);
-    }
-} else {
-    $dot->list_scripts();
-}
+$dot = $core->librarian->factory('*/dot');
+$dot->run($_SERVER['argv']);

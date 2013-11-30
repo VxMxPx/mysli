@@ -13,7 +13,7 @@ class JSON
      * @param  integet  $depth    -- User specified recursion depth.
      * @return mixed
      */
-    public static function decode_file($filename, $assoc=false, $depth=512)
+    public static function decode_file($filename, $assoc = false, $depth = 512)
     {
         $filename = ds($filename);
 
@@ -35,7 +35,7 @@ class JSON
      * @param integet  $depth    -- User specified recursion depth.
      * @return mixed
      */
-    public static function decode($json, $assoc=false, $depth=512)
+    public static function decode($json, $assoc = false, $depth = 512)
     {
         $decoded = json_decode($json, $assoc, $depth);
 
@@ -69,7 +69,7 @@ class JSON
      *                            JSON_FORCE_OBJECT.
      * @return bool
      */
-    public static function encode_file($filename, $values, $options=0)
+    public static function encode_file($filename, $values, $options = 0)
     {
         return \FS::file_replace(
                     self::encode($values, $options),
@@ -89,7 +89,7 @@ class JSON
      *                            JSON_FORCE_OBJECT.
      * @return string
      */
-    public static function encode($values, $options=0)
+    public static function encode($values, $options = 0)
     {
         return json_encode($values, $options);
     }

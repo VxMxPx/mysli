@@ -15,6 +15,7 @@ class Librarian
     protected $cache     = [];
 
     protected $log;
+    protected $cfg;
     protected $core;
 
     /**
@@ -34,6 +35,7 @@ class Librarian
     {
         $this->core = $dependencies['core'];
         $this->log  = $dependencies['log'];
+        $this->cfg  = $dependencies['cfg'];
 
         // TODO: Shouldn't assume that we have mysli/core
         $this->cache['mysli/core'] = $this->core;
@@ -344,7 +346,10 @@ class Librarian
         }
 
         // Instantiate class now...
-        $object = new $class($this->dependencies_factory($library));
+        $object = new $class(
+            $this->cfg->get($library, []),
+            $this->dependencies_factory($library)
+        );
 
         // Do we have instruction to be instantiated once?
         if ($info['instantiation'] === 'once') {
@@ -442,7 +447,8 @@ class Librarian
 
         // Construct and return
         $dependencies = $this->dependencies_factory($library);
-        return new $setup_class_name($dependencies);
+        $config = $this->cfg->get($library, []);
+        return new $setup_class_name($config, $dependencies);
     }
 
     /**
@@ -469,10 +475,12 @@ class Librarian
     public function load($library, $force = false)
     {
         $class = $this->lib_to_ns($library);
+        $library_segments = explode('/', $library);
+        $library_base = $library_segments[0] . '/' . $library_segments[1];
 
         if (class_exists($class, false)) { return true; }
 
-        if (!$this->is_enabled($library) && !$force) {
+        if (!$this->is_enabled($library_base) && !$force) {
             $this->log->info(
                 "Cannot load the class: '{$class}', " .
                 "because the library is not enabled.",
@@ -481,7 +489,11 @@ class Librarian
             return false;
         }
 
-        $filename = libpath(ds($library, explode('/', $library)[1] . '.php'));
+        if (count($library_segments) === 2) {
+            $filename = libpath(ds($library, explode('/', $library)[1] . '.php'));
+        } else {
+            $filename = libpath(ds($library . '.php'));
+        }
 
         if (!file_exists($filename)) {
             $this->log->info(

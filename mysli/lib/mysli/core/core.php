@@ -50,8 +50,8 @@ class Core
             'Mysli\\Core\\Util\\JSON' => 'JSON',
         ]);
         $this->load_core_libraries([
-            'benchmark', 'log', 'librarian', 'event', 'cfg', 'response',
-            'request', 'language', 'output', 'server', 'error'
+            'benchmark', 'log', 'cfg', 'librarian', 'event', 'request',
+            'response', 'language', 'output', 'server', 'error'
         ]);
 
         // Set Error Handler
@@ -136,6 +136,14 @@ class Core
                     ],
                 ];
 
+            case 'cfg':
+                return [
+                    [
+                        'cfgfile' => $this->datpath('core/cfg.json'),
+                    ],
+                    [],
+                ];
+
             case 'librarian':
                 return [
                     [
@@ -144,6 +152,7 @@ class Core
                     [
                         'core' => $this,
                         'log'  => $this->log,
+                        'cfg'  => $this->cfg,
                     ],
                 ];
 
@@ -155,14 +164,6 @@ class Core
                     [
                         'librarian' => $this->librarian,
                     ],
-                ];
-
-            case 'cfg':
-                return [
-                    [
-                        'cfgfile' => $this->datpath('core/cfg.json'),
-                    ],
-                    [],
                 ];
 
             case 'request':

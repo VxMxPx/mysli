@@ -9,16 +9,21 @@ class Setup
     protected $datpath;
     protected $path;
 
-    public function __construct($pubpath, $libpath, $datpath)
+    public function __construct(array $config = [], array $dependencies = [])
     {
         // Load functions
         if (!function_exists('ds')) {
-            include __DIR__ . DIRECTORY_SEPARATOR . 'functions.php';
+            include
+                __DIR__ .
+                DIRECTORY_SEPARATOR .
+                'util' .
+                DIRECTORY_SEPARATOR .
+                'functions.php';
         }
 
-        $this->pubpath = ds($pubpath);
-        $this->libpath = ds($libpath);
-        $this->datpath = ds($datpath);
+        $this->pubpath = isset($config['pubpath']) ? ds($config['pubpath']) : pubpath();
+        $this->libpath = isset($config['libpath']) ? ds($config['libpath']) : libpath();
+        $this->datpath = isset($config['datpath']) ? ds($config['datpath']) : datpath();
         $this->path    = ds(__DIR__);
     }
 
@@ -62,10 +67,6 @@ class Setup
 
         }
         file_put_contents(
-            ds($this->datpath, 'core', 'dot.json'),
-            file_get_contents(ds($this->path, 'setup', 'dot.json'))
-        );
-        file_put_contents(
             ds($this->datpath, 'core', 'cfg.json'),
             file_get_contents(ds($this->path, 'setup', 'cfg.json'))
         );
@@ -81,24 +82,6 @@ class Setup
             json_encode($meta)
         );
 
-        // Load dot.tpl
-        $dot_contents = file_get_contents(ds($this->path, 'setup', 'dot.tpl'));
-        // Replace {{LIBPATH}} and {{PUBPATH}}
-        $ds = DIRECTORY_SEPARATOR;
-        $dot_contents = str_replace(
-            [
-                '{{LIBPATH}}',
-                '{{PUBPATH}}'
-            ],
-            [
-                '/' . str_replace(DIRECTORY_SEPARATOR, '/', relative_path($this->libpath, $this->datpath)),
-                '/' . str_replace(DIRECTORY_SEPARATOR, '/', relative_path($this->pubpath, $this->datpath)),
-            ],
-            $dot_contents
-        );
-        // Create index.php
-        file_put_contents(ds($this->datpath, 'dot'), $dot_contents);
-
         return true;
     }
 
@@ -109,5 +92,9 @@ class Setup
     { return true; }
 
     public function after_disable()
-    { return true; }
+    {
+        \FS::dir_remove(datpath());
+        \FS::dir_remove(pubpath());
+        return true;
+    }
 }

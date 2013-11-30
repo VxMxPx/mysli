@@ -1,56 +1,142 @@
 <?php
 
-namespace Mysli\Core\Lib;
+namespace Mysli;
+
+use \Mysli\Dot\Util as Util;
 
 class Dot
 {
     protected $scripts_registry;
     protected $constructed = [];
+    protected $core;
 
-    public function __construct(array $scripts_registry)
+    /**
+     * Construct DOT
+     * --
+     * @param array $config
+     *   - none
+     * @param array $dependencies
+     *   - core
+     */
+    public function __construct(array $config = [], array $dependencies = [])
     {
-        $this->scripts_registry = $scripts_registry;
+        $this->scripts_registry = $this->discover_scripts();
+        $this->core = $core;
     }
 
+    /**
+     * Scan libraries to find scripts.
+     * --
+     * @return array
+     */
+    protected function discover_scripts()
+    {
+        $enabled = $this->core->librarian->get_enabled(true);
+        $scripts = [];
+
+        foreach ($enabled as $library => $details) {
+            $path = libpath($library, 'scripts');
+            if (!file_exists($path) || !is_dir($path)) {
+                continue;
+            }
+            $files = scandir($path);
+            foreach ($files as $file) {
+                if (substr($file, -4) !== '.php') {
+                    continue;
+                }
+                $id = substr($file, 0, -4);
+                $scripts[$id] = [
+                    'path'        => ds($path, $file),
+                    'class'       =>
+                        $this->core->librarian->lib_to_ns($library) .
+                        '\\Script\\' . \Str::to_camelcase($id),
+                    'description' => $details['description']
+                ];
+            }
+        }
+
+        return $scripts;
+    }
+
+
+    /**
+     * Will run command (arguments)
+     * --
+     * @param  array  $arguments
+     * --
+     * @return void
+     */
+    public function run(array $arguments)
+    {
+        if (isset($arguments[1])) {
+            $script  = $arguments[1];
+            if ($script === '--help') {
+                $this->list_scripts();
+            }
+            $command = isset($arguments[2]) ? $arguments[2] : false;
+            if (!$this->execute($script, $command, array_slice($arguments, 3))) {
+                Util::warn('Cannot find the command: ' . $script);
+            }
+        } else {
+            $this->list_scripts();
+        }
+    }
+
+    /**
+     * Construct required script
+     * --
+     * @param  string $script
+     * --
+     * @return object
+     */
     protected function construct_script($script) {
         if (isset($this->constructed[$script])) {
             return $this->constructed[$script];
         }
         $class = $this->scripts_registry[$script]['class'];
         $class_array = explode('\\', $class);
-        $library = \Librarian::ns_to_lib($class_array[0] . '\\' . $class_array[1]);
+        $library = $this->core->librarian->ns_to_lib($class_array[0] . '\\' . $class_array[1]);
         if (!class_exists($class, false)) {
-            if (!\Librarian::is_enabled($library)) {
-                \DotUtil::warn('FAILED. Not enabled: ' . $library);
+            if (!$this->core->librarian->is_enabled($library)) {
+                Util::warn('FAILED. Not enabled: ' . $library);
             }
             $path = \Str::to_underscore($class);
             $path = str_replace('\\', '/', $path);
             $path = preg_replace('/\/script\//', '/scripts/', $path);
             $path = libpath($path . '.php');
             if (!file_exists($path)) {
-                \DotUtil::warn("Cannot find script: `{$path}`.");
+                Util::warn("Cannot find script: `{$path}`.");
                 return false;
             }
             include $path;
         }
         if (!class_exists($class, false)) {
-            \DotUtil::warn("Cannot find class: `{$class}` in `{$path}`.");
+            Util::warn("Cannot find class: `{$class}` in `{$path}`.");
             return false;
         }
 
-        $dependencies = \Librarian::dependencies_factory($library);
+        $dependencies = $this->core->librarian->dependencies_factory($library);
         return new $class($dependencies);
     }
 
+    /**
+     * Execute particulat script.
+     * --
+     * @param  string $script
+     * @param  string $command
+     * @param  array  $arguments
+     * --
+     * @return boolean
+     */
     public function execute($script, $command, array $arguments = [])
     {
         if (!isset($this->scripts_registry[$script])) {
-            \DotUtil::warn('Command not found: ' . $script);
+            Util::warn('Command not found: ' . $script);
             return false;
         }
         $script_obj = $this->construct_script($script);
         if (!is_object($script_obj)) {
-            \DotUtil::warn('Could not construct the object!');
+            Util::warn('Could not construct the object!');
             return false;
         }
         if (!$command) {
@@ -59,7 +145,7 @@ class Dot
             if (method_exists($script_obj, 'help_index')) {
                 call_user_func([$script_obj, 'help_index']);
             } else {
-                \DotUtil::plain("No help found for command `{$script}`.");
+                Util::plain("No help found for command `{$script}`.");
             }
             return true;
         }
@@ -73,13 +159,18 @@ class Dot
         return false;
     }
 
+    /**
+     * List all available scripts.
+     * --
+     * @return void
+     */
     public function list_scripts()
     {
         $commands = [];
         foreach ($this->scripts_registry as $script => $data) {
             $commands[$script] = $data['description'];
         }
-        \DotUtil::doc(
+        Util::doc(
             'Mysli Core :: List of Available Commands',
             '<COMMAND> [OPTIONS...]',
             $commands
