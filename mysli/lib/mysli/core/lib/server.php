@@ -4,6 +4,21 @@ namespace Mysli\Core\Lib;
 
 class Server
 {
+    protected $config;
+
+    /**
+     * Construct SERVER
+     * --
+     * @param array $config
+     *   - url = Default server url
+     * @param array $dependencies
+     *   - none
+     */
+    public function __construct(array $config = [], array $dependencies = [])
+    {
+        $this->config = $config;
+    }
+
     /**
      * Get base URL, with appended URI (if so desired).
      * --
@@ -11,9 +26,9 @@ class Server
      * --
      * @return string
      */
-    public static function url($uri=null)
+    public function url($uri = null)
     {
-        $url = Cfg::get('core/server/url', self::get_current_url());
+        $url = \Arr::element('url', $this->config, $this->get_current_url());
         $url = rtrim($url, '/') . '/'; // Always ending slash!
         if ($uri) {
             $url .= ltrim($uri, '/');
@@ -26,7 +41,7 @@ class Server
      * --
      * @return string
      */
-    public static function get_domain()
+    public function get_domain()
     {
         return $_SERVER['SERVER_NAME'];
     }
@@ -40,10 +55,10 @@ class Server
      * --
      * @return  string
      */
-    public static function get_current_url($with_query = false, $trim = true)
+    public function get_current_url($with_query = false, $trim = true)
     {
         if (isset($_SERVER['HTTP_HOST'])) {
-            $url = (self::is_ssl() ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'];
+            $url = ($this->is_ssl() ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'];
         } else {
             $url = '';
         }
@@ -67,7 +82,7 @@ class Server
      * --
      * @return boolean
      */
-    public static function is_ssl() {
+    public function is_ssl() {
         if (isset($_SERVER['HTTPS'])) {
             if ('on' == strtolower($_SERVER['HTTPS'])) {
                 return true;

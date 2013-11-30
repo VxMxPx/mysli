@@ -4,21 +4,37 @@ namespace Mysli\Core\Lib;
 
 class Response
 {
-    private static $headers = [];
+    protected $headers = [];
+
+    protected $event;
+
+    /**
+     * Construct RESPONSE
+     * --
+     * @param array $config
+     *   - none
+     * @param array $dependencies
+     *   - event
+     */
+    public function __construct(array $config = [], array $dependencies = [])
+    {
+        $this->event = $dependencies['event'];
+    }
 
     /**
      * Will apply headers.
      * --
      * @return void
      */
-    public static function apply_headers()
+    public function apply_headers()
     {
         if (headers_sent($file, $line)) {
-            trigger_error("Output was already started: in file : `{$file}`, on line: `{$line}`.", E_USER_ERROR);
-            return false;
+            throw new \Mysli\Core\ResponseException(
+                "Output was already started: in file : '{$file}', on line: '{$line}'."
+            );
         }
 
-        foreach (self::$headers as $type => $header) {
+        foreach ($this->headers as $type => $header) {
             if (substr($type, 0, 1) !== '-') {
                 $header = $type . ': ' . $header;
             }
@@ -32,12 +48,12 @@ class Response
      * @param  mixed  $header -- Array or string
      * @param  string $type   -- Unique header type
      */
-    public static function header($header, $type=false)
+    public function header($header, $type=false)
     {
         if (!is_array($header)) { $header = [$type => $header]; }
 
         foreach ($header as $type => $hdr) {
-            self::$headers[$type] = $hdr;
+            $this->headers[$type] = $hdr;
         }
     }
 
@@ -47,10 +63,10 @@ class Response
      * @param  mixed $header String or Array
      * @param  mixed $type   String or false
      */
-    public static function replace($header, $type=false)
+    public function replace($header, $type=false)
     {
-        self::clear();
-        self::header($header, $type);
+        $this->clear();
+        $this->header($header, $type);
     }
 
     /**
@@ -58,9 +74,9 @@ class Response
      * --
      * @return void
      */
-    public static function clear()
+    public function clear()
     {
-        self::$headers = [];
+        $this->headers = [];
     }
 
     /**
@@ -68,9 +84,9 @@ class Response
      * --
      * @return array
      */
-    public static function as_array()
+    public function as_array()
     {
-        return self::$headers;
+        return $this->headers;
     }
 
     /**
@@ -79,7 +95,7 @@ class Response
      * @param   string  $url    Full url address
      * @return  void
      */
-    public static function to($url)
+    public function to($url)
     {
         $headers = [
             'Expires'       => 'Mon, 16 Apr 1984 02:40:00 GMT',
@@ -88,8 +104,8 @@ class Response
             'Pragma'        => 'no-cache',
             'Location'      => $url,
         ];
-        Event::trigger('/mysli/core/lib/http::redirect', $headers);
-        self::header_replace($headers);
+        $this->event->trigger('/mysli/core/lib/http->redirect', $headers);
+        $this->header_replace($headers);
     }
 
     /**
@@ -97,8 +113,8 @@ class Response
      * --
      * @return  void
      */
-    public static function status_200_ok()
-        { self::header('HTTP/1.1 200 OK', '-Status'); }
+    public function status_200_ok()
+        { $this->header('HTTP/1.1 200 OK', '-Status'); }
 
     /**
      * The server successfully processed the request,
@@ -106,8 +122,8 @@ class Response
      * --
      * @return  void
      */
-    public static function status_204_no_content()
-        { self::header('HTTP/1.1 204 No Content', '-Status'); }
+    public function status_204_no_content()
+        { $this->header('HTTP/1.1 204 No Content', '-Status'); }
 
     /**
      * This and all future requests should be directed to the given URI.
@@ -116,9 +132,9 @@ class Response
      * @param   string  $url
      * @return  void
      */
-    public static function status_301_moved_permanently($url)
+    public function status_301_moved_permanently($url)
     {
-        self::header([
+        $this->header([
             '-Status'  => 'HTTP/1.1 301 Moved Permanently',
             'Location' => $url
         ]);
@@ -135,9 +151,9 @@ class Response
      * @param   string  $url
      * @return  void
      */
-    public static function status_307_temporary_redirect($url)
+    public function status_307_temporary_redirect($url)
     {
-        self::header([
+        $this->header([
             '-Status'  => 'HTTP/1.1 307 Temporary Redirect',
             'Location' => $url
         ]);
@@ -148,9 +164,9 @@ class Response
      * --
      * @return  void
      */
-    public static function status_400_bad_request()
+    public function status_400_bad_request()
     {
-        self::header('HTTP/1.1 400 Bad Request', '-Status');
+        $this->header('HTTP/1.1 400 Bad Request', '-Status');
     }
 
     /**
@@ -158,9 +174,9 @@ class Response
      * --
      * @return void
      */
-    public static function status_401_unauthorized()
+    public function status_401_unauthorized()
     {
-        self::header('HTTP/1.1 401 Unauthorized', '-Status');
+        $this->header('HTTP/1.1 401 Unauthorized', '-Status');
     }
 
     /**
@@ -169,9 +185,9 @@ class Response
      * --
      * @return  void
      */
-    public static function status_403_forbidden()
+    public function status_403_forbidden()
     {
-        self::header('HTTP/1.1 403 Forbidden', '-Status');
+        $this->header('HTTP/1.1 403 Forbidden', '-Status');
     }
 
     /**
@@ -180,9 +196,9 @@ class Response
      * --
      * @return  void
      */
-    public static function status_404_not_found()
+    public function status_404_not_found()
     {
-        self::header('HTTP/1.0 404 Not Found', '-Status');
+        $this->header('HTTP/1.0 404 Not Found', '-Status');
     }
 
     /**
@@ -198,9 +214,9 @@ class Response
      * @param   boolean $die
      * @return  void
      */
-    public static function status_410_gone()
+    public function status_410_gone()
     {
-        self::header('HTTP/1.0 410 Gone', '-Status');
+        $this->header('HTTP/1.0 410 Gone', '-Status');
     }
 
     /**
@@ -209,13 +225,13 @@ class Response
      * --
      * @return  void
      */
-    public static function status_503_service_unavailable()
+    public function status_503_service_unavailable()
     {
-        self::header('HTTP/1.0 503 Service Unavailable', '-Status');
+        $this->header('HTTP/1.0 503 Service Unavailable', '-Status');
     }
 
-    public static function content_type_json()
+    public function content_type_json()
     {
-        self::header('application/json', 'Content-type');
+        $this->header('application/json', 'Content-type');
     }
 }

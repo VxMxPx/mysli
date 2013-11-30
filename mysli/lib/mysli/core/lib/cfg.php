@@ -4,27 +4,28 @@ namespace Mysli\Core\Lib;
 
 class Cfg
 {
-    private static $configs = []; // All configurations values
-    private static $cache   = []; // Cached values, for faster access
-    private static $master  = ''; // The master config file, to which changes
-                                  // will be saved.
+    private $configs = []; // All configurations values
+    private $cache   = []; // Cached values, for faster access
+    private $master  = ''; // The master config file, to which changes
+                           // will be saved.
 
     /**
-     * Will load, append and set it as main config file.
-     * The "master" mean, that when you call "write",
-     * all changes will get written to this file.
+     * Construct CONFIG
      * --
-     * @param  string  $filename Full path to the master config file.
-     *                           Please note: All changes will be written
-     *                           to this file, including those appended.
-     * --
-     * @return boolean
+     * @param array $config
+     *   - cfgfile = Config master file
+     * @param array $dependencies
+     *   - none
      */
-    public static function init($filename)
+    public function __construct(array $config = [], array $dependencies = [])
     {
+        $filename = \Arr::element('cfgfile', $config);
+
         // In case of wrong filename!
         if (!file_exists($filename)) {
-            trigger_error("File not found: `{$filename}`.", E_USER_ERROR);
+            throw new \Mysli\Core\FileNotFoundException(
+                "File not found: '{$filename}'."
+            );
         }
 
         if (substr($filename, -5) === '.json') {
@@ -34,11 +35,14 @@ class Cfg
         }
 
         if (!isset($cfg)) {
-            trigger_error("File was loaded {$filename}, but \$cfg variable isn't set!", E_USER_WARNING);
+            trigger_error(
+                "File was loaded {$filename}, but \$cfg variable isn't set!",
+                E_USER_WARNING
+            );
         }
 
-        self::$master = $filename;
-        self::append($cfg);
+        $this->master = $filename;
+        $this->append($cfg);
     }
 
     /**
@@ -48,27 +52,27 @@ class Cfg
      * --
      * @return void
      */
-    public static function append($config)
+    public function append(array $config)
     {
         // First we'll clear all cached values
-        self::$cache = array();
+        $this->cache = array();
 
         // Assign new merged version of config
-        self::$configs = Arr::merge(self::$configs, $config);
+        $this->configs = \Arr::merge($this->configs, $config);
     }
 
     /**
      * Will write changes to file, if no filename is provided,
-     * the self::$master will be used.
+     * the $this->master will be used.
      * --
      * @param  mixed $filename
      * --
      * @return boolean
      */
-    public static function write($filename=null)
+    public function write($filename = null)
     {
-        $filename = $filename ? $filename : self::$master;
-        return file_put_contents($filename, json_encode(self::$config));
+        $filename = $filename ? $filename : $this->master;
+        return file_put_contents($filename, json_encode($this->config));
     }
 
     /**
@@ -76,9 +80,9 @@ class Cfg
      * --
      * @return array
      */
-    public static function dump()
+    public function dump()
     {
-        return [self::$cache, self::$configs];
+        return [$this->cache, $this->configs];
     }
 
     /**
@@ -89,29 +93,29 @@ class Cfg
      * --
      * @return mixed
      */
-    public static function get($key, $default=null)
+    public function get($key, $default = null)
     {
-        if (!isset(self::$cache[$key])) {
-            self::$cache[$key] = Arr::get_by_path($key, self::$configs, $default);
+        if (!isset($this->cache[$key])) {
+            $this->cache[$key] = \Arr::get_by_path($key, $this->configs, $default);
         }
 
-        return self::$cache[$key];
+        return $this->cache[$key];
     }
 
     /**
      * Overwrite particular config key, this is temporary action,
-     * the changes won't get saved, until you call self::write();
+     * the changes won't get saved, until you call $this->write();
      * --
      * @param   string  $path   In format: key/subkey
      * @param   mixed   $value
      * --
      * @return  void
      */
-    public static function set($path, $value)
+    public function set($path, $value)
     {
         # Clear cache to avoid conflicts
-        self::$cache = [];
+        $this->cache = [];
 
-        Arr::set_by_path($path, $value, self::$configs);
+        \Arr::set_by_path($path, $value, $this->configs);
     }
 }

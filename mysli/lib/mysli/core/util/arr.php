@@ -1,9 +1,12 @@
 <?php
 
-namespace Mysli\Core\Lib;
+namespace Mysli\Core\Util;
 
 class Arr
 {
+    const CAMELCASE  = 'camelcase';
+    const UNDERSCORE = 'underscore';
+
     /**
      * Multi dimensional array, to one dimension.
      * Pass in value = name
@@ -223,11 +226,11 @@ class Arr
      * Clean array keys - remove spaces, dashes, etc...
      * --
      * @param   array   $input_array
-     * @param   integer $divider    STRING_CAMELCASE | STRING_UNDERSCORE
+     * @param   integer $divider    Arr::CAMELCASE | Arr::UNDERSCORE
      * --
      * @return  array
      */
-    public static function clean_keys(array $input_array, $divider=STRING_UNDERSCORE)
+    public static function clean_keys(array $input_array, $divider = self::UNDERSCORE)
     {
         $new_array = [];
         $to_space  = ['_', '-', '.', ',', ';', '+', '/'];
@@ -247,7 +250,7 @@ class Arr
             if (empty($key)) {
                 $key = $position;
             } else {
-                if ($divider === STRING_CAMELCASE) {
+                if ($divider === self::CAMELCASE) {
                     $key = Str::to_camelcase($key, false);
                 }
             }

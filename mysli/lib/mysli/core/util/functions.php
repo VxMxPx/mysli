@@ -1,5 +1,14 @@
 <?php
 
+class MysliVoidMagicObject {
+    public function __call($name, $arguments) { return null; }
+    public static function __callStatic($name, $arguments) { return null; }
+    public function __get($name) { return null; }
+    public function __set($name, $value) { return null; }
+    public function __isset($name) { return null; }
+    public function __unset($name) { return null; }
+}
+
 /**
  * Determine if this is command line interface.
  * --
@@ -15,9 +24,83 @@ function is_cli() { return php_sapi_name() === 'cli' || defined('STDIN'); }
  * --
  * @return string
  */
-function libpath($path=null) { return ds(LIBPATH.'/'.$path); }
-function pubpath($path=null) { return ds(PUBPATH.'/'.$path); }
-function datpath($path=null) { return ds(DATPATH.'/'.$path); }
+function libpath($path = null)
+{
+    return with(core(), '1801:Core is not instantiated. Cannot use \'libpath\'.')
+        ->libpath($path);
+}
+function pubpath($path = null)
+{
+    return with(core(), '1802:Core is not instantiated. Cannot use \'pubpath\'.')
+        ->pubpath($path);
+}
+function datpath($path = null)
+{
+    return with(core(), '1803:Core is not instantiated. Cannot use \'datpath\'.')
+        ->datpath($path);
+}
+
+/**
+ * With particular library .. do something.
+ * --
+ * @param  mixed $what      object|string:library|string:class
+ * @param  mixed $exception Throw exception if $what was not found. False or
+ *                          string: Exception message.
+ * --
+ * @return mixed
+ */
+function with($what, $exception = false)
+{
+    if (!$what) {
+        if ($exception) {
+            throw new Exception($exception, 1800);
+        } else {
+            return new MysliVoidMagicObject();
+        }
+    }
+    if (is_object($what)) {
+        return $what;
+    }
+    if (is_string($what)) {
+        $lib = core('librarian');
+        if (!is_object($lib)) {
+            if ($exception) {
+                throw new Exception($exception, 1800);
+            } else {
+                return new MysliVoidMagicObject();
+            }
+        }
+        if (strpos($what, '\\') !== false) {
+            $what = $lib->ns_to_lib($what);
+        }
+        return $lib->factory($what);
+    }
+}
+
+/**
+ * Return core instance or one of the core libraries.
+ * --
+ * @param  string $library
+ * --
+ * @return mixed  Object | false
+ */
+function core($library = null)
+{
+    $core = \Mysli\Core::instance();
+
+    if (!$library) {
+        return $core;
+    } else {
+        if (!is_object($core)) {
+            return false;
+        }
+        if (!property_exists($core, $library)) {
+            return false;
+        }
+
+        return $core->{$library};
+    }
+}
 
 /**
  * Correct Directory Separators.

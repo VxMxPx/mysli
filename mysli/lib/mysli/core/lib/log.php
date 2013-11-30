@@ -5,7 +5,25 @@ namespace Mysli\Core\Lib;
 class Log
 {
     // All log items
-    private static $logs = [];
+    protected $logs = [];
+
+    protected $benchmark;
+    protected $event;
+
+    /**
+     * Construct LOG
+     * --
+     * @param array $config
+     *   - none
+     * @param array $dependencies
+     *   - benchmark
+     *   - event
+     */
+    public function __construct(array $config = [], array $dependencies = [])
+    {
+        $this->benchmark = $dependencies['benchmark'];
+        $this->event     = $dependencies['event'];
+    }
 
     /**
      * Add System Log Message.
@@ -17,7 +35,7 @@ class Log
      * --
      * @return  void
      */
-    public static function add($message, $type, $file, $line)
+    public function add($message, $type, $file, $line)
     {
         $type = strtolower($type);
 
@@ -32,10 +50,15 @@ class Log
         );
 
         // Trigger event telling to add new item
-        Event::trigger('/mysli/core/lib/log::add', $log_item);
+        if ($this->event) {
+            $this->event->trigger(
+                '/mysli/core/lib/log->add',
+                $log_item
+            );
+        }
 
         // Add item to the stack
-        self::$logs[] = $log_item;
+        $this->logs[] = $log_item;
     }
 
     /**
@@ -47,9 +70,12 @@ class Log
      * --
      * @return void
      */
-    public static function info($message, $file, $line) { return self::add($message, 'info', $file, $line); }
-    public static function warn($message, $file, $line) { return self::add($message, 'warn', $file, $line); }
-    public static function error($message, $file, $line) { return self::add($message, 'error', $file, $line); }
+    public function info($message, $file, $line)
+        { return $this->add($message, 'info',  $file, $line); }
+    public function warn($message, $file, $line)
+        { return $this->add($message, 'warn',  $file, $line); }
+    public function error($message, $file, $line)
+        { return $this->add($message, 'error', $file, $line); }
 
     /**
      * Is particular (or any) log message set?
@@ -58,16 +84,16 @@ class Log
      * --
      * @return boolean
      */
-    public static function has($type=false)
+    public function has($type=false)
     {
         if (!$type) {
-            return !empty(self::$logs);
+            return !empty($this->logs);
         }
         else {
-            if (empty(self::$logs)) { return false; }
+            if (empty($this->logs)) { return false; }
             if (!is_array($type))   { $type = array($type); }
 
-            foreach (self::$logs as $log) {
+            foreach ($this->logs as $log) {
                 if (in_array($log['type'], $type)) { return true; }
             }
         }
@@ -80,14 +106,14 @@ class Log
      * --
      * @return array
      */
-    public static function as_array($type=false)
+    public function as_array($type=false)
     {
-        if (!self::has())     { return array(); }
-        if (!$type)           { return self::$logs; }
+        if (!$this->has())     { return array(); }
+        if (!$type)           { return $this->logs; }
         if (!is_array($type)) { $type = array($type); }
 
         $collection = array();
-        foreach (self::$logs as $log) {
+        foreach ($this->logs as $log) {
             if (in_array($log['type'], $type)) { $collection[] = $log; }
         }
 
@@ -102,10 +128,10 @@ class Log
      * --
      * @return string
      */
-    public static function as_string($type=false, $line_break="\n")
+    public function as_string($type=false, $line_break="\n")
     {
         $output = '';
-        $logs   = self::as_array($type);
+        $logs   = $this->as_array($type);
 
         foreach ($logs as $log) {
             $out_item = [''];
@@ -128,10 +154,10 @@ class Log
      * --
      * @return string
      */
-    public static function as_html($template, $type=false)
+    public function as_html($template, $type=false)
     {
         $output = '';
-        $logs   = self::as_array($type);
+        $logs   = $this->as_array($type);
 
         foreach ($logs as $log) {
             $output .= str_replace(
@@ -161,19 +187,23 @@ class Log
      * --
      * @return void
      */
-    public static function add_benchmarks()
+    public function add_benchmarks()
     {
         // Add Memory usage..
-        $memory       = Benchmark::get_memory_usage();
-        $memory_bytes = Benchmark::get_memory_usage(false);
-        self::info("Memory usage: {$memory_bytes} bytes / " . $memory .
-                    " the memory limist is: " . ini_get('memory_limit'), __FILE__, __LINE__);
+        $memory       = $this->benchmark->get_memory_usage();
+        $memory_bytes = $this->benchmark->get_memory_usage(false);
+        $this->info(
+            "Memory usage: {$memory_bytes} bytes / " . $memory .
+            " the memory limist is: " . ini_get('memory_limit'),
+            __FILE__, __LINE__
+        );
 
         // Add Total Loading Time Of System
-        $sys_timer = Benchmark::get_timer('/mysli/core');
-        self::add(
+        $sys_timer = $this->benchmark->get_timer('/mysli/core');
+        $this->add(
             "Total processing time: {$sys_timer}",
             ((float)$sys_timer > 5 ? 'warn' : 'info' ),
-            __FILE__, __LINE__);
+            __FILE__, __LINE__
+        );
     }
 }

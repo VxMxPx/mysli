@@ -18,11 +18,12 @@ class JSON
         $filename = ds($filename);
 
         if (file_exists($filename)) {
-            $content = FS::file_read($filename);
+            $content = \FS::file_read($filename);
             return self::decode($content, $assoc, $depth);
+        } else {
+            trigger_error("File not found: `{$filename}`.", E_USER_WARNING);
+            return false;
         }
-        else
-            { return Log::warn("File not found: `{$filename}`.", __FILE__, __LINE__); }
     }
 
     /**
@@ -45,7 +46,9 @@ class JSON
                 JSON_ERROR_CTRL_CHAR => 'Control character error, possibly incorrectly encoded',
                 JSON_ERROR_SYNTAX    => 'Syntax error',
             );
-            Log::error("JSON decode error: `" . $JSONErrors[json_last_error()] . '`.', __FILE__, __LINE__);
+            throw new \Mysli\Core\DataException(
+                "JSON decode error: `" . $JSONErrors[json_last_error()] . '`.'
+            );
             return false;
         }
         else {
@@ -68,7 +71,7 @@ class JSON
      */
     public static function encode_file($filename, $values, $options=0)
     {
-        return FS::file_replace(
+        return \FS::file_replace(
                     self::encode($values, $options),
                     $filename,
                     false

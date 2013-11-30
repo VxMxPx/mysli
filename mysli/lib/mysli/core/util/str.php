@@ -1,6 +1,6 @@
 <?php
 
-namespace Mysli\Core\Lib;
+namespace Mysli\Core\Util;
 
 class Str
 {
@@ -30,7 +30,7 @@ class Str
                 try {
                     $input = self::limit_repeat($input, $char_item, $limit);
                 }
-                catch (\Avrelia\Exception\ValueError $e) {
+                catch (\Mysli\Core\ValueException $e) {
                     throw new $e;
                 }
             }
@@ -38,9 +38,10 @@ class Str
         }
 
         if (strlen($char) < 1) {
-            throw new \Avrelia\Exception\ValueError(
-                "Expected parameter is string, long at least one character.", 1);
-
+            throw new \Mysli\Core\ValueException(
+                "Expected parameter is string, long at least one character.",
+                10
+            );
         }
 
         $char_escaped = preg_quote($char);
@@ -48,8 +49,10 @@ class Str
         $limit = (int) $limit;
 
         if ($limit < 1) {
-            throw new \Avrelia\Exception\ValueError(
-                "Expected parameter is integer higher than one.", 2);
+            throw new \Mysli\Core\ValueException(
+                "Expected parameter is integer higher than one.",
+                20
+            );
         }
 
         $regex = "([{$char_escaped}]{{$limit},})";
@@ -219,8 +222,12 @@ class Str
      * @param   integer $limit
      * @return  string
      */
-    public static function clean($string, $mask='aA1s', $custom=false, $limit=256)
-    {
+    public static function clean(
+        $string,
+        $mask = 'aA1s',
+        $custom = false,
+        $limit = 256
+    ) {
         if (empty($string)) { return ''; }
 
         // Normalize String
@@ -241,12 +248,13 @@ class Str
             if (strpos($mask, '1') !== false) { $filter .= $n; }
             if (strpos($mask, 's') !== false) { $filter .= $s; }
             if ($c                 !== false) { $filter .= $c; }
+        } else {
+            throw new \Mysli\Core\ValueException('Invalid or empty mask.', 10);
         }
-        else
-            { throw new \Avrelia\Exception\ValueError('Invalid or empty mask.', 1); }
 
-        if (empty($filter))
-            { throw new \Avrelia\Exception\ValueError('Empty filter.', 2); }
+        if (empty($filter)) {
+            throw new \Mysli\Core\ValueException('Empty filter.', 20);
+        }
 
         // Construct regular expression filter
         $filter = '/([^' . $filter . '])/sm';
@@ -350,8 +358,9 @@ class Str
 
         // Check if limit < 1
         if ($limit < 1) {
-            throw new \Avrelia\Exception\ValueError(
-                'Limit must be at least one character!', 1);
+            throw new \Mysli\Core\ValueException(
+                'Limit must be at least one character!'
+            );
         }
 
         $input_original = $input;
@@ -395,8 +404,9 @@ class Str
 
         // Check if limit < 1
         if ($limit < 1) {
-            throw new \Avrelia\Exception\ValueError(
-                'Limit must be at least one character!', 1);
+            throw new \Mysli\Core\ValueException(
+                'Limit must be at least one character!'
+            );
         }
 
         $input = substr($input, 0, $limit);
@@ -478,15 +488,18 @@ class Str
             {  return false; }
 
         // Check if separator isn't just \ character
-        if ($separator === CHAR_BACKSLASH) {
-            Log::war("Separator can't be backslash.");
+        if ($separator === '\\') {
+            trigger_error("Separator can't be backslash.", E_USER_WARNING);
             return false;
         }
 
         // Open and close of protected region
         if (is_array($protected)) {
             if (count($protected) !== 2) {
-                Log::war("Protected need to have exactly 2 elements.");
+                trigger_error(
+                    "Protected need to have exactly 2 elements.",
+                    E_USER_WARNING
+                );
                 return false;
             }
 
@@ -521,9 +534,9 @@ class Str
             $current_char = $input[$i];
 
             switch ($current_char) {
-                case CHAR_BACKSLASH:
+                case '\\':
                     $is_escaped = true;
-                    $current_token .= CHAR_BACKSLASH;
+                    $current_token .= '\\';
                     continue 2;
 
                 case $close_first:
@@ -678,17 +691,17 @@ class Str
         }
 
         // Convert backslashes
-        if (strpos($string, CHAR_BACKSLASH) !== false) {
-            $string = str_replace(CHAR_BACKSLASH, ' ', $string);
+        if (strpos($string, '\\') !== false) {
+            $string = str_replace('\\', ' ', $string);
             $string = ucwords($string);
-            $string = str_replace(' ', CHAR_BACKSLASH, $string);
+            $string = str_replace(' ', '\\', $string);
         }
 
         // Convert slashes
-        if (strpos($string, CHAR_SLASH) !== false) {
-            $string = str_replace(CHAR_SLASH, ' ', $string);
+        if (strpos($string, '/') !== false) {
+            $string = str_replace('/', ' ', $string);
             $string = ucwords($string);
-            $string = str_replace(' ', CHAR_SLASH, $string);
+            $string = str_replace(' ', '/', $string);
         }
 
         if (!$uc_first) {

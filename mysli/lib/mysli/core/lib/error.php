@@ -5,7 +5,7 @@ namespace Mysli\Core\Lib;
 class Error
 {
     // Error codes to plain English string.
-    private static $error_to_title =  [
+    private $error_to_title =  [
         E_ERROR              => 'Error',
         E_WARNING            => 'Warning',
         E_PARSE              => 'Parsing Error',
@@ -23,7 +23,7 @@ class Error
         E_USER_DEPRECATED    => 'User-generated warning message',
     ];
 
-    private static $map = [
+    private $map = [
         E_ERROR              => 'error',
         E_WARNING            => 'warn',
         E_PARSE              => 'error',
@@ -41,9 +41,9 @@ class Error
         E_USER_DEPRECATED    => 'warn',
     ];
 
-    private static $log_template = '<div class="log_item log_{type}"><p>{date_time} - {type}</p><code><pre>{message}</pre></code><p>{file} - {line}</p></div>';
+    private $log_template = '<div class="log_item log_{type}"><p>{date_time} - {type}</p><code><pre>{message}</pre></code><p>{file} - {line}</p></div>';
 
-    private static $template = '
+    private $template = '
         <!DOCTYPE html>
         <html lang="en">
         <meta charset=utf-8>
@@ -66,26 +66,51 @@ class Error
             <div id=log>
                 {{error_report}}';
 
-    public static function handle($errno, $errmsg, $filename, $linenum)
+    protected $log;
+    protected $event;
+
+    /**
+     * Construct ERROR
+     * --
+     * @param array $config
+     *   - none
+     * @param array $dependencies
+     *   - log
+     *   - event
+     */
+    public function __construct(array $config = [], array $dependencies = [])
+    {
+        $this->log = $dependencies['log'];
+        $this->event = $dependencies['event'];
+    }
+
+    public function handle($errno, $errmsg, $filename, $linenum)
     {
         // Get error title
-        $title = isset(self::$error_to_title[$errno]) ? self::$error_to_title[$errno] : 'Unknown';
+        $title = isset($this->error_to_title[$errno])
+            ? $this->error_to_title[$errno]
+            : 'Unknown';
         $errmsg = $title . ":\n" . $errmsg;
 
         // Get error simple type
-        $type = isset(self::$map[$errno]) ? self::$map[$errno] : 'warn';
+        $type = isset($this->map[$errno]) ? $this->map[$errno] : 'warn';
 
-        Log::add($errmsg, $type, $filename, $linenum);
+        if ($type === 'error') {
+            $e = new \Exception();
+            $errmsg .= "\n\nDebug backtrace:\n" . $e->getTraceAsString();
+        }
+
+        $this->log->add($errmsg, $type, $filename, $linenum);
 
         // Fatal error.
         if ($type === 'error')
         {
             // Error reporting
             $error_report = is_cli()
-                ? Log::as_string()
-                : Log::as_html(self::$log_template);
+                ? $this->log->as_string()
+                : $this->log->as_html($this->log_template);
 
-            Event::trigger('/mysli/core/lib/error::handle', $error_report);
+            $this->event->trigger('/mysli/core/lib/error->handle/error', $error_report);
 
             if (is_cli()) {
                 die($error_report);
@@ -94,7 +119,7 @@ class Error
                 die(str_replace(
                     array('{{error_report}}', '{{error_no}}'),
                     array($error_report, $errno),
-                    trim(self::$template)));
+                    $this->template));
             }
         }
     }

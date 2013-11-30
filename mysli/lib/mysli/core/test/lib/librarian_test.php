@@ -3,17 +3,24 @@
 namespace Mysli\Core\Lib;
 
 include(__DIR__.'/../../core.php');
-\Mysli\Core::init(
-    __DIR__.'/public_dummy',
-    __DIR__.'/libraries_dummy',
-    __DIR__.'/data_dummy'
+new \Mysli\Core(
+    __DIR__.'/../dummy/public',
+    __DIR__.'/../dummy/libraries',
+    __DIR__.'/../dummy/data'
 );
 
 class LibrarianTest extends \PHPUnit_Framework_TestCase
 {
+    protected $librarian;
+
+    public function __construct()
+    {
+        $this->librarian = core('librarian');
+    }
+
     public function test_get_enabled()
     {
-        $libraries = Librarian::get_enabled();
+        $libraries = $this->librarian->get_enabled();
         $this->assertEquals(
             'mysli/core',
             $libraries[0]
@@ -23,14 +30,14 @@ class LibrarianTest extends \PHPUnit_Framework_TestCase
     public function test_get_enabled_detailed()
     {
         $this->assertEquals(
-            json_decode(file_get_contents(__DIR__.'/data_dummy/core/libraries.json'), true),
-            Librarian::get_enabled(true)
+            json_decode(file_get_contents(__DIR__.'/../dummy/data/core/libraries.json'), true),
+            $this->librarian->get_enabled(true)
         );
     }
 
     public function test_get_disabled()
     {
-        $disabled = Librarian::get_disabled();
+        $disabled = $this->librarian->get_disabled();
         $this->assertTrue(is_array($disabled));
         $this->assertTrue(!empty($disabled));
         $this->assertTrue(in_array('mysli/manage_settings', $disabled));
@@ -38,7 +45,7 @@ class LibrarianTest extends \PHPUnit_Framework_TestCase
 
     public function test_get_disabled_detailed()
     {
-        $disabled = Librarian::get_disabled(true);
+        $disabled = $this->librarian->get_disabled(true);
 
         $this->assertEquals(
             'mysli/manage_settings',
@@ -50,7 +57,7 @@ class LibrarianTest extends \PHPUnit_Framework_TestCase
     {
         $this->assertEquals(
             'mysli/core',
-            Librarian::get_details('mysli/core')['library']
+            $this->librarian->get_details('mysli/core')['library']
         );
     }
 
@@ -58,18 +65,18 @@ class LibrarianTest extends \PHPUnit_Framework_TestCase
     {
         $this->assertEquals(
             'mysli/manage_settings',
-            Librarian::get_details('mysli/manage_settings')['library']
+            $this->librarian->get_details('mysli/manage_settings')['library']
         );
     }
 
     /**
-     * @expectedException Mysli\Core\FileSystemException
+     * @expectedException Mysli\Core\FileNotFoundException
      */
     public function test_get_details_nonexisting()
     {
         $this->assertEquals(
             [],
-            Librarian::get_details('vendor/library')
+            $this->librarian->get_details('vendor/library')
         );
     }
 
@@ -77,7 +84,7 @@ class LibrarianTest extends \PHPUnit_Framework_TestCase
     {
         $this->assertEquals(
             'mysli/core',
-            Librarian::resolve('mysli/core')
+            $this->librarian->resolve('mysli/core')
         );
     }
 
@@ -85,7 +92,7 @@ class LibrarianTest extends \PHPUnit_Framework_TestCase
     {
         $this->assertEquals(
             'mysli/manage_settings',
-            Librarian::resolve('mysli/manage_settings')
+            $this->librarian->resolve('mysli/manage_settings')
         );
     }
 
@@ -93,14 +100,14 @@ class LibrarianTest extends \PHPUnit_Framework_TestCase
     {
         $this->assertEquals(
             'mysli/core',
-            Librarian::resolve('*/core')
+            $this->librarian->resolve('*/core')
         );
     }
 
     public function test_resolve_name_failed()
     {
         $this->assertFalse(
-            Librarian::resolve('vendor/library')
+            $this->librarian->resolve('vendor/library')
         );
     }
 
@@ -111,7 +118,7 @@ class LibrarianTest extends \PHPUnit_Framework_TestCase
                 'mysli/users',
                 'avrelia/users'
             ],
-            Librarian::resolve_all('*/users')
+            $this->librarian->resolve_all('*/users')
         );
     }
 
@@ -121,7 +128,7 @@ class LibrarianTest extends \PHPUnit_Framework_TestCase
             [
                 'avrelia/backend'
             ],
-            Librarian::resolve_all('avrelia/backend')
+            $this->librarian->resolve_all('avrelia/backend')
         );
     }
 
@@ -129,33 +136,33 @@ class LibrarianTest extends \PHPUnit_Framework_TestCase
     {
         $this->assertEquals(
             [],
-            Librarian::resolve_all('*/non_existant')
+            $this->librarian->resolve_all('*/non_existant')
         );
     }
 
     public function test_factory()
     {
-        $object = Librarian::factory('mysli/dot');
+        $object = $this->librarian->factory('mysli/dot');
         $this->assertInstanceOf('Mysli\\Dot', $object);
     }
 
     public function test_dependencies_factory()
     {
-        $dependencies = Librarian::dependencies_factory('mysli/backend');
-        $this->assertFalse($dependencies['core']);
+        $dependencies = $this->librarian->dependencies_factory('mysli/backend');
+        $this->assertInstanceOf('Mysli\\Core', $dependencies['core']);
         $this->assertInstanceOf('Mysli\\Mjs', $dependencies['mjs']);
         $this->assertInstanceOf('Mysli\\Session', $dependencies['session']);
     }
 
     public function test_construct_setup()
     {
-        $setup = Librarian::construct_setup('mysli/mjs');
+        $setup = $this->librarian->construct_setup('mysli/mjs');
         $this->assertInstanceOf('Mysli\\Mjs\\Setup', $setup);
     }
 
     public function test_construct_setup_no_file()
     {
-        $setup = Librarian::construct_setup('avrelia/dummy');
+        $setup = $this->librarian->construct_setup('avrelia/dummy');
         $this->assertFalse($setup);
     }
 
@@ -167,19 +174,19 @@ class LibrarianTest extends \PHPUnit_Framework_TestCase
 
     public function test_load_existing()
     {
-        $this->assertTrue(Librarian::load('mysli/users'));
+        $this->assertTrue($this->librarian->load('mysli/users'));
     }
 
     public function test_load_non_existing()
     {
-        $this->assertFalse(Librarian::load('avrelia/non_existant'));
+        $this->assertFalse($this->librarian->load('avrelia/non_existant'));
     }
 
     public function test_call()
     {
         $this->assertEquals(
             'hi',
-            Librarian::call('mysli/backend', 'say_hi')
+            $this->librarian->call('mysli/backend', 'say_hi')
         );
     }
 
@@ -188,20 +195,20 @@ class LibrarianTest extends \PHPUnit_Framework_TestCase
         $random_numer = rand(0, 100);
         $this->assertEquals(
             'The random number is: ' . $random_numer,
-            Librarian::call('mysli/backend', 'say_number', [$random_numer])
+            $this->librarian->call('mysli/backend', 'say_number', [$random_numer])
         );
     }
 
     public function test_is_enabled()
     {
         $this->assertTrue(
-            Librarian::is_enabled('mysli/backend')
+            $this->librarian->is_enabled('mysli/backend')
         );
         $this->assertFalse(
-            Librarian::is_enabled('avrelia/writter')
+            $this->librarian->is_enabled('avrelia/writter')
         );
         $this->assertFalse(
-            Librarian::is_enabled('avrelia/non_existant')
+            $this->librarian->is_enabled('avrelia/non_existant')
         );
     }
 
@@ -217,7 +224,7 @@ class LibrarianTest extends \PHPUnit_Framework_TestCase
                 'disabled' => [],
                 'missing'  => []
             ],
-            Librarian::get_dependencies('mysli/backend')
+            $this->librarian->get_dependencies('mysli/backend')
         );
     }
 
@@ -229,7 +236,7 @@ class LibrarianTest extends \PHPUnit_Framework_TestCase
                 'disabled' => ['avrelia/reader' => '>= 0.1'],
                 'missing'  => []
             ],
-            Librarian::get_dependencies('avrelia/backend')
+            $this->librarian->get_dependencies('avrelia/backend')
         );
     }
 
@@ -244,7 +251,7 @@ class LibrarianTest extends \PHPUnit_Framework_TestCase
                     'avrelia/sql' => '>= 1.0'
                 ]
             ],
-            Librarian::get_dependencies('avrelia/dummy')
+            $this->librarian->get_dependencies('avrelia/dummy')
         );
     }
 
@@ -263,7 +270,7 @@ class LibrarianTest extends \PHPUnit_Framework_TestCase
                 ],
                 'missing'  => []
             ],
-            Librarian::get_dependencies('avrelia/backend', true)
+            $this->librarian->get_dependencies('avrelia/backend', true)
         );
     }
 
@@ -271,7 +278,7 @@ class LibrarianTest extends \PHPUnit_Framework_TestCase
     {
         $this->assertEquals(
             ['mysli/backend'],
-            Librarian::get_dependees('mysli/session')
+            $this->librarian->get_dependees('mysli/session')
         );
     }
 
@@ -279,7 +286,7 @@ class LibrarianTest extends \PHPUnit_Framework_TestCase
     {
         $this->assertEquals(
             ['mysli/backend', 'mysli/session'],
-            Librarian::get_dependees('mysli/users', true)
+            $this->librarian->get_dependees('mysli/users', true)
         );
     }
 }

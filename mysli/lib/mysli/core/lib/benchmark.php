@@ -4,7 +4,7 @@ namespace Mysli\Core\Lib;
 
 class Benchmark
 {
-    private static $timers;
+    protected $timers;
 
     /**
      * MircoTime start
@@ -13,11 +13,11 @@ class Benchmark
      * --
      * @return integer
      */
-    public static function set_timer($name)
+    public function set_timer($name)
     {
         $temp = explode(' ', microtime());
-        self::$timers[$name] = $temp[1] + $temp[0];
-        return self::$timers[$name];
+        $this->timers[$name] = $temp[1] + $temp[0];
+        return $this->timers[$name];
     }
 
     /**
@@ -27,11 +27,11 @@ class Benchmark
      * --
      * @return string
      */
-    public static function get_timer($name)
+    public function get_timer($name)
     {
-        if (isset(self::$timers[$name]))
+        if (isset($this->timers[$name]))
         {
-            $start = self::$timers[$name];
+            $start = $this->timers[$name];
             $temp  = explode(' ', microtime());
             $total = $temp[0] + $temp[1] - $start;
             $total = sprintf('%.3f',  $total);
@@ -48,7 +48,7 @@ class Benchmark
      * --
      * @return string
      */
-    public static function get_memory_usage($formated=true, $peak=true)
+    public function get_memory_usage($formated=true, $peak=true)
     {
         $memory = 0;
 
@@ -59,6 +59,6 @@ class Benchmark
             $memory = memory_get_usage(true);
         }
 
-        return ($formated) ? FS::format_size($memory) : $memory;
+        return ($formated) ? \FS::format_size($memory) : $memory;
     }
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace Mysli\Core\Lib;
+namespace Mysli\Core\Util;
 
 class FS
 {
@@ -59,16 +59,12 @@ class FS
         }
 
         if (rename($old, $new)) {
-            Log::info(
-                "File was renamed from: `{$old}`, to `{$new}`.",
-                __FILE__, __LINE__
-            );
             return 1;
         }
         else {
-            Log::warn(
+            trigger_error(
                 "Error while renaming file: `{$old}`, to `{$new}`.",
-                __FILE__, __LINE__
+                E_USER_WARNING
             );
             return 0;
         }
@@ -163,7 +159,7 @@ class FS
         if (file_exists($filename)) {
             return file_get_contents($filename);
         } else {
-            Log::warn("File not found: `{$filename}`.", __FILE__, __LINE__);
+            trigger_error("File not found: `{$filename}`.", E_USER_WARNING);
             return false;
         }
     }
@@ -182,9 +178,9 @@ class FS
         if (file_exists($filename)) {
             if (!$empty) { return false; }
             if (file_put_contents($filename, '') === false) {
-                Log::warn(
+                trigger_error(
                     "Couldn't remove file's contents: `{$filename}`.",
-                    __FILE__, __LINE__
+                    E_USER_WARNING
                 );
                 return false;
             }
@@ -193,11 +189,9 @@ class FS
         if (touch($filename)) {
             return true;
         } else {
-            Log::error(
-                "Could not touch file: `{$filename}`.",
-                __FILE__, __LINE__
+            throw new \Mysli\Core\FileSystemException(
+                "Could not touch file: `{$filename}`."
             );
-            return false;
         }
     }
 
@@ -221,8 +215,9 @@ class FS
         if (file_exists($filename)) {
             return file_put_contents($filename, $content, FILE_APPEND);
         } else {
-            Log::error("Could not write to file: `{$filename}`.", __FILE__, __LINE__);
-            return false;
+            throw new \Mysli\Core\FileSystemException(
+                "Could not write to file: `{$filename}`."
+            );
         }
     }
 
@@ -258,11 +253,9 @@ class FS
             }
             return $i;
         } else {
-            Log::error(
-                "Could not write to file: `{$filename}`.",
-                __FILE__, __LINE__
+            throw new \Mysli\Core\FileSystemException(
+                "Could not write to file: `{$filename}`."
             );
-            return false;
         }
     }
 
@@ -285,11 +278,9 @@ class FS
         if (file_exists($filename)) {
             return file_put_contents($filename, $content);
         } else {
-            Log::error(
-                "Could not write to file: `{$filename}`.",
-                __FILE__, __LINE__
+            throw new \Mysli\Core\FileSystemException(
+                "Could not write to file: `{$filename}`."
             );
-            return false;
         }
     }
 
@@ -396,7 +387,7 @@ class FS
         if (file_exists($destination)) {
             switch ($on_exists) {
                 case self::EXISTS_IGNORE:
-                    Log::info(
+                    with(core('log'))->info(
                         "File exists: `{$destination}`. Ignoring.",
                         __FILE__, __LINE__
                     );
@@ -411,14 +402,14 @@ class FS
                     break;
 
                 case self::EXISTS_REPLACE:
-                    Log::info(
+                    with(core('log'))->info(
                         "File exists: `{$destination}`. It will be replaced.",
                         __FILE__, __LINE__
                     );
                     break;
 
                 case self::EXISTS_RENAME:
-                    Log::info(
+                    with(core('log'))->info(
                         "File exists: `{$destination}`. It will be renamed.",
                         __FILE__, __LINE__
                     );
@@ -434,7 +425,7 @@ class FS
         }
 
         if (copy($source, $destination)) {
-            Log::info(
+            with(core('log'))->info(
                 "File was copied: `{$source}`, to: `{$destination}`.",
                 __FILE__, __LINE__
             );
@@ -475,7 +466,7 @@ class FS
     public static function file_move(
         $source,
         $destination,
-        $on_exists = FS::EXISTS_REPLACE
+        $on_exists = self::EXISTS_REPLACE
     ) {
         if (is_array($source)) {
             $i = 0;
@@ -518,7 +509,7 @@ class FS
         if (file_exists($destination)) {
             switch ($on_exists) {
                 case self::EXISTS_IGNORE:
-                    Log::info(
+                    with(core('log'))->info(
                         "File exists: `{$destination}`. Ignoring.",
                         __FILE__, __LINE__
                     );
@@ -533,14 +524,14 @@ class FS
                     break;
 
                 case self::EXISTS_REPLACE:
-                    Log::info(
+                    with(core('log'))->info(
                         "File exists: `{$destination}`. It will be replaced.",
                         __FILE__, __LINE__
                     );
                     break;
 
                 case self::EXISTS_RENAME:
-                    Log::info(
+                    with(core('log'))->info(
                         "File exists: `{$destination}`. It will be renamed.",
                         __FILE__, __LINE__
                     );
@@ -556,7 +547,7 @@ class FS
         }
 
         if (rename($source, $destination)) {
-            Log::info(
+            with(core('log'))->info(
                 "File was renamed: `{$source}`, to: `{$destination}`.",
                 __FILE__, __LINE__
             );
@@ -629,7 +620,7 @@ class FS
         }
 
         if (!file_exists($filename)) {
-            Log::warn("File not found: `{$filename}`.", __FILE__, __LINE__);
+            trigger_error("File not found: `{$filename}`.", E_USER_WARNING);
             return null;
         }
 
@@ -682,7 +673,7 @@ class FS
      */
     public static function get_url($filename)
     {
-        return Server::url(self::get_uri($filename));
+        return with(core('server'))->url(self::get_uri($filename));
     }
 
     // Directories Methods -----------------------------------------------------
@@ -776,7 +767,7 @@ class FS
                 }
                 if (!unlink($filename)) {
                     throw new \Mysli\Core\FileSystemException(
-                        'Could not remove file: ' . $filename, 40
+                        "Could not remove file: `{$filename}`.", 40
                     );
                 }
             }
@@ -879,9 +870,9 @@ class FS
                 $skipped += $count === true ? 0 : $count;
             } else {
                 if (!copy($filename, ds($destination, $file))) {
-                    \Log::warn(
+                    trigger_error(
                         "Couldn't copy, will skip: `{$filename}`.",
-                        __FILE__, __LINE__
+                        E_USER_WARNING
                     );
                     $skipped++;
                 }

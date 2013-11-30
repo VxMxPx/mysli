@@ -11,28 +11,28 @@ class Request
     const METHOD_DELETE = 'DELETE';
 
     // List of all url segments
-    private static $segments = [];
+    private $segments = [];
 
     // Get segments
-    private static $get      = [];
+    private $get      = [];
 
-    public static function init()
+    public function __construct()
     {
         // Set get segments
-        self::$get = $_GET;
+        $this->get = $_GET;
 
         // Set list of segments
-        $segments = trim(self::get_path_info(), '/');
-        $segments = Str::explode_trim('/', $segments);
+        $segments = trim($this->get_path_info(), '/');
+        $segments = \Str::explode_trim('/', $segments);
 
         // Register segments containing equal sign, to get
         foreach ($segments as $segment) {
             if (strpos($segment, '=') !== false) {
-                $segment_get = Str::explode_trim('=', $segment, 2);
-                self::$get[$segment_get[0]] = $segment_get[1];
+                $segment_get = \Str::explode_trim('=', $segment, 2);
+                $this->get[$segment_get[0]] = $segment_get[1];
                 continue;
             }
-            self::$segments[] = $segment;
+            $this->segments[] = $segment;
         }
     }
 
@@ -41,7 +41,7 @@ class Request
      * --
      * @return string
      */
-    public static function get_path_info()
+    public function get_path_info()
     {
         return isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : null;
     }
@@ -54,10 +54,10 @@ class Request
      * --
      * @return mixed
      */
-    public static function segment($number, $defult=false)
+    public function segment($number, $defult = false)
     {
-        return isset(self::$segments[$number])
-                ? self::$segments[$number]
+        return isset($this->segments[$number])
+                ? $this->segments[$number]
                 : $default;
     }
 
@@ -66,9 +66,9 @@ class Request
      * --
      * @return array
      */
-    public static function segments()
+    public function segments()
     {
-        return self::$segments;
+        return $this->segments;
     }
 
     /**
@@ -78,9 +78,9 @@ class Request
      * --
      * return null
      */
-    public static function set_segments($list)
+    public function set_segments($list)
     {
-        self::$segments = $list;
+        $this->segments = $list;
     }
 
     /**
@@ -93,15 +93,15 @@ class Request
      * --
      * @return mixed
      */
-    public static function get($key=false, $default=false)
+    public function get($key = false, $default = false)
     {
-        if (!$key) { return self::$get; }
+        if (!$key) { return $this->get; }
 
         if (is_array($key)) {
-            return Arr::elements($key, self::$get, $default);
+            return \Arr::elements($key, $this->get, $default);
         }
         else {
-            return Arr::element($key, self::$get, $default);
+            return \Arr::element($key, $this->get, $default);
         }
     }
 
@@ -115,15 +115,15 @@ class Request
      * --
      * @return mixed
      */
-    public static function post($key=false, $default=false)
+    public function post($key = false, $default = false)
     {
         if (!$key) { return $_POST; }
 
         if (is_array($key)) {
-            return Arr::elements($key, $_POST, $default);
+            return \Arr::elements($key, $_POST, $default);
         }
         else {
-            return Arr::element($key, $_POST, $default);
+            return \Arr::element($key, $_POST, $default);
         }
     }
 
@@ -133,7 +133,7 @@ class Request
      * @param  string $key Are we looking for particular key?
      * @return boolean
      */
-    public static function has_post($key=false)
+    public function has_post($key = false)
     {
         if ($key)
             { return isset($_POST[$key]); }
@@ -147,23 +147,23 @@ class Request
      * --
      * @return integer
      */
-    public static function get_method()
+    public function get_method()
     {
         // Is it put?
         if ($_SERVER['REQUEST_METHOD'] === 'PUT' ||
-            self::post('REQUEST_METHOD') === 'PUT') {
+            $this->post('REQUEST_METHOD') === 'PUT') {
             return self::METHOD_PUT;
         }
 
         // Is it delete?
         if ($_SERVER['REQUEST_METHOD'] === 'DELETE' ||
-            self::post('REQUEST_METHOD') === 'DELETE' ||
-            self::get('request_method') === 'delete') {
+            $this->post('REQUEST_METHOD') === 'DELETE' ||
+            $this->get('request_method') === 'delete') {
             return self::METHOD_DELETE;
         }
 
         // Is it post?
-        if (self::has_post()) {
+        if ($this->has_post()) {
             return self::METHOD_POST;
         }
 

@@ -1,12 +1,12 @@
 <?php
 
-namespace Mysli\Core\Lib;
+namespace Mysli\Core\Util;
 
 include(__DIR__.'/../../core.php');
-\Mysli\Core::init(
-    __DIR__.'/public_dummy',
-    __DIR__.'/libraries_dummy',
-    __DIR__.'/data_dummy'
+new \Mysli\Core(
+    __DIR__.'/../dummy/public',
+    __DIR__.'/../dummy/libraries',
+    __DIR__.'/../dummy/data'
 );
 
 class IntTest extends \PHPUnit_Framework_TestCase

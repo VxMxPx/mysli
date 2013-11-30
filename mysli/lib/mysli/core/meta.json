@@ -1,6 +1,6 @@
 {
     "component"     : "mysli/core",
-    "instantiation" : "never",
+    "instantiation" : "once",
     "version"       : "0.1",
     "depends_on"    : null,
     "maintainer"    : "Marko Gajšt <marko@gaj.st>",

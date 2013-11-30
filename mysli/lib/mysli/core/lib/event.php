@@ -9,31 +9,39 @@ class Event
     const PRIORITY_LOW    = 'low';
 
     // List of events to be executed
-    private static $waiting = [];
+    protected $waiting = [];
 
     // List of events that has be triggered
-    private static $history = [];
+    protected $history = [];
 
     // Master filename, it will save newly registered events.
     // Autoset on init
-    private static $filename = '';
+    protected $filename = '';
+
+    protected $librarian;
 
     /**
-     * Will load list of events, and add them to the list.
+     * Construct EVENT
      * --
-     * @param  string $events_file
-     * --
-     * @return void
+     * @param array $config
+     *   - eventfile = Master filename it will save newly registered events.
+     * @param array $dependencies
+     *   - librarian
      */
-    public static function init($events_file)
+    public function __construct(array $config = [], array $dependencies = [])
     {
-        self::$filename = $events_file;
-        if (file_exists($events_file)) {
-            $events = json_decode(file_get_contents($events_file), true);
-            if (is_array($events)) {
-                self::$waiting = $events;
-            }
+        $this->filename = $config['eventfile'];
+        if (!file_exists($this->filename)) {
+            throw new \Mysli\Core\FileNotFoundException(
+                "File not found: '{$this->filename}'"
+            );
         }
+        $events = json_decode(file_get_contents($this->filename), true);
+        if (is_array($events)) {
+            $this->waiting = $events;
+        }
+
+        $this->librarian = $dependencies['librarian'];
     }
 
     /**
@@ -43,13 +51,17 @@ class Event
      * @param  mixed  $call
      * @param  string $priority Event::PRIORITY_HIGH, Event::PRIORITY_MEDIUM,
      *                          Event::PRIORITY_LOW
-     * @param  string $filename If not provided self::$filename will be used.
+     * @param  string $filename If not provided $this->filename will be used.
      * --
      * @return boolean
      */
-    public static function register($event, $call, $priority=self::PRIORITY_MEDIUM, $filename=null)
-    {
-        $filename = $filename ? $filename : self::$filename;
+    public function register(
+        $event,
+        $call,
+        $priority = self::PRIORITY_MEDIUM,
+        $filename = null
+    ) {
+        $filename = $filename ? $filename : $this->filename;
 
         // Get all events
         if (!file_exists($filename)) {
@@ -83,15 +95,15 @@ class Event
      * --
      * @return  void
      */
-    public static function on($event, $call, $priority=self::PRIORITY_MEDIUM)
+    public function on($event, $call, $priority = self::PRIORITY_MEDIUM)
     {
-        if (!isset(self::$waiting[$event])) {
-            self::$waiting[$event] = [];
+        if (!isset($this->waiting[$event])) {
+            $this->waiting[$event] = [];
         }
-        if (!isset(self::$waiting[$event][$priority])) {
-            self::$waiting[$event][$priority] = [];
+        if (!isset($this->waiting[$event][$priority])) {
+            $this->waiting[$event][$priority] = [];
         }
-        self::$waiting[$event][$priority][] = $call;
+        $this->waiting[$event][$priority][] = $call;
     }
 
     /**
@@ -99,9 +111,9 @@ class Event
      * --
      * @return array
      */
-    public static function dump()
+    public function dump()
     {
-        return [self::$waiting, self::$history];
+        return [$this->waiting, $this->history];
     }
 
     /**
@@ -112,22 +124,22 @@ class Event
      * @return  integer Number of called functions.
      *                  Function count only if "true" was returned.
      */
-    public static function trigger($event, &$params=null)
+    public function trigger($event, &$params = null)
     {
         $num = 0;
 
-        self::$history[$event][] = 'Trigger!';
+        $this->history[$event][] = 'Trigger!';
 
         // Check if anyone at all is waiting for this event.
-        if (!isset(self::$waiting[$event])) {
+        if (!isset($this->waiting[$event])) {
             return 0;
         }
 
         // Create new list, sorted by priority
         $events = [];
         foreach (['high', 'medium', 'low'] as $priority) {
-            if (isset(self::$waiting[$event][$priority])) {
-                foreach (self::$waiting[$event][$priority] as $value) {
+            if (isset($this->waiting[$event][$priority])) {
+                foreach ($this->waiting[$event][$priority] as $value) {
                     $events[] = $value;
                 }
             }
@@ -139,8 +151,8 @@ class Event
                     $num += $call($params) ? 1 : 0;
                     continue;
                 }
-                self::$history[$event][] = 'Call: ' . (is_array($call) ? implode(', ', $call) : $call);
-                $num += (Librarian::call($call[0], $call[1], [&$params]) ? 1 : 0);
+                $this->history[$event][] = 'Call: ' . (is_array($call) ? implode(', ', $call) : $call);
+                $num += ($this->librarian->call($call[0], $call[1], [&$params]) ? 1 : 0);
             }
         }
 

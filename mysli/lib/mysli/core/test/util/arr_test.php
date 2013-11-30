@@ -1,12 +1,12 @@
 <?php
 
-namespace Mysli\Core\Lib;
+namespace Mysli\Core\Util;
 
 include(__DIR__.'/../../core.php');
-\Mysli\Core::init(
-    __DIR__.'/public_dummy',
-    __DIR__.'/libraries_dummy',
-    __DIR__.'/data_dummy'
+new \Mysli\Core(
+    __DIR__.'/../dummy/public',
+    __DIR__.'/../dummy/libraries',
+    __DIR__.'/../dummy/data'
 );
 
 class ArrTest extends \PHPUnit_Framework_TestCase
@@ -379,7 +379,7 @@ class ArrTest extends \PHPUnit_Framework_TestCase
                 1 => 'b',
                 2 => 'c'
             ],
-            Arr::clean_keys($in, STRING_CAMELCASE)
+            Arr::clean_keys($in, Arr::CAMELCASE)
         );
         $this->assertEquals(
             [
@@ -391,7 +391,7 @@ class ArrTest extends \PHPUnit_Framework_TestCase
                 1 => 'b',
                 2 => 'c'
             ],
-            Arr::clean_keys($in, STRING_UNDERSCORE)
+            Arr::clean_keys($in, Arr::UNDERSCORE)
         );
     }
 

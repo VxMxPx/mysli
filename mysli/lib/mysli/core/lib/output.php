@@ -5,7 +5,7 @@ namespace Mysli\Core\Lib;
 class Output
 {
     // Whole output
-    private static $output_cache = [];
+    protected $output_cache = [];
 
     /**
      * Add output string.
@@ -13,17 +13,17 @@ class Output
      * @param string  $contents
      * @param mixed   $key      Either false for automatic, or particular key.
      */
-    public static function add($contents, $key=false)
+    public function add($contents, $key = false)
     {
         if (!$key) {
-            self::$output_cache[] = $contents;
+            $this->output_cache[] = $contents;
         }
         else {
-            if (isset(self::$output_cache[$key])) {
-                $contents = self::$output_cache[$key] . $contents;
+            if (isset($this->output_cache[$key])) {
+                $contents = $this->output_cache[$key] . $contents;
             }
 
-            self::$output_cache[$key] = $contents;
+            $this->output_cache[$key] = $contents;
         }
     }
 
@@ -35,9 +35,9 @@ class Output
      * --
      * @return void
      */
-    public static function replace($contents, $key)
+    public function replace($contents, $key)
     {
-        self::$output_cache[$key] = $contents;
+        $this->output_cache[$key] = $contents;
     }
 
     /**
@@ -48,10 +48,10 @@ class Output
      * --
      * @return  mixed
      */
-    public static function take($key=false)
+    public function take($key = false)
     {
-        $output = self::as_string($key);
-        self::clear($key);
+        $output = $this->as_string($key);
+        $this->clear($key);
 
         return $output;
     }
@@ -63,10 +63,10 @@ class Output
      * --
      * @return string
      */
-    public static function as_string($key=false)
+    public function as_string($key = false)
     {
-        if (!$key) { $html = implode("\n", self::$output_cache); }
-        $html = Arr::element($key, self::$output_cache, null);
+        if (!$key) { $html = implode("\n", $this->output_cache); }
+        $html = \Arr::element($key, $this->output_cache, null);
         return htmlentities($html);
     }
 
@@ -77,10 +77,10 @@ class Output
      * --
      * @return string
      */
-    public static function as_html($key=false)
+    public function as_html($key = false)
     {
-        if (!$key) { return implode("\n", self::$output_cache); }
-        return Arr::element($key, self::$output_cache, null);
+        if (!$key) { return implode("\n", $this->output_cache); }
+        return \Arr::element($key, $this->output_cache, null);
     }
 
     /**
@@ -90,13 +90,13 @@ class Output
      * --
      * @return  boolean
      */
-    public static function has($key=false)
+    public function has($key = false)
     {
         if (!$key) {
-            return is_array(self::$output_cache) && !empty(self::$output_cache);
+            return is_array($this->output_cache) && !empty($this->output_cache);
         }
         else {
-            return isset(self::$output_cache[$key]);
+            return isset($this->output_cache[$key]);
         }
     }
 
@@ -108,14 +108,14 @@ class Output
      * --
      * @return  void
      */
-    public static function clear($key=false)
+    public function clear($key = false)
     {
         if (!$key) {
-            self::$output_cache = [];
+            $this->output_cache = [];
         }
         else {
-            if (isset(self::$output_cache[$key])) {
-                unset(self::$output_cache[$key]);
+            if (isset($this->output_cache[$key])) {
+                unset($this->output_cache[$key]);
             }
         }
     }
@@ -125,8 +125,8 @@ class Output
      * --
      * @return array
      */
-    public static function as_array()
+    public function as_array()
     {
-        return self::$output_cache;
+        return $this->output_cache;
     }
 }

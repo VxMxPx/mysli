@@ -78,7 +78,8 @@ $core_path = str_replace('/', DIRECTORY_SEPARATOR, $libpath.'/'.$core_lib.'/core
 if (!file_exists($core_path)) {
     trigger_error("Cannot find core file: `{$core_path}`", E_USER_ERROR);
 }
-include($libpath.'/'.$core_lib.'/core.php');
-$core_class::init($pubpath, $libpath, $datpath);
-echo $core_class::as_html();
-exit($core_class::terminate());
+include($core_path);
+$core = new $core_class($pubpath, $libpath, $datpath);
+$core->response->apply_headers();
+echo $core->output->as_html();
+exit($core->terminate());

@@ -5,31 +5,45 @@ namespace Mysli\Core\Lib;
 class Librarian
 {
     // All the enabled libraries (loaded from init($filename))
-    private static $enabled = [];
+    protected $enabled = [];
     // All the disabled libraries (cached for multiple calls)
-    private static $disabled = [];
+    protected $disabled = [];
     // Libraries filename (from where list of enabled libraries is loaded and
     // where all the modifications are saved)
-    private static $filename  = '';
+    protected $filename  = '';
     // Constrcuted libraries // kind of a like registry
-    private static $cache     = [];
+    protected $cache     = [];
+
+    protected $log;
+    protected $core;
 
     /**
      * Init the librarian class. Will accept filename of
      * of registry file, containing currently enabled libraries.
      * --
-     * @param  string $filename
+     * @param  array $config
+     *   - libfile = master json file where all libraries are saved
+     * @param  array $dependencies
+     *   - core = any core
      * --
      * @throws \Mysli\Core\FileSystemException
      * --
      * @return boolean
      */
-    public static function init($filename)
+    public function __construct(array $config = [], array $dependencies = [])
     {
+        $this->core = $dependencies['core'];
+        $this->log  = $dependencies['log'];
+
+        // TODO: Shouldn't assume that we have mysli/core
+        $this->cache['mysli/core'] = $this->core;
+
+        $filename = $config['libfile'];
+
         if (file_exists($filename)) {
-            self::$filename = $filename;
-            self::$enabled = json_decode(file_get_contents($filename), true);
-            if (!is_array(self::$enabled)) {
+            $this->filename = $filename;
+            $this->enabled = json_decode(file_get_contents($filename), true);
+            if (!is_array($this->enabled)) {
                 throw new \Mysli\Core\DataException(
                     'Invalid libraries registry file.'
                 );
@@ -37,8 +51,8 @@ class Librarian
                 return true;
             }
         } else {
-            throw new \Mysli\Core\FileSystemException(
-                "Cannot find the libraries registry file: `{$filename}`."
+            throw new \Mysli\Core\FileNotFoundException(
+                "Cannot find the libraries registry file: '{$filename}'."
             );
         }
     }
@@ -51,12 +65,12 @@ class Librarian
      * --
      * @return array
      */
-    public static function get_enabled($details = false)
+    public function get_enabled($details = false)
     {
         if (!$details) {
-            return array_keys(self::$enabled);
+            return array_keys($this->enabled);
         } else {
-            return self::$enabled;
+            return $this->enabled;
         }
     }
 
@@ -68,15 +82,15 @@ class Librarian
      * --
      * @return array
      */
-    public static function get_disabled($details = false)
+    public function get_disabled($details = false)
     {
-        if (!empty(self::$disabled)) {
+        if (!empty($this->disabled)) {
             if ($details) {
-                if (is_array(Arr::first(self::$disabled))) {
-                    return self::$disabled;
+                if (is_array(\Arr::first($this->disabled))) {
+                    return $this->disabled;
                 }
             } else {
-                return array_keys(self::$disabled);
+                return array_keys($this->disabled);
             }
         }
 
@@ -92,18 +106,18 @@ class Librarian
 
                 $library = $vendor . '/' . $library_name;
 
-                if (self::is_enabled($library)) continue;
+                if ($this->is_enabled($library)) continue;
 
                 $disabled[$library] = true;
 
                 if (!$details) continue;
 
-                $disabled[$library] = self::get_details($library);
+                $disabled[$library] = $this->get_details($library);
             }
         }
 
-        self::$disabled = $disabled;
-        return !$details ? array_keys(self::$disabled) : self::$disabled;
+        $this->disabled = $disabled;
+        return !$details ? array_keys($this->disabled) : $this->disabled;
     }
 
     /**
@@ -113,17 +127,17 @@ class Librarian
      * --
      * @return array
      */
-    public static function get_details($library)
+    public function get_details($library)
     {
-        if (self::is_enabled($library)) {
-            return self::$enabled[$library];
+        if ($this->is_enabled($library)) {
+            return $this->enabled[$library];
         }
 
         // Disabled!
         $meta_file = libpath(ds($library, 'meta.json'));
         if (!file_exists($meta_file)) {
-            throw new \Mysli\Core\FileSystemException(
-                "Cannot find `meta.json` file for `{$library}`"
+            throw new \Mysli\Core\FileNotFoundException(
+                "Cannot find 'meta.json' file for '{$library}'"
             );
         }
 
@@ -133,7 +147,7 @@ class Librarian
             || $meta['library'] !== $library
         ) {
             throw new \Mysli\Core\DataException(
-                "Meta file for `{$library}` seems to be invalid: " .
+                "Meta file for '{$library}' seems to be invalid: " .
                 dump_r($meta)
             );
         }
@@ -155,7 +169,7 @@ class Librarian
      * --
      * @return mixed  String (lib full name || false if not found)
      */
-    public static function resolve($library, $limit_to = null)
+    public function resolve($library, $limit_to = null)
     {
         // Is regex?
         if (strpos($library, '*') !== false) {
@@ -172,11 +186,11 @@ class Librarian
         if ($limit_to === null || $limit_to === 'enabled') {
             // No regular expression + enabled
             if (!$library_regex) {
-                if (self::is_enabled($library)) return $library;
+                if ($this->is_enabled($library)) return $library;
             }
             else {
                 // Regular expression + enabled
-                foreach (self::$enabled as $library => $data) {
+                foreach ($this->enabled as $library => $data) {
                     if (preg_match($library_regex, $library)) return $library;
                 }
             }
@@ -184,14 +198,14 @@ class Librarian
 
         // Disabled?
         if ($limit_to === null || $limit_to === 'disabled') {
-            self::get_disabled(false);
+            $this->get_disabled(false);
             // No regular expression + disabled
             if (!$library_regex) {
-                if (isset(self::$disabled[$library])) return $library;
+                if (isset($this->disabled[$library])) return $library;
             }
             else {
                 // Regular expression + disabled
-                foreach (self::$disabled as $library => $data) {
+                foreach ($this->disabled as $library => $data) {
                     if (preg_match($library_regex, $library)) return $library;
                 }
             }
@@ -210,7 +224,7 @@ class Librarian
      * --
      * @return array  Empty if not matches.
      */
-    public static function resolve_all($library, $limit_to = null)
+    public function resolve_all($library, $limit_to = null)
     {
         $stack = [];
 
@@ -229,25 +243,25 @@ class Librarian
         if ($limit_to === null || $limit_to === 'enabled') {
             // No regular expression + enabled
             if (!$library_regex) {
-                if (self::is_enabled($library)) $stack[] = $library;
+                if ($this->is_enabled($library)) $stack[] = $library;
             }
             else {
                 // Regular expression + enabled
-                foreach (self::$enabled as $library => $data) {
+                foreach ($this->enabled as $library => $data) {
                     if (preg_match($library_regex, $library)) $stack[] = $library;
                 }
             }
         }
 
         if ($limit_to === null || $limit_to === 'disabled') {
-            self::get_disabled(false);
+            $this->get_disabled(false);
             // No regular expression + disabled
             if (!$library_regex) {
-                    if (isset(self::$disabled[$library])) $stack[] = $library;
+                    if (isset($this->disabled[$library])) $stack[] = $library;
             }
             else {
                 // Regular expression + disabled
-                foreach (self::$disabled as $library => $data) {
+                foreach ($this->disabled as $library => $data) {
                     if (preg_match($library_regex, $library)) $stack[] = $library;
                 }
             }
@@ -271,70 +285,70 @@ class Librarian
      * --
      * @return mixed
      */
-    public static function factory($library)
+    public function factory($library)
     {
         // Check if is enabled?
-        if (!self::is_enabled($library)) {
+        if (!$this->is_enabled($library)) {
             throw new \Mysli\Core\ValueException(
-                "The library is not enabled: `{$library}`."
+                "The library is not enabled: '{$library}'."
             );
         }
 
         // Check if we have it cached...
-        if (isset(self::$cache[$library]) && is_object(self::$cache[$library])) {
-            Log::info(
-                "The library `{$library}` was found in cache!",
+        if (isset($this->cache[$library]) && is_object($this->cache[$library])) {
+            $this->log->info(
+                "The library '{$library}' was found in cache!",
                 __FILE__, __LINE__
             );
-            return self::$cache[$library];
+            return $this->cache[$library];
         }
 
         // Get library info
-        $info = self::get_details($library);
+        $info = $this->get_details($library);
 
         // Do we have the index?
         if (!isset($info['instantiation'])) {
             throw new \Mysli\Core\DataException(
-                "The `instantiation` key is missing in meta for: `{$library}`."
+                "The 'instantiation' key is missing in meta for: '{$library}'."
             );
         }
 
         // Check the instantiation instructions
         if ($info['instantiation'] === 'never') {
-            Log::info(
-                "The library `{$library}` will not be auto instantiated. " .
-                'The `instantiation` is set to `never`.',
+            $this->log->info(
+                "The library '{$library}' will not be auto instantiated. " .
+                "The 'instantiation' is set to 'never'.",
                 __FILE__, __LINE__
             );
             return false;
         }
 
         // Check if we have class and if not, fetch it ...
-        $class = self::lib_to_ns($library);
+        $class = $this->lib_to_ns($library);
 
         if (!class_exists($class, false)) {
-            if (!self::load($library)) {
+            if (!$this->load($library)) {
                 return false;
             }
         }
 
         // Check if we have manual instruction for instantiation
         if ($info['instantiation'] === 'manual') {
-            Log::info(
-                "The library `{$library}` should be manually instantiated. ".
-                'The `instantiation` is set to `manual`. ' .
-                'Will return a class name.',
+            $this->log->info(
+                "The library '{$library}' should be manually instantiated. ".
+                "The 'instantiation' is set to 'manual'. " .
+                "Will return a class name.",
                 __FILE__, __LINE__
             );
             return $class;
         }
 
         // Instantiate class now...
-        $object = new $class(self::dependencies_factory($library));
+        $object = new $class($this->dependencies_factory($library));
 
         // Do we have instruction to be instantiated once?
         if ($info['instantiation'] === 'once') {
-            self::$cache[$library] = $object;
+            $this->cache[$library] = $object;
         }
 
         return $object;
@@ -347,42 +361,46 @@ class Librarian
      * --
      * @return array
      */
-    public static function dependencies_factory($library)
+    public function dependencies_factory($library)
     {
         $result = [];
 
-        $info = self::get_details($library);
+        $info = $this->get_details($library);
         if (!$info) {
-            throw new \Mysli\Core\DataException(
-                "Cannot get details for: `{$library}`."
+            throw new \Mysli\Core\DependencyException(
+                "Cannot get details for: '{$library}'.",
+                10
             );
         }
         $dependencies = $info['depends_on'];
 
         foreach ($dependencies as $dependency => $version) {
-            $dependency_resovled = self::resolve($dependency, 'enabled');
+            $dependency_resovled = $this->resolve($dependency, 'enabled');
 
             // Check if we have match
             if (!$dependency_resovled) {
-                throw new \Mysli\Core\FileSystemException(
-                    "Cannot get dependency: `{$dependency}` version: `{$version}`."
+                throw new \Mysli\Core\DependencyException(
+                    "Cannot get dependency: '{$dependency}' version: '{$version}'.",
+                    20
                 );
             }
             // Check if is enabled
-            if (!self::is_enabled($dependency_resovled)) {
-                throw new \Mysli\Core\ValueException(
-                    "Dependency is not enabled: `{$dependency}` cannot proceed."
+            if (!$this->is_enabled($dependency_resovled)) {
+                throw new \Mysli\Core\DependencyException(
+                    "Dependency is not enabled: '{$dependency}' cannot proceed.",
+                    30
                 );
             }
             // Check if version is OK
-            $resolved_version = self::get_details($dependency_resovled)['version'];
-            if (!Int::compare_versions($resolved_version, $version)) {
-                throw new \Mysli\Core\ValueException(
+            $resolved_version = $this->get_details($dependency_resovled)['version'];
+            if (!\Int::compare_versions($resolved_version, $version)) {
+                throw new \Mysli\Core\DependencyException(
                     "Dependency version is not correct. ".
-                    "Version: `{$resolved_version}` required: `{$version}`."
+                    "Version: '{$resolved_version}' required: '{$version}'.",
+                    40
                 );
             }
-            $result[explode('/', $dependency_resovled)[1]] = self::factory($dependency_resovled);
+            $result[explode('/', $dependency_resovled)[1]] = $this->factory($dependency_resovled);
         }
         return $result;
     }
@@ -394,16 +412,16 @@ class Librarian
      * --
      * @return mixed  Object (setup) or false
      */
-    public static function construct_setup($library)
+    public function construct_setup($library)
     {
         $library_vendor = explode('/', $library)[0];
         $library_name   = explode('/', $library)[1];
 
         // Resolve class name with namespace!
-        $setup_class_name = Str::to_camelcase($library_vendor) .
-                            CHAR_BACKSLASH .
-                            Str::to_camelcase($library_name) .
-                            CHAR_BACKSLASH .
+        $setup_class_name = \Str::to_camelcase($library_vendor) .
+                            '\\' .
+                            \Str::to_camelcase($library_name) .
+                            '\\' .
                             'Setup';
 
         // Does setup file exists
@@ -411,19 +429,19 @@ class Librarian
             return false;
         }
 
-        Log::info("Setup was found for `{$library}`.", __FILE__, __LINE__);
+        $this->log->info("Setup was found for '{$library}'.", __FILE__, __LINE__);
 
         if (!class_exists($setup_class_name, false)) {
             include(libpath(ds($library, 'setup.php')));
             if (!class_exists($setup_class_name, false)) {
-                throw new \Mysli\Core\FileSystemException(
-                    "Class not found `{$setup_class_name}`."
+                throw new \Mysli\Core\DataException(
+                    "Class not found '{$setup_class_name}'."
                 );
             }
         }
 
         // Construct and return
-        $dependencies = self::dependencies_factory($library);
+        $dependencies = $this->dependencies_factory($library);
         return new $setup_class_name($dependencies);
     }
 
@@ -434,10 +452,10 @@ class Librarian
      * --
      * @return void
      */
-    public static function autoloader($class)
+    public function autoloader($class)
     {
-        $library = self::ns_to_lib($class);
-        self::load($library);
+        $library = $this->ns_to_lib($class);
+        $this->load($library);
     }
 
     /**
@@ -448,15 +466,15 @@ class Librarian
      * --
      * @return boolean
      */
-    public static function load($library, $force = false)
+    public function load($library, $force = false)
     {
-        $class = self::lib_to_ns($library);
+        $class = $this->lib_to_ns($library);
 
         if (class_exists($class, false)) { return true; }
 
-        if (!self::is_enabled($library) && !$force) {
-            Log::info(
-                "Cannot load the class: `{$class}`, ".
+        if (!$this->is_enabled($library) && !$force) {
+            $this->log->info(
+                "Cannot load the class: '{$class}', " .
                 "because the library is not enabled.",
                 __FILE__, __LINE__
             );
@@ -466,8 +484,8 @@ class Librarian
         $filename = libpath(ds($library, explode('/', $library)[1] . '.php'));
 
         if (!file_exists($filename)) {
-            Log::info(
-                "File not found: `{$filename}`.",
+            $this->log->info(
+                "File not found: '{$filename}'.",
                 __FILE__, __LINE__
             );
             return false;
@@ -486,19 +504,21 @@ class Librarian
      * --
      * @return mixed  Result of the execution.
      */
-    public static function call($library, $method, array $params = array())
+    public function call($library, $method, array $params = array())
     {
-        $object = self::factory($library);
+        $object = $this->factory($library);
 
         if (!is_object($object)) {
             throw new \Mysli\Core\ValueException(
-                'Could not construct the library: `' . $library . '`.'
+                "Could not construct the library: '{$library}'.",
+                10
             );
         }
 
         if (!method_exists($object, $method)) {
             throw new \Mysli\Core\ValueException(
-                "Required method doesn't exists: `{$method}` for `{$library}`."
+                "Required method doesn't exists: '{$method}' for '{$library}'.",
+                20
             );
         }
 
@@ -512,13 +532,13 @@ class Librarian
      * --
      * @return string
      */
-    public static function lib_to_ns($library)
+    public function lib_to_ns($library)
     {
         if (strpos($library, '/') === false) {
             return $library;
         }
 
-        $class = Str::to_camelcase($library);
+        $class = \Str::to_camelcase($library);
         $class = str_replace('/', '\\', $class);
 
         return $class;
@@ -532,13 +552,13 @@ class Librarian
      * --
      * @return string
      */
-    public static function ns_to_lib($class)
+    public function ns_to_lib($class)
     {
         if (strpos($class, '\\') === false) {
             return $class;
         }
 
-        $library = Str::to_underscore($class);
+        $library = \Str::to_underscore($class);
         $library = strtolower($library);
         $library = str_replace('\\', '/', $library);
 
@@ -552,9 +572,9 @@ class Librarian
      * --
      * @return boolean
      */
-    public static function is_enabled($library)
+    public function is_enabled($library)
     {
-        return isset(self::$enabled[$library]);
+        return isset($this->enabled[$library]);
     }
 
     /**
@@ -567,12 +587,12 @@ class Librarian
      * --
      * @return array
      */
-    public static function get_dependencies($library, $deep = false)
+    public function get_dependencies($library, $deep = false)
     {
-        $details = self::get_details($library);
+        $details = $this->get_details($library);
         if (!is_array($details) || empty($details)) {
             throw new \Mysli\Core\DataException(
-                "Could not get details for `{$library}`."
+                "Could not get details for '{$library}'."
             );
         }
 
@@ -583,12 +603,12 @@ class Librarian
         ];
 
         foreach ($details['depends_on'] as $dependency => $version) {
-            $dependency_resovled = self::resolve($dependency);
+            $dependency_resovled = $this->resolve($dependency);
             if (!$dependency_resovled) {
                 $dependencies['missing'][$dependency] = $version;
             }
             else {
-                if (self::is_enabled($dependency_resovled)) {
+                if ($this->is_enabled($dependency_resovled)) {
                     $dependencies['enabled'][$dependency_resovled] = $version;
                 } else {
                     $dependencies['disabled'][$dependency_resovled] = $version;
@@ -599,18 +619,18 @@ class Librarian
         if (!$deep) return $dependencies;
 
         foreach ($dependencies['disabled'] as $dependency => $version) {
-            $dependency_resovled = self::resolve($dependency);
+            $dependency_resovled = $this->resolve($dependency);
             if (!$dependency_resovled) {
                 $dependencies['missing'] = array_merge(
                     [$dependency => $version],
                     $dependencies['missing']
                 );
             } else {
-                if (self::is_enabled($dependency_resovled)) {
+                if ($this->is_enabled($dependency_resovled)) {
                     $dependencies['enabled'][$dependency_resovled] = $version;
                 } else {
-                    $dependencies = Arr::merge(
-                        self::get_dependencies($dependency_resovled, true),
+                    $dependencies = \Arr::merge(
+                        $this->get_dependencies($dependency_resovled, true),
                         $dependencies
                     );
                 }
@@ -631,12 +651,12 @@ class Librarian
      * --
      * @return array
      */
-    public static function get_dependees($library, $deep = false)
+    public function get_dependees($library, $deep = false)
     {
-        $details = self::get_details($library);
+        $details = $this->get_details($library);
         if (!is_array($details) || empty($details)) {
             throw new \Mysli\Core\DataException(
-                "Could not get details for `{$library}`."
+                "Could not get details for '{$library}'."
             );
         }
 
@@ -646,8 +666,8 @@ class Librarian
 
         foreach ($details['required_by'] as $dependee) {
             $dependees[] = $dependee;
-            $dependees = Arr::merge(
-                self::get_dependees($dependee, true),
+            $dependees = \Arr::merge(
+                $this->get_dependees($dependee, true),
                 $dependees
             );
         }
@@ -664,21 +684,21 @@ class Librarian
      * --
      * @return boolean
      */
-    public static function disable($library)
+    public function disable($library)
     {
         // Is enabled at all?
-        if (!self::is_enabled($library)) {
+        if (!$this->is_enabled($library)) {
             throw new \Mysli\Core\ValueException(
-                "Cannot disable library: `{$library}` it's not enabled."
+                "Cannot disable library: '{$library}' it's not enabled."
             );
         }
 
-        $info = self::get_details($library);
+        $info = $this->get_details($library);
 
         // Is required by other libraries?
         if (!empty($info['required_by'])) {
-            Log::info(
-                "Will disable library: `{$library}` ".
+            $this->log->info(
+                "Will disable library: '{$library}' ".
                 "despite the fact that it's required by: " .
                 dump_r($info['required_by']),
                 __FILE__, __LINE__
@@ -687,14 +707,14 @@ class Librarian
 
         // Remove itself from required_by
         foreach ($info['depends_on'] as $dependency => $version) {
-            $dependency = self::resolve($dependency, 'enabled');
+            $dependency = $this->resolve($dependency, 'enabled');
             if ($dependency) {
-                if (in_array($library, self::$enabled[$dependency]['required_by'])) {
+                if (in_array($library, $this->enabled[$dependency]['required_by'])) {
                     unset(
-                        self::$enabled[$dependency]['required_by'][
+                        $this->enabled[$dependency]['required_by'][
                             array_search(
                                 $library,
-                                self::$enabled[$dependency]['required_by'])
+                                $this->enabled[$dependency]['required_by'])
                         ]
                     );
                 }
@@ -702,12 +722,12 @@ class Librarian
         }
 
         // Remove the main key
-        if (isset(self::$enabled[$library])) {
-            unset(self::$enabled[$library]);
+        if (isset($this->enabled[$library])) {
+            unset($this->enabled[$library]);
         }
 
         // Save changes
-        return self::registry_save();
+        return $this->registry_save();
     }
 
     /**
@@ -719,7 +739,7 @@ class Librarian
      * --
      * @return boolean
      */
-    public static function enable($library)
+    public function enable($library)
     {
         // Resolve the path
         $library_path   = libpath($library);
@@ -729,27 +749,27 @@ class Librarian
         // Check if main class file exists
         if (!file_exists(ds($library_path, $library_name.'.php'))) {
             throw new \Mysli\Core\FileSystemException(
-                "Cannot find main library's class `{$library_name}.php` ".
-                "in `{$library_path}`."
+                "Cannot find main library's class '{$library_name}.php' ".
+                "in '{$library_path}'."
             );
         }
 
         // Get info!
-        $info = self::get_details($library);
+        $info = $this->get_details($library);
 
         // Add new required_by key
         foreach ($info['depends_on'] as $dependency => $version) {
-            $dependency = self::resolve($dependency, 'enabled');
+            $dependency = $this->resolve($dependency, 'enabled');
             if ($dependency) {
-                self::$enabled[$dependency]['required_by'][] = $library;
+                $this->enabled[$dependency]['required_by'][] = $library;
             }
         }
 
         // Add library's details to the register
         $info['required_by'] = [];
-        self::$enabled[$library] = $info;
+        $this->enabled[$library] = $info;
 
-        return self::registry_save();
+        return $this->registry_save();
     }
 
     /**
@@ -757,8 +777,8 @@ class Librarian
      * --
      * @return boolean
      */
-    protected static function registry_save()
+    protected function registry_save()
     {
-        return file_put_contents(self::$filename, json_encode(self::$enabled));
+        return file_put_contents($this->filename, json_encode($this->enabled));
     }
 }

@@ -5,19 +5,26 @@ namespace Mysli\Core\Lib;
 class Language
 {
     // All translations
-    private static $dictionary = [];
+    protected $dictionary = [];
 
     // List of loaded files (so that we don't load and parse a file twice)
-    private static $loaded     = [];
+    protected $loaded     = [];
+
+    protected $log;
+
+    public function __construct(array $config = [], array $dependencies = [])
+    {
+        $this->log = $dependencies['log'];
+    }
 
     /**
      * Will return language debug (info)
      * --
      * @return array
      */
-    public static function dump()
+    public function dump()
     {
-        return [self::$loaded, self::$dictionary];
+        return [$this->loaded, $this->dictionary];
     }
 
     /**
@@ -25,9 +32,9 @@ class Language
      * --
      * @return string
      */
-    public static function as_json()
+    public function as_json()
     {
-        return JSON::encode(self::$dictionary);
+        return \JSON::encode($this->dictionary);
     }
 
     /**
@@ -35,9 +42,9 @@ class Language
      * --
      * @return array
      */
-    public static function as_array()
+    public function as_array()
     {
-        return self::$dictionary;
+        return $this->dictionary;
     }
 
     /**
@@ -47,22 +54,25 @@ class Language
      * --
      * @return boolean
      */
-    public static function append($filename)
+    public function append($filename)
     {
         // Check if file was already loaded
-        if (in_array($filename, self::$loaded)) {
-            Log::info("File is already loaded, won't load it twice: `{$filename}`.", __FILE__, __LINE__);
+        if (in_array($filename, $this->loaded)) {
+            $this->log->info(
+                "File is already loaded, won't load it twice: '{$filename}'.",
+                __FILE__, __LINE__
+            );
             return false;
         }
         else {
-            self::$loaded[] = $filename;
+            $this->loaded[] = $filename;
         }
 
-        $processed = self::process($filename);
+        $processed = $this->process($filename);
 
         if (is_array($processed)) {
-            self::$dictionary = array_merge(self::$dictionary, $processed);
-            Log::info("Language loaded: `{$file}`", __FILE__, __LINE__);
+            $this->dictionary = array_merge($this->dictionary, $processed);
+            $this->log->info("Language loaded: '{$file}'", __FILE__, __LINE__);
             return true;
         }
     }
@@ -73,10 +83,10 @@ class Language
      * @param   string  $filename
      * @return  array
      */
-    private static function process($filename)
+    private function process($filename)
     {
-        $file_contents = FS::file_read($filename);
-        $file_contents = Str::standardize_line_endings($file_contents);
+        $file_contents = \FS::file_read($filename);
+        $file_contents = \Str::standardize_line_endings($file_contents);
 
         // Remove comments
         $file_contents = preg_replace('/^#.*$/m', '', $file_contents);
@@ -111,11 +121,11 @@ class Language
      * --
      * @return  string
      */
-    public static function translate($key, $params=[])
+    public function translate($key, array $params = [])
     {
-        if (isset(self::$dictionary[$key]))
+        if (isset($this->dictionary[$key]))
         {
-            $return = self::$dictionary[$key];
+            $return = $this->dictionary[$key];
 
             // Check for any variables {1}, ...
             if ($params) {
@@ -133,7 +143,7 @@ class Language
             return $return;
         }
         else {
-            Log::warn("Language key not found: `{$key}`.", __FILE__, __LINE__);
+            trigger_error("Language key not found: '{$key}'.", E_USER_WARNING);
             return $key;
         }
     }
