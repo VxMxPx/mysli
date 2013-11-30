@@ -1,5 +1,5 @@
 {
-    "component"     : "mysli/core",
+    "library"       : "mysli/core",
     "instantiation" : "once",
     "version"       : "0.1",
     "depends_on"    : null,

@@ -20,8 +20,11 @@ class Dot
      */
     public function __construct(array $config = [], array $dependencies = [])
     {
+        $this->core = $dependencies['core'];
         $this->scripts_registry = $this->discover_scripts();
-        $this->core = $core;
+
+        // Remove vendor for non-specific usage in scripts we're calling.
+        class_alias('\Mysli\Dot\Util', 'Dot\Util');
     }
 
     /**
@@ -35,7 +38,7 @@ class Dot
         $scripts = [];
 
         foreach ($enabled as $library => $details) {
-            $path = libpath($library, 'scripts');
+            $path = libpath($library . '/scripts');
             if (!file_exists($path) || !is_dir($path)) {
                 continue;
             }
@@ -115,8 +118,17 @@ class Dot
             return false;
         }
 
+        $libname = explode('/', $library)[1];
         $dependencies = $this->core->librarian->dependencies_factory($library);
-        return new $class($dependencies);
+        $dependencies = array_merge(
+            [
+                // Send its own library in
+                $libname => $this->core->librarian->factory($library)
+            ],
+            $dependencies
+        );
+        $config = $this->core->cfg->get($library, []);
+        return new $class($config, $dependencies);
     }
 
     /**

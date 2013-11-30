@@ -232,14 +232,16 @@ class Core
      */
     protected function load_util(array $libraries)
     {
-        // Include core functions
-        include(
-            $this->path .
-            DIRECTORY_SEPARATOR .
-            'util' .
-            DIRECTORY_SEPARATOR .
-            'functions.php'
-        );
+        if (!function_exists('ds')) {
+            // Include core functions
+            include(
+                $this->path .
+                DIRECTORY_SEPARATOR .
+                'util' .
+                DIRECTORY_SEPARATOR .
+                'functions.php'
+            );
+        }
 
         foreach ($libraries as $class => $alias) {
             $file = strtolower($class);

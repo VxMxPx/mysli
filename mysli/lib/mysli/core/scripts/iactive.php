@@ -6,7 +6,9 @@ class Iactive
 {
     public function action_index($args = [])
     {
-        \DotUtil::plain("Hi there! This is an interactive console for the Mysli CMS.");
+        \Dot\Util::plain(
+            "Hi there! This is an interactive console for the Mysli CMS."
+        );
 
         do {
             if (function_exists('readline')) {
@@ -26,6 +28,6 @@ class Iactive
             echo "\n" . eval('echo dump_r(' . $stdin . ');');
         } while(true);
 
-        \DotUtil::plain('Bye now!');
+        \Dot\Util::plain('Bye now!');
     }
 }

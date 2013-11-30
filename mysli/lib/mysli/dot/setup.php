@@ -16,7 +16,6 @@ class Setup
         // Load dot.tpl
         $dot_contents = file_get_contents(libpath('mysli/dot/setup/dot.tpl'));
         // Replace {{LIBPATH}} and {{PUBPATH}}
-        $ds = DIRECTORY_SEPARATOR;
         $dot_contents = str_replace(
             [
                 '{{LIBPATH}}',

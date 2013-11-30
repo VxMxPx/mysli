@@ -1,9 +1,9 @@
 {
-    "component"     : "mysli/dot",
+    "library"       : "mysli/dot",
     "instantiation" : "once",
     "version"       : "0.1",
     "depends_on"    : {
-        "*/core" : ">= 0.1"
+        "*/core"    : ">= 0.1"
     },
     "maintainer"    : "Marko Gajšt <marko@gaj.st>",
     "description"   : "Mysli Dot: Command Line Interface."

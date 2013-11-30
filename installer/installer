@@ -85,7 +85,7 @@ print_line('Core was successfully enabled.');
 $setup->after_enable();
 
 // Construct Core
-print_line('Locating for core: ' . $core);
+print_line('Locating main core file: ' . $core);
 $core_file = realpath($libpath . DIRECTORY_SEPARATOR . $core . DIRECTORY_SEPARATOR . 'core.php');
 if (!file_exists($core_file)) {
     print_line('Cannot find core file.');
@@ -104,7 +104,14 @@ if (!empty($dot_dependencies['missing']) || !empty($dot_dependencies['disabled']
     print_line('Cannot enable DOT libraray. Command line interface will not be available.');
     exit(6);
 }
+// Deal with the setup...
+$setup = $core->librarian->construct_setup($dot_lib);
+if (!$setup->before_enable()) {
+    print_line('Setup for DOT failed.');
+    exit(6);
+}
 if (!$core->librarian->enable($dot_lib)) {
+    $setup->after_enable();
     print_line('Failed to enable DOT.');
     exit(6);
 } else {

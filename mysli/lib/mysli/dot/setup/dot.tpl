@@ -83,5 +83,6 @@ include($core_path);
 $core = new $core_class($pubpath, $libpath, $datpath);
 
 // Dot execution
-$dot = $core->librarian->factory('*/dot');
+$dot_lib = $core->librarian->resolve('*/dot');
+$dot = $core->librarian->factory($dot_lib);
 $dot->run($_SERVER['argv']);
