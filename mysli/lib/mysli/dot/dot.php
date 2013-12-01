@@ -132,7 +132,7 @@ class Dot
     }
 
     /**
-     * Execute particulat script.
+     * Execute particular script.
      * --
      * @param  string $script
      * @param  string $command

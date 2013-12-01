@@ -34,6 +34,22 @@ class Libraries
         \Dot\Util::plain('Example: libraries enable mysli/backend');
         return true;
     }
+    protected function enable_helper($lib)
+    {
+        $setup = $this->core->librarian->construct_setup($lib);
+        if (!$setup->before_enable()) {
+            \Dot\Util::error('Setup failed for: ' . $lib);
+            return false;
+        }
+        if (!$this->core->librarian->enable($lib)) {
+            \Dot\Util::error('Failed to enable: ' . $lib);
+            return false;
+        } else {
+            \Dot\Util::success('Enabled: ' . $lib);
+            $setup->after_enable();
+            return true;
+        }
+    }
     public function action_enable($lib)
     {
         if (!$lib) {
@@ -61,20 +77,12 @@ class Libraries
                 return false;
             }
             foreach ($dependencies['disabled'] as $dependency => $version) {
-                if (!$this->core->librarian->enable($dependency)) {
-                    \Dot\Util::error('Failed to enable: ' . $dependency);
+                if (!$this->enable_helper($dependency)) {
                     return false;
-                } else {
-                    \Dot\Util::success('Enabled: ' . $dependency);
                 }
             }
         }
-        if (!$this->core->librarian->enable($lib)) {
-            \Dot\Util::error('Failed to enable: ' . $lib);
-            return false;
-        } else {
-            \Dot\Util::success('Enabled: ' . $lib);
-        }
+        return $this->enable_helper($lib);
     }
 
     public function help_disable()
@@ -86,7 +94,22 @@ class Libraries
         \Dot\Util::plain('Example: libraries disable mysli/backend');
         return true;
     }
-
+    protected function disable_helper($lib)
+    {
+        $setup = $this->core->librarian->construct_setup($lib);
+        if (!$setup->before_disable()) {
+            \Dot\Util::error('Setup failed for: ' . $lib);
+            return false;
+        }
+        if (!$this->core->librarian->disable($lib)) {
+            \Dot\Util::error('Failed to disable: ' . $lib);
+            return false;
+        } else {
+            \Dot\Util::success('Disabled: ' . $lib);
+            $setup->after_disable();
+            return true;
+        }
+    }
     public function action_disable($lib)
     {
         if (!$lib) {
@@ -106,20 +129,12 @@ class Libraries
                 return false;
             }
             foreach ($dependees as $dependee) {
-                if (!$this->core->librarian->disable($dependee)) {
-                    \Dot\Util::error('Failed to disable: ' . $dependee);
+                if (!$this->disable_helper($dependee)) {
                     return false;
-                } else {
-                    \Dot\Util::success('Disabled: ' . $dependee);
                 }
             }
         }
-        if (!$this->core->librarian->disable($lib)) {
-            \Dot\Util::error('Failed to disable: ' . $lib);
-            return false;
-        } else {
-            \Dot\Util::success('Disabled: ' . $lib);
-        }
+        return $this->disable_helper($lib);
     }
 
     public function help_list()
