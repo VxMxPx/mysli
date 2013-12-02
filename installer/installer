@@ -41,14 +41,14 @@ if (!file_exists(__DIR__ . DIRECTORY_SEPARATOR . 'common.php')) {
 include __DIR__ . DIRECTORY_SEPARATOR . 'common.php';
 
 // Resolve library path
-$libpath = resolve_path($libpath . DIRECTORY_SEPARATOR . 'lib', __DIR__ . DIRECTORY_SEPARATOR);
+$libpath = resolve_path(dst($libpath, 'lib'), __DIR__ . DIRECTORY_SEPARATOR);
 $libpath = $libpath[0];
 
 // Construct core setup
 print_line('Locating setup for core: ' . $core);
-$setup_file = realpath($libpath . DIRECTORY_SEPARATOR . $core . DIRECTORY_SEPARATOR . 'setup.php');
+$setup_file = realpath(dst($libpath, $core, 'setup.php'));
 if (!file_exists($setup_file)) {
-    print_line('Cannot find setup file.');
+    print_line('Cannot find setup file: ' . $setup_file);
     exit(1);
 }
 include $setup_file;
@@ -86,9 +86,9 @@ $setup->after_enable();
 
 // Construct Core
 print_line('Locating main core file: ' . $core);
-$core_file = realpath($libpath . DIRECTORY_SEPARATOR . $core . DIRECTORY_SEPARATOR . 'core.php');
+$core_file = realpath(dst($libpath, $core, 'core.php'));
 if (!file_exists($core_file)) {
-    print_line('Cannot find core file.');
+    print_line('Cannot find core file: ' . $core_file);
     exit(1);
 }
 include $core_file;

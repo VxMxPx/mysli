@@ -46,8 +46,8 @@ class Setup
                 '{{DATPATH}}'
             ],
             [
-                '/' . str_replace(DIRECTORY_SEPARATOR, '/', relative_path($this->libpath, $this->pubpath)),
-                '/' . str_replace(DIRECTORY_SEPARATOR, '/', relative_path($this->datpath, $this->pubpath)),
+                '/' . str_replace(DIRECTORY_SEPARATOR, '/', \relative_path($this->libpath, $this->pubpath)),
+                '/' . str_replace(DIRECTORY_SEPARATOR, '/', \relative_path($this->datpath, $this->pubpath)),
             ],
             $index_contents
         );
