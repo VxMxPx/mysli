@@ -160,13 +160,17 @@ class Arr
                 }
             } elseif (is_object($val) || is_bool($val) || is_numeric($val)) {
                 $result[$key] = $val;
-            } else {
-                if ($val && !empty(trim($val))) {
+            } elseif (is_string($val)) {
+                if (trim($val)) {
                     $result[$key] = $val;
                 } else {
                     // Position counter will not be increased
                     continue;
                 }
+            } elseif ($val) {
+                $result[$key] = $val;
+            } else {
+                continue;
             }
             $position++;
         }
