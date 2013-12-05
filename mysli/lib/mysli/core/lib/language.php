@@ -86,7 +86,7 @@ class Language
     private function process($filename)
     {
         $file_contents = \FS::file_read($filename);
-        $file_contents = \Str::standardize_line_endings($file_contents);
+        $file_contents = \Str::to_unix_line_endings($file_contents);
 
         // Remove comments
         $file_contents = preg_replace('/^#.*$/m', '', $file_contents);
