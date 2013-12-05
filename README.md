@@ -5,21 +5,40 @@ Mysli CMS / Framework
 
 Work in progress...
 
-Task-list 11/2013:
+Todo:
 
 ```
-[x] Basic structure
-[x] Core library
-[x] Installer library
-[x] Librarian
-[~] Dashboard library
-[ ] Dashboard JavaScript
-[x] JS Panels
-[ ] Auth libraries
-[ ] Content editing libraries
-[x] FS library finish + tests
-[ ] Core: CCI
-[ ] Core: Validator
+- Frontend library
+- Dashboard library
+- Dashboard JavaScript
+- Auth libraries
+- Content editing libraries
+- Common Configuration Layer (?)
+- Common Dashboard Layer (?)
+- Validator
+- Design implementation
+```
+
+Changelog 12/2013:
+
+```
++ Str library tests
+- Dot JSON file, scripts are now discovered dynamically
+* Core + most of the core libraries are not static anymore
+* Dot moved to separated library
+* Validator (moved out of core, not implemented yet)
+```
+
+Changelog 11/2013:
+
+```
++ Basic structure
++ Core library
++ Installer cli
++ Librarian + tests
++ FS library finish + tests
++ JS Panels (demo version, not committed)
++ Design (PSD base, not implemented)
 ```
 
 Perhaps:
