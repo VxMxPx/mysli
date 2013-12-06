@@ -1,8 +1,6 @@
 Mysli
 =====
 
-Mysli CMS / Framework
-
 Work in progress...
 
 Todo:

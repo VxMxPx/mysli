@@ -393,65 +393,56 @@ class Str
         return $string;
     }
 
-
-
     /**
      * Get desired number of words - shorten string nicely.
      * --
-     * @param   string  $input
-     * @param   integer $limit
-     * @param   string  $ending
+     * @param   string  $string
+     * @param   integer $limit   To how many words should the string be limited?
+     * @param   string  $ending  To be appended at the end of the string, but
+     *                           only if it was shortened.
+     * --
      * @return  string
      */
-    public static function limit_words($input, $limit, $ending=null)
+    public static function limit_words($string, $limit, $ending = null)
     {
-        $input = (string) $input;
+        $string = (string) $string;
+        $string_initial_length = mb_strlen($string);
 
         // Check if limit < 1
         if ($limit < 1) {
             throw new \Mysli\Core\ValueException(
-                'Limit must be at least one character!'
+                'Limit must be greater than zero!'
             );
         }
 
-        $input_original = $input;
-        $input = explode(' ', $input);
-        $final = ''; $i = 0;
-        if (is_array($input)) {
-            foreach ($input as $word)
-            {
-                $final .= $word . ' ';
-
-                if ($i >= $limit)
-                    { break; }
-                else
-                    { $i++; }
-            }
-        }
-        else {
-            return $input;
+        if (strpos($string, ' ') === false) {
+            return $string;
         }
 
-        if ($ending && strlen($input_original) !== strlen($final))
-            { $final = $final . $ending; }
+        $string = implode(' ', array_slice(explode(' ', $string), 0, $limit));
 
-        return rtrim($final);
+        if ($ending && mb_strlen($string) !== $string_initial_length) {
+            $string = $string . $ending;
+        }
+
+        return $string;
     }
 
     /**
      * Get desired number of characters.
      * --
-     * @param   string  $input
-     * @param   integer $limit
-     * @param   string  $ending
+     * @param   string  $string
+     * @param   integer $limit  To how many characters should the string
+     *                          be limited?
+     * @param   string  $ending To be appended at the end of the string, but
+     *                          only if it was shortened.
+     * --
      * @return  string
      */
-    public static function limit_length($input, $limit, $ending=null)
+    public static function limit_length($string, $limit, $ending = null)
     {
-        // Adjust length if we have special ending
-        if ($ending) { $limit = $limit - strlen($ending); }
-        $input = (string) $input;
-        $input_original = $input;
+        $string = (string) $string;
+        $string_initial_length = mb_strlen($string);
 
         // Check if limit < 1
         if ($limit < 1) {
@@ -460,104 +451,116 @@ class Str
             );
         }
 
-        $input = substr($input, 0, $limit);
+        $string = substr($string, 0, $limit);
 
-        if ($ending && strlen($input_original) !== strlen($input))
-            { $final = $final . $ending; }
+        if ($ending && mb_strlen($string) !== $string_initial_length) {
+            $string = $string . $ending;
+        }
 
-        return $input;
+        return $string;
     }
 
     /**
      * Explode and trim data.
-     *
-     * @param  string  $separator If array, then we'll explode by all of them!
+     * --
+     * @param  string  $separator  Array|String
      * @param  string  $input
      * @param  string  $trim_mask
      * @param  integer $limit
+     * --
      * @return array
      */
-    public static function explode_trim($separator, $input, $trim_mask='', $limit=false)
-    {
+    public static function explode_trim(
+        $separator,
+        $input,
+        $trim_mask = null,
+        $limit = false
+    ) {
         // If we wanna replace by more than one item!
         if (is_array($separator)) {
             $sep_first = $separator[0];
             unset($separator[0]);
 
             foreach ($separator as $sep) {
-                str_replace($sep, $sep_first, $input);
+                $input = str_replace($sep, $sep_first, $input);
             }
 
             $separator = $sep_first;
         }
 
-        if ($limit !== false)
-            { $d = explode($separator, $input, $limit); }
-        else
-            { $d = explode($separator, $input); }
+        if ($limit !== false) $d = explode($separator, $input, $limit);
+        else $d = explode($separator, $input);
 
         $f = array();
 
-        if (is_array($d))
-            { foreach($d as $i) { $f[] = trim($i, $trim_mask); } }
+        if (is_array($d)) {
+            foreach($d as $i) {
+                $f[] = $trim_mask ? trim($i, $trim_mask) : trim($i);
+            }
+        }
 
         return $f;
     }
 
     /**
      * Explode and trim data, and get particular index.
-     *
-     * @param  string  $separator If array, then we'll explode by all of them!
+     * --
+     * @param  mixed   $separator   Array|String
      * @param  string  $input
      * @param  integer $piece_index
+     * @param  string  $trim_mask
      * @param  integer $limit
-     * @return array or false
+     * --
+     * @return string  null if not found.
      */
-    public static function explode_get($separator, $input, $piece_index, $limit=false)
-    {
-        $return = self::explode_trim($separator, $input, $limit);
-        return isset($return[$piece_index]) ? $return[$piece_index] : false;
+    public static function explode_get(
+        $separator,
+        $input,
+        $piece_index,
+        $trim_mask = null,
+        $limit = false
+    ) {
+        $return = self::explode_trim($separator, $input, $trim_mask, $limit);
+        return isset($return[$piece_index]) ? $return[$piece_index] : null;
     }
 
     /**
      * Explode string by separator, but ignore protected regions.
      *     id='head' class='odd new' title='it\'s a nice day!' ---->
      * Space as a separator and array() as protected:
-     *     [["id='head'"], ["class='odd new'"], ["title='it\'s a nice day!'"]]
-     *
+     *     ["id='head'", "class='odd new'", "title='it\'s a nice day!'"]
+     * --
      * @param  string $input
      * @param  string $separator
      * @param  array  $protected Protected regions. As single character, when
      *                           same end as start, or array, with open and
      *                           end tag.
+     * --
      * @return array
      */
     public static function tokenize($input, $separator, $protected)
     {
         // Check if input is string
-        if (!is_string($input) || empty($input))
-            {  return false; }
+        if (!is_string($input) || empty($input)) return false;
 
         // Check if separator isn't just \ character
         if ($separator === '\\') {
-            trigger_error("Separator can't be backslash.", E_USER_WARNING);
-            return false;
+            throw new \Mysli\ValueException(
+                "Separator can't be backslash.", 1
+            );
         }
 
         // Open and close of protected region
         if (is_array($protected)) {
             if (count($protected) !== 2) {
-                trigger_error(
-                    "Protected need to have exactly 2 elements.",
-                    E_USER_WARNING
+                throw new \Mysli\ValueException(
+                    "Protected need to have exactly 2 elements.", 2
                 );
-                return false;
             }
 
             $protected_open = $protected[0];
             $protected_close = $protected[1];
-        }
-        else {
+        } else {
             $protected_open = $protected;
             $protected_close = $protected;
         }
@@ -581,13 +584,13 @@ class Str
         $result = array();
 
         // Now walk through string
-        for ($i=0; $i<$input_length; $i++) {
+        for ($i=0; $i < $input_length; $i++) {
             $current_char = $input[$i];
 
             switch ($current_char) {
                 case '\\':
                     $is_escaped = true;
-                    $current_token .= '\\';
+                    //$current_token .= '\\';
                     continue 2;
 
                 case $close_first:
@@ -652,38 +655,40 @@ class Str
      *     ----> pe***
      * input: peach, disallowed: peach, mask: *, keep: array(2, 2)
      *     ----> pe*ch
-     * @param  mixed   $input      String or array
+     * @param  string  $input
      * @param  mixed   $disallowed String, array or associative array
      * @param  string  $mask       Mask character
-     * @param  mixed   $keep       Integer, or array consisting of two numbers,
+     * @param  string  $keep       Integer, or string consisting of two numbers:
+     *                             1-2:
      *                             1: characters to keep on left,
      *                             2: characters to keep on right
+     * --
      * @return mixed   Depends on input type.
      */
-    public static function censor($input, $disallowed, $mask='*', $keep=2)
+    public static function censor($input, $disallowed, $mask = '*', $keep = 2)
     {
         // We need to have input of course...
-        if (empty($input)) { return $input; }
-
-        // Do we have an array as input?
-        if (is_array($input)) {
-            $result = array();
-            foreach ($input as $k => $value) {
-                $result[$k] = self::censor($value, $disallowed, $mask, $keep);
-            }
-            return $result;
-        }
+        if (!$input) return $input;
 
         // Disallowed must be an array
-        if (!is_array($disallowed)) { $disallowed = array($disallowed); }
+        if (!is_array($disallowed)) {
+            $disallowed = array($disallowed => null);
+        }
+        elseif (!Arr::is_associative($disallowed)) {
+            $tmp = [];
+            foreach ($disallowed as $kw) {
+                $tmp[$kw] = null;
+            }
+            $disallowed = $tmp;
+        }
 
         // Set keep ranges
-        if (is_array($keep)) {
+        if (is_string($keep) && strpos($keep, '-') !== false) {
+            $keep = explode('-', $keep);
             $keep_left  = Arr::element(0, $keep, 0);
             $keep_right = Arr::element(1, $keep, false);
             $keep_right = $keep_right ? -($keep_right) : false;
-        }
-        else {
+        } else {
             $keep_left  = $keep;
             $keep_right = false;
         }
@@ -692,27 +697,24 @@ class Str
         $keep[0] = $keep_left;
         $keep[1] = $keep_right;
 
-        foreach ($disallowed as $censor => $word) {
+        foreach ($disallowed as $word => $censor) {
             $regex = '/\b('.preg_quote($word).')\b/i';
             $input = preg_replace_callback(
             $regex,
             function($match) use ($censor, $mask, $keep) {
-                if (!is_integer($censor)) {
+                if (!is_null($censor)) {
                     return $censor;
-                }
-                else if (!$keep[0]) {
-                    return str_repeat($mask, strlen($match[0]));
-                }
-                else {
-                    $end = $keep[1] ? $keep[1] : strlen($match[0]);
-                    $mask_length = strlen($match[0]);
+                // } else if (!$keep[0]) {
+                //     return str_repeat($mask, strlen($match[0]));
+                } else {
+                    $end = $keep[1] ? $keep[1] : mb_strlen($match[0]);
+                    $mask_length = mb_strlen($match[0]);
                     $mask_length = $mask_length - $keep[0];
                     $mask_length = $mask_length + $keep[1];
                     if ($mask_length >= 0) {
                         $mask_full = str_repeat($mask, $mask_length);
-                    }
-                    else {
-                        return str_repeat($mask, strlen($match[0]));
+                    } else {
+                        return str_repeat($mask, mb_strlen($match[0]));
                     }
                     return substr_replace($match[0], $mask_full, $keep[0], $end);
                 }
@@ -731,7 +733,7 @@ class Str
      * --
      * @return string
      */
-    public static function to_camelcase($string, $uc_first=true)
+    public static function to_camelcase($string, $uc_first = true)
     {
 
         // Convert _
@@ -744,21 +746,20 @@ class Str
         // Convert backslashes
         if (strpos($string, '\\') !== false) {
             $string = str_replace('\\', ' ', $string);
-            $string = ucwords($string);
+            $string = $uc_first ? ucwords($string) : lcfirst($string);
             $string = str_replace(' ', '\\', $string);
         }
 
         // Convert slashes
         if (strpos($string, '/') !== false) {
             $string = str_replace('/', ' ', $string);
-            $string = ucwords($string);
+            $string = $uc_first ? ucwords($string) : lcfirst($string);
             $string = str_replace(' ', '/', $string);
         }
 
         if (!$uc_first) {
             $string = lcfirst($string);
-        }
-        else {
+        } else {
             $string = ucfirst($string);
         }
 
