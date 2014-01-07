@@ -64,18 +64,18 @@ class JSON
      * @param mixed  $values   -- The value being encoded. Can be any type
      *                            except a resource . This function only works
      *                            with UTF-8 encoded data.
-     * @param int    $options  -- Bitmask consisting of JSON_HEX_QUOT,
+     * @param integer $options -- Bitmask consisting of JSON_HEX_QUOT,
      *                            JSON_HEX_TAG, JSON_HEX_AMP, JSON_HEX_APOS,
      *                            JSON_FORCE_OBJECT.
-     * @return bool
+     * @return boolean
      */
     public static function encode_file($filename, $values, $options = 0)
     {
-        return \FS::file_replace(
-                    self::encode($values, $options),
-                    $filename,
-                    false
-                );
+        return !!\FS::file_replace(
+            $filename,
+            self::encode($values, $options),
+            false
+        );
     }
 
     /**
