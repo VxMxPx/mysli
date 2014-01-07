@@ -172,6 +172,18 @@ class LibrarianTest extends \PHPUnit_Framework_TestCase
         $this->assertInstanceOf('Mysli\\Users', $users);
     }
 
+    public function test_autoloader_subclass()
+    {
+        $user = new \Mysli\Users\User();
+        $this->assertInstanceOf('Mysli\\Users\\User', $user);
+    }
+
+    public function test_autoloader_subclass_exception()
+    {
+        $exception = new \Mysli\Users\BaseException();
+        $this->assertInstanceOf('Mysli\\Users\\BaseException', $exception);
+    }
+
     public function test_load_existing()
     {
         $this->assertTrue($this->librarian->load('mysli/users'));

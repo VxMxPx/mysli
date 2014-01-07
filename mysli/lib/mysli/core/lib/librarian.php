@@ -456,12 +456,55 @@ class Librarian
      * --
      * @param  string $class
      * --
+     * @throws \Core\LibraryException If trying to load sub class
+     *                                of library which is not enabled.
+     * --
      * @return void
      */
     public function autoloader($class)
     {
-        $library = $this->ns_to_lib($class);
-        $this->load($library);
+        // Perhaps it's a sub-class of a library? (\Mysli\Library\SubClass)
+        if (substr_count($class, '\\') > 1) {
+
+            // Create path e.g.: mysli/library/sub_class from class name
+            $path = $this->ns_to_lib($class);
+            // Create an array of path segments
+            $segments = explode('/', $path);
+            // The actual library name consist of first two segments
+            $library = $segments[0] . '/'  . $segments[1];
+
+            // The library must be enabled...
+            if (!$this->is_enabled($library)) {
+                throw new \Core\LibraryException(
+                    "Cannot load class: `{$class}`, ".
+                    "library is not enabled: `{$library}`.",
+                    1
+                );
+            }
+
+            // Are we dealing with exception?
+            if (substr($class, -9, 9) === 'Exception') {
+                $file = array_pop($segments);
+                $file = substr($file, 0, -10);
+                $path = libpath(implode('/', $segments) . '/exceptions/' . $file . '.php');
+            } else {
+                $path = libpath($path . '.php');
+            }
+
+            // We don't have file?
+            if (!file_exists($path)) {
+                throw new \Core\FileSystemException(
+                    "Cannot find file for class: `{$class}` in: `{$path}`.",
+                    1
+                );
+            }
+
+            // All is ok, include the file.
+            include $path;
+        } else {
+            $library = $this->ns_to_lib($class);
+            $this->load($library);
+        }
     }
 
     /**
