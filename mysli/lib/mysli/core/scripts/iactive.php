@@ -25,7 +25,11 @@ class Iactive
                 break;
             }
 
-            echo "\n" . eval('echo dump_r(' . $stdin . ');');
+            if (substr($stdin, 0, 1) === '\\') {
+                echo "\n" . eval(substr($stdin, 1));
+            } else {
+                echo "\n" . eval('echo dump_r(' . trim($stdin, ';') . ');');
+            }
         } while(true);
 
         \Dot\Util::plain('Bye now!');
