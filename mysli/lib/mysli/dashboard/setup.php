@@ -4,11 +4,16 @@ namespace Mysli\Dashboard;
 
 class Setup
 {
+    public function __construct(array $config = [], array $dependencies = [])
+    {
+        dump($dependencies);
+    }
+
     public function before_enable()
     {
         \FS::dir_copy(
             libpath('mysli/dashboard/assets'),
-            pubpath('mysli/dashboard'))
+            pubpath('mysli/dashboard')
         );
         return true;
     }
