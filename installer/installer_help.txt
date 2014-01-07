@@ -1,0 +1,20 @@
+./installer
+Mysli Installer 0.1
+
+Usage: ./installer [OPTION]...
+
+    -c, --core <name>     Name of the core, in a format: vendor/core,
+                          the default value is: mysli/core
+    -l, --libpath <name>  Path where the libraries are. The default is: ../mysli
+    -p, --pubpath <name>  Public / URL accessible path (where to put index.php).
+                          The default is: ../public
+    -d, --datpath <name>  Data / private path (where configuration and databases will
+                          be stored. Should not be URL accessible). The default is: ../private
+    -e, --cli <name>      Name of the CLI library in a format: vendor/cli,
+                          the default value is: mysli/cli; use "no" if you do not
+                          want to enable CLI library.
+    -g, --global          Install Mysli CLI to be globally accessible, will put it to
+                          the "/usr/local/bin" folder.
+    -y, --yes             Assume "yes" as an answer to all prompts.
+    -v, --verbose         Run in verbose mode (print detailed information).
+    -h, --help            Print this help.
