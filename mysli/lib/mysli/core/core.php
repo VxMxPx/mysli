@@ -66,6 +66,7 @@ class Core
 
         $this->benchmark->set_timer('/mysli/core');
         $this->log->info('Hello! | PHP version: ' . PHP_VERSION, __FILE__, __LINE__);
+
         $this->event->trigger('/mysli/core->__construct');
 
         self::$instance = $this;
@@ -220,6 +221,13 @@ class Core
                 DIRECTORY_SEPARATOR .
                 $file
             );
+            // Alias the exception, this is so that core exceptions can be used
+            // globally, without hard-coded dependency on Mysli.
+            $base = substr($file, 0, -4); // Cut off the .php part
+            $base = str_replace('_', ' ', $base); // Convert _ to spaces
+            // Capitalize words, and remove spaces and add Exception part
+            $base = str_replace(' ', '', ucwords($base)) . 'Exception';
+            class_alias('Mysli\\Core\\'.$base, 'Core\\'.$base, false);
         }
     }
 
