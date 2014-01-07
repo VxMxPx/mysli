@@ -1,101 +1,193 @@
 <?php
 
-namespace Mysli;
+namespace Mysli\Users;
 
 class User
 {
-    protected static $current;
-
     protected $properties = [
-        'email'      => '',
-        'password'   => '',
-        'salt'       => '',
-        'full_name'  => '',
-        'lastlogin'  => '',
-        'updated'    => '',
-        'settings'   => []
+        'email'         => '',
+        'password'      => '',
+        'salt'          => '',
+        'name'          => '',
+        'last_seen_on'  => '',
+        'updated_on'    => '',
+        'created_on'    => '',
+        'deleted_on'    => false,
+        'is_super'      => false,
+        'settings'      => []
     ];
 
-    public function __construct(array $record)
+    /**
+     * Create new User object, ...
+     * --
+     * @param array    $record See properties above for possible elements.
+     * @param boolean  $raw    When true, methods won't be set through setters,
+     *                         but rather directly. Meaning, for example:
+     *                         `password` field will not be hashed but set as it is.
+     */
+    public function __construct(array $record, $raw = false)
     {
         foreach ($this->properties as $k => $v) {
             if (isset($record[$k])) {
-                $this->properties[$k] = $record[$k];
+                if ($raw === true) {
+                    $this->properties[$k] = $record[$k];
+                } else {
+                    if ($k !== 'settings') {
+                        $this->{$k}($record[$k]);
+                    } else {
+                        $this->{$k}(null, $record[$k]);
+                    }
+                }
             }
         }
     }
 
-    public static function current($set=false)
-    {
-        if ($set) {
-            if (self::$current) {
-                throw new Exception("Cannot set user again, already there!", 1);
-            } else {
-                self::$current = $set;
-            }
-        } else {
-            return self::$current;
-        }
-    }
-
-    public function dump()
+    /**
+     * Dump data as array.
+     * --
+     * @return array
+     */
+    public function as_array()
     {
         return $this->properties;
     }
 
-    public function save()
+    /**
+     * Check if password is correct.
+     * --
+     * @param  string $password
+     * --
+     * @return boolean
+     */
+    public function auth_password($password)
     {
-        try {
-            Users::update($this->properties, $this->email);
-        } catch (Exception $e) {
-            throw $e;
-        }
-
-        return Users::save();
+        return $this->password() === $this->generate_password($password, $this->salt());
     }
 
-    public function __get($property) {
-        if (isset($this->properties[$property])) {
-            if (method_exists($this, 'get_' . $property)) {
-                return call_user_func([$this, 'get_'.$property]);
-            } else {
-                return $this->properties[$property];
+    /**
+     * Get / set e-mail addres.
+     * --
+     * @param  mixed $value
+     * --
+     * @throws \Core\ValueException If Invalid email when setting (no @ or less than 3 chars)
+     * --
+     * @return string
+     */
+    public function email($value = null)
+    {
+        if ($value !== null) {
+            $value = trim($value);
+            if (mb_strlen($value) < 3 || strpos($value, '@') === false) {
+                throw new \Core\ValueException("Invalid e-mail addes.", 1);
             }
+            $this->properties['email'] = $value;
         }
+
+        return $this->properties['email'];
     }
 
-    public function __set($property, $value) {
-        if (isset($this->properties[$property])) {
-            if (method_exists($this, 'set_' . $property)) {
-                $this->properties[$property] = call_user_func_array([$this, 'set_'.$property], [$value]);
-            } else {
-                $this->properties[$property] = $value;
+    /**
+     * Set / get salt. If $value is true, salt will be auto generated.
+     * --
+     * @param  mixed $value String / boolean (true)
+     * --
+     * @return string
+     */
+    public function salt($value = null)
+    {
+        if ($value !== null) {
+            if ($value === true) {
+                $value = \Str::random(8);
             }
+            $this->properties['salt'] = $value;
+        }
+
+        return $this->properties['salt'];
+    }
+
+
+    /**
+     * Set / get new password.
+     * --
+     * @param  string $value
+     * --
+     * @return string
+     */
+    public function password($value = null)
+    {
+        if ($value !== null) {
+            $salt = $this->salt(true);
+            $this->properties['password'] = $this->generate_password($value, $salt);
+        }
+
+        return $this->properties['password'];
+    }
+
+    /**
+     * Set / get settings
+     * @param  string $key  If string, and no $value, then, that element will be
+     *                      returned from settings. If $key and $value,
+     *                      then the key will be updated / created.
+     * @param  mixed $value If empty, $key will be returned, else $key will be set.
+     *                      If array, and key null, $value will be merged with all
+     *                      settings.
+     * --
+     * @return mixed String or array.
+     */
+    public function settings($key = null, $value = null)
+    {
+        if ($key === null) {
+            if (is_array($value)) {
+                $this->properties['settings'] = array_merge(
+                    $this->properties['settings'],
+                    $value
+                );
+            }
+            return $this->properties['settings'];
+        }
+
+        if ($value !== null) {
+            $this->properties['settings'][$key] = $value;
+        }
+
+        if (isset($this->properties['settings'][$key])) {
+            return $this->properties['settings'][$key];
         }
     }
 
-    protected function set_salt($salt)
+    /**
+     * Generate the password.
+     * --
+     * @param  string $password
+     * @param  string $salt
+     * --
+     * @return string
+     */
+    protected function generate_password($password, $salt)
     {
-        if ($salt === true) {
-            $salt = Lib\Str::random(8);
+        // p[assword] t[ype] m[ysli] [version] 0 f[in]
+        return 'ptm0f' . sha1( sha1( sha1( $password ) . sha1( $salt ) ) );
+    }
+
+    /**
+     * Call inaccessible methods.
+     * --
+     * @param  string $name      Method's name
+     * @param  array  $arguments Method's arguments
+     * --
+     * @throws \Core\ValueException If property doesn't exists.
+     * --
+     * @return void
+     */
+    public function __call($name, array $arguments)
+    {
+        if (isset($this->properties[$name])) {
+            if (!empty($arguments)) {
+                $this->properties[$name] = $arguments[0];
+            }
+            return $this->properties[$name];
+        } else {
+            throw new \Core\ValueException("No such property: `{$name}`", 1);
         }
-
-        return $salt;
-    }
-
-    protected function set_password($password)
-    {
-        $this->salt = true;
-        return $this->gen_password($password);
-    }
-
-    public function auth_passwd($password)
-    {
-        return $this->password === $this->gen_password($password);
-    }
-
-    protected function gen_password($password)
-    {
-        return sha1( sha1( sha1( $password ) . sha1( $this->salt ) ) );
     }
 }
