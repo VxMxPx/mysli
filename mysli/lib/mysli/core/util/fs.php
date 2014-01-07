@@ -166,7 +166,7 @@ class FS
 
     /**
      * Will create new file, if doesn't exists already.
-     * If it does exists (and $empty=true) it will remove existing content.
+     * If it does exists (and $empty = true) it will remove existing content.
      * --
      * @param  string  $filename
      * @param  boolean $empty
@@ -736,7 +736,12 @@ class FS
      * @param  string  $directory
      * @param  boolean $force
      * --
-     * @return integer
+     * @throws ValueException      If Director is an empty string or /
+     * @throws ValueException      If Directory doesn't exists
+     * @throws ValueException      If Directory is not empty and $force if false
+     * @throws FileSystemException If one of the files could not be removed.
+     * --
+     * @return boolean
      */
     public static function dir_remove($directory, $force = true)
     {
@@ -785,9 +790,10 @@ class FS
      * @param  integer $on_exists
      *     EXISTS_REPLACE // Delete destination if exists
      *     EXISTS_MERGE   // Merge source + destination
+     *                       OR throw FileSystemException if destination is a file.
      *     EXISTS_RENAME  // Rename (new) destination
-     *     EXISTS_ERROR   // Throw exception
-     *     EXISTS_IGNORE  // Skip quietly
+     *     EXISTS_ERROR   // Throw FileSystemException
+     *     EXISTS_IGNORE  // Skip quietly, return null
      * --
      * @return mixed      True || Null: ignore || Integer: number of skipped files.
      */
@@ -824,7 +830,13 @@ class FS
                     break;
 
                 case self::EXISTS_MERGE:
-                    # Pass through...
+                    if (!is_dir($destination)) {
+                        throw new \Mysli\CoreFileSystemException(
+                            "Destination is file, so cannot merge: `{$destination}`",
+                            1
+                        );
+                    }
+                    // Continue...
                     break;
 
                 case self::EXISTS_RENAME:
@@ -835,11 +847,9 @@ class FS
                     throw new \Mysli\Core\FileSystemException(
                         "Directory exists: `{$destination}`.", 3
                     );
-                    break;
 
                 case self::EXISTS_IGNORE:
                     return null;
-                    break;
 
                 default:
                     throw new \Mysli\Core\ValueException(
@@ -891,9 +901,10 @@ class FS
      * @param  integer $on_exists
      *     EXISTS_REPLACE // Delete destination if exists
      *     EXISTS_MERGE   // Merge source + destination
+     *                       OR throw FileSystemException if destination is a file.
      *     EXISTS_RENAME  // Rename (new) destination
-     *     EXISTS_ERROR   // Throw exception
-     *     EXISTS_IGNORE  // Skip quietly
+     *     EXISTS_ERROR   // Throw FileSystemException
+     *     EXISTS_IGNORE  // Skip quietly, return null
      * --
      * @return boolean
      */
@@ -908,5 +919,76 @@ class FS
         } else {
             return false;
         }
+    }
+
+    /**
+     * Create new directory.
+     * --
+     * @param  string  $name
+     * @param  integer $on_exists
+     *     EXISTS_REPLACE // Delete destination if exists
+     *     EXISTS_MERGE   // Return true if DIR,
+     *                       OR throw FileSystemException if file.
+     *     EXISTS_RENAME  // Rename the (new) destination
+     *     EXISTS_ERROR   // Throw FileSystemException
+     *     EXISTS_IGNORE  // Skip quietly, return null
+     * @param integer $mode       The mode is 0777 by default, which means
+     *                            the widest possible access.
+     * @param boolean $recursive  Allows the creation of nested directories
+     *                            specified in the pathname.
+     * --
+     * @throws FileSystemException If directory could not be created.
+     * @throws FileSystemException If destination exists and $on_exists set to:
+     *                             EXISTS_MERGE (and destination is file) or
+     *                             EXISTS_ERROR
+     * @throws ValueException      If Invalid $on_exists value is set.
+     * --
+     * @return mixed  string on success (full path), false on failure
+     */
+    public static function dir_create(
+        $destination,
+        $on_exists = self::EXISTS_IGNORE,
+        $mode = 0777,
+        $recursive = false
+    ) {
+        if (file_exists($destination)) {
+            switch ($on_exists) {
+                case self::EXISTS_REPLACE:
+                    self::dir_remove($destination, true);
+                    break;
+
+                case self::EXISTS_MERGE:
+                    if (!is_dir($destination)) {
+                        throw new \Mysli\Core\FileSystemException(
+                            "Destination is file, so cannot merge: `{$destination}`",
+                            1
+                        );
+                    }
+                    return $destination;
+
+                case self::EXISTS_RENAME:
+                    $destination = self::unique_name($destination);
+                    break;
+
+                case self::EXISTS_ERROR:
+                    throw new \Mysli\Core\FileSystemException(
+                        "Directory exists: `{$destination}`.", 2
+                    );
+
+                case self::EXISTS_IGNORE:
+                    return null;
+
+                default:
+                    throw new \Mysli\Core\ValueException(
+                        "Invalid value for \$on_exists: `{$on_exists}`.", 3
+                    );
+            }
+        }
+
+        if (!mkdir($destination, $mode, $recursive)) {
+            throw new \Mysli\Core\FileSystemException(
+                "Filed to create directory: `{$destination}`", 4
+            );
+        } else return $destination;
     }
 }

@@ -1175,4 +1175,36 @@ class FsTest extends \PHPUnit_Framework_TestCase
         \FS::dir_remove($src);
         \FS::dir_remove($dest);
     }
+
+    // Dir Create --------------------------------------------------------------
+    public function test_dir_create()
+    {
+        $dest = datpath('fs/dir1');
+        $this->assertFalse(file_exists($dest));
+        $this->assertEquals(
+            $dest,
+            \FS::dir_create($dest)
+        );
+        $this->assertFileExists($dest);
+        \FS::dir_remove($dest);
+    }
+    public function test_dir_create_rename()
+    {
+        $dest = datpath('fs/dir1');
+        $destr = datpath('fs/dir1_2');
+        mkdir($dest);
+        $this->assertFileExists($dest);
+
+        $this->assertEquals(
+            $destr,
+            \FS::dir_create(
+                $dest,
+                \FS::EXISTS_RENAME
+            )
+        );
+        $this->assertFileExists($destr);
+
+        \FS::dir_remove($dest);
+        \FS::dir_remove($destr);
+    }
 }
