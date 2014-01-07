@@ -37,7 +37,7 @@ class Libraries
     protected function enable_helper($lib)
     {
         $setup = $this->core->librarian->construct_setup($lib);
-        if (!$setup->before_enable()) {
+        if (method_exists($setup, 'before_enable') && !$setup->before_enable()) {
             \Dot\Util::error('Setup failed for: ' . $lib);
             return false;
         }
@@ -46,7 +46,9 @@ class Libraries
             return false;
         } else {
             \Dot\Util::success('Enabled: ' . $lib);
-            $setup->after_enable();
+            if (method_exists($setup, 'after_enable')) {
+                $setup->after_enable();
+            }
             return true;
         }
     }
@@ -97,7 +99,7 @@ class Libraries
     protected function disable_helper($lib)
     {
         $setup = $this->core->librarian->construct_setup($lib);
-        if (!$setup->before_disable()) {
+        if (method_exists($setup, 'before_disable') && !$setup->before_disable()) {
             \Dot\Util::error('Setup failed for: ' . $lib);
             return false;
         }
@@ -106,7 +108,9 @@ class Libraries
             return false;
         } else {
             \Dot\Util::success('Disabled: ' . $lib);
-            $setup->after_disable();
+            if (method_exists($setup, 'after_enable')) {
+                $setup->after_disable();
+            }
             return true;
         }
     }
