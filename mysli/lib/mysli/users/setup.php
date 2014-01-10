@@ -13,17 +13,12 @@ class Setup
 
     public function before_enable()
     {
-        $destination = datpath('users');
-        \FS::dir_create($destination, \FS::EXISTS_MERGE);
-        // Create new file if not already there...
-        \FS::file_create(ds($destination, 'users.json'));
-
+        \FS::dir_create(datpath('users'), \FS::EXISTS_MERGE);
         return true;
     }
 
     public function before_disable()
     {
-        // Clean up!
         return \FS::dir_remove(datpath('users'));
     }
 }

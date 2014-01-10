@@ -4,6 +4,7 @@ namespace Mysli\Users;
 
 class User
 {
+    protected $path;
     protected $properties = [
         'email'         => '',
         'password'      => '',
@@ -20,13 +21,25 @@ class User
     /**
      * Create new User object, ...
      * --
-     * @param array    $record See properties above for possible elements.
-     * @param boolean  $raw    When true, methods won't be set through setters,
-     *                         but rather directly. Meaning, for example:
-     *                         `password` field will not be hashed but set as it is.
+     * @param string $path   The path (including filename) where user
+     *                       will be saved to or loaded from.
+     * @param array  $record See properties above for possible elements.
+     *                       If empty, the user will be loaded from $path.
      */
-    public function __construct(array $record, $raw = false)
+    public function __construct($path, array $record = [])
     {
+        if (empty($record)) {
+            $record = \JSON::decode_file($path, true);
+            $raw = true; // Will not process values when assigning them.
+        } else {
+            // New user being created...
+            $record['created_on'] = gmdate('YmdHis');
+            $record['updated_on'] = gmdate('YmdHis');
+            $raw = false;
+        }
+
+        $this->path = $path;
+
         foreach ($this->properties as $k => $v) {
             if (isset($record[$k])) {
                 if ($raw === true) {
@@ -153,6 +166,27 @@ class User
         if (isset($this->properties['settings'][$key])) {
             return $this->properties['settings'][$key];
         }
+    }
+
+    /**
+     * Save changes made in this user object.
+     * --
+     * @return boolean
+     */
+    public function save()
+    {
+        return \JSON::encode_file($this->path, $this->properties);
+    }
+
+    /**
+     * Mark this user as deleted.
+     * --
+     * @return boolean
+     */
+    public function delete()
+    {
+        $this->properties['deleted_on'] = gmdate('YmdHis');
+        return $this->save();
     }
 
     /**

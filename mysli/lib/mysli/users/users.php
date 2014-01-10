@@ -7,28 +7,15 @@ class Users
     protected $config;   // This library's configuration
     protected $core;     // The core (dependency)
 
-    protected $filename; // File where users are saved (users/users.json)
-    protected $users;    // Collection of all users from users/users.json
+    protected $path;     // Path where the users are stored!
+    protected $cache;    // Collection of all users objects (returned as reference!)
 
     public function __construct(array $config = [], array $dependencies = [])
     {
         $this->config = $config;
         $this->core = $dependencies['core'];
 
-        $this->filename = datpath('users/users.json');
-
-        // Load users file
-        $this->reload();
-    }
-
-    /**
-     * Load users again (from users/users.json)
-     * --
-     * @return void
-     */
-    public function reload()
-    {
-        $this->users = \JSON::decode_file($this->filename, true);
+        $this->path = datpath('users');
     }
 
     /**
@@ -55,6 +42,18 @@ class Users
     }
 
     /**
+     * Get path for particular user's file,
+     * --
+     * @param  string $email
+     * --
+     * @return string Path to user's file.
+     */
+    public function get_path($email)
+    {
+        return ds($this->path, md5($email) . '.json');
+    }
+
+    /**
      * Get one user by e-mail.
      * --
      * @param  string $email
@@ -63,8 +62,13 @@ class Users
      */
     public function get_by_email($email)
     {
-        if (isset($this->users[$email])) {
-            return new \Mysli\Users\User($this->users[$email], true);
+        $path = $this->get_path($email);
+        if (file_exists($path)) {
+            if (isset($this->cache[$email])) {
+                return $this->cache[$email];
+            } else {
+                return ( $this->cache[$email] = new \Mysli\Users\User($path) );
+            }
         } else {
             return false;
         }
@@ -81,102 +85,41 @@ class Users
     public function create($data)
     {
         if (!is_array($data)) {
-            $email = $data;
             $data  = [
-                'email' => $email
+                'email' => $data
             ];
-        } else if (isset($data['email'])) {
-            $email = $data['email'];
-        } else {
+        } else if (!isset($data['email'])) {
             throw new \Core\ValueException(
-                `The e-mail property is required.`, 1
+                'The e-mail property is required.', 1
             );
         }
 
-        // If user already exists, then false will be returned...
-        if (isset($this->users[$email])) {
+        $path = $this->get_path($data['email']);
+
+        // User already exists?
+        if ( file_exists($path) ) {
             return false;
         }
 
-        $data['created_on'] = gmdate('YmdHis');
-        $data['updated_on'] = gmdate('YmdHis');
-        $this->users[$email] = $data;
-        $this->write();
-
-        return new \Mysli\Users\User($data, false);
+        return ( $this->cache[$data['email']] = new \Mysli\Users\User($path, $data) );
     }
 
     /**
-     * Update particular user.
+     * Delete users by email address.
      * --
-     * @param  object $user \Mysli\Users\User
+     * @param  array   $users List of users' email addressed to be deleted.
      * --
-     * @return boolean
+     * @return integer        Number of deleted records.
      */
-    public function save(\Mysli\Users\User $user)
+    public function delete(array $users)
     {
-        $this->reload();
-
-        $email = $user->email();
-
-        if (isset($this->users[$email])) {
-            $user->updated_on = gmdate('YmdHis');
-            $this->users[$email] = $user->as_array();
-        } else {
-            throw new \Core\ValueException(
-                "Cannot find user with id: `{$email}`.", 1
-            );
+        $deleted = 0;
+        foreach ($users as $user_email) {
+            $user = $this->get_by_email($user_email);
+            if (!$user) { continue; }
+            $user->delete();
+            $deleted++;
         }
-
-        return $this->write();
-    }
-
-    /**
-     * Delete user (by email) address.
-     * --
-     * @param  mixed   $id     String: email address
-     *                         Object: instance of \Mysli\Users\User
-     *                         Array:  collection of (see above) emails or objects.
-     * @param  boolean $write  Write changes to file.
-     * --
-     * @return integer         Number of deleted records.
-     */
-    public function delete($id, $write = true)
-    {
-        if ($write) $this->reload();
-
-        if (is_array($id)) {
-            foreach ($id as $user) {
-                $count += $this->delete($user, false);
-            }
-            if ($write) $this->write();
-            return $count;
-        }
-
-        $deleted_on_timestamp = gmdate('YmdHis');
-
-        if (is_object($id) && $id instanceof \Mysli\Users\User) {
-            $id->deleted_on($deleted_on_timestamp);
-            $id = $id->email();
-        }
-
-        if (isset($this->users[$id])) {
-            $this->users[$id]['deleted_on'] = $deleted_on_timestamp;
-        } else {
-            return 0;
-        }
-
-        if ($write) $this->write();
-        return 1;
-    }
-
-    /**
-     * Write $this->users to file (users/users.json)
-     * --
-     * @return boolean
-     */
-    protected function write()
-    {
-        return \JSON::encode_file($this->filename, $this->users);
+        return $deleted;
     }
 }
