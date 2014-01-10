@@ -1,43 +1,47 @@
 <?php
 
-namespace Mysli\Core\Lib;
+namespace Mysli;
 
 class Cookie
 {
+    protected $core;
+    protected $config;
+
+    public function __construct(array $config = [], array $dependencies = [])
+    {
+        $this->core = $dependencies['core'];
+        $this->config = $config;
+
+        $this->config['domain'] = $this->config['domain'] ?: $_SERVER['SERVER_NAME'];
+    }
+
     /**
      * Create cookie
      * --
      * @param  string $name
      * @param  string $value
      * @param  string $expire  Use false for default expire time (set in
-     *                         configuration), or enter value (actuall value so
+     *                         configuration), or enter value (actual value so
      *                         must be time() + seconds)
      * --
-     * @return bool
+     * @return boolean
      */
-    public static function create($name, $value, $expire=false)
+    public function create($name, $value, $expire = false)
     {
-        // Expire
         if ($expire === false) {
-            $expire = time() + Cfg::get('core/cookie/timeout');
+            $expire = time() + $this->config['timeout'];
         }
 
-        // Domain
-        $domain = Cfg::get('core/cookie/domain');
-        if (!$domain) { $domain = $_SERVER['SERVER_NAME']; }
+        $domain = $this->config['domain'];
+        $prefix = $this->config['prefix'];
 
-        Log::info('Cookie will be set, as: "' . Cfg::get('core/cookie/prefix') .
-                    $name . '", with value: "'  .
-                    $value . '", set to expire: "' .
-                    ($expire) . '" to domain: "' . $domain . '"',
-                    __FILE__, __LINE__);
+        $this->core->log->info(
+            "Cookie will be set, as: `{$prefix}{$name}`, with value: `{$value}`, " .
+            "set to expire on: `{$expire}`, to domain: `{$domain}`.",
+            __FILE__, __LINE__
+        );
 
-        return setcookie(
-            Cfg::get('core/cookie/prefix') . $name,
-            $value,
-            $expire,
-            "/",
-            $domain);
+        return setcookie($prefix . $name, $value, $expire, '/', $domain);
     }
 
     /**
@@ -45,19 +49,19 @@ class Cookie
      * --
      * @param  string $key
      * --
-     * @return mixed
+     * @return mixed  String - cookie value / False if no cookie found.
      */
-    public static function read($key='')
+    public function read($key)
     {
-        $key_prefix = Cfg::get('core/cookie/prefix') . $key;
+        $key_prefix = $this->config['prefix'] . $key;
 
-        // Is Cookie With Prefix Set?
-        if (isset($_COOKIE[$key_prefix]))
-            { $return = $_COOKIE[$key_prefix]; }
-        elseif (isset($_COOKIE[$key]))
-            { $return = $_COOKIE[$key]; }
-        else
-            { return false; }
+        if (isset($_COOKIE[$key_prefix])) {
+            $return = $_COOKIE[$key_prefix];
+        } elseif (isset($_COOKIE[$key])) {
+            $return = $_COOKIE[$key];
+        } else {
+            return false;
+        }
 
         return htmlspecialchars($return);
     }
@@ -69,21 +73,16 @@ class Cookie
      * --
      * @return boolean
      */
-    public static function remove($name)
+    public function remove($name)
     {
-       Log::info('Cookie will be unset: `'.Cfg::get('core/cookie/prefix').$name.'`.', __FILE__, __LINE__);
+        $domain = $this->config['domain'];
+        $prefix = $this->config['prefix'];
 
-        // Domain
-        $domain = Cfg::get('core/cookie/domain');
-        if (!$domain) {
-            $domain = $_SERVER['SERVER_NAME'];
-        }
+        $this->core->log->info(
+            "Cookie will be unset: `{$prefix}{$name}`.",
+            __FILE__, __LINE__
+        );
 
-       return setcookie(
-            Cfg::get('core/cookie/prefix') . $name,
-            '',
-            time() - 3600,
-            "/",
-            $domain);
+        return setcookie($prefix . $name, '', time() - 3600, '/', $domain);
     }
 }
