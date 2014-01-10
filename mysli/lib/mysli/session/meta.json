@@ -4,6 +4,7 @@
     "version"       : "0.1",
     "depends_on"    : {
         "*/core"    : ">= 0.1",
+        "*/cookie"  : ">= 0.1",
         "*/users"   : ">= 0.1"
     },
     "maintainer"    : "Marko Gajšt <marko@gaj.st>",
