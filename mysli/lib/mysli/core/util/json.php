@@ -74,7 +74,7 @@ class JSON
         return !!\FS::file_replace(
             $filename,
             self::encode($values, $options),
-            false
+            true
         );
     }
 
