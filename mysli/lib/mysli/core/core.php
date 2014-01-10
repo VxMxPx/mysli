@@ -61,8 +61,8 @@ class Core
         spl_autoload_register([$this->librarian, 'autoloader']);
 
         // In theory we should have timezone now
-        date_default_timezone_set($this->cfg->get('core/timezone', 'UTC'));
-        ini_set('display_errors', $this->cfg->get('core/debug', false));
+        date_default_timezone_set($this->cfg->get('mysli/core/timezone', 'UTC'));
+        ini_set('display_errors', $this->cfg->get('mysli/core/debug', false));
 
         $this->benchmark->set_timer('/mysli/core');
         $this->log->info('Hello! | PHP version: ' . PHP_VERSION, __FILE__, __LINE__);
@@ -191,7 +191,7 @@ class Core
 
             case 'server':
                 return [
-                    $this->cfg->get('core/server'),
+                    $this->cfg->get('mysli/core/server'),
                     [],
                 ];
 

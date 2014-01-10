@@ -4,7 +4,7 @@ namespace Mysli\Core\Lib;
 
 class Cfg
 {
-    private $configs = []; // All configurations values
+    private $config = []; // All configurations values
     private $cache   = []; // Cached values, for faster access
     private $master  = ''; // The master config file, to which changes
                            // will be saved.
@@ -58,7 +58,7 @@ class Cfg
         $this->cache = array();
 
         // Assign new merged version of config
-        $this->configs = \Arr::merge($this->configs, $config);
+        $this->config = \Arr::merge($this->config, $config);
     }
 
     /**
@@ -82,7 +82,7 @@ class Cfg
      */
     public function dump()
     {
-        return [$this->cache, $this->configs];
+        return [$this->cache, $this->config];
     }
 
     /**
@@ -95,11 +95,19 @@ class Cfg
      */
     public function get($key, $default = null)
     {
-        if (!isset($this->cache[$key])) {
-            $this->cache[$key] = \Arr::get_by_path($key, $this->configs, $default);
+        if (isset($this->cache[$key])) {
+            return $this->cache[$key];
         }
 
-        return $this->cache[$key];
+        $value = \Arr::get_by_path($key, $this->config, $default);
+
+        // We cache only when we assume it's not default value...
+        if ($value !== $default) {
+            $this->cache[$key] = $value;
+        }
+
+        // Return value in any case...
+        return $value;
     }
 
     /**
@@ -116,6 +124,6 @@ class Cfg
         # Clear cache to avoid conflicts
         $this->cache = [];
 
-        \Arr::set_by_path($path, $value, $this->configs);
+        \Arr::set_by_path($path, $value, $this->config);
     }
 }
