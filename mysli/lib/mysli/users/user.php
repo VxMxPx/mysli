@@ -13,6 +13,7 @@ class User
         'last_seen_on'  => '',
         'updated_on'    => '',
         'created_on'    => '',
+        'is_active'     => true,
         'deleted_on'    => false,
         'is_super'      => false,
         'settings'      => []
@@ -75,6 +76,68 @@ class User
     public function auth_password($password)
     {
         return $this->password() === $this->generate_password($password, $this->salt());
+    }
+
+    /**
+     * Return user's ID.
+     * --
+     * @return string
+     */
+    public function id()
+    {
+        return md5($this->properties['email']);
+    }
+
+    /**
+     * This will deactivate this account.
+     * --
+     * @return void
+     */
+    public function deactivate()
+    {
+        $this->properties['is_active'] = false;
+    }
+
+    /**
+     * This will activate this account.
+     * --
+     * @return void
+     */
+    public function activate()
+    {
+        $this->properties['is_active'] = true;
+    }
+
+    /**
+     * Is this user's account active? (Not deleted, etc...)
+     * --
+     * @return boolean
+     */
+    public function is_active()
+    {
+        // User's password must be set in order account to be valid.
+        if (!$this->properties['password']) return false;
+
+        // Account shoulnd't be deleted.
+        if ($this->properties['deleted_on']) return false;
+
+        // is_active property shouldn't be false.
+        if (!$this->properties['is_active']) return false;
+
+        // If all the above passed, then account is active.
+        return true;
+    }
+
+    /**
+     * Alias for uname, in some cases uname might be different than e-mail.
+     * --
+     * @param  string $value
+     * --
+     * @return string
+     */
+    public function uname($value = null)
+    {
+        return $this->email($value);
     }
 
     /**

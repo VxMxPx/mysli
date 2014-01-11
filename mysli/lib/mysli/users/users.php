@@ -28,15 +28,11 @@ class Users
      */
     public function auth($email, $password)
     {
-        $user = $this->get_by_email($email);
+        $user = $this->get_by_uname($email);
 
-        if (!$user) {
-            return false;
-        }
-
-        if (!$user->auth_passwd($password)) {
-            return false;
-        }
+        if (!$user)                         return false;
+        if (!$user->auth_passwd($password)) return false;
+        if (!$user->is_active())            return false;
 
         return $user;
     }
@@ -44,30 +40,43 @@ class Users
     /**
      * Get path for particular user's file,
      * --
-     * @param  string $email
+     * @param  string  $id
      * --
      * @return string Path to user's file.
      */
-    public function get_path($email)
+    public function get_path($id)
     {
-        return ds($this->path, md5($email) . '.json');
+        return ds($this->path, $id . '.json');
     }
 
     /**
-     * Get one user by e-mail.
+     * Get one user by uname = e-mail.
      * --
      * @param  string $email
      * --
      * @return mixed  false, or object \Mysli\Users\User
      */
-    public function get_by_email($email)
+    public function get_by_uname($email)
     {
-        $path = $this->get_path($email);
+        // The id is just a md5 version of email...
+        return $this->get_by_id(md5($email));
+    }
+
+    /**
+     * Get one user by ID.
+     * --
+     * @param  string  $id
+     * --
+     * @return mixed   false, or object \Mysli\Users\User
+     */
+    public function get_by_id($id)
+    {
+        $path = $this->get_path($id);
         if (file_exists($path)) {
-            if (isset($this->cache[$email])) {
-                return $this->cache[$email];
+            if (isset($this->cache[$id])) {
+                return $this->cache[$id];
             } else {
-                return ( $this->cache[$email] = new \Mysli\Users\User($path) );
+                return ( $this->cache[$id] = new \Mysli\Users\User($path) );
             }
         } else {
             return false;
@@ -94,28 +103,33 @@ class Users
             );
         }
 
-        $path = $this->get_path($data['email']);
+        $id = md5($data['email']);
+        $path = $this->get_path($id);
 
         // User already exists?
         if ( file_exists($path) ) {
             return false;
         }
 
-        return ( $this->cache[$data['email']] = new \Mysli\Users\User($path, $data) );
+        return ( $this->cache[$id] = new \Mysli\Users\User($path, $data) );
     }
 
     /**
-     * Delete users by email address.
+     * Delete users by ID or uname (email).
      * --
-     * @param  array   $users List of users' email addressed to be deleted.
+     * @param  array   $users List of users' IDs or unames (email).
      * --
      * @return integer        Number of deleted records.
      */
     public function delete(array $users)
     {
         $deleted = 0;
-        foreach ($users as $user_email) {
-            $user = $this->get_by_email($user_email);
+        foreach ($users as $id) {
+            if (strpos($id, '@') !== false) {
+                $user = $this->get_by_uname($id);
+            } else {
+                $user = $this->get_by_id($id);
+            }
             if (!$user) { continue; }
             $user->delete();
             $deleted++;
