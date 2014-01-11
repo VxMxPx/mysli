@@ -9,8 +9,10 @@ class Session
     protected $users;
 
     protected $path;
+    protected $config;
 
-    protected $current; // Currently discovered session // User Object!
+    protected $user; // Currently discovered session // User Object!
+    protected $info; // Current session information, like ID, etc...
 
     public function __construct(array $config = [], array $dependencies = [])
     {
@@ -18,9 +20,30 @@ class Session
         $this->cookie = $dependencies['cookie'];
         $this->users  = $dependencies['users'];
 
+        $this->config = $config;
         $this->path = datpath('session');
 
         $this->discover();
+    }
+
+    /**
+     * Get current user.
+     * --
+     * @return mixed Object or null if no user is set.
+     */
+    public function user()
+    {
+        return $this->user;
+    }
+
+    /**
+     * Current session information, like ID, etc...
+     * --
+     * @return mixed Array or null session is not set.
+     */
+    public function info()
+    {
+        return $this->info;
     }
 
     /**
@@ -50,11 +73,11 @@ class Session
      */
     protected function get_filename_from_id($id)
     {
-        return ds($this->path, $session_id . '_session.json');
+        return ds($this->path, $id . '_session.json');
     }
 
     /**
-     * Will look for cookie, if anything found $this->current will be set!
+     * Will look for cookie, if anything found $this->user will be set!
      * --
      * @return boolean
      */
@@ -82,7 +105,7 @@ class Session
         }
 
         // Read session file
-        $session = \Core\JSON::decode_file($session_path, true);
+        $session = \JSON::decode_file($session_path, true);
         if (!is_array($session)) {
             $this->core->log->warn(
                 'Corrupted file for session: `' .
@@ -156,7 +179,8 @@ class Session
             __FILE__, __LINE__
         );
 
-        $this->current = $user;
+        $this->user = $user;
+        $this->info = $session;
         $this->renew($session_id, $session, $user);
         return true;
     }
@@ -188,22 +212,23 @@ class Session
         }
 
         // Create a unique id
-        $q_id  = time() . '_' . \Str::random(20, 'aA1');
+        $id  = time() . '_' . \Str::random(20, 'aA1');
 
         // Store cookie
-        $this->cookie->create($this->config['cookie_name'], $q_id, $expires);
+        $this->cookie->create($this->config['cookie_name'], $id, $expires);
 
         // Set session file
         $session = [
-            'id'         => $q_id,
+            'id'         => $id,
             'user_id'    => $user->id(),
             'expires_on' => $expires === 0 ? time() + 60 * 60 : $expires,
             'ip'         => $_SERVER['REMOTE_ADDR'],
             'agent'      => $this->get_agent(),
         ];
 
-        $this->current = $user;
-        return $this->write($q_id, $session);
+        $this->user = $user;
+        $this->info = $session;
+        return $this->write($id, $session);
     }
 
     /**
@@ -223,7 +248,7 @@ class Session
         // then we'll destroy current session and set new one.
         if ($this->config['change_id_on_renew']) {
             $this->destroy();
-            $this->current = $user;
+            $this->user = $user;
             return $this->create($user);
         }
 
@@ -273,13 +298,20 @@ class Session
      * Used mostly on logout, will remove session's cookies, delete the file,
      * and set current to null.
      * --
-     * @param   string  $session_id
+     * @param   mixed $session_id -- If false, then it will destroy current session,
+     *                               If string, it will treat string as session id,
+     *                               which needs to be destroyed.
      * --
      * @return  void
      */
-    public function destroy($session_id)
+    public function destroy($session_id = false)
     {
-        $this->current = null;
+        if (!$session_id) {
+            $session_id = $this->info['id'];
+        }
+
+        $this->user = null;
+        $this->info = null;
         $this->cookie->remove($this->config['cookie_name']);
         $filename = $this->get_filename_from_id($session_id);
         if (file_exists($filename)) {
