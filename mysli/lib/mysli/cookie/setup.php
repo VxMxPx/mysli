@@ -14,7 +14,7 @@ class Setup
     public function before_enable()
     {
         $config['mysli']['cookie'] = [
-            'timeout' => 60 * 60 * 7, // 7 Days
+            'timeout' => 60 * 60 * 24 * 7, // 7 Days
             'domain'  => '', // Dynamic
             'prefix'  => 'mysli_',
         ];
