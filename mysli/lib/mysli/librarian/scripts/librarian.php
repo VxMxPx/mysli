@@ -1,8 +1,8 @@
 <?php
 
-namespace Mysli\Core\Script;
+namespace Mysli\Librarian\Script;
 
-class Libraries
+class Librarian
 {
     protected $core;
 
