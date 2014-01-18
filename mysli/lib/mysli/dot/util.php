@@ -25,7 +25,7 @@ class Util
                 readline_add_history($stdin);
             }
             else {
-                echo $title;
+                fwrite(STDOUT, $title);
                 $stdin = fread(STDIN, 8192);
             }
             $result = $func($stdin);
@@ -98,13 +98,13 @@ class Util
      * Create a new line
      * @param  integer $num Number of new lines
      */
-    public static function nl($num=1)
-        { echo str_repeat("\n", (int)$num); }
+    public static function nl($num = 1)
+        { fwrite( STDOUT, str_repeat(PHP_EOL, (int) $num) ); }
 
     /**
      * Create documentation / help for particular command.
      */
-    public static function doc($title, $usage, $commands=false)
+    public static function doc($title, $usage, $commands = false)
     {
         self::plain($title);
         self::nl();
@@ -168,13 +168,12 @@ class Util
                 $color = null;
         }
 
-        echo
-            (!is_null($color) ? $color : ''),
-            $message,
-            "\x1b[39;49;00m";
+        fwrite(
+            STDOUT,
+            (!is_null($color) ? $color : '') . $message . "\x1b[39;49;00m"
+        );
 
-        if ($new_line)
-            { echo "\n"; }
+        if ($new_line) fwrite(STDOUT, PHP_EOL);
 
         flush();
     }

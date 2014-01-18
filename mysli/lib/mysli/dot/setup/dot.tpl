@@ -1,4 +1,4 @@
-#!/usr/bin/php
+#!/usr/bin/env php
 <?php
 
 /*
@@ -28,6 +28,8 @@ if (!(version_compare(PHP_VERSION, '5.4.0') >= 0)) {
         E_USER_ERROR);
 }
 
+$ds = DIRECTORY_SEPARATOR;
+
 /*
  * Set some basic paths, which will be passed to the core.
  * pubpath - Public URL accessible path, where index.php is stored.
@@ -36,51 +38,21 @@ if (!(version_compare(PHP_VERSION, '5.4.0') >= 0)) {
  *           be stored. This path shouldn't be accessible through URL!
  */
 $datpath = realpath(__DIR__);
-$pubpath = realpath(str_replace('/', DIRECTORY_SEPARATOR, $datpath . '{{PUBPATH}}'));
-$libpath = realpath(str_replace('/', DIRECTORY_SEPARATOR, $datpath . '{{LIBPATH}}'));
+$pubpath = realpath(str_replace('/', $ds, $datpath . '{{PUBPATH}}'));
+$libpath = realpath(str_replace('/', $ds, $datpath . '{{LIBPATH}}'));
 
 /**
- * Load libraries registry to locate core!
+ * Get core!
  */
-$lib_registry = realpath($datpath.'/core/libraries.json');
-if (!$lib_registry || !file_exists($lib_registry)) {
-    trigger_error(
-        "Libraries registry not found ({$lib_registry}), cannot locate core!",
-        E_USER_ERROR);
+$core_id_file = $datpath . $ds . 'core' . $ds . 'id.json';
+if (!file_exists($core_id_file)) {
+    trigger_error("File not found: `{$core_id_file}`", E_USER_ERROR);
+} else {
+    $core_id = json_decode(file_get_contents($core_id_file), true);
 }
-
-$libraries = file_get_contents($lib_registry);
-$libraries = json_decode($libraries, true);
-$core_lib  = false;
-$core_class = false;
-
-foreach ($libraries as $lib_name => $lib_meta) {
-    if (preg_match('/.*?\/core/i', $lib_name)) {
-        $core_lib = $lib_name;
-        if (isset($lib_meta['class'])) {
-            $core_class = $lib_meta['class'];
-        } else {
-            $core_class = explode('/', $lib_name);
-            $core_class = '\\' . ucfirst($core_class[0]) .
-                          '\\' . ucfirst($core_class[1]);
-        }
-        break;
-    }
-}
-
-if (!$core_lib) {
-    trigger_error("Core is not enabled, cannot proceed!", E_USER_ERROR);
-}
-
-/*
- * Init & exit the system now...
- */
-$core_path = str_replace('/', DIRECTORY_SEPARATOR, $libpath.'/'.$core_lib.'/core.php');
-if (!file_exists($core_path)) {
-    trigger_error("Cannot find core file: `{$core_path}`", E_USER_ERROR);
-}
-include($core_path);
-$core = new $core_class($pubpath, $libpath, $datpath);
+include($libpath . $ds . str_replace('/', $ds, $core_id['file']));
+$core = new $core_id['class']($pubpath, $libpath, $datpath);
+$core->init();
 
 // Dot execution
 $dot_lib = $core->librarian->resolve('*/dot');
