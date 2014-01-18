@@ -1,0 +1,13 @@
+{
+    "library"       : "mysli/error_handler",
+    "role"          : "error_handler",
+    "instantiation" : "once",
+    "version"       : 1,
+    "depends_on"    : {
+        "~core"   : ">= 1",
+        "~event"  : ">= 1",
+        "~logger" : ">= 1"
+    },
+    "maintainer"    : "Marko Gajšt <marko@gaj.st>",
+    "description"   : "Mysli Error Handler"
+}

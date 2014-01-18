@@ -1,0 +1,13 @@
+{
+    "library"       : "mysli/logger",
+    "role"          : "logger",
+    "instantiation" : "once",
+    "version"       : 1,
+    "depends_on"    : {
+        "~core"      : ">= 1",
+        "~benchmark" : ">= 1",
+        "~event"     : ">= 1"
+    },
+    "maintainer"    : "Marko Gajšt <marko@gaj.st>",
+    "description"   : "Mysli Core Logger Library."
+}

@@ -80,6 +80,5 @@ if (!file_exists($core_path)) {
 }
 include($core_path);
 $core = new $core_class($pubpath, $libpath, $datpath);
-$core->response->apply_headers();
-echo $core->output->as_html();
-exit($core->terminate());
+$core->init();
+exit($core->event->trigger('index:done'));

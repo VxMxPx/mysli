@@ -1,10 +1,10 @@
 {
     "library"       : "mysli/manage_settings",
     "instantiation" : "once",
-    "version"       : "0.1",
+    "version"       : 1,
     "depends_on"    : {
-        "*/core"      : ">= 0.1",
-        "*/dashboard" : ">= 0.1"
+        "~core"       : ">= 1",
+        "*/dashboard" : ">= 1"
     },
     "maintainer"    : "Marko Gajšt <marko@gaj.st>",
     "description"   : "Allows you to change system settings!"

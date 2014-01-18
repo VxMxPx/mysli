@@ -247,6 +247,7 @@ class Arr
 
             // There should be maximum one space
             $key = Str::limit_repeat($key, ' ', 1);
+            $key = Str::normalize($key);
             $key = Str::clean($key, 'aA1s');
             $key = strtolower(trim($key));
             $key = str_replace(' ', '_', $key);

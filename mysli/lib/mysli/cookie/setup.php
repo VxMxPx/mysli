@@ -4,30 +4,26 @@ namespace Mysli\Cookie;
 
 class Setup
 {
-    protected $core;
+    protected $config;
 
-    public function __construct(array $config = [], array $dependencies = [])
+    public function __construct($config)
     {
-        $this->core = $dependencies['core'];
+        $this->config = $config;
     }
 
     public function before_enable()
     {
-        $config['mysli']['cookie'] = [
+        $this->config->merge([
             'timeout' => 60 * 60 * 24 * 7, // 7 Days
             'domain'  => '', // Dynamic
             'prefix'  => 'mysli_',
-        ];
+        ]);
 
-        $this->core->cfg->append($config);
-        $this->core->cfg->write();
-        return true;
+        return $this->config->write();
     }
 
     public function before_disable()
     {
-        $this->core->cfg->set('mysli/cookie', null);
-        $this->core->cfg->write();
-        return true;
+        $this->config->destroy();
     }
 }

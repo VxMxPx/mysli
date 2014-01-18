@@ -1,6 +1,6 @@
 <?php
 
-namespace Mysli/Core/Lib;
+namespace Mysli;
 
 class ValidatorCollection
 {

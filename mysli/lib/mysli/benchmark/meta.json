@@ -1,0 +1,11 @@
+{
+    "library"       : "mysli/benchmark",
+    "role"          : "benchmark",
+    "instantiation" : "once",
+    "version"       : 1,
+    "depends_on"    : {
+        "~core" : ">= 1"
+    },
+    "maintainer"    : "Marko Gajšt <marko@gaj.st>",
+    "description"   : "Mysli Benchmark Library."
+}

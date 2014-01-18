@@ -1,9 +1,10 @@
 {
     "library"       : "mysli/cookie",
     "instantiation" : "once",
-    "version"       : "0.1",
+    "version"       : 1,
     "depends_on"    : {
-        "*/core"    : ">= 0.1"
+        "~core"    : ">= 1",
+        "~config"  : ">= 1"
     },
     "maintainer"    : "Marko Gajšt <marko@gaj.st>",
     "description"   : "Basic cookie functionality."

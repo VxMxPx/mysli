@@ -179,7 +179,7 @@ class Str
         $chars .= ((strpos($mask, '1') !== false) ? $n : '');
         $chars .= ((strpos($mask, 's') !== false) ? $s : '');
 
-        if (!chars) {
+        if (!$chars) {
             throw new \Mysli\Core\ValueException("Invalid mask!", 1);
         }
         if ($length < 1) {

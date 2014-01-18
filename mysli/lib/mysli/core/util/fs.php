@@ -387,10 +387,10 @@ class FS
         if (file_exists($destination)) {
             switch ($on_exists) {
                 case self::EXISTS_IGNORE:
-                    with(core('log'))->info(
-                        "File exists: `{$destination}`. Ignoring.",
-                        __FILE__, __LINE__
-                    );
+                    // with(core('log'))->info(
+                    //     "File exists: `{$destination}`. Ignoring.",
+                    //     __FILE__, __LINE__
+                    // );
                     return 0;
                     break;
 
@@ -402,17 +402,17 @@ class FS
                     break;
 
                 case self::EXISTS_REPLACE:
-                    with(core('log'))->info(
-                        "File exists: `{$destination}`. It will be replaced.",
-                        __FILE__, __LINE__
-                    );
+                    // with(core('log'))->info(
+                    //     "File exists: `{$destination}`. It will be replaced.",
+                    //     __FILE__, __LINE__
+                    // );
                     break;
 
                 case self::EXISTS_RENAME:
-                    with(core('log'))->info(
-                        "File exists: `{$destination}`. It will be renamed.",
-                        __FILE__, __LINE__
-                    );
+                    // with(core('log'))->info(
+                    //     "File exists: `{$destination}`. It will be renamed.",
+                    //     __FILE__, __LINE__
+                    // );
                     $destination = self::unique_name($destination);
                     break;
 
@@ -425,10 +425,10 @@ class FS
         }
 
         if (copy($source, $destination)) {
-            with(core('log'))->info(
-                "File was copied: `{$source}`, to: `{$destination}`.",
-                __FILE__, __LINE__
-            );
+            // with(core('log'))->info(
+            //     "File was copied: `{$source}`, to: `{$destination}`.",
+            //     __FILE__, __LINE__
+            // );
             return 1;
         }
         else {
@@ -465,8 +465,8 @@ class FS
      */
     public static function file_move(
         $source,
-        $destination,
-        $on_exists = self::EXISTS_REPLACE
+        $destination = null,
+        $on_exists   = self::EXISTS_REPLACE
     ) {
         if (is_array($source)) {
             $i = 0;
@@ -509,10 +509,10 @@ class FS
         if (file_exists($destination)) {
             switch ($on_exists) {
                 case self::EXISTS_IGNORE:
-                    with(core('log'))->info(
-                        "File exists: `{$destination}`. Ignoring.",
-                        __FILE__, __LINE__
-                    );
+                    // with(core('log'))->info(
+                    //     "File exists: `{$destination}`. Ignoring.",
+                    //     __FILE__, __LINE__
+                    // );
                     return 0;
                     break;
 
@@ -524,17 +524,17 @@ class FS
                     break;
 
                 case self::EXISTS_REPLACE:
-                    with(core('log'))->info(
-                        "File exists: `{$destination}`. It will be replaced.",
-                        __FILE__, __LINE__
-                    );
+                    // with(core('log'))->info(
+                    //     "File exists: `{$destination}`. It will be replaced.",
+                    //     __FILE__, __LINE__
+                    // );
                     break;
 
                 case self::EXISTS_RENAME:
-                    with(core('log'))->info(
-                        "File exists: `{$destination}`. It will be renamed.",
-                        __FILE__, __LINE__
-                    );
+                    // with(core('log'))->info(
+                    //     "File exists: `{$destination}`. It will be renamed.",
+                    //     __FILE__, __LINE__
+                    // );
                     $destination = self::unique_name($destination);
                     break;
 
@@ -547,10 +547,10 @@ class FS
         }
 
         if (rename($source, $destination)) {
-            with(core('log'))->info(
-                "File was renamed: `{$source}`, to: `{$destination}`.",
-                __FILE__, __LINE__
-            );
+            // with(core('log'))->info(
+            //     "File was renamed: `{$source}`, to: `{$destination}`.",
+            //     __FILE__, __LINE__
+            // );
             return 1;
         }
         else {
@@ -671,10 +671,10 @@ class FS
      * --
      * @return string
      */
-    public static function get_url($filename)
-    {
-        return with(core('server'))->url(self::get_uri($filename));
-    }
+    // public static function get_url($filename)
+    // {
+    //     return with(core('server'))->url(self::get_uri($filename));
+    // }
 
     // Directories Methods -----------------------------------------------------
 

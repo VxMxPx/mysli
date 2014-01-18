@@ -4,17 +4,11 @@ namespace Mysli;
 
 class Users
 {
-    protected $config;   // This library's configuration
-    protected $core;     // The core (dependency)
-
     protected $path;     // Path where the users are stored!
     protected $cache;    // Collection of all users objects (returned as reference!)
 
-    public function __construct(array $config = [], array $dependencies = [])
+    public function __construct()
     {
-        $this->config = $config;
-        $this->core = $dependencies['core'];
-
         $this->path = datpath('users');
     }
 

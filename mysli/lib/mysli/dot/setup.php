@@ -4,13 +4,6 @@ namespace Mysli\Dot;
 
 class Setup
 {
-    protected $core;
-
-    public function __construct(array $config = [], array $dependencies = [])
-    {
-        $this->core = $dependencies['core'];
-    }
-
     public function before_enable()
     {
         // Load dot.tpl

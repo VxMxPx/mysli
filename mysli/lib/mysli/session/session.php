@@ -4,23 +4,23 @@ namespace Mysli;
 
 class Session
 {
-    protected $core;
+    protected $config;
     protected $cookie;
     protected $users;
+    protected $logger;
 
     protected $path;
-    protected $config;
 
     protected $user; // Currently discovered session // User Object!
     protected $info; // Current session information, like ID, etc...
 
-    public function __construct(array $config = [], array $dependencies = [])
+    public function __construct($config, $cookie, $users, $logger)
     {
-        $this->core   = $dependencies['core'];
-        $this->cookie = $dependencies['cookie'];
-        $this->users  = $dependencies['users'];
-
         $this->config = $config;
+        $this->cookie = $cookie;
+        $this->users  = $users;
+        $this->logger = $logger;
+
         $this->path = datpath('session');
 
         $this->discover();
@@ -84,8 +84,8 @@ class Session
     public function discover()
     {
         // Check if we can find session id in cookies.
-        if ( ! ($session_id = $this->cookie->read($this->config['cookie_name'])) ) {
-            $this->core->log->info('No session found.', __FILE__, __LINE__);
+        if ( ! ($session_id = $this->cookie->read($this->config->get('cookie_name'))) ) {
+            $this->logger->info('No session found.', __FILE__, __LINE__);
             return false;
         }
 
@@ -95,7 +95,7 @@ class Session
         // Does such session_id exists?
         $session_path = $this->get_filename_from_id($session_id);
         if ( ! file_exists($session_path) ) {
-            $this->core->log->info(
+            $this->logger->info(
                 "Session found in cookies but not in database: `{$session_id}`.",
                 __FILE__, __LINE__
             );
@@ -107,7 +107,7 @@ class Session
         // Read session file
         $session = \JSON::decode_file($session_path, true);
         if (!is_array($session)) {
-            $this->core->log->warn(
+            $this->logger->warn(
                 'Corrupted file for session: `' .
                 $session_id . '`, containing: ' .
                 print_r($session, true),
@@ -119,7 +119,7 @@ class Session
 
         // Is it expired?
         if ((int) $session['expires_on'] < time()) {
-            $this->core->log->info(
+            $this->logger->info(
                 'Session found, but it\'s expired.',
                 __FILE__, __LINE__
             );
@@ -128,9 +128,9 @@ class Session
         }
 
         // Do we need identical IP address?
-        if ($this->config['require_ip']) {
+        if ($this->config->get('require_ip')) {
             if ($session['ip'] !== $_SERVER['REMOTE_ADDR']) {
-                $this->core->log->info(
+                $this->logger->info(
                     "The session's IP: `{$session['ip']}`, " .
                     "is not the same as the actual IP: `{$_SERVER['REMOTE_ADDR']}`.",
                     __FILE__, __LINE__
@@ -141,10 +141,10 @@ class Session
         }
 
         // Do we need identical agent?
-        if ($this->config['require_agent']) {
+        if ($this->config->get('require_agent')) {
             $current_agent = $this->get_agent();
             if ($session['agent'] !== $current_agent) {
-                $this->core->log->info(
+                $this->logger->info(
                     "The agent set in session: `{$session['agent']}`, " .
                     "doesn't match with the actual agent: `{$current_agent}`.",
                     __FILE__, __LINE__
@@ -157,7 +157,7 @@ class Session
         // Get user finally...
         $user = $this->users->get_by_id($session['user_id']);
         if (!$user) {
-            $this->core->log->info(
+            $this->logger->info(
                 "No user with such id: `{$session['user_id']}`.",
                 __FILE__, __LINE__
             );
@@ -166,7 +166,7 @@ class Session
         }
 
         if (!$user->is_active()) {
-            $this->core->log->info(
+            $this->logger->info(
                 "User's account is not active: `{$session['user_id']}`.",
                 __FILE__, __LINE__
             );
@@ -174,7 +174,7 @@ class Session
             return false;
         }
 
-        $this->core->log->info(
+        $this->logger->info(
             "Session was found for `{$session['user_id']}`, user will be set!",
             __FILE__, __LINE__
         );
@@ -205,7 +205,7 @@ class Session
         // Set expires to some time in future. It 0 was set in config, then we
         // set it to expires immediately when browser window is closed.
         if ($expires === null) {
-            $expires = (int) $this->config['expires'];
+            $expires = (int) $this->config->get('expires');
             $expires = $expires > 0 ? $expires + time() : 0;
         } else {
             $expires = (int) $expires;
@@ -215,7 +215,7 @@ class Session
         $id  = time() . '_' . \Str::random(20, 'aA1');
 
         // Store cookie
-        $this->cookie->create($this->config['cookie_name'], $id, $expires);
+        $this->cookie->create($this->config->get('cookie_name'), $id, $expires);
 
         // Set session file
         $session = [
@@ -246,7 +246,7 @@ class Session
     {
         // If we have to change id on renew,
         // then we'll destroy current session and set new one.
-        if ($this->config['change_id_on_renew']) {
+        if ($this->config->get('change_id_on_renew')) {
             $this->destroy();
             $this->user = $user;
             return $this->create($user);
@@ -255,7 +255,7 @@ class Session
         // Set expires to some time in future. It 0 was set in config, then we
         // set it to expires immediately when browser window is closed.
         if ($expires === null) {
-            $expires = (int) $this->config['expires'];
+            $expires = (int) $this->config->get('expires');
             $expires = $expires > 0 ? $expires + time() : 0;
         } else {
             $expires = (int) $expires;
@@ -265,7 +265,7 @@ class Session
         $session['ip']         = $_SERVER['REMOTE_ADDR'];
         $session['agent']      = $this->get_agent();
 
-        $this->cookie->create($this->config['cookie_name'], $id, $expires);
+        $this->cookie->create($this->config->get('cookie_name'), $id, $expires);
 
         return $this->write($id, $session);
     }
@@ -312,7 +312,7 @@ class Session
 
         $this->user = null;
         $this->info = null;
-        $this->cookie->remove($this->config['cookie_name']);
+        $this->cookie->remove($this->config->get('cookie_name'));
         $filename = $this->get_filename_from_id($session_id);
         if (file_exists($filename)) {
             \FS::file_remove($filename);

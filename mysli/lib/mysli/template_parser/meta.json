@@ -1,9 +1,9 @@
 {
     "library"       : "mysli/template_parser",
     "instantiation" : "manual",
-    "version"       : "0.1",
+    "version"       : 1,
     "depends_on"    : {
-        "*/core"    : ">= 0.1"
+        "~core"     : ">= 1"
     },
     "maintainer"    : "Marko Gajšt <marko@gaj.st>",
     "description"   : "Default template parser engine."

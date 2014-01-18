@@ -4,9 +4,9 @@ namespace Mysli\Core\Util;
 
 include(__DIR__.'/../../core.php');
 new \Mysli\Core(
-    __DIR__.'/../dummy/public',
-    __DIR__.'/../dummy/libraries',
-    __DIR__.'/../dummy/data'
+    realpath(__DIR__.'/../dummy/public'),
+    realpath(__DIR__.'/../dummy/libraries'),
+    realpath(__DIR__.'/../dummy/data')
 );
 
 class FsTest extends \PHPUnit_Framework_TestCase
@@ -58,7 +58,7 @@ class FsTest extends \PHPUnit_Framework_TestCase
 
         // Create file
         file_put_contents($oldfilename, 'Lorem ipsum dolor sit amet.');
-        unlink($newfilename);
+        //unlink($newfilename);
 
         // This file must exists before we can test rename!
         $this->assertFileExists($oldfilename);
@@ -82,8 +82,8 @@ class FsTest extends \PHPUnit_Framework_TestCase
 
         file_put_contents($old1, 'Lorem.');
         file_put_contents($old2, 'Lorem.');
-        unlink($new1);
-        unlink($new2);
+        // unlink($new1);
+        // unlink($new2);
 
         // This file must exists before we can test rename!
         $this->assertFileExists($old1);
@@ -426,7 +426,7 @@ class FsTest extends \PHPUnit_Framework_TestCase
         $file = datpath('fs/lorem.txt');
         $dest = datpath('fs/lorem_copy.txt');
         file_put_contents($file, 'Lorem.');
-        unlink($dest);
+        //unlink($dest);
 
         $this->assertFalse(file_exists($dest));
         $this->assertFileExists($file);
@@ -449,8 +449,8 @@ class FsTest extends \PHPUnit_Framework_TestCase
         $dest2 = datpath('fs.ipsum_copy.txt');
         file_put_contents($file1, 'Lorem.');
         file_put_contents($file2, 'Lorem.');
-        unlink($dest1);
-        unlink($dest2);
+        //unlink($dest1);
+        //unlink($dest2);
 
         $this->assertFalse(file_exists($dest1));
         $this->assertFalse(file_exists($dest2));
@@ -655,7 +655,7 @@ class FsTest extends \PHPUnit_Framework_TestCase
         $file = datpath('fs/lorem.txt');
         $dest = datpath('fs/lorem_moved.txt');
         file_put_contents($file, 'Lorem.');
-        unlink($dest);
+        //unlink($dest);
 
         $this->assertFalse(file_exists($dest));
         $this->assertFileExists($file);
@@ -678,8 +678,8 @@ class FsTest extends \PHPUnit_Framework_TestCase
         $dest2 = datpath('fs.ipsum_moved.txt');
         file_put_contents($file1, 'Lorem.');
         file_put_contents($file2, 'Lorem.');
-        unlink($dest1);
-        unlink($dest2);
+        //unlink($dest1);
+        //unlink($dest2);
 
         $this->assertFalse(file_exists($dest1));
         $this->assertFalse(file_exists($dest2));
@@ -968,17 +968,18 @@ class FsTest extends \PHPUnit_Framework_TestCase
     }
 
     // File Get Url ------------------------------------------------------------
-    public function test_get_url()
-    {
-        $file = pubpath('test.txt');
-        file_put_contents($file, '1234');
-        $this->assertEquals(
-            // This url is set in data_dummy/core/cfg.json
-            'http:://localhost/test.txt',
-            \FS::get_url($file)
-        );
-        unlink($file);
-    }
+    // NOTE: Note part of the FS class anymore!
+    // public function test_get_url()
+    // {
+    //     $file = pubpath('test.txt');
+    //     file_put_contents($file, '1234');
+    //     $this->assertEquals(
+    //         // This url is set in data_dummy/core/cfg.json
+    //         'http:://localhost/test.txt',
+    //         \FS::get_url($file)
+    //     );
+    //     unlink($file);
+    // }
 
     // Dir Get Signatures
     public function test_dir_signatures()

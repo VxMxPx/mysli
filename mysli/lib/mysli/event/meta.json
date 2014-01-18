@@ -1,0 +1,12 @@
+{
+    "library"       : "mysli/event",
+    "role"          : "event",
+    "instantiation" : "once",
+    "version"       : 1,
+    "depends_on"    : {
+        "~core"      : ">= 1",
+        "~librarian" : ">= 1"
+    },
+    "maintainer"    : "Marko Gajšt <marko@gaj.st>",
+    "description"   : "Mysli Event Library."
+}

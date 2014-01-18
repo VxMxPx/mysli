@@ -9,7 +9,7 @@ class Setup
     protected $datpath;
     protected $path;
 
-    public function __construct(array $config = [], array $dependencies = [])
+    public function __construct($config = null)
     {
         // Load functions
         if (!function_exists('ds')) {
@@ -21,10 +21,16 @@ class Setup
                 'functions.php';
         }
 
-        $this->pubpath = isset($config['pubpath']) ? ds($config['pubpath']) : pubpath();
-        $this->libpath = isset($config['libpath']) ? ds($config['libpath']) : libpath();
-        $this->datpath = isset($config['datpath']) ? ds($config['datpath']) : datpath();
-        $this->path    = ds(__DIR__);
+        if (is_array($config)) {
+            $this->pubpath = ds($config['pubpath']);
+            $this->libpath = ds($config['libpath']);
+            $this->datpath = ds($config['datpath']);
+        } else {
+            $this->pubpath = pubpath();
+            $this->libpath = libpath();
+            $this->datpath = datpath();
+        }
+        $this->path = ds(__DIR__);
     }
 
     public function before_enable()
@@ -61,26 +67,6 @@ class Setup
                 throw new \Exception('Cannot create data directory!', 2);
             }
         }
-        // Create 'core' folder
-        if (!mkdir(ds($this->datpath, 'core'), 0777)) {
-            throw new \Exception('Cannot create core directory!', 3);
-
-        }
-        file_put_contents(
-            ds($this->datpath, 'core', 'cfg.json'),
-            file_get_contents(ds($this->path, 'setup', 'cfg.json'))
-        );
-        file_put_contents(
-            ds($this->datpath, 'core', 'events.json'),
-            '{}'
-        );
-        $meta = json_decode(file_get_contents(ds($this->path, 'meta.json')), true);
-        $meta['required_by'] = [];
-        $meta = ['mysli/core' => $meta];
-        file_put_contents(
-            ds($this->datpath, 'core', 'libraries.json'),
-            json_encode($meta)
-        );
 
         return true;
     }
@@ -93,8 +79,8 @@ class Setup
 
     public function after_disable()
     {
-        \FS::dir_remove(datpath());
-        \FS::dir_remove(pubpath());
+        \FS::dir_remove($this->datpath);
+        \FS::dir_remove($this->pubpath);
         return true;
     }
 }

@@ -4,32 +4,30 @@ namespace Mysli\Session;
 
 class Setup
 {
-    protected $core;
+    protected $config;
 
-    public function __construct(array $config = [], array $dependencies = [])
+    public function __construct($config)
     {
-        $this->core = $dependencies['core'];
+        $this->config = $config;
     }
 
     public function before_enable()
     {
-        $config['mysli']['session'] = [
+        $this->config->merge([
             'cookie_name'        => 'mysli_session',
             'require_ip'         => false,
             'require_agent'      => false,
             'expires'            => 60 * 60 * 24 * 7,
             'change_id_on_renew' => false,
-        ];
-        $this->core->cfg->append($config);
-        $this->core->cfg->write();
+        ]);
+        $this->config->write();
         \FS::dir_create(datpath('session'), \FS::EXISTS_MERGE);
         return true;
     }
 
     public function before_disable()
     {
-        $this->core->cfg->set('mysli/session', null);
-        $this->core->cfg->write();
+        $this->config->destroy();
         return \FS::dir_remove(datpath('session'));
     }
 }

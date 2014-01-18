@@ -360,36 +360,36 @@ class ArrTest extends \PHPUnit_Framework_TestCase
     public function test_clean_keys()
     {
         $in  = [
-            'hello world  ' => 0,
+            'hello world  '    => 0,
             ' hEllo-new-WOrld' => 0,
-            'ščć' => 0,
-            '------' => 'a',
-            12 => 0,
-            1 => 'b',
-            '' => 'c'
+            'ščć'              => 'shumniki',
+            '------'           => 'a',
+            12                 => 0,
+            1                  => 'b',
+            ''                 => 'c'
         ];
 
         $this->assertEquals(
             [
-                'helloWorld' => 0,
+                'helloWorld'    => 0,
                 'helloNewWorld' => 0,
-                'scc' => 0,
-                0 => 'a',
-                12 => 0,
-                1 => 'b',
-                2 => 'c'
+                'scc'           => 'shumniki',
+                0               => 'a',
+                12              => 0,
+                1               => 'b',
+                2               => 'c'
             ],
             Arr::clean_keys($in, Arr::CAMELCASE)
         );
         $this->assertEquals(
             [
-                'hello_world' => 0,
+                'hello_world'     => 0,
                 'hello_new_world' => 0,
-                'scc' => 0,
-                0 => 'a',
-                12 => 0,
-                1 => 'b',
-                2 => 'c'
+                'scc'             => 'shumniki',
+                0                 => 'a',
+                12                => 0,
+                1                 => 'b',
+                2                 => 'c'
             ],
             Arr::clean_keys($in, Arr::UNDERSCORE)
         );

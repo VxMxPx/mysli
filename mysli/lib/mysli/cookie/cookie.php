@@ -4,15 +4,16 @@ namespace Mysli;
 
 class Cookie
 {
-    protected $core;
     protected $config;
 
-    public function __construct(array $config = [], array $dependencies = [])
+    /**
+     * Construct Cookie
+     * --
+     * @param object $config ~config
+     */
+    public function __construct($config)
     {
-        $this->core = $dependencies['core'];
         $this->config = $config;
-
-        $this->config['domain'] = $this->config['domain'] ?: $_SERVER['SERVER_NAME'];
     }
 
     /**
@@ -29,17 +30,11 @@ class Cookie
     public function create($name, $value, $expire = false)
     {
         if ($expire === false) {
-            $expire = time() + $this->config['timeout'];
+            $expire = time() + $this->config->get('timeout');
         }
 
-        $domain = $this->config['domain'];
-        $prefix = $this->config['prefix'];
-
-        $this->core->log->info(
-            "Cookie will be set, as: `{$prefix}{$name}`, with value: `{$value}`, " .
-            "set to expire on: `{$expire}`, to domain: `{$domain}`.",
-            __FILE__, __LINE__
-        );
+        $domain = $this->config->get('domain', $_SERVER['SERVER_NAME']);
+        $prefix = $this->config->get('prefix');
 
         return setcookie($prefix . $name, $value, $expire, '/', $domain);
     }
@@ -53,7 +48,7 @@ class Cookie
      */
     public function read($key)
     {
-        $key_prefix = $this->config['prefix'] . $key;
+        $key_prefix = $this->config->get('prefix') . $key;
 
         if (isset($_COOKIE[$key_prefix])) {
             $return = $_COOKIE[$key_prefix];
@@ -75,13 +70,8 @@ class Cookie
      */
     public function remove($name)
     {
-        $domain = $this->config['domain'];
-        $prefix = $this->config['prefix'];
-
-        $this->core->log->info(
-            "Cookie will be unset: `{$prefix}{$name}`.",
-            __FILE__, __LINE__
-        );
+        $domain = $this->config->get('domain', $_SERVER['SERVER_NAME']);
+        $prefix = $this->config->get('prefix');
 
         return setcookie($prefix . $name, '', time() - 3600, '/', $domain);
     }

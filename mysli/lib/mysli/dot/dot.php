@@ -8,19 +8,16 @@ class Dot
 {
     protected $scripts_registry;
     protected $constructed = [];
-    protected $core;
+    protected $librarian;
 
     /**
      * Construct DOT
      * --
-     * @param array $config
-     *   - none
-     * @param array $dependencies
-     *   - core
+     * @param object $librarian ~librarian
      */
-    public function __construct(array $config = [], array $dependencies = [])
+    public function __construct($librarian)
     {
-        $this->core = $dependencies['core'];
+        $this->librarian = $librarian;
         $this->scripts_registry = $this->discover_scripts();
 
         // Remove vendor for non-specific usage in scripts we're calling.
@@ -34,7 +31,7 @@ class Dot
      */
     protected function discover_scripts()
     {
-        $enabled = $this->core->librarian->get_enabled(true);
+        $enabled = $this->librarian->get_enabled(true);
         $scripts = [];
 
         foreach ($enabled as $library => $details) {
@@ -51,7 +48,7 @@ class Dot
                 $scripts[$id] = [
                     'path'        => ds($path, $file),
                     'class'       =>
-                        $this->core->librarian->lib_to_ns($library) .
+                        $this->librarian->lib_to_ns($library) .
                         '\\Script\\' . \Str::to_camelcase($id),
                     'description' => $details['description']
                 ];
@@ -92,15 +89,16 @@ class Dot
      * --
      * @return object
      */
-    protected function construct_script($script) {
+    protected function construct_script($script)
+    {
         if (isset($this->constructed[$script])) {
             return $this->constructed[$script];
         }
         $class = $this->scripts_registry[$script]['class'];
         $class_array = explode('\\', $class);
-        $library = $this->core->librarian->ns_to_lib($class_array[0] . '\\' . $class_array[1]);
+        $library = $this->librarian->ns_to_lib($class_array[0] . '\\' . $class_array[1]);
         if (!class_exists($class, false)) {
-            if (!$this->core->librarian->is_enabled($library)) {
+            if (!$this->librarian->is_enabled($library)) {
                 Util::warn('FAILED. Not enabled: ' . $library);
             }
             $path = \Str::to_underscore($class);
@@ -119,16 +117,15 @@ class Dot
         }
 
         $libname = explode('/', $library)[1];
-        $dependencies = $this->core->librarian->dependencies_factory($library);
-        $dependencies = array_merge(
-            [
-                // Send its own library in
-                $libname => $this->core->librarian->factory($library)
-            ],
-            $dependencies
-        );
-        $config = $this->core->cfg->get($library, []);
-        return new $class($config, $dependencies);
+
+        $object = new \ReflectionClass($class);
+        if ($object->hasMethod('__construct')) {
+            $dependencies = $this->dependencies_factory($library);
+            $dependencies[]['requested_by'] = $library;
+            return $object->newInstanceArgs($dependencies);
+        } else {
+            return $object->newInstanceWithoutConstructor();
+        }
     }
 
     /**

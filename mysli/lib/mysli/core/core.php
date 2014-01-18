@@ -4,25 +4,7 @@ namespace Mysli;
 
 class Core
 {
-    protected $path; // Core path
-    protected $pubpath;
-    protected $libpath;
-    protected $datpath;
-
-    protected static $instance;
-
-    // Core libraries
-    protected $error;
-    public $benchmark;
-    public $cfg;
-    public $event;
-    public $language;
-    public $librarian;
-    public $log;
-    public $output;
-    public $request;
-    public $response;
-    public $server;
+    protected $event;
 
     /**
      * Base path are required:
@@ -35,187 +17,90 @@ class Core
      */
     public function __construct($pubpath, $libpath, $datpath)
     {
-        $this->pubpath = $pubpath;
-        $this->libpath = $libpath;
-        $this->datpath = $datpath;
+        define('MYSLI_PUBPATH', $pubpath);
+        define('MYSLI_LIBPATH', $libpath);
+        define('MYSLI_DATPATH', $datpath);
 
-        $this->path = realpath(__DIR__);
-
-        $this->load_exceptions();
-        $this->load_util([
-            'Mysli\\Core\\Util\\Arr'  => 'Arr',
-            'Mysli\\Core\\Util\\Str'  => 'Str',
-            'Mysli\\Core\\Util\\Int'  => 'Int',
-            'Mysli\\Core\\Util\\FS'   => 'FS',
-            'Mysli\\Core\\Util\\JSON' => 'JSON',
-        ]);
-        $this->load_core_libraries([
-            'benchmark', 'log', 'cfg', 'librarian', 'event', 'request',
-            'response', 'language', 'output', 'server', 'error'
-        ]);
-
-        // Set Error Handler
-        set_error_handler([$this->error, 'handle']);
-
-        // Register Class Loader
-        spl_autoload_register([$this->librarian, 'autoloader']);
-
-        // In theory we should have timezone now
-        date_default_timezone_set($this->cfg->get('mysli/core/timezone', 'UTC'));
-        ini_set('display_errors', $this->cfg->get('mysli/core/debug', false));
-
-        $this->benchmark->set_timer('/mysli/core');
-        $this->log->info('Hello! | PHP version: ' . PHP_VERSION, __FILE__, __LINE__);
-
-        $this->event->trigger('/mysli/core->__construct');
-
-        self::$instance = $this;
+        $path  = realpath(__DIR__);
+        $this->load_exceptions($path);
+        $this->load_util(
+            $path,
+            [
+                'Mysli\\Core\\Util\\Arr'  => 'Arr',
+                'Mysli\\Core\\Util\\Str'  => 'Str',
+                'Mysli\\Core\\Util\\Int'  => 'Int',
+                'Mysli\\Core\\Util\\FS'   => 'FS',
+                'Mysli\\Core\\Util\\JSON' => 'JSON',
+            ]
+        );
     }
 
     /**
-     * Return absolute libraries path.
+     * Init the core libraries, like librarian and config,...
      * --
-     * @param  string $path
-     * --
-     * @return string
+     * @return void
      */
-    public function libpath($path = null) {
-        return ds($this->libpath.'/'.$path);
-    }
-
-    /**
-     * Return absolute public path.
-     * --
-     * @param  string $path
-     * --
-     * @return string
-     */
-    public function pubpath($path = null) {
-        return ds($this->pubpath.'/'.$path);
-    }
-
-    /**
-     * Return absolute datpath path.
-     * --
-     * @param  string $path
-     * --
-     * @return string
-     */
-    public function datpath($path = null) {
-        return ds($this->datpath.'/'.$path);
-    }
-
-    /**
-     * Trigger the final event.
-     */
-    public function terminate()
+    public function init()
     {
-        // Final event
-        $this->event->trigger('/mysli/core->terminate');
-        exit();
+        // Get Librarian & Register Class Loader
+        $librarian = $this->get_librarian();
+        spl_autoload_register([$librarian, 'autoloader']);
+
+        // Get Error Handler & Register it
+        $error_handler = $librarian->factory('~error_handler');
+        set_error_handler([$error_handler, 'handle']);
+
+        $benchmark = $librarian->factory('~benchmarker');
+        $benchmark->set_timer('core');
+
+        $log = $librarian->factory('~logger');
+        $log->info('Hello! | PHP Version: ' . PHP_VERSION, __FILE__, __LINE__);
+
+        $this->event = $librarian->factory('~event');
+        $this->event->trigger('/mysli/core:init');
     }
 
     /**
-     * Get params for particular library.
+     * Will get enabled librarian if exists...
      * --
-     * @param  string $library
-     * --
-     * @return array
+     * @return void
      */
-    protected function get_params($library)
+    protected function get_librarian()
     {
-        switch ($library) {
-            case 'benchmark':
-                return [];
-
-            case 'log':
-                return [
-                    [],
-                    [
-                        'event'     => &$this->event,
-                        'benchmark' => $this->benchmark,
-                    ],
-                ];
-
-            case 'cfg':
-                return [
-                    [
-                        'cfgfile' => $this->datpath('core/cfg.json'),
-                    ],
-                    [],
-                ];
-
-            case 'librarian':
-                return [
-                    [
-                        'libfile' => $this->datpath('core/libraries.json'),
-                    ],
-                    [
-                        'core' => $this,
-                        'log'  => $this->log,
-                        'cfg'  => $this->cfg,
-                    ],
-                ];
-
-            case 'event':
-                return [
-                    [
-                        'eventfile' => $this->datpath('core/events.json'),
-                    ],
-                    [
-                        'librarian' => $this->librarian,
-                    ],
-                ];
-
-            case 'request':
-                return [];
-
-            case 'response':
-                return [
-                    [],
-                    [
-                        'event' => $this->event,
-                    ],
-                ];
-
-            case 'language':
-                return [
-                    [],
-                    [
-                        'log' => $this->log,
-                    ],
-                ];
-
-            case 'output':
-                return [];
-
-            case 'server':
-                return [
-                    $this->cfg->get('mysli/core/server'),
-                    [],
-                ];
-
-            case 'error':
-                return [
-                    [],
-                    [
-                        'log'   => $this->log,
-                        'event' => $this->event,
-                    ],
-                ];
+        // There should be librarian folder...
+        $libid = datpath('librarian/id.json');
+        if (!file_exists($libid)) {
+            throw new \Core\FileNotFoundException(
+                "Could not found librarian ID file: `{$libid}`.", 1
+            );
         }
+        $lib_info = \JSON::decode_file($libid, true);
+        $lib_file = $lib_info['file'];
+        if (!file_exists(libpath($lib_file))) {
+            throw new \Core\FileNotFoundException(
+                "Librarian file not found: `{$lib_file}`.", 2
+            );
+        }
+        if (!class_exists($lib_info['class'], false)) {
+            throw new \Core\ValueException(
+                "The librarian class not found: `{$lib_info['class']}`.", 1
+            );
+        }
+        return new $lib_info['class'](datpath('librarian/registry.json'));
     }
 
     /**
      * Load base exception classes.
+     * --
+     * @param string $path
      */
-    protected function load_exceptions()
+    protected function load_exceptions($path)
     {
-        $files = scandir($this->path . DIRECTORY_SEPARATOR . 'exceptions');
+        $files = scandir($path . DIRECTORY_SEPARATOR . 'exceptions');
         $files = array_diff($files, ['.', '..']);
         foreach ($files as $file) {
             include(
-                $this->path .
+                $path .
                 DIRECTORY_SEPARATOR .
                 'exceptions' .
                 DIRECTORY_SEPARATOR .
@@ -234,16 +119,17 @@ class Core
     /**
      * Load base util classes.
      * --
-     * @param  array $libraries
+     * @param  string $path
+     * @param  array  $libraries
      * --
      * @return void
      */
-    protected function load_util(array $libraries)
+    protected function load_util($path, array $libraries)
     {
         if (!function_exists('ds')) {
             // Include core functions
             include(
-                $this->path .
+                $path .
                 DIRECTORY_SEPARATOR .
                 'util' .
                 DIRECTORY_SEPARATOR .
@@ -254,7 +140,7 @@ class Core
         foreach ($libraries as $class => $alias) {
             $file = strtolower($class);
             $file = str_replace('\\', DIRECTORY_SEPARATOR, $file);
-            $filename = ds($this->path, 'util', strtolower($alias) . '.php');
+            $filename = ds($path, 'util', strtolower($alias) . '.php');
 
             if (!file_exists($filename)) {
                 throw new \Mysli\Core\FileNotFoundException(
@@ -267,35 +153,12 @@ class Core
     }
 
     /**
-     * Load core libraries.
-     * --
-     * @param  array  $libraries
-     * --
-     * @return void
+     * Trigger the final event.
      */
-    protected function load_core_libraries(array $libraries)
+    public function terminate()
     {
-        foreach ($libraries as $library) {
-            $class_name = '\\Mysli\\Core\\Lib\\' . ucfirst($library);
-            $filename = ds($this->path, 'lib', $library . '.php');
-            if (!file_exists($filename)) {
-                throw new \Mysli\Core\FileNotFoundException(
-                    "File not found: '{$filename}'."
-                );
-            }
-            include($filename);
-            $class = new \ReflectionClass($class_name);
-            $this->{$library} = $class->newInstanceArgs($this->get_params($library));
-        }
-    }
-
-    /**
-     * Return this instance.
-     * --
-     * @return object \Mysli\Core
-     */
-    public static function instance()
-    {
-        return self::$instance;
+        // Final event
+        $this->event->trigger('/mysli/core:terminate');
+        exit();
     }
 }
