@@ -4,7 +4,8 @@ namespace Mysli;
 
 class Core
 {
-    protected $event;
+    public $event;
+    public $librarian;
 
     /**
      * Base path are required:
@@ -43,20 +44,20 @@ class Core
     public function init()
     {
         // Get Librarian & Register Class Loader
-        $librarian = $this->get_librarian();
-        spl_autoload_register([$librarian, 'autoloader']);
+        $this->librarian = $this->get_librarian();
+        spl_autoload_register([$this->librarian, 'autoloader']);
 
         // Get Error Handler & Register it
-        $error_handler = $librarian->factory('~error_handler');
+        $error_handler = $this->librarian->factory('~error_handler');
         set_error_handler([$error_handler, 'handle']);
 
-        $benchmark = $librarian->factory('~benchmarker');
+        $benchmark = $this->librarian->factory('~benchmarker');
         $benchmark->set_timer('core');
 
-        $log = $librarian->factory('~logger');
+        $log = $this->librarian->factory('~logger');
         $log->info('Hello! | PHP Version: ' . PHP_VERSION, __FILE__, __LINE__);
 
-        $this->event = $librarian->factory('~event');
+        $this->event = $this->librarian->factory('~event');
         $this->event->trigger('/mysli/core:init');
     }
 
@@ -80,6 +81,8 @@ class Core
             throw new \Core\FileNotFoundException(
                 "Librarian file not found: `{$lib_file}`.", 2
             );
+        } else {
+            include libpath($lib_file);
         }
         if (!class_exists($lib_info['class'], false)) {
             throw new \Core\ValueException(

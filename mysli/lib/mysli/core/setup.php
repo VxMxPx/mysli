@@ -68,6 +68,22 @@ class Setup
             }
         }
 
+        // Check if core folder exists...
+        if (!is_dir(ds($this->datpath, 'core'))) {
+            if (!mkdir(ds($this->datpath, 'core'))) {
+                throw new \Exception('Cannot create `core` directory.', 3);
+            }
+        }
+
+        // Save core ID!
+        file_put_contents(
+            ds($this->datpath, '/core/id.json'),
+            json_encode([
+                'file'  => 'mysli/core/core.php',
+                'class' => 'Mysli\\Core',
+            ])
+        );
+
         return true;
     }
 
