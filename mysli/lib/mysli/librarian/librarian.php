@@ -319,7 +319,7 @@ class Librarian
 
         $info = $this->get_details($library);
         if (!$info) {
-            throw new DependencyException(
+            throw new \Mysli\Librarian\DependencyException(
                 "Cannot get details for: '{$library}'.",
                 10
             );
@@ -331,14 +331,14 @@ class Librarian
 
             // Check if we have match
             if (!$dependency_resovled) {
-                throw new DependencyException(
+                throw new \Mysli\Librarian\DependencyException(
                     "Cannot get dependency: '{$dependency}' version: '{$version}'.",
                     20
                 );
             }
             // Check if is enabled
             if (!$this->is_enabled($dependency_resovled)) {
-                throw new DependencyException(
+                throw new \Mysli\Librarian\DependencyException(
                     "Dependency is not enabled: '{$dependency}' cannot proceed.",
                     30
                 );
@@ -346,7 +346,7 @@ class Librarian
             // Check if version is OK
             $resolved_version = $this->get_details($dependency_resovled)['version'];
             if (!\Int::compare_versions($resolved_version, $version)) {
-                throw new DependencyException(
+                throw new \Mysli\Librarian\DependencyException(
                     "Dependency version is not correct. ".
                     "Version: '{$resolved_version}' required: '{$version}'.",
                     40
