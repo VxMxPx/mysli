@@ -21,7 +21,7 @@ class Dot
         $this->scripts_registry = $this->discover_scripts();
 
         // Remove vendor for non-specific usage in scripts we're calling.
-        class_alias('\Mysli\Dot\Util', 'Dot\Util');
+        class_alias('\\Mysli\\Dot\\Util', 'Dot\\Util');
     }
 
     /**
