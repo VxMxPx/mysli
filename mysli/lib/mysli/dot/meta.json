@@ -1,5 +1,6 @@
 {
     "library"       : "mysli/dot",
+    "role"          : "cli",
     "instantiation" : "once",
     "version"       : 1,
     "depends_on"    : {
