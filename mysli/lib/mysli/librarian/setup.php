@@ -12,6 +12,13 @@ class Setup
             'class' => 'Mysli\\Librarian',
         ]);
         \JSON::encode_file(datpath('librarian/registry.json'), []);
+
+        // Add self to libraries oO
+        if (!class_exists('Mysli\\Librarian', false)) {
+            include libpath('mysli/librarian/librarian.php');
+        }
+        $librarian = new \Mysli\Librarian();
+        $librarian->enable('mysli/librarian');
         return true;
     }
 
