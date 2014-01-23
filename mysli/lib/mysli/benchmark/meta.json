@@ -1,6 +1,6 @@
 {
     "library"       : "mysli/benchmark",
-    "role"          : "benchmark",
+    "role"          : "benchmarker",
     "instantiation" : "once",
     "version"       : 1,
     "depends_on"    : {
