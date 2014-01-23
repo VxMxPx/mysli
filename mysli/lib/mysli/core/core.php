@@ -48,16 +48,31 @@ class Core
         spl_autoload_register([$this->librarian, 'autoloader']);
 
         // Get Error Handler & Register it
-        $error_handler = $this->librarian->factory('~error_handler');
+        $error_handler = $this->librarian->resolve('~error_handler');
+        if (!$error_handler)
+            throw new \Mysli\Core\CoreException('Could not found `~error_handler` library.', 1);
+        $error_handler = $this->librarian->factory($error_handler);
         set_error_handler([$error_handler, 'handle']);
 
-        $benchmark = $this->librarian->factory('~benchmarker');
+        // Get benchmarker and start it
+        $benchmarker = $this->librarian->resolve('~benchmarker');
+        if (!$benchmarker)
+            throw new \Mysli\Core\CoreException('Could not found `~benchmarker` library.', 2);
+        $benchmark = $this->librarian->factory($benchmarker);
         $benchmark->set_timer('core');
 
-        $log = $this->librarian->factory('~logger');
+        // Get logger and log a message
+        $logger = $this->librarian->resolve('~logger');
+        if (!$logger)
+            throw new \Mysli\Core\CoreException('Could not found `~logger` library.', 3);
+        $log = $this->librarian->factory($logger);
         $log->info('Hello! | PHP Version: ' . PHP_VERSION, __FILE__, __LINE__);
 
-        $this->event = $this->librarian->factory('~event');
+        // Get event and trigger init
+        $event = $this->librarian->resolve('~event');
+        if (!$event)
+            throw new \Mysli\Core\CoreException('Could not found `~event` library.', 4);
+        $this->event = $this->librarian->factory($event);
         $this->event->trigger('/mysli/core:init');
     }
 
