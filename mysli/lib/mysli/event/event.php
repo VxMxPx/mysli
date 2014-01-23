@@ -14,8 +14,8 @@ class Event
     // List of events that has be triggered
     protected $history = [];
 
-    // Master filename, it will save newly registered events.
-    // Autoset on init
+    // Master file, where newly registered events will be saved.
+    // Will be set when constructed.
     protected $filename = '';
 
     protected $librarian;
@@ -113,7 +113,7 @@ class Event
     }
 
     /**
-     * Wait for paticular event to happened - then call the assigned function / method.
+     * Wait for particular event to happened - then call the assigned function / method.
      * --
      * @param   string  $event    Name of the event you're waiting for
      * @param   mixed   $call     Can be:
