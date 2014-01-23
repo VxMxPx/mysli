@@ -3,7 +3,7 @@
     "role"          : "core",
     "instantiation" : "never",
     "version"       : 1,
-    "depends_on"    : null,
+    "depends_on"    : [],
     "maintainer"    : "Marko Gajšt <marko@gaj.st>",
     "description"   : "Mysli Core."
 }
