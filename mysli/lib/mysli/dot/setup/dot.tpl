@@ -55,6 +55,6 @@ $core = new $core_id['class']($pubpath, $libpath, $datpath);
 $core->init();
 
 // Dot execution
-$dot_lib = $core->librarian->resolve('*/dot');
+$dot_lib = $core->librarian->resolve('~cli');
 $dot = $core->librarian->factory($dot_lib);
 $dot->run($_SERVER['argv']);
