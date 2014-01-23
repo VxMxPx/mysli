@@ -9,7 +9,8 @@ class Setup
     protected $datpath;
     protected $path;
 
-    public function __construct($config = null)
+    // Config is not automatically injected, as CORE has no dependencies!
+    public function __construct(array $config = null)
     {
         // Load functions
         if (!function_exists('ds')) {
@@ -42,23 +43,26 @@ class Setup
                 throw new \Exception('Cannot create public directory!', 1);
             }
         }
-        // Load index.tpl
-        $index_contents = file_get_contents(ds($this->path, 'setup', 'index.tpl'));
-        // Replace {{LIBPATH}} and {{DATPATH}}
-        $ds = DIRECTORY_SEPARATOR;
-        $index_contents = str_replace(
-            [
-                '{{LIBPATH}}',
-                '{{DATPATH}}'
-            ],
-            [
-                '/' . str_replace(DIRECTORY_SEPARATOR, '/', \relative_path($this->libpath, $this->pubpath)),
-                '/' . str_replace(DIRECTORY_SEPARATOR, '/', \relative_path($this->datpath, $this->pubpath)),
-            ],
-            $index_contents
-        );
-        // Create index.php
-        file_put_contents(ds($this->pubpath, 'index.php'), $index_contents);
+
+        if (!file_exists(ds($this->pubpath, 'index.php'))) {
+            // Load index.tpl
+            $index_contents = file_get_contents(ds($this->path, 'setup', 'index.tpl'));
+            // Replace {{LIBPATH}} and {{DATPATH}}
+            $ds = DIRECTORY_SEPARATOR;
+            $index_contents = str_replace(
+                [
+                    '{{LIBPATH}}',
+                    '{{DATPATH}}'
+                ],
+                [
+                    '/' . str_replace(DIRECTORY_SEPARATOR, '/', \relative_path($this->libpath, $this->pubpath)),
+                    '/' . str_replace(DIRECTORY_SEPARATOR, '/', \relative_path($this->datpath, $this->pubpath)),
+                ],
+                $index_contents
+            );
+            // Create index.php
+            file_put_contents(ds($this->pubpath, 'index.php'), $index_contents);
+        }
 
         // Check if datpath exists
         if (!is_dir($this->datpath)) {
