@@ -266,6 +266,84 @@ class ArrTest extends \PHPUnit_Framework_TestCase
 
     // -------------------------------------------------------------------------
 
+    public function test_readable()
+    {
+        $this->assertEquals(
+            "city       : Saint Petersburg\n".
+            "country    : Russia\n".
+            "population : 4879566\n".
+            "area       : 1439"
+            ,
+            Arr::readable([
+                'city'       => 'Saint Petersburg',
+                'country'    => 'Russia',
+                'population' => 4879566,
+                'area'       => 1439
+            ])
+        );
+    }
+
+    public function test_readable_multidimensional()
+    {
+        $this->assertEquals(
+            "Slovenia\n" .
+            "  area       : 20273\n" .
+            "  population : 2055496\n" .
+            "  cities\n" .
+            "    Ljubljana\n" .
+            "      population : 274826\n" .
+            "    Maribor\n" .
+            "      population : 94809\n" .
+            "    Celje\n" .
+            "      population : 50039\n" .
+            "Russia\n" .
+            "  area       : 17098242\n" .
+            "  population : 143657134\n" .
+            "  cities\n" .
+            "    Moscow\n" .
+            "      population : 11514300\n" .
+            "    Saint Petersburg\n" .
+            "      population : 5227567\n" .
+            "    Novosibirsk\n" .
+            "      population : 1473737"
+            ,
+            Arr::readable([
+                'Slovenia' => [
+                    'area' => 20273,
+                    'population' => 2055496,
+                    'cities' => [
+                        'Ljubljana' => [
+                            'population' => 274826,
+                        ],
+                        'Maribor' => [
+                            'population' => 94809,
+                        ],
+                        'Celje' => [
+                            'population' => 50039,
+                        ]
+                    ]
+                ],
+                'Russia' => [
+                    'area' => 17098242,
+                    'population' => 143657134,
+                    'cities' => [
+                        'Moscow' => [
+                            'population' => 11514300
+                        ],
+                        'Saint Petersburg' => [
+                            'population' => 5227567
+                        ],
+                        'Novosibirsk' => [
+                            'population' => 1473737
+                        ]
+                    ]
+                ]
+            ])
+        );
+    }
+
+    // -------------------------------------------------------------------------
+
     /**
      * Test Arr::remove_empty()
      *

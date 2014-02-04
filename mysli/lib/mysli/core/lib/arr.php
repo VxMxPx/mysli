@@ -139,6 +139,49 @@ class Arr
     }
 
     /**
+     * Return array as a nicely formatted string. Example:
+     * key      : value
+     * long_key : value
+     * --
+     * @param array   $input
+     * @param string  $separator used to separate key and value.
+     * @param string  $new_line  new line character.
+     * @param integer $step      in multi-dimensional array, how much to indent next level.
+     * @param integer $indent    starting indentation.
+     * --
+     * @return string
+     */
+    public static function readable(
+        array $input,
+        $separator = ' : ',
+        $new_line = "\n",
+        $step = 2,
+        $indent = 0
+    ) {
+        $lkey = 0;
+        $out  = '';
+
+        // Get the longest key...
+        foreach ($input as $key => $val) {
+            if (strlen($key) > $lkey) {
+                $lkey = strlen($key);
+            }
+        }
+
+        foreach ($input as $key => $value) {
+            $out .= str_repeat(' ', $indent) . $key;
+            if (is_array($value)) {
+                $out .= $new_line . self::readable($value, $separator, $new_line, $step, $indent + $step);
+            } else {
+                $out .= str_repeat(' ', $lkey - strlen($key)) . $separator . $value;
+            }
+            $out .= $new_line;
+        }
+
+        return rtrim($out);
+    }
+
+    /**
      * Remove empty values from Array.
      * --
      * @param   array   $input_array
