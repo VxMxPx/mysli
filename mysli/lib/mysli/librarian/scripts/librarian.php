@@ -4,16 +4,16 @@ namespace Mysli\Librarian\Script;
 
 class Librarian
 {
-    protected $core;
+    protected $librarian;
 
-    public function __construct(array $config = [], array $dependencies = [])
+    public function __construct(\Mysli\Librarian $librarian)
     {
-        $this->core = $dependencies['core'];
+        $this->librarian = $librarian;
     }
 
     public function help_index()
     {
-        \Dot\Util::doc(
+        \Cli\Util::doc(
             'Mysli Core :: Libraries Management',
             'libraries <OPTION> [ARGUMENTS...]',
             [
@@ -27,25 +27,25 @@ class Librarian
 
     public function help_enable()
     {
-        \Dot\Util::doc(
+        \Cli\Util::doc(
             'Mysli Core :: Libraries Management :: ENABLE',
             'libraries enable <LIBRARY NAME>'
         );
-        \Dot\Util::plain('Example: libraries enable mysli/backend');
+        \Cli\Util::plain('Example: libraries enable mysli/backend');
         return true;
     }
     protected function enable_helper($lib)
     {
-        $setup = $this->core->librarian->construct_setup($lib);
+        $setup = $this->librarian->construct_setup($lib);
         if (method_exists($setup, 'before_enable') && !$setup->before_enable()) {
-            \Dot\Util::error('Setup failed for: ' . $lib);
+            \Cli\Util::error('Setup failed for: ' . $lib);
             return false;
         }
-        if (!$this->core->librarian->enable($lib)) {
-            \Dot\Util::error('Failed to enable: ' . $lib);
+        if (!$this->librarian->enable($lib)) {
+            \Cli\Util::error('Failed to enable: ' . $lib);
             return false;
         } else {
-            \Dot\Util::success('Enabled: ' . $lib);
+            \Cli\Util::success('Enabled: ' . $lib);
             if (method_exists($setup, 'after_enable')) {
                 $setup->after_enable();
             }
@@ -57,25 +57,25 @@ class Librarian
         if (!$lib) {
             return $this->help_enable();
         }
-        if ($this->core->librarian->is_enabled($lib)) {
-            \Dot\Util::warn("Library is already enabled: `{$lib}`.");
+        if ($this->librarian->is_enabled($lib)) {
+            \Cli\Util::warn("Library is already enabled: `{$lib}`.");
             return false;
         }
-        if (!$this->core->librarian->resolve($lib, 'disabled')) {
-            \Dot\Util::warn("Library not found: `{$lib}`.");
+        if (!$this->librarian->resolve($lib, 'disabled')) {
+            \Cli\Util::warn("Library not found: `{$lib}`.");
             return false;
         }
-        $dependencies = $this->core->librarian->get_dependencies($lib, true);
+        $dependencies = $this->librarian->get_dependencies($lib, true);
         if (!empty($dependencies['missing'])) {
-            \Dot\Util::warn('Cannot enable, following libraries are missing: ' .
+            \Cli\Util::warn('Cannot enable, following libraries are missing: ' .
                 print_r($dependencies['missing'], true));
             return false;
         }
         if (count($dependencies['disabled'])) {
-            \Dot\Util::plain('The following dependencies needs to be enabled: ' .
+            \Cli\Util::plain('The following dependencies needs to be enabled: ' .
                 print_r($dependencies['disabled'], true));
-            if (!\Dot\Util::confirm('Continue and enable disabled dependencies?')) {
-                \Dot\Util::plain('Process terminated.');
+            if (!\Cli\Util::confirm('Continue and enable disabled dependencies?')) {
+                \Cli\Util::plain('Process terminated.');
                 return false;
             }
             foreach ($dependencies['disabled'] as $dependency => $version) {
@@ -89,25 +89,25 @@ class Librarian
 
     public function help_disable()
     {
-        \Dot\Util::doc(
+        \Cli\Util::doc(
             'Mysli Core :: Libraries Management :: DISABLE',
             'libraries disable <LIBRARY NAME>'
         );
-        \Dot\Util::plain('Example: libraries disable mysli/backend');
+        \Cli\Util::plain('Example: libraries disable mysli/backend');
         return true;
     }
     protected function disable_helper($lib)
     {
-        $setup = $this->core->librarian->construct_setup($lib);
+        $setup = $this->librarian->construct_setup($lib);
         if (method_exists($setup, 'before_disable') && !$setup->before_disable()) {
-            \Dot\Util::error('Setup failed for: ' . $lib);
+            \Cli\Util::error('Setup failed for: ' . $lib);
             return false;
         }
-        if (!$this->core->librarian->disable($lib)) {
-            \Dot\Util::error('Failed to disable: ' . $lib);
+        if (!$this->librarian->disable($lib)) {
+            \Cli\Util::error('Failed to disable: ' . $lib);
             return false;
         } else {
-            \Dot\Util::success('Disabled: ' . $lib);
+            \Cli\Util::success('Disabled: ' . $lib);
             if (method_exists($setup, 'after_enable')) {
                 $setup->after_disable();
             }
@@ -119,17 +119,17 @@ class Librarian
         if (!$lib) {
             return $this->help_disable();
         }
-        if (!$this->core->librarian->is_enabled($lib)) {
-            \Dot\Util::warn("Library not enabled: `{$lib}`.");
+        if (!$this->librarian->is_enabled($lib)) {
+            \Cli\Util::warn("Library not enabled: `{$lib}`.");
             return false;
         }
-        $dependees = $this->core->librarian->get_dependees($lib, true);
+        $dependees = $this->librarian->get_dependees($lib, true);
         if (!empty($dependees)) {
-            \Dot\Util::plain('The following libraried depends on the `'. $lib .
+            \Cli\Util::plain('The following libraried depends on the `'. $lib .
                 '` and need to be disabled: ' .
                 print_r($dependees, true));
-            if (!\Dot\Util::confirm('Disable listed libraries?')) {
-                \Dot\Util::plain('Process terminated.');
+            if (!\Cli\Util::confirm('Disable listed libraries?')) {
+                \Cli\Util::plain('Process terminated.');
                 return false;
             }
             foreach ($dependees as $dependee) {
@@ -143,22 +143,30 @@ class Librarian
 
     public function help_list()
     {
-        \Dot\Util::doc(
+        \Cli\Util::doc(
             'Mysli Core :: Libraries Management :: LIST',
             'libraries list <disabled|enabled>'
         );
-        \Dot\Util::plain('Example, list all disabled libraries: libraries list disabled');
+        \Cli\Util::plain('Example, list all disabled libraries: libraries list disabled');
         return true;
     }
-    public function action_list($type)
+    public function action_list($type = null)
     {
         switch (strtolower($type)) {
             case 'enabled':
-                \Dot\Util::plain(print_r($this->core->librarian->get_enabled()), true);
+                \Cli\Util::nl();
+                \Cli\Util::plain(\Core\Arr::readable(
+                    $this->librarian->get_enabled(),
+                    ' : ', "\n", 2, 2
+                ), true);
                 break;
 
             case 'disabled':
-                \Dot\Util::plain(print_r($this->core->librarian->get_disabled()), true);
+                \Cli\Util::nl();
+                \Cli\Util::plain(\Core\Arr::readable(
+                    $this->librarian->get_disabled(),
+                    ' : ', "\n", 2, 2
+                ), true);
                 break;
 
             default:

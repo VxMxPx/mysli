@@ -6,7 +6,7 @@ class Interactive
 {
     public function action_index($args = [])
     {
-        \Dot\Util::plain(
+        \Cli\Util::plain(
             "Hi there! This is an interactive console for the Mysli."
         );
 
@@ -37,15 +37,15 @@ class Interactive
             }
         } while(true);
 
-        \Dot\Util::plain('Bye now!');
+        \Cli\Util::plain('Bye now!');
     }
 
     protected function help()
     {
-        \Dot\Util::plain('MYSLI INTERACTIVE :: HELP');
-        \Dot\Util::plain('Normal PHP commands are accepted, example: `$var = \'value\'`.');
-        \Dot\Util::plain('You don\'t need to enter `echo` and you can omit semicolons.');
-        \Dot\Util::plain('If you want command not to be echoed automatically, prefix it with dot `.`.');
-        \Dot\Util::plain('Enter `q` or `exit` to quit.');
+        \Cli\Util::plain('MYSLI INTERACTIVE :: HELP');
+        \Cli\Util::plain('Normal PHP commands are accepted, example: `$var = \'value\'`.');
+        \Cli\Util::plain('You don\'t need to enter `echo` and you can omit semicolons.');
+        \Cli\Util::plain('If you want command not to be echoed automatically, prefix it with dot `.`.');
+        \Cli\Util::plain('Enter `q` or `exit` to quit.');
     }
 }

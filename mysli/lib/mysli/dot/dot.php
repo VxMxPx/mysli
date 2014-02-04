@@ -2,8 +2,6 @@
 
 namespace Mysli;
 
-use \Mysli\Dot\Util as Util;
-
 class Dot
 {
     protected $scripts_registry;
@@ -21,7 +19,7 @@ class Dot
         $this->scripts_registry = $this->discover_scripts();
 
         // Remove vendor for non-specific usage in scripts we're calling.
-        class_alias('\\Mysli\\Dot\\Util', 'Dot\\Util');
+        class_alias('\\Mysli\\Dot\\Util', 'Cli\\Util');
     }
 
     /**
@@ -75,7 +73,7 @@ class Dot
             }
             $command = isset($arguments[2]) ? $arguments[2] : false;
             if (!$this->execute($script, $command, array_slice($arguments, 3))) {
-                Util::warn('Cannot find the command: ' . $script);
+                \Cli\Util::warn('Cannot find the command: ' . $script);
             }
         } else {
             $this->list_scripts();
@@ -99,20 +97,20 @@ class Dot
         $library = $this->librarian->ns_to_lib($class_array[0] . '\\' . $class_array[1]);
         if (!class_exists($class, false)) {
             if (!$this->librarian->is_enabled($library)) {
-                Util::warn('FAILED. Not enabled: ' . $library);
+                \Cli\Util::warn('FAILED. Not enabled: ' . $library);
             }
             $path = \Core\Str::to_underscore($class);
             $path = str_replace('\\', '/', $path);
             $path = preg_replace('/\/script\//', '/scripts/', $path);
             $path = libpath($path . '.php');
             if (!file_exists($path)) {
-                Util::warn("Cannot find script: `{$path}`.");
+                \Cli\Util::warn("Cannot find script: `{$path}`.");
                 return false;
             }
             include $path;
         }
         if (!class_exists($class, false)) {
-            Util::warn("Cannot find class: `{$class}` in `{$path}`.");
+            \Cli\Util::warn("Cannot find class: `{$class}` in `{$path}`.");
             return false;
         }
 
@@ -120,8 +118,12 @@ class Dot
 
         $object = new \ReflectionClass($class);
         if ($object->hasMethod('__construct')) {
-            $dependencies = $this->dependencies_factory($library);
-            $dependencies[]['requested_by'] = $library;
+            $dependencies = [];
+            $dependencies[] = $this->librarian->factory($library);
+            $dependencies = array_merge(
+                $dependencies,
+                $this->librarian->dependencies_factory($library)
+            );
             return $object->newInstanceArgs($dependencies);
         } else {
             return $object->newInstanceWithoutConstructor();
@@ -140,12 +142,12 @@ class Dot
     public function execute($script, $command, array $arguments = [])
     {
         if (!isset($this->scripts_registry[$script])) {
-            Util::warn('Command not found: ' . $script);
+            \Cli\Util::warn('Command not found: ' . $script);
             return false;
         }
         $script_obj = $this->construct_script($script);
         if (!is_object($script_obj)) {
-            Util::warn('Could not construct the object!');
+            \Cli\Util::warn('Could not construct the object!');
             return false;
         }
         if (!$command) {
@@ -154,7 +156,7 @@ class Dot
             if (method_exists($script_obj, 'help_index')) {
                 call_user_func([$script_obj, 'help_index']);
             } else {
-                Util::plain("No help found for command `{$script}`.");
+                \Cli\Util::plain("No help found for command `{$script}`.");
             }
             return true;
         }
@@ -179,7 +181,7 @@ class Dot
         foreach ($this->scripts_registry as $script => $data) {
             $commands[$script] = $data['description'];
         }
-        Util::doc(
+        \Cli\Util::doc(
             'Mysli Core :: List of Available Commands',
             '<COMMAND> [OPTIONS...]',
             $commands
