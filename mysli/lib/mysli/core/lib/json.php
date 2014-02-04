@@ -1,16 +1,17 @@
 <?php
 
-namespace Mysli\Core\Util;
+namespace Mysli\Core\Lib;
 
 class JSON
 {
     /**
      * Decode a JSON file, and return it as Array or Object
-     *
-     * @param  string   $filename -- The file with JSON string
-     * @param  bool     $assoc    -- When TRUE, returned object will be
-     *                               converted into associative array.
-     * @param  integet  $depth    -- User specified recursion depth.
+     * --
+     * @param  string  $filename The file with JSON string
+     * @param  boolean $assoc    When TRUE, returned object will be
+     *                           converted into associative array.
+     * @param  integet $depth    User specified recursion depth.
+     * --
      * @return mixed
      */
     public static function decode_file($filename, $assoc = false, $depth = 512)
@@ -18,7 +19,7 @@ class JSON
         $filename = ds($filename);
 
         if (file_exists($filename)) {
-            $content = \FS::file_read($filename);
+            $content = FS::file_read($filename);
             return self::decode($content, $assoc, $depth);
         } else {
             trigger_error("File not found: `{$filename}`.", E_USER_WARNING);
@@ -28,11 +29,14 @@ class JSON
 
     /**
      * Decode a JSON string, and return it as Array or Object
-     *
-     * @param string   $json     -- The json string being decoded.
-     * @param bool     $assoc    -- When TRUE, returned object will be converted
-     *                              into associative array.
-     * @param integet  $depth    -- User specified recursion depth.
+     * --
+     * @param  string  $json  The json string being decoded.
+     * @param  boolean $assoc When TRUE, returned object will be converted
+     *                        into associative array.
+     * @param  integet $depth User specified recursion depth.
+     * --
+     * @throws DataException If JSON decode error.
+     * --
      * @return mixed
      */
     public static function decode($json, $assoc = false, $depth = 512)
@@ -49,29 +53,28 @@ class JSON
             throw new \Mysli\Core\DataException(
                 "JSON decode error: `" . $JSONErrors[json_last_error()] . '`.'
             );
-            return false;
         }
-        else {
-            return $decoded;
-        }
+
+        return $decoded;
     }
 
     /**
      * Save the JSON representation of a value, to the file.
      * If file exists, it will be overwritten.
-     *
-     * @param string $filename -- The file to which the data will be saved.
-     * @param mixed  $values   -- The value being encoded. Can be any type
-     *                            except a resource . This function only works
-     *                            with UTF-8 encoded data.
-     * @param integer $options -- Bitmask consisting of JSON_HEX_QUOT,
-     *                            JSON_HEX_TAG, JSON_HEX_AMP, JSON_HEX_APOS,
-     *                            JSON_FORCE_OBJECT.
+     * --
+     * @param string $filename The file to which the data will be saved.
+     * @param mixed  $values   The value being encoded. Can be any type
+     *                         except a resource . This function only works
+     *                         with UTF-8 encoded data.
+     * @param integer $options Bitmask consisting of JSON_HEX_QUOT,
+     *                         JSON_HEX_TAG, JSON_HEX_AMP, JSON_HEX_APOS,
+     *                         JSON_FORCE_OBJECT.
+     * --
      * @return boolean
      */
     public static function encode_file($filename, $values, $options = 0)
     {
-        return !!\FS::file_replace(
+        return !!FS::file_replace(
             $filename,
             self::encode($values, $options),
             true
@@ -80,13 +83,14 @@ class JSON
 
     /**
      * Returns the JSON representation of a value
-     *
-     * @param mixed  $values   -- The value being encoded. Can be any type
-     *                            except a resource . This function only works
-     *                            with UTF-8 encoded data.
-     * @param int    $options  -- Bitmask consisting of JSON_HEX_QUOT,
-     *                            JSON_HEX_TAG, JSON_HEX_AMP, JSON_HEX_APOS,
-     *                            JSON_FORCE_OBJECT.
+     * --
+     * @param mixed   $values  The value being encoded. Can be any type
+     *                         except a resource . This function only works
+     *                         with UTF-8 encoded data.
+     * @param integer $options Bitmask consisting of JSON_HEX_QUOT,
+     *                         JSON_HEX_TAG, JSON_HEX_AMP, JSON_HEX_APOS,
+     *                         JSON_FORCE_OBJECT.
+     * --
      * @return string
      */
     public static function encode($values, $options = 0)

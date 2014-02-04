@@ -6,7 +6,7 @@ class Setup
 {
     public function before_enable()
     {
-        \FS::dir_copy(
+        \Core\FS::dir_copy(
             libpath('mysli/dashboard/assets'),
             pubpath('mysli/dashboard')
         );
@@ -15,7 +15,7 @@ class Setup
 
     public function after_disable()
     {
-        \FS::dir_remove(pubpath('mysli/dashboard'));
+        \Core\FS::dir_remove(pubpath('mysli/dashboard'));
         return true;
     }
 }

@@ -4,7 +4,6 @@ namespace Mysli\Core;
 
 class Setup
 {
-    protected $pubpath;
     protected $libpath;
     protected $datpath;
     protected $path;
@@ -12,22 +11,15 @@ class Setup
     // Config is not automatically injected, as CORE has no dependencies!
     public function __construct(array $config = null)
     {
-        // Load functions
+        // Load common functions
         if (!function_exists('ds')) {
-            include
-                __DIR__ .
-                DIRECTORY_SEPARATOR .
-                'util' .
-                DIRECTORY_SEPARATOR .
-                'functions.php';
+            include __DIR__ . DIRECTORY_SEPARATOR . 'common.php';
         }
 
         if (is_array($config)) {
-            $this->pubpath = ds($config['pubpath']);
             $this->libpath = ds($config['libpath']);
             $this->datpath = ds($config['datpath']);
         } else {
-            $this->pubpath = pubpath();
             $this->libpath = libpath();
             $this->datpath = datpath();
         }
@@ -36,34 +28,6 @@ class Setup
 
     public function before_enable()
     {
-        // Check if pubpath exists
-        if (!is_dir($this->pubpath)) {
-            // If not create it
-            if (!mkdir($this->pubpath, 0777, true)) {
-                throw new \Exception('Cannot create public directory!', 1);
-            }
-        }
-
-        if (!file_exists(ds($this->pubpath, 'index.php'))) {
-            // Load index.tpl
-            $index_contents = file_get_contents(ds($this->path, 'setup', 'index.tpl'));
-            // Replace {{LIBPATH}} and {{DATPATH}}
-            $ds = DIRECTORY_SEPARATOR;
-            $index_contents = str_replace(
-                [
-                    '{{LIBPATH}}',
-                    '{{DATPATH}}'
-                ],
-                [
-                    '/' . str_replace(DIRECTORY_SEPARATOR, '/', \relative_path($this->libpath, $this->pubpath)),
-                    '/' . str_replace(DIRECTORY_SEPARATOR, '/', \relative_path($this->datpath, $this->pubpath)),
-                ],
-                $index_contents
-            );
-            // Create index.php
-            file_put_contents(ds($this->pubpath, 'index.php'), $index_contents);
-        }
-
         // Check if datpath exists
         if (!is_dir($this->datpath)) {
             // If not create it
@@ -100,7 +64,6 @@ class Setup
     public function after_disable()
     {
         \FS::dir_remove($this->datpath);
-        \FS::dir_remove($this->pubpath);
         return true;
     }
 }

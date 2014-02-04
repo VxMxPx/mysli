@@ -59,6 +59,6 @@ class Benchmark
             $memory = memory_get_usage(true);
         }
 
-        return ($formated) ? \FS::format_size($memory) : $memory;
+        return ($formated) ? \Core\FS::format_size($memory) : $memory;
     }
 }

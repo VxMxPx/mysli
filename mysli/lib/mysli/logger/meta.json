@@ -1,6 +1,5 @@
 {
     "library"       : "mysli/logger",
-    "role"          : "logger",
     "instantiation" : "once",
     "version"       : 1,
     "depends_on"    : {

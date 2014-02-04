@@ -38,7 +38,6 @@ $ds = DIRECTORY_SEPARATOR;
  *           be stored. This path shouldn't be accessible through URL!
  */
 $datpath = realpath(__DIR__);
-$pubpath = realpath(str_replace('/', $ds, $datpath . '{{PUBPATH}}'));
 $libpath = realpath(str_replace('/', $ds, $datpath . '{{LIBPATH}}'));
 
 /**
@@ -51,10 +50,9 @@ if (!file_exists($core_id_file)) {
     $core_id = json_decode(file_get_contents($core_id_file), true);
 }
 include($libpath . $ds . str_replace('/', $ds, $core_id['file']));
-$core = new $core_id['class']($pubpath, $libpath, $datpath);
-$core->init();
+$core = new $core_id['class']($datpath, $libpath);
 
 // Dot execution
-$dot_lib = $core->librarian->resolve('~cli');
-$dot = $core->librarian->factory($dot_lib);
+$dot_lib = $core->librarian()->resolve('~cli');
+$dot = $core->librarian()->factory($dot_lib);
 $dot->run($_SERVER['argv']);

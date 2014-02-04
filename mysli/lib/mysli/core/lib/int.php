@@ -1,6 +1,6 @@
 <?php
 
-namespace Mysli\Core\Util;
+namespace Mysli\Core\Lib;
 
 class Int
 {

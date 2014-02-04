@@ -11,12 +11,10 @@ class Setup
         // Replace {{LIBPATH}} and {{PUBPATH}}
         $dot_contents = str_replace(
             [
-                '{{LIBPATH}}',
-                '{{PUBPATH}}'
+                '{{LIBPATH}}'
             ],
             [
-                '/' . str_replace(DIRECTORY_SEPARATOR, '/', relative_path(libpath(), datpath())),
-                '/' . str_replace(DIRECTORY_SEPARATOR, '/', relative_path(pubpath(), datpath())),
+                '/' . str_replace(DIRECTORY_SEPARATOR, '/', relative_path(libpath(), datpath()))
             ],
             $dot_contents
         );
@@ -34,7 +32,7 @@ class Setup
 
     public function after_disable()
     {
-        \FS::file_remove(datpath('dot'));
+        \Core\FS::file_remove(datpath('dot'));
         return true;
     }
 }

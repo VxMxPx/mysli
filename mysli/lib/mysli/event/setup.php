@@ -6,12 +6,12 @@ class Setup
 {
     public function before_enable()
     {
-        \FS::dir_create(datpath('event'), \FS::EXISTS_MERGE);
-        return \JSON::encode_file(datpath('event/registry.json'), []);
+        \Core\FS::dir_create(datpath('event'), \Core\FS::EXISTS_MERGE);
+        return \Core\JSON::encode_file(datpath('event/registry.json'), []);
     }
 
     public function after_disable()
     {
-        return \FS::dir_remove(datpath('event'));
+        return \Core\FS::dir_remove(datpath('event'));
     }
 }

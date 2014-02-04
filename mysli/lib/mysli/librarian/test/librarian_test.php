@@ -3,11 +3,10 @@
 namespace Mysli;
 
 include(__DIR__.'/../librarian.php');    // Include self
-include(__DIR__.'/../../core/core.php'); // Mysli CORE is needed!
+include(__DIR__.'/../../core/core.php'); // CORE is needed!
 new \Mysli\Core(
-    realpath(__DIR__.'/dummy/public'),
-    realpath(__DIR__.'/dummy/libraries'),
-    realpath(__DIR__.'/dummy/data')
+    realpath(__DIR__.'/dummy/private'),
+    realpath(__DIR__.'/dummy/libraries')
 );
 
 class LibrarianTest extends \PHPUnit_Framework_TestCase
@@ -17,7 +16,6 @@ class LibrarianTest extends \PHPUnit_Framework_TestCase
     public function __construct()
     {
         $this->librarian = new Librarian();
-        spl_autoload_register([$this->librarian, 'autoloader']);
     }
 
     public function test_get_enabled()
@@ -72,7 +70,7 @@ class LibrarianTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException Mysli\Core\FileNotFoundException
+     * @expectedException Mysli\Core\NotFoundException
      */
     public function test_get_details_nonexisting()
     {

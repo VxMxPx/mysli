@@ -30,7 +30,7 @@ class User
     public function __construct($path, array $record = [])
     {
         if (empty($record)) {
-            $record = \JSON::decode_file($path, true);
+            $record = \Core\JSON::decode_file($path, true);
             $raw = true; // Will not process values when assigning them.
         } else {
             // New user being created...
@@ -173,7 +173,7 @@ class User
     {
         if ($value !== null) {
             if ($value === true) {
-                $value = \Str::random(8);
+                $value = \Core\Str::random(8);
             }
             $this->properties['salt'] = $value;
         }
@@ -238,7 +238,7 @@ class User
      */
     public function save()
     {
-        return \JSON::encode_file($this->path, $this->properties);
+        return \Core\JSON::encode_file($this->path, $this->properties);
     }
 
     /**

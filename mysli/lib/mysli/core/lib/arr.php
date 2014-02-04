@@ -1,6 +1,6 @@
 <?php
 
-namespace Mysli\Core\Util;
+namespace Mysli\Core\Lib;
 
 class Arr
 {
@@ -22,9 +22,10 @@ class Arr
      * @param   array   $input_array
      * @param   string  $value   Which sub-key's value, we use as value?
      * @param   string  $key     Which sub-key's value, we use as key?
+     * --
      * @return  array
      */
-    public static function to_one_dimension(array $input_array, $value, $key=false)
+    public static function to_one_dimension(array $input_array, $value, $key = false)
     {
         $result     = [];
         $position   = 0;
@@ -63,6 +64,7 @@ class Arr
      * --
      * @param   string  $glue
      * @param   array   $pieces
+     * --
      * @return  string
      */
     public static function implode_keys($glue, array $pieces)
@@ -92,10 +94,15 @@ class Arr
      *                               automatically? It will be numeric.
      * @param   boolean $rewrite     Rewrite if key exists, else, add number
      *                               after it.
+     * --
      * @return  array
      */
-    public static function key_from_sub(array $input_array, $index_key, $automatic=true, $rewrite=false)
-    {
+    public static function key_from_sub(
+        array $input_array,
+        $index_key,
+        $automatic = true,
+        $rewrite = false
+    ) {
         if (!is_array($input_array)) { return []; }
 
         $result = [];
@@ -205,8 +212,11 @@ class Arr
      * --
      * @return  array
      */
-    public static function explode_to_key(array $input_array, $separator=':', $ignore_non_existent=true)
-    {
+    public static function explode_to_key(
+        array $input_array,
+        $separator = ':',
+        $ignore_non_existent = true
+    ) {
         if (!is_array($input_array) || empty($input_array)) {
             return [];
         }
@@ -327,7 +337,7 @@ class Arr
      * --
      * @return mixed
      */
-    public static function element($key, array $input_array, $default=false)
+    public static function element($key, array $input_array, $default = false)
     {
         if (self::is_empty($input_array))
             { return $default; }
@@ -349,7 +359,7 @@ class Arr
      * --
      * @return array
      */
-    public static function elements($keys, array $input_array, $default=false)
+    public static function elements($keys, array $input_array, $default = false)
     {
         // If we have string we can covert it to an array
         if (!is_array($keys)) { $keys = Str::explode_trim(',', $keys); }
@@ -495,7 +505,7 @@ class Arr
      * --
      * @return  mixed
      */
-    public static function get_by_path($path, array $input_array, $default=null)
+    public static function get_by_path($path, array $input_array, $default = null)
     {
         if (self::is_empty($input_array)) { return $default; }
 
@@ -559,9 +569,11 @@ class Arr
 
     /**
      * Delete by path helper
+     * --
      * @param   array   $input_array
      * @param   string  $path
      * @param   string  $cp
+     * --
      * @return  array
      */
     protected static function _delete_by_path_helper($input_array, $path, $cp)
@@ -584,12 +596,13 @@ class Arr
 
     /**
      * Will trim array values(!)
-     *
+     * --
      * @param   array   $input_array
      * @param   string  $mask
-     * @return  void
+     * --
+     * @return  null
      */
-    public static function trim(&$input_array, $mask=false)
+    public static function trim(&$input_array, $mask = false)
     {
         if (self::is_empty($input_array)) { return false; }
 

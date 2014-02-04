@@ -11,7 +11,7 @@ class Config
     /**
      * Construct CONFIG
      * --
-     * @param array $info -- Info from the librarian
+     * @param array  $info Info from the librarian
      */
     public function __construct(array $info)
     {
@@ -20,13 +20,13 @@ class Config
         // array, containing the information about the request (e.g. - who required
         // particular library). In this case, we'll use this info, to construct
         // costumized config, containing only element meant for particular library.
-        $library   = \Arr::element('requested_by', $info);
+        $library   = \Core\Arr::element('requested_by', $info);
         $library   = str_replace('/', '.', $library);
         $this->filename = datpath('config', $library . '.json');
 
         // If we have file, then load contents...
         if (file_exists($filename)) {
-            $this->config = \JSON::decode_file($this->filename, true);
+            $this->config = \Core\JSON::decode_file($this->filename, true);
         }
     }
 
@@ -37,7 +37,7 @@ class Config
      */
     public function write()
     {
-        return \JSON::encode_file($this->filename, $this->config);
+        return \Core\JSON::encode_file($this->filename, $this->config);
     }
 
     /**
@@ -81,7 +81,7 @@ class Config
             return $this->cache[$key];
         }
 
-        $value = \Arr::get_by_path($key, $this->config, $default);
+        $value = \Core\Arr::get_by_path($key, $this->config, $default);
 
         // We cache only when we assume it's not default value...
         if ($value !== $default) {
@@ -106,7 +106,7 @@ class Config
         # Clear cache to avoid conflicts
         $this->cache = [];
 
-        \Arr::set_by_path($path, $value, $this->config);
+        \Core\Arr::set_by_path($path, $value, $this->config);
     }
 
     /**
@@ -119,6 +119,6 @@ class Config
     public function merge(array $config)
     {
         $this->cache = [];
-        $this->config = \Arr::merge($this->config, $config);
+        $this->config = \Core\Arr::merge($this->config, $config);
     }
 }

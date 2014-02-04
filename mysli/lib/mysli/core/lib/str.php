@@ -1,6 +1,6 @@
 <?php
 
-namespace Mysli\Core\Util;
+namespace Mysli\Core\Lib;
 
 class Str
 {
@@ -113,6 +113,9 @@ class Str
      *                        to limit.
      * @param  integer $limit to how many characters should te limit be set
      * --
+     * @throws ValueException If $char is not a string, long at least one character. (10)
+     * @throws ValueException If $limit is not an integer higher or equal to 1. (20)
+     * --
      * @return string
      */
     public static function limit_repeat($input, $char, $limit)
@@ -142,7 +145,7 @@ class Str
 
         if ($limit < 1) {
             throw new \Mysli\Core\ValueException(
-                "Expected parameter is integer higher than one.",
+                "Expected parameter is integer higher than zero.",
                 20
             );
         }
@@ -163,6 +166,9 @@ class Str
      *   A ----> QWERTZUIOPASDFGHJKLYXCVBNM
      *   1 ----> 0123456789
      *   s ----> ~#$%&()=?*<>-_:.;,+!
+     * --
+     * @throws ValueException If $mask is not valid. (1)
+     * @throws ValueException If $length is less than one character long. (2)
      * --
      * @return  string
      */
@@ -401,6 +407,8 @@ class Str
      * @param   string  $ending  To be appended at the end of the string, but
      *                           only if it was shortened.
      * --
+     * @throws ValueException If $limit is not greater then zero.
+     * --
      * @return  string
      */
     public static function limit_words($string, $limit, $ending = null)
@@ -436,6 +444,8 @@ class Str
      *                          be limited?
      * @param   string  $ending To be appended at the end of the string, but
      *                          only if it was shortened.
+     * --
+     * @throws ValueException If $limit is less then one.
      * --
      * @return  string
      */
@@ -536,6 +546,9 @@ class Str
      *                           same end as start, or array, with open and
      *                           end tag.
      * --
+     * @throws ValueException If $separator is backslash. (1)
+     * @throws ValueException If $protected is array and have more or less than two elements. (2)
+     * --
      * @return array
      */
     public static function tokenize($input, $separator, $protected)
@@ -545,7 +558,7 @@ class Str
 
         // Check if separator isn't just \ character
         if ($separator === '\\') {
-            throw new \Mysli\ValueException(
+            throw new \Mysli\Core\ValueException(
                 "Separator can't be backslash.", 1
             );
         }
@@ -553,7 +566,7 @@ class Str
         // Open and close of protected region
         if (is_array($protected)) {
             if (count($protected) !== 2) {
-                throw new \Mysli\ValueException(
+                throw new \Mysli\Core\ValueException(
                     "Protected need to have exactly 2 elements.", 2
                 );
             }

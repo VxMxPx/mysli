@@ -36,8 +36,8 @@ class Event
     /**
      * Get list of events.
      * --
-     * @throws \Mysli\Event\FileException If registry file not found.
-     * @throws \Mysli\Event\DataException If registry file doesn't contain a valid json.
+     * @throws \Core\NotFoundException If registry file not found.
+     * @throws \Core\DataException If registry file doesn't contain a valid json.
      * --
      * @return array
      */
@@ -47,14 +47,14 @@ class Event
         // we don't want to manipulate $this->waiting, because some events
         // are added with ->on() method, and are not meant to be saved.
         if (!file_exists($this->filename)) {
-            throw new \Mysli\Event\FileException(
+            throw new \Core\NotFoundException(
                 "File not found: `{$this->filename}`.", 1
             );
         }
 
         $events = json_decode(file_get_contents($this->filename), true);
         if (!is_array($events)) {
-            throw new \Mysli\Event\DataException(
+            throw new \Core\DataException(
                 "Expected data to be a valid json: `{$this->filename}`.", 1
             );
         }

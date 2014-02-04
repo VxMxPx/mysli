@@ -1,6 +1,6 @@
 <?php
 
-namespace Mysli\Core\Util;
+namespace Mysli\Core\Lib;
 
 class FS
 {
@@ -150,9 +150,9 @@ class FS
     /**
      * Will get file's content if file exists.
      * --
-     * @param  string  $filename
+     * @param  string $filename
      * --
-     * @return string  or false if file doesn't exists.
+     * @return string or false if file doesn't exists.
      */
     public static function file_read($filename)
     {
@@ -170,6 +170,8 @@ class FS
      * --
      * @param  string  $filename
      * @param  boolean $empty
+     * --
+     * @throws FSException If file couldn't be created.
      * --
      * @return boolean
      */
@@ -189,8 +191,8 @@ class FS
         if (touch($filename)) {
             return true;
         } else {
-            throw new \Mysli\Core\FileSystemException(
-                "Could not touch file: `{$filename}`."
+            throw new \Mysli\Core\FSException(
+                "Could not create file file: `{$filename}`."
             );
         }
     }
@@ -202,6 +204,8 @@ class FS
      * @param  string  $filename
      * @param  string  $content
      * @param  boolean $create   Should file be created if doesn't exists.
+     * --
+     * @throws FSException If can't write to file.
      * --
      * @return integer Number of bytes written, or FALSE on failure.
      */
@@ -215,7 +219,7 @@ class FS
         if (file_exists($filename)) {
             return file_put_contents($filename, $content, FILE_APPEND);
         } else {
-            throw new \Mysli\Core\FileSystemException(
+            throw new \Mysli\Core\FSException(
                 "Could not write to file: `{$filename}`."
             );
         }
@@ -227,6 +231,8 @@ class FS
      * @param  string  $filename
      * @param  string  $content
      * @param  boolean $create
+     * --
+     * @throws FSException If can't write to file.
      * --
      * @return mixed   integer or when error boolean false
      */
@@ -253,7 +259,7 @@ class FS
             }
             return $i;
         } else {
-            throw new \Mysli\Core\FileSystemException(
+            throw new \Mysli\Core\FSException(
                 "Could not write to file: `{$filename}`."
             );
         }
@@ -265,6 +271,8 @@ class FS
      * @param  string  $filename
      * @param  string  $content
      * @param  boolean $create
+     * --
+     * @throws FSException If can't write to file.
      * --
      * @return mixed   integer or when error boolean false
      */
@@ -278,7 +286,7 @@ class FS
         if (file_exists($filename)) {
             return file_put_contents($filename, $content);
         } else {
-            throw new \Mysli\Core\FileSystemException(
+            throw new \Mysli\Core\FSException(
                 "Could not write to file: `{$filename}`."
             );
         }
@@ -339,6 +347,13 @@ class FS
      * @param  string  $destination
      * @param  boolean $on_exists
      * --
+     * @throws ValueException If Source file doesn't exists (10)
+     * @throws ValueException If Source is directory (11)
+     * @throws ValueException If Destination isn't directory (12)
+     * @throws ValueException If Invalid value for $on_exists (20)
+     * @throws FSException If Destination (file) exists and $on_exists is self::EXISTS_ERROR (10)
+     * @throws FSException If Can't copy file (copy function failed) (11)
+     * --
      * @return integer Number of copied files.
      */
     public static function file_copy(
@@ -395,7 +410,7 @@ class FS
                     break;
 
                 case self::EXISTS_ERROR:
-                    throw new \Mysli\Core\FileSystemException(
+                    throw new \Mysli\Core\FSException(
                         "File exists: `{$destination}`.",
                         10
                     );
@@ -432,7 +447,7 @@ class FS
             return 1;
         }
         else {
-            throw new \Mysli\Core\FileSystemException(
+            throw new \Mysli\Core\FSException(
                 "Error, can't copy file: `{$source}`, to: `{$destination}`.",
                 11
             );
@@ -461,7 +476,14 @@ class FS
      * @param  string  $destination
      * @param  boolean $on_exists
      * --
-     * @return mixed   Integer (number of copied files) or boolean false on error.
+     * @throws ValueException If Source file doesn't exists (10)
+     * @throws ValueException If Source is directory (11)
+     * @throws ValueException If Destination isn't directory (12)
+     * @throws ValueException If Invalid value for $on_exists (20)
+     * @throws FSException If Destination (file) exists and $on_exists is self::EXISTS_ERROR (10)
+     * @throws FSException If Can't move file (rename function failed) (11)
+     * --
+     * @return mixed Integer (number of copied files) or boolean false on error.
      */
     public static function file_move(
         $source,
@@ -517,7 +539,7 @@ class FS
                     break;
 
                 case self::EXISTS_ERROR:
-                    throw new \Mysli\Core\FileSystemException(
+                    throw new \Mysli\Core\FSException(
                         "File exists: `{$destination}`.",
                         10
                     );
@@ -554,7 +576,7 @@ class FS
             return 1;
         }
         else {
-            throw new \Mysli\Core\FileSystemException(
+            throw new \Mysli\Core\FSException(
                 "Error, can't rename file: `{$source}`, to: `{$destination}`.",
                 11
             );
@@ -567,6 +589,8 @@ class FS
      * @param  string  $directory
      * @param  string  $filter_regex Regular expression filter, e.g. /*.\.jpg/i
      * @param  boolean $deep         Will also search in sub-directories.
+     * --
+     * @throws ValueException If $directory is not valid directory.
      * --
      * @return array
      */
@@ -635,15 +659,15 @@ class FS
      * --
      * @return boolean
      */
-    public static function is_public($filename)
-    {
-        $public_length = strlen(pubpath());
-        if (ds(substr($filename, 0, $public_length)) !== pubpath()) {
-            return false;
-        } else {
-            return true;
-        }
-    }
+    // public static function is_public($filename)
+    // {
+    //     $public_length = strlen(pubpath());
+    //     if (ds(substr($filename, 0, $public_length)) !== pubpath()) {
+    //         return false;
+    //     } else {
+    //         return true;
+    //     }
+    // }
 
     /**
      * Return file URI from absolute path on the server. Works only if the file
@@ -653,15 +677,15 @@ class FS
      * --
      * @return string Full url, or empty if not public
      */
-    public static function get_uri($filename)
-    {
-        if (!self::is_public($filename)) {
-            return '';
-        }
+    // public static function get_uri($filename)
+    // {
+    //     if (!self::is_public($filename)) {
+    //         return '';
+    //     }
 
-        $filename = substr($filename, strlen(pubpath()));
-        return str_replace('\\', '/', $filename);
-    }
+    //     $filename = substr($filename, strlen(pubpath()));
+    //     return str_replace('\\', '/', $filename);
+    // }
 
     /**
      * Return file URL from absolute path on the server. Works only if file is
@@ -707,12 +731,14 @@ class FS
      * --
      * @param  string $directory
      * --
+     * @throws FSException If directory ($directory) is not readable.
+     * --
      * @return boolean
      */
     public static function dir_is_empty($directory)
     {
         if (!is_readable($directory)) {
-            throw new \Mysli\Core\FileSystemException(
+            throw new \Mysli\Core\FSException(
                 'The directory is not readable!', 30
             );
         }
@@ -736,10 +762,10 @@ class FS
      * @param  string  $directory
      * @param  boolean $force
      * --
-     * @throws ValueException      If Director is an empty string or /
-     * @throws ValueException      If Directory doesn't exists
-     * @throws ValueException      If Directory is not empty and $force if false
-     * @throws FileSystemException If one of the files could not be removed.
+     * @throws ValueException If Director is an empty string or / (40)
+     * @throws ValueException If Directory doesn't exists (41)
+     * @throws ValueException If Directory is not empty and $force if false (42)
+     * @throws FSException    If one of the files could not be removed. (40)
      * --
      * @return boolean
      */
@@ -771,7 +797,7 @@ class FS
                     continue;
                 }
                 if (!unlink($filename)) {
-                    throw new \Mysli\Core\FileSystemException(
+                    throw new \Mysli\Core\FSException(
                         "Could not remove file: `{$filename}`.", 40
                     );
                 }
@@ -790,10 +816,18 @@ class FS
      * @param  integer $on_exists
      *     EXISTS_REPLACE // Delete destination if exists
      *     EXISTS_MERGE   // Merge source + destination
-     *                       OR throw FileSystemException if destination is a file.
+     *                       OR throw FSException if destination is a file.
      *     EXISTS_RENAME  // Rename (new) destination
-     *     EXISTS_ERROR   // Throw FileSystemException
+     *     EXISTS_ERROR   // Throw FSException
      *     EXISTS_IGNORE  // Skip quietly, return null
+     * --
+     * @throws ValueException If Source doesn't exists (1)
+     * @throws ValueException If Source is not a valid directory. (2)
+     * @throws ValueException If Invalid value for $on_exists (3)
+     * @throws FSException If Cannot delete destination (when self::EXISTS_REPLACE) (1)
+     * @throws FSException If Destination is file (when self::EXISTS_MERGE) (2)
+     * @throws FSException If Destination exists (when self::EXISTS_ERROR) (3)
+     * @throws FSException If Couldn't create directory (mkdir failed) (4)
      * --
      * @return mixed      True || Null: ignore || Integer: number of skipped files.
      */
@@ -809,7 +843,7 @@ class FS
         }
 
         if (!is_dir($source)) {
-            throw new \Msyli\Core\ValueException(
+            throw new \Mysli\Core\ValueException(
                 "Not a valid directory: `{$source}`.", 2
             );
         }
@@ -823,17 +857,16 @@ class FS
                         self::dir_remove($destination, true);
                     }
                     if (file_exists($destination)) {
-                        throw new \Mysli\Core\FileSystemException(
-                            "Cannot delete destination: `{$destination}`", 2
+                        throw new \Mysli\Core\FSException(
+                            "Cannot delete destination: `{$destination}`", 1
                         );
                     }
                     break;
 
                 case self::EXISTS_MERGE:
                     if (!is_dir($destination)) {
-                        throw new \Mysli\CoreFileSystemException(
-                            "Destination is file, so cannot merge: `{$destination}`",
-                            1
+                        throw new \Mysli\Core\FSException(
+                            "Destination is file, so cannot merge: `{$destination}`", 2
                         );
                     }
                     // Continue...
@@ -844,7 +877,7 @@ class FS
                     break;
 
                 case self::EXISTS_ERROR:
-                    throw new \Mysli\Core\FileSystemException(
+                    throw new \Mysli\Core\FSException(
                         "Directory exists: `{$destination}`.", 3
                     );
 
@@ -860,8 +893,8 @@ class FS
 
         if (!file_exists($destination)) {
             if (!mkdir($destination, 0777, true)) {
-                throw new \Mysli\Core\FileSystemException(
-                    "Couldn't create the directory: `{$destination}`.", 1
+                throw new \Mysli\Core\FSException(
+                    "Couldn't create the directory: `{$destination}`.", 4
                 );
             }
         }
@@ -901,10 +934,18 @@ class FS
      * @param  integer $on_exists
      *     EXISTS_REPLACE // Delete destination if exists
      *     EXISTS_MERGE   // Merge source + destination
-     *                       OR throw FileSystemException if destination is a file.
+     *                       OR throw FSException if destination is a file.
      *     EXISTS_RENAME  // Rename (new) destination
-     *     EXISTS_ERROR   // Throw FileSystemException
+     *     EXISTS_ERROR   // Throw FSException
      *     EXISTS_IGNORE  // Skip quietly, return null
+     * --
+     * @throws ValueException If Source doesn't exists (1)
+     * @throws ValueException If Source is not a valid directory. (2)
+     * @throws ValueException If Invalid value for $on_exists (3)
+     * @throws FSException If Cannot delete destination (when self::EXISTS_REPLACE) (1)
+     * @throws FSException If Destination is file (when self::EXISTS_MERGE) (2)
+     * @throws FSException If Destination exists (when self::EXISTS_ERROR) (3)
+     * @throws FSException If Couldn't create directory (mkdir failed) (4)
      * --
      * @return boolean
      */
@@ -928,17 +969,17 @@ class FS
      * @param  integer $on_exists
      *     EXISTS_REPLACE // Delete destination if exists
      *     EXISTS_MERGE   // Return true if DIR,
-     *                       OR throw FileSystemException if file.
+     *                       OR throw FSException if file.
      *     EXISTS_RENAME  // Rename the (new) destination
-     *     EXISTS_ERROR   // Throw FileSystemException
+     *     EXISTS_ERROR   // Throw FSException
      *     EXISTS_IGNORE  // Skip quietly, return null
      * @param integer $mode       The mode is 0777 by default, which means
      *                            the widest possible access.
      * @param boolean $recursive  Allows the creation of nested directories
      *                            specified in the pathname.
      * --
-     * @throws FileSystemException If directory could not be created.
-     * @throws FileSystemException If destination exists and $on_exists set to:
+     * @throws FSException If directory could not be created.
+     * @throws FSException If destination exists and $on_exists set to:
      *                             EXISTS_MERGE (and destination is file) or
      *                             EXISTS_ERROR
      * @throws ValueException      If Invalid $on_exists value is set.
@@ -959,7 +1000,7 @@ class FS
 
                 case self::EXISTS_MERGE:
                     if (!is_dir($destination)) {
-                        throw new \Mysli\Core\FileSystemException(
+                        throw new \Mysli\Core\FSException(
                             "Destination is file, so cannot merge: `{$destination}`",
                             1
                         );
@@ -971,7 +1012,7 @@ class FS
                     break;
 
                 case self::EXISTS_ERROR:
-                    throw new \Mysli\Core\FileSystemException(
+                    throw new \Mysli\Core\FSException(
                         "Directory exists: `{$destination}`.", 2
                     );
 
@@ -986,7 +1027,7 @@ class FS
         }
 
         if (!mkdir($destination, $mode, $recursive)) {
-            throw new \Mysli\Core\FileSystemException(
+            throw new \Mysli\Core\FSException(
                 "Filed to create directory: `{$destination}`", 4
             );
         } else return $destination;

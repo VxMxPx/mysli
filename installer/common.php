@@ -82,7 +82,7 @@ function enable_librarian($librarian, $libpath, callable $errout)
     $librarian = new $lib_class();
     return $librarian;
 }
-function enable_core($corelib, $pubpath, $libpath, $datpath, callable $errout)
+function enable_core($corelib, $libpath, $datpath, callable $errout)
 {
     $setup_file = dst($libpath, $corelib, 'setup.php');
     $setup_class = lib_to_ns($corelib) . '\\Setup';
@@ -92,7 +92,6 @@ function enable_core($corelib, $pubpath, $libpath, $datpath, callable $errout)
     }
     include($setup_file);
     $setup = new $setup_class([
-        'pubpath' => $pubpath,
         'libpath' => $libpath,
         'datpath' => $datpath
     ]);
@@ -115,7 +114,7 @@ function enable_core($corelib, $pubpath, $libpath, $datpath, callable $errout)
         return false;
     }
     include $lib_file;
-    $core = new $lib_class($pubpath, $libpath, $datpath);
+    $core = new $lib_class($datpath, $libpath);
     return $core;
 }
 // Get library index, for example from: vendor/lib => vendor/lib/lib.php

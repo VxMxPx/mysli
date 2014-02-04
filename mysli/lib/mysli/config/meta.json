@@ -2,6 +2,7 @@
     "library"       : "mysli/config",
     "role"          : "config",
     "instantiation" : "always",
+    "request_info"  : true,
     "version"       : 1,
     "depends_on"    : {
         "~core" : ">= 1"

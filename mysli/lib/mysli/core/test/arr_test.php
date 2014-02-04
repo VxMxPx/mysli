@@ -1,13 +1,10 @@
 <?php
 
-namespace Mysli\Core\Util;
+namespace Mysli\Core\Lib;
 
-include(__DIR__.'/../../core.php');
-new \Mysli\Core(
-    __DIR__.'/../dummy/public',
-    __DIR__.'/../dummy/libraries',
-    __DIR__.'/../dummy/data'
-);
+// Exceptions, etc..
+include(__DIR__.'/../core.php');
+$core = new \Mysli\Core(__DIR__.'/dummy', __DIR__.'/dummy');
 
 class ArrTest extends \PHPUnit_Framework_TestCase
 {

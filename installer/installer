@@ -11,17 +11,13 @@ Mysli Installer (v" . MYSLI_INSTALLER_VERSION . ")
 Usage: ./installer [OPTIONS]...
 
   -l, --libpath <name>   Path where the libraries are. The default is: ../mysli
-  -p, --pubpath <name>   Public / URL accessible path (where to put index.php).
-                         The default is: ../public
   -d, --datpath <name>   Data / private path (where configuration and databases
                          will be stored. Should not be URL accessible).
                          The default is: ../private
   -r, -rewrite <options> Rewrite core libraries, in format: role:vendor\lib,...
                          The default values are:
-                         benchmark:mysli/benchmark,config:mysli/config,
-                         core:mysli/core,cli:mysli/dot,
-                         error_handler:mysli/error_handler,event:mysli/event,
-                         librarian:mysli/librarian,logger:mysli/logger
+                         config:mysli/config,core:mysli/core,cli:mysli/dot,
+                         event:mysli/event,librarian:mysli/librarian
 
   -y                     Assume `yes` as an answer to all questions.
   -h, --help             Print this help.
@@ -77,8 +73,8 @@ if (!file_exists(__DIR__ . DIRECTORY_SEPARATOR . 'common.php')) {
 include __DIR__ . DIRECTORY_SEPARATOR . 'common.php';
 
 // Get cli parameters...
-$short = 'l:p:d:r:hy';
-$long  = ['libpath:', 'pubpath:', 'datpath:', 'rewrite:', 'help'];
+$short = 'l:d:r:hy';
+$long  = ['libpath:', 'datpath:', 'rewrite:', 'help'];
 $options = getopt($short, $long);
 
 // Do we have help request?
@@ -89,18 +85,14 @@ if (get_opt_val($options, 'h', 'help', 'not') !== 'not') {
 
 // Get libpath
 $libraries = [
-    'benchmark'     => 'mysli/benchmark',
     'config'        => 'mysli/config',
     'core'          => 'mysli/core',
     'cli'           => 'mysli/dot',
-    'error_handler' => 'mysli/error_handler',
     'event'         => 'mysli/event',
     'librarian'     => 'mysli/librarian',
-    'logger'        => 'mysli/logger'
 ];
 $is_yes  = !get_opt_val($options, 'y', false, true); // Need to invert it
 $libpath = get_opt_val($options, 'l', 'libpath', '../mysli');
-$pubpath = get_opt_val($options, 'p', 'pubpath', '../public');
 $datpath = get_opt_val($options, 'd', 'datpath', '../private');
 $rewrite = get_opt_val($options, 'r', 'rewrite', '');
 $rewrite = explode(',', $rewrite);
@@ -121,9 +113,6 @@ $libpath = resolve_path(dst($libpath, 'lib'), __DIR__ . DIRECTORY_SEPARATOR);
 if ($libpath[1]) print_line_and_die('Library path is invalid.');
 $libpath = $libpath[0];
 
-$pubpath = resolve_path($pubpath, __DIR__ . DIRECTORY_SEPARATOR);
-$pubpath = $pubpath[1] ? implode('', $pubpath) : $pubpath[0];
-
 $datpath = resolve_path($datpath, __DIR__ . DIRECTORY_SEPARATOR);
 $datpath = $datpath[1] ? implode('', $datpath) : $datpath[0];
 
@@ -131,7 +120,6 @@ $datpath = $datpath[1] ? implode('', $datpath) : $datpath[0];
 print_line('Review before setup:');
 print_line(null);
 print_line('--- Paths ---');
-print_line('Public    ' . $pubpath);
 print_line('Private   ' . $datpath);
 print_line('Libraries ' . $libpath);
 print_line(null);
@@ -158,7 +146,7 @@ if (!empty($missing))
     print_line_and_die("Libraries not found:\n" . nice_array($missing));
 
 // Enable the core library...
-if ( ! ($core = enable_core($libraries['core'], $pubpath, $libpath, $datpath, 'print_line_and_die')) ) {
+if ( ! ($core = enable_core($libraries['core'], $libpath, $datpath, 'print_line_and_die')) ) {
     print_line('Core was successfully enabled.');
 }
 
@@ -171,25 +159,9 @@ if ( ! ($librarian = enable_librarian($libraries['librarian'], $libpath, 'print_
 $librarian->enable($libraries['core']);
 lib_enable($librarian, $libraries['config'], 'print_line_and_die');
 lib_enable($librarian, $libraries['cli'], 'print_line_and_die');
-lib_enable($librarian, $libraries['benchmark'], 'print_line_and_die');
 lib_enable($librarian, $libraries['event'], 'print_line_and_die');
-lib_enable($librarian, $libraries['logger'], 'print_line_and_die');
-lib_enable($librarian, $libraries['error_handler'], 'print_line_and_die');
 
 die(0);
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // Construct core setup
 print_line('Locating setup for core: ' . $core);

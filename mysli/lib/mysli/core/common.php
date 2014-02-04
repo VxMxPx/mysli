@@ -8,21 +8,37 @@
 function is_cli() { return php_sapi_name() === 'cli' || defined('STDIN'); }
 
 /**
- * Path helper methods.
- * Return full absolute this, library, public and database path.
+ * Retrun data path.
  * --
- * @param  string $path Leave empty to get only base path.
+ * @param string ... Accept multiple parameters, to build full path from them.
  * --
  * @return string
  */
-function libpath($path = null) { return ds(MYSLI_LIBPATH . '/' . $path); }
-function pubpath($path = null) { return ds(MYSLI_PUBPATH . '/' . $path); }
-function datpath($path = null) { return ds(MYSLI_DATPATH . '/' . $path); }
+function datpath()
+{
+    $arguments = func_get_args();
+    $arguments = implode(DIRECTORY_SEPARATOR, $arguments);
+    return ds(MYSLI_DATPATH, $arguments);
+}
+
+/**
+ * Retrun libraries path.
+ * --
+ * @param string ... Accept multiple parameters, to build full path from them.
+ * --
+ * @return string
+ */
+function libpath()
+{
+    $arguments = func_get_args();
+    $arguments = implode(DIRECTORY_SEPARATOR, $arguments);
+    return ds(MYSLI_LIBPATH, $arguments);
+}
 
 /**
  * Correct Directory Separators.
  * --
- * @param string ... Accept multiple parameters, to build full path from them
+ * @param string ... Accept multiple parameters, to build full path from them.
  * --
  * @return string
  */

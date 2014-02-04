@@ -4,119 +4,47 @@ namespace Mysli;
 
 class Core
 {
-    public $event;
-    public $librarian;
+    protected $librarian;
 
     /**
-     * Base path are required:
-     * @param string $pubpath Public URL accessible path,
-     *                        where index.php is stored.
-     * @param string $libpath Libraries repository.
-     * @param string $datpath Data(base) path, where most of the application
-     *                        specific files will be stored.
-     *                        This path shouldn't be accessible through URL!
+     * Construct new instance of util, check if is inited!
+     * --
+     * @param  string $datpath data path, - private directory.
+     * @param  string $libpath libraries path, - where all libraries are located.
+     * --
+     * @throws Exception If datpath is not a valid directory. (1)
+     * @throws Exception If libpath is not a valid directory. (2)
      */
-    public function __construct($pubpath, $libpath, $datpath)
+    public function __construct($datpath, $libpath)
     {
-        define('MYSLI_PUBPATH', $pubpath);
-        define('MYSLI_LIBPATH', $libpath);
+        if (!$datpath || !is_dir($datpath))
+            throw new \Exception("Invalid datpath: `{$datpath}`.", 1);
+
+        if (!$libpath || !is_dir($libpath))
+            throw new \Exception("Invalid libpath: `{$libpath}`.", 2);
+
         define('MYSLI_DATPATH', $datpath);
+        define('MYSLI_LIBPATH', $libpath);
 
-        $path  = realpath(__DIR__);
-        $this->load_exceptions($path);
-        $this->load_util(
-            $path,
-            [
-                'Mysli\\Core\\Util\\Arr'  => 'Arr',
-                'Mysli\\Core\\Util\\Str'  => 'Str',
-                'Mysli\\Core\\Util\\Int'  => 'Int',
-                'Mysli\\Core\\Util\\FS'   => 'FS',
-                'Mysli\\Core\\Util\\JSON' => 'JSON',
-            ]
-        );
+        $this->init();
     }
 
     /**
-     * Init the core libraries, like librarian and config,...
+     * Load all exception classes, etc...
+     * --
+     * @throws NotFoundException If common.php file is not found. (1)
+     * @throws NotFoundException If library file not found. (2)
      * --
      * @return void
      */
-    public function init()
+    protected function init()
     {
-        // Get Librarian & Register Class Loader
-        $this->librarian = $this->get_librarian();
-        spl_autoload_register([$this->librarian, 'autoloader']);
+        $path = rtrim(__DIR__, DIRECTORY_SEPARATOR);
 
-        // Get Error Handler & Register it
-        $error_handler = $this->librarian->resolve('~error_handler');
-        if (!$error_handler)
-            throw new \Mysli\Core\CoreException('Could not found `~error_handler` library.', 1);
-        $error_handler = $this->librarian->factory($error_handler);
-        set_error_handler([$error_handler, 'handle']);
-
-        // Get benchmarker and start it
-        $benchmarker = $this->librarian->resolve('~benchmarker');
-        if (!$benchmarker)
-            throw new \Mysli\Core\CoreException('Could not found `~benchmarker` library.', 2);
-        $benchmark = $this->librarian->factory($benchmarker);
-        $benchmark->set_timer('core');
-
-        // Get logger and log a message
-        $logger = $this->librarian->resolve('~logger');
-        if (!$logger)
-            throw new \Mysli\Core\CoreException('Could not found `~logger` library.', 3);
-        $log = $this->librarian->factory($logger);
-        $log->info('Hello! | PHP Version: ' . PHP_VERSION, __FILE__, __LINE__);
-
-        // Get event and trigger init
-        $event = $this->librarian->resolve('~event');
-        if (!$event)
-            throw new \Mysli\Core\CoreException('Could not found `~event` library.', 4);
-        $this->event = $this->librarian->factory($event);
-        $this->event->trigger('/mysli/core:init');
-    }
-
-    /**
-     * Will get enabled librarian if exists...
-     * --
-     * @return void
-     */
-    protected function get_librarian()
-    {
-        // There should be librarian folder...
-        $libid = datpath('librarian/id.json');
-        if (!file_exists($libid)) {
-            throw new \Core\FileNotFoundException(
-                "Could not found librarian ID file: `{$libid}`.", 1
-            );
-        }
-        $lib_info = \JSON::decode_file($libid, true);
-        $lib_file = $lib_info['file'];
-        if (!file_exists(libpath($lib_file))) {
-            throw new \Core\FileNotFoundException(
-                "Librarian file not found: `{$lib_file}`.", 2
-            );
-        } else {
-            include libpath($lib_file);
-        }
-        if (!class_exists($lib_info['class'], false)) {
-            throw new \Core\ValueException(
-                "The librarian class not found: `{$lib_info['class']}`.", 1
-            );
-        }
-        return new $lib_info['class'](datpath('librarian/registry.json'));
-    }
-
-    /**
-     * Load base exception classes.
-     * --
-     * @param string $path
-     */
-    protected function load_exceptions($path)
-    {
-        $files = scandir($path . DIRECTORY_SEPARATOR . 'exceptions');
-        $files = array_diff($files, ['.', '..']);
-        foreach ($files as $file) {
+        // Load exceptions
+        $exception_files = scandir($path . DIRECTORY_SEPARATOR . 'exceptions');
+        $exception_files = array_diff($exception_files, ['.', '..']);
+        foreach ($exception_files as $file) {
             include(
                 $path .
                 DIRECTORY_SEPARATOR .
@@ -125,44 +53,38 @@ class Core
                 $file
             );
             // Alias the exception, this is so that core exceptions can be used
-            // globally, without hard-coded dependency on Mysli.
+            // globally, without hard-coded Mysli namespace.
             $base = substr($file, 0, -4); // Cut off the .php part
             $base = str_replace('_', ' ', $base); // Convert _ to spaces
             // Capitalize words, and remove spaces and add Exception part
             $base = str_replace(' ', '', ucwords($base)) . 'Exception';
             class_alias('Mysli\\Core\\'.$base, 'Core\\'.$base, false);
         }
-    }
 
-    /**
-     * Load base util classes.
-     * --
-     * @param  string $path
-     * @param  array  $libraries
-     * --
-     * @return void
-     */
-    protected function load_util($path, array $libraries)
-    {
+        // Load common functions
         if (!function_exists('ds')) {
-            // Include core functions
-            include(
-                $path .
-                DIRECTORY_SEPARATOR .
-                'util' .
-                DIRECTORY_SEPARATOR .
-                'functions.php'
-            );
+            if (!file_exists($path . DIRECTORY_SEPARATOR . 'common.php'))
+                throw new \Mysli\Core\NotFoundException("Cannot find: `common.php`.", 1);
+            else include $path . DIRECTORY_SEPARATOR . 'common.php';
         }
 
+        $libraries = [
+            'Mysli\\Core\\Lib\\Arr'  => 'Core\\Arr',
+            'Mysli\\Core\\Lib\\Str'  => 'Core\\Str',
+            'Mysli\\Core\\Lib\\Int'  => 'Core\\Int',
+            'Mysli\\Core\\Lib\\FS'   => 'Core\\FS',
+            'Mysli\\Core\\Lib\\JSON' => 'Core\\JSON',
+        ];
+
+        // Load (and alias) libraries
         foreach ($libraries as $class => $alias) {
             $file = strtolower($class);
             $file = str_replace('\\', DIRECTORY_SEPARATOR, $file);
-            $filename = ds($path, 'util', strtolower($alias) . '.php');
+            $filename = ds($path, 'lib', strtolower(substr($alias, strpos($alias, '\\'))) . '.php');
 
             if (!file_exists($filename)) {
-                throw new \Mysli\Core\FileNotFoundException(
-                    "File not found: '{$filename}'."
+                throw new \Mysli\Core\NotFoundException(
+                    "File not found: '{$filename}'.", 2
                 );
             }
             include($filename);
@@ -171,12 +93,42 @@ class Core
     }
 
     /**
-     * Trigger the final event.
+     * Get librarian.
+     * --
+     * @throws NotFoundException If librarian ID file couldn't be found. (1)
+     * @throws NotFoundException If librarian file not found. (2)
+     * @throws NotFoundException If librarian class doesn't exists. (3)
+     * --
+     * @return object ~librarian
      */
-    public function terminate()
+    public function librarian()
     {
-        // Final event
-        $this->event->trigger('/mysli/core:terminate');
-        exit();
+        if ($this->librarian) return $this->librarian;
+
+        // Get librarian id file path
+        $librarian_id_path = datpath('librarian/id.json');
+        if (!file_exists($librarian_id_path))
+            throw new \Mysli\Core\NotFoundException(
+                "Could not found librarian ID file: `{$librarian_id_path}`.", 1
+            );
+
+        // Decode file and try to find librarian class file
+        $lib_info = \Core\JSON::decode_file($librarian_id_path, true);
+        $lib_file = $lib_info['file'];
+        if (!file_exists(libpath($lib_file)))
+            throw new \Mysli\Core\NotFoundException(
+                "Librarian file not found: `{$lib_file}`.", 2
+            );
+        else include libpath($lib_file);
+
+        // Librarian class should now be available
+        if (!class_exists($lib_info['class'], false))
+            throw new \Mysli\Core\NotFoundException(
+                "The librarian class not found: `{$lib_info['class']}`.", 3
+            );
+
+        // Construct librarian class
+        $this->librarian = new $lib_info['class']();
+        return $this->librarian;
     }
 }

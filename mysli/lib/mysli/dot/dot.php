@@ -49,7 +49,7 @@ class Dot
                     'path'        => ds($path, $file),
                     'class'       =>
                         $this->librarian->lib_to_ns($library) .
-                        '\\Script\\' . \Str::to_camelcase($id),
+                        '\\Script\\' . \Core\Str::to_camelcase($id),
                     'description' => $details['description']
                 ];
             }
@@ -101,7 +101,7 @@ class Dot
             if (!$this->librarian->is_enabled($library)) {
                 Util::warn('FAILED. Not enabled: ' . $library);
             }
-            $path = \Str::to_underscore($class);
+            $path = \Core\Str::to_underscore($class);
             $path = str_replace('\\', '/', $path);
             $path = preg_replace('/\/script\//', '/scripts/', $path);
             $path = libpath($path . '.php');

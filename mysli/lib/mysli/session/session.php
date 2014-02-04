@@ -90,7 +90,7 @@ class Session
         }
 
         // Clean session id
-        $session_id = \Str::clean($session_id, 'aA1', '_');
+        $session_id = \Core\Str::clean($session_id, 'aA1', '_');
 
         // Does such session_id exists?
         $session_path = $this->get_filename_from_id($session_id);
@@ -105,7 +105,7 @@ class Session
         }
 
         // Read session file
-        $session = \JSON::decode_file($session_path, true);
+        $session = \Core\JSON::decode_file($session_path, true);
         if (!is_array($session)) {
             $this->logger->warn(
                 'Corrupted file for session: `' .
@@ -212,7 +212,7 @@ class Session
         }
 
         // Create a unique id
-        $id  = time() . '_' . \Str::random(20, 'aA1');
+        $id  = time() . '_' . \Core\Str::random(20, 'aA1');
 
         // Store cookie
         $this->cookie->create($this->config->get('cookie_name'), $id, $expires);
@@ -284,9 +284,9 @@ class Session
         {
             if (mb_substr($session_file, -13) !== '_session.json') continue;
             $filename = ds($this->path, $session_file);
-            $session = \JSON::decode_file($filename);
+            $session = \Core\JSON::decode_file($filename);
             if ($session['expires_on'] < time()) {
-                \FS::file_remove($filename);
+                \Core\FS::file_remove($filename);
                 $removed++;
             }
         }
@@ -315,7 +315,7 @@ class Session
         $this->cookie->remove($this->config->get('cookie_name'));
         $filename = $this->get_filename_from_id($session_id);
         if (file_exists($filename)) {
-            \FS::file_remove($filename);
+            \Core\FS::file_remove($filename);
         }
     }
 
@@ -330,6 +330,6 @@ class Session
     public function write($id, array $session)
     {
         $filename = $this->get_filename_from_id($id);
-        return \JSON::encode_file($filename, $session);
+        return \Core\JSON::encode_file($filename, $session);
     }
 }

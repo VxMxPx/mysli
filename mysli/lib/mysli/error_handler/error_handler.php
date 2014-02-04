@@ -106,7 +106,7 @@ class ErrorHandler
                 ? $this->log->as_string()
                 : $this->log->as_html($this->log_template);
 
-            $this->event->trigger('/mysli/core/lib/error->handle/error', $error_report);
+            $this->event->trigger('~error_handler->handle!fatal', $error_report);
 
             if (is_cli()) {
                 die($error_report);
