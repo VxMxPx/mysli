@@ -4,20 +4,22 @@ namespace Mysli;
 
 class Event
 {
+    // When `high` is used, the event will be added to the begining of the event list.
+    // When `low` is used, the event will be added to the end of the event list.
     const PRIORITY_HIGH   = 'high';
-    const PRIORITY_MEDIUM = 'medium';
     const PRIORITY_LOW    = 'low';
 
     // List of events to be executed
     protected $waiting = [];
 
-    // List of events that has be triggered
+    // List of events that has been triggered
     protected $history = [];
 
     // Master file, where newly registered events will be saved.
     // Will be set when constructed.
     protected $filename = '';
 
+    // The ~librarian library.
     protected $librarian;
 
     /**
@@ -67,12 +69,12 @@ class Event
      * --
      * @param  string $event
      * @param  string $call     Call in format: vendor/library::method
-     * @param  string $priority Event::PRIORITY_HIGH, Event::PRIORITY_MEDIUM,
+     * @param  string $priority Event::PRIORITY_HIGH
      *                          Event::PRIORITY_LOW
      * --
      * @return boolean
      */
-    public function register($event, $call, $priority = self::PRIORITY_MEDIUM)
+    public function register($event, $call, $priority = self::PRIORITY_LOW)
     {
         $events = $this->get_list();
 
@@ -80,11 +82,17 @@ class Event
             $events[$event] = [];
         }
 
-        if (!isset($events[$event][$priority])) {
-            $events[$event][$priority] = [];
+        if ($priority === self::PRIORITY_LOW) {
+            $events[$event][] = $call;
+        } else {
+            array_unshift($events[$event], $call);
         }
 
-        $events[$event][$priority][] = $call;
+        // if (!isset($events[$event][$priority])) {
+        //     $events[$event][$priority] = [];
+        // }
+
+        // $events[$event][$priority][] = $call;
 
         $this->on($event, $call, $priority);
         return !!file_put_contents($this->filename, json_encode($events));
@@ -100,16 +108,26 @@ class Event
      */
     public function unregister($event, $call)
     {
-        $events = $this->get_list();
+        $events_collection = $this->get_list();
 
-        foreach ($events as $event_key => &$event_data)
-            if ($event_key === $event)
-                foreach ($event_data as $priority => &$callers)
-                    if (in_array($call, $callers))
-                        unset($callers[array_search($call, $callers)]);
+        foreach ($events_collection as $event_from_collection => &$calls_array) {
+            if ($event_from_collection !== $event) {
+                continue;
+            }
+            foreach ($calls_array as $call_id => $call_from_collection) {
+                if ($call_from_collection === $call) {
+                    unset($calls_array[$call_id]);
+                }
+            }
+            // In case all events were unset, the main element
+            // should be removed also.
+            if (!$calls_array) {
+                unset($events_collection[$event]);
+            }
+        }
 
         $this->off($event, $call);
-        return !!file_put_contents($this->filename, json_encode($events));
+        return !!file_put_contents($this->filename, json_encode($events_collection));
     }
 
     /**
@@ -121,25 +139,26 @@ class Event
      *                            - string: vendor/library::methid
      *                            - array('vendor/library', 'method')
      * @param   boolean $priority Which priority should the event be:
-     *                            Event::PRIORITY_HIGH, Event::PRIORITY_MEDIUM,
-     *                            Event::PRIORITY_LOW
+     *                            Event::PRIORITY_HIGH, Event::PRIORITY_LOW
      * --
      * @return  integer           Event ID in the stack, it can be used to
      *                            call particular event off
      */
-    public function on($event, $call, $priority = self::PRIORITY_MEDIUM)
+    public function on($event, $call, $priority = self::PRIORITY_LOW)
     {
         if (!isset($this->waiting[$event])) {
             $this->waiting[$event] = [];
         }
-        if (!isset($this->waiting[$event][$priority])) {
-            $this->waiting[$event][$priority] = [];
+
+        if ($priority === self::PRIORITY_LOW) {
+            $this->waiting[$event][] = $call;
+        } else {
+            array_unshift($this->waiting[$event], $call);
         }
-        $this->waiting[$event][$priority][] = $call;
 
         // Return ID
-        end($this->waiting[$event][$priority]);
-        return key($this->waiting[$event][$priority]);
+        end($this->waiting[$event]);
+        return key($this->waiting[$event]);
     }
 
     /**
@@ -154,15 +173,24 @@ class Event
      */
     public function off($event, $call)
     {
-        // What a beauty! :P
-        foreach ($this->waiting as $event_key => &$event_data)
-            if ($event_key === $event)
-                foreach ($event_data as $priority => &$callers)
-                    foreach ($callers as $id => $callback)
-                        if (is_integer($call) && $call === $id)
-                            unset($callers[$id]);
-                        elseif (is_string($callback) && $call === $callback)
-                            unset($callers[$id]);
+        foreach ($this->waiting as $event_from_collection => &$calls_array) {
+            if ($event_from_collection !== $event) {
+                continue;
+            }
+            foreach ($calls_array as $call_id => $call_from_collection) {
+                if (is_integer($call) && $call === $call_id) {
+                    unset($calls_array[$call_id]);
+                }
+                elseif (is_string($call) && $call === $call_from_collection) {
+                    unset($calls_array[$call_id]);
+                }
+            }
+            // In case all events were unset, the main element
+            // should be removed also.
+            if (!$calls_array) {
+                unset($this->waiting[$event]);
+            }
+        }
     }
 
     /**
@@ -189,29 +217,32 @@ class Event
 
         $this->history[$event][] = 'Trigger!';
 
-        // Check if anyone at all is waiting for this event.
-        if (!isset($this->waiting[$event])) {
-            return 0;
-        }
+        if (empty($this->waiting)) { return 0; }
 
-        // Create new list, sorted by priority
-        $events = [];
-        foreach (['high', 'medium', 'low'] as $priority) {
-            if (isset($this->waiting[$event][$priority])) {
-                foreach ($this->waiting[$event][$priority] as $value) {
-                    $events[] = $value;
-                }
+        foreach ($this->waiting as $waiting_event => $calls_array) {
+
+            if (strpos($waiting_event, '*') !== false) {
+                $regex = preg_quote($waiting_event, '/');
+                $regex =
+                    '/' .
+                    str_replace('\\*', '.*?', $regex) .
+                    '/i';
+            } else {
+                $regex = false;
             }
-        }
 
-        if (!empty($events)) {
-            foreach ($events as $call) {
+            // Check if anyone at all is waiting for this event.
+            if (!$regex && $event !== $waiting_event) { continue; }
+            if ($regex && !preg_match($regex, $waiting_event)) { continue; }
+
+            foreach ($calls_array as $call_id => $call) {
                 if (!is_string($call) && !is_array($call) && is_callable($call)) {
                     $num += $call($params) ? 1 : 0;
                     continue;
-                } else if (!is_array($call)) {
-                    $call = explode('::', $call, 2);
                 }
+
+                if (!is_array($call)) { $call = explode('::', $call, 2); }
+
                 $this->history[$event][] = 'Call: ' . implode('::', $call);
                 $num += ($this->librarian->call($call[0], $call[1], [&$params]) ? 1 : 0);
             }

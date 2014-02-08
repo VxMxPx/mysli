@@ -6,7 +6,6 @@ include(__DIR__.'/../event.php');        // Include self
 include(__DIR__.'/../../core/core.php'); // Mysli CORE is needed!
 new \Mysli\Core(
     realpath(__DIR__.'/dummy'),
-    realpath(__DIR__.'/dummy'),
     realpath(__DIR__.'/dummy')
 );
 
@@ -36,7 +35,7 @@ class EventTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals(
             'vendor/library::method',
-            $data[0]['mysli/event/test/event_test::test_register']['medium'][0]
+            $data[0]['mysli/event/test/event_test::test_register'][0]
         );
     }
 
@@ -57,7 +56,7 @@ class EventTest extends \PHPUnit_Framework_TestCase
 
         $this->assertCount(
             2,
-            $data1[0]['mysli/event/test/event_test::test_unregister']['medium']
+            $data1[0]['mysli/event/test/event_test::test_unregister']
         );
 
         $event->unregister(
@@ -70,11 +69,11 @@ class EventTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals(
             'vendor/library::method_two',
-            $data2[0]['mysli/event/test/event_test::test_unregister']['medium'][1]
+            $data2[0]['mysli/event/test/event_test::test_unregister'][1]
         );
         $this->assertCount(
             1,
-            $data2[0]['mysli/event/test/event_test::test_unregister']['medium']
+            $data2[0]['mysli/event/test/event_test::test_unregister']
         );
     }
 
@@ -82,33 +81,107 @@ class EventTest extends \PHPUnit_Framework_TestCase
     {
         $this->reset_file();
         $event = $this->get_instance();
+        $event_name = 'mysli/event/test/event_test::test_register';
 
-        $event->on(
-            'mysli/event/test/event_test::test_register',
-            function (&$result) { $result = 'Hello World!'; }
-        );
+        $event->on($event_name, 'vendor/library::method');
+        $available = $event->dump()[0];
+
+        $this->assertArrayHasKey($event_name, $available);
+    }
+
+    public function test_off_name()
+    {
+        $this->reset_file();
+        $event = $this->get_instance();
+        $event_name = 'mysli/event/test/event_test::test_register';
+
+        $event_id = $event->on($event_name, 'vendor/library::method');
+        $event->off($event_name, 'vendor/library::method');
+        $available = $event->dump()[0];
+
+        $this->assertFalse(isset($available[$event_name]));
+    }
+
+    public function test_off_id()
+    {
+        $this->reset_file();
+        $event = $this->get_instance();
+        $event_name = 'mysli/event/test/event_test::test_register';
+
+        $event_id = $event->on($event_name, 'vendor/library::method');
+        $event->off($event_name, $event_id);
+        $available = $event->dump()[0];
+        $this->assertFalse(isset($available[$event_name]));
+    }
+
+    public function test_off_id_two()
+    {
+        $this->reset_file();
+        $event = $this->get_instance();
+        $event_name = 'mysli/event/test/event_test::test_register';
+
+        $event_id_one = $event->on($event_name, 'vendor/library::method');
+        $event_id_two = $event->on($event_name, 'vendor/library::method_two');
+        $event->off($event_name, $event_id_one);
+        $available = $event->dump()[0];
+
+        $this->assertTrue(isset($available[$event_name][$event_id_two]));
+    }
+
+    public function test_trigger()
+    {
+        $this->reset_file();
+        $event = $this->get_instance();
+        $event_name = 'mysli/event/test/event_test::test_register';
+
+        $event->on($event_name, function (&$result) {
+            $result = 'Hello World!';
+        });
 
         $result = '';
-        $event->trigger('mysli/event/test/event_test::test_register', $result);
+        $event->trigger($event_name, $result);
 
         $this->assertEquals('Hello World!', $result);
     }
 
-    public function test_off()
+    public function test_trigger_many()
     {
         $this->reset_file();
         $event = $this->get_instance();
+        $event_name = 'mysli/event/test/event_test::test_register';
 
-        $event_id = $event->on(
-            'mysli/event/test/event_test::test_register',
-            function (&$result) { $result = 'Hello World!'; }
-        );
+        $event->on($event_name, function (&$result) {
+            $result .= 'One ';
+        });
+        $event->on($event_name, function (&$result) {
+            $result .= 'Two ';
+        });
+        $event->on($event_name, function (&$result) {
+            $result .= 'Three ';
+        });
+        $event->on($event_name, function (&$result) {
+            $result .= 'Four!';
+        });
 
-        $event->off('mysli/event/test/event_test::test_register', $event_id);
+        $result = '';
+        $event->trigger($event_name, $result);
 
-        $result = 'Nop';
-        $event->trigger('mysli/event/test/event_test::test_register', $result);
+        $this->assertEquals('One Two Three Four!', $result);
+    }
 
-        $this->assertEquals('Nop', $result);
+    public function test_trigger_regex()
+    {
+        $this->reset_file();
+        $event = $this->get_instance();
+        $event_name = 'mysli/event/test/event_test::test_register';
+
+        $event->on('*/event/*/event_test::test_register', function (&$result) {
+            $result = 'Hello World!';
+        });
+
+        $result = '';
+        $event->trigger($event_name, $result);
+
+        $this->assertEquals('Hello World!', $result);
     }
 }
