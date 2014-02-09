@@ -88,12 +88,6 @@ class Event
             array_unshift($events[$event], $call);
         }
 
-        // if (!isset($events[$event][$priority])) {
-        //     $events[$event][$priority] = [];
-        // }
-
-        // $events[$event][$priority][] = $call;
-
         $this->on($event, $call, $priority);
         return !!file_put_contents($this->filename, json_encode($events));
     }
@@ -194,7 +188,7 @@ class Event
     }
 
     /**
-     * Dump currently waiting events, and history of executed events
+     * Dump currently waiting events, and history of executed events.
      * --
      * @return array
      */
@@ -204,29 +198,24 @@ class Event
     }
 
     /**
-     * Trigger the event.
+     * Trigger an event.
      * --
-     * @param   string  $event  Which event?
-     * @param   mixed   $params Shall we provide any params?
-     * @return  integer Number of called functions.
-     *                  Function count only if "true" was returned.
+     * @param   string $event  Event name.
+     * @param   array  $params
+     * --
+     * @return  void
      */
-    public function trigger($event, &$params = null)
+    public function trigger($event, array $params = null)
     {
-        $num = 0;
-
         $this->history[$event][] = 'Trigger!';
 
-        if (empty($this->waiting)) { return 0; }
+        if (empty($this->waiting)) { return; }
 
         foreach ($this->waiting as $waiting_event => $calls_array) {
 
             if (strpos($waiting_event, '*') !== false) {
                 $regex = preg_quote($waiting_event, '/');
-                $regex =
-                    '/' .
-                    str_replace('\\*', '.*?', $regex) .
-                    '/i';
+                $regex = '/' . str_replace('\\*', '.*?', $regex) . '/i';
             } else {
                 $regex = false;
             }
@@ -237,17 +226,13 @@ class Event
 
             foreach ($calls_array as $call_id => $call) {
                 if (!is_string($call) && !is_array($call) && is_callable($call)) {
-                    $num += $call($params) ? 1 : 0;
-                    continue;
+                    $result = call_user_func_array($call, $params);
+                } else {
+                    if (!is_array($call)) { $call = explode('::', $call, 2); }
+                    $this->history[$event][] = 'Call: ' . implode('::', $call);
+                    $result = $this->librarian->call($call[0], $call[1], $params);
                 }
-
-                if (!is_array($call)) { $call = explode('::', $call, 2); }
-
-                $this->history[$event][] = 'Call: ' . implode('::', $call);
-                $num += ($this->librarian->call($call[0], $call[1], [&$params]) ? 1 : 0);
             }
         }
-
-        return $num;
     }
 }

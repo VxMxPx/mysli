@@ -139,7 +139,23 @@ class EventTest extends \PHPUnit_Framework_TestCase
         });
 
         $result = '';
-        $event->trigger($event_name, $result);
+        $event->trigger($event_name, [&$result]);
+
+        $this->assertEquals('Hello World!', $result);
+    }
+
+    public function test_trigger_regex()
+    {
+        $this->reset_file();
+        $event = $this->get_instance();
+        $event_name = 'mysli/event/test/event_test::test_register';
+
+        $event->on('*/event/*/event_test::test_register', function (&$result) {
+            $result = 'Hello World!';
+        });
+
+        $result = '';
+        $event->trigger($event_name, [&$result]);
 
         $this->assertEquals('Hello World!', $result);
     }
@@ -164,24 +180,47 @@ class EventTest extends \PHPUnit_Framework_TestCase
         });
 
         $result = '';
-        $event->trigger($event_name, $result);
+        $event->trigger($event_name, [&$result]);
 
         $this->assertEquals('One Two Three Four!', $result);
     }
 
-    public function test_trigger_regex()
+    public function test_trigger_many_params()
     {
         $this->reset_file();
         $event = $this->get_instance();
         $event_name = 'mysli/event/test/event_test::test_register';
 
-        $event->on('*/event/*/event_test::test_register', function (&$result) {
-            $result = 'Hello World!';
+        $event->on($event_name, function (&$first, &$second) {
+            $first = 'Hello World!';
+            $second = 'Hello Moon!';
         });
 
-        $result = '';
-        $event->trigger($event_name, $result);
+        $first = '';
+        $second = '';
+        $event->trigger($event_name, [&$first, &$second]);
 
-        $this->assertEquals('Hello World!', $result);
+        $this->assertEquals('Hello World!', $first);
+        $this->assertEquals('Hello Moon!', $second);
+    }
+
+
+    public function test_trigger_many_params_no_ref()
+    {
+        $this->reset_file();
+        $event = $this->get_instance();
+        $event_name = 'mysli/event/test/event_test::test_register';
+
+        $event->on($event_name, function (&$first, $second) {
+            $first = 'Hello World!';
+            $second = 'Hello Moon!';
+        });
+
+        $first = '';
+        $second = 'Nop!';
+        $event->trigger($event_name, [&$first, $second]);
+
+        $this->assertEquals('Hello World!', $first);
+        $this->assertEquals('Nop!', $second);
     }
 }
