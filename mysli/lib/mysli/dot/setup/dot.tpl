@@ -32,7 +32,6 @@ $ds = DIRECTORY_SEPARATOR;
 
 /*
  * Set some basic paths, which will be passed to the core.
- * pubpath - Public URL accessible path, where index.php is stored.
  * libpath - Libraries repository.
  * datpath - Data(base) path, where most of the application specific files will
  *           be stored. This path shouldn't be accessible through URL!
