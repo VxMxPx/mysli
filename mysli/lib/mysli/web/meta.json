@@ -1,0 +1,12 @@
+{
+    "library"       : "mysli/web",
+    "instantiation" : "once",
+    "version"       : 1,
+    "depends_on"    : {
+        "~core"  : ">= 1",
+        "~config": ">= 1",
+        "~event" : ">= 1"
+    },
+    "maintainer"    : "Marko Gajšt <marko@gaj.st>",
+    "description"   : "Mysli Web: Frontend Library."
+}
