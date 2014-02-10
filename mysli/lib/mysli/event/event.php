@@ -215,7 +215,7 @@ class Event
 
             if (strpos($waiting_event, '*') !== false) {
                 $regex = preg_quote($waiting_event, '/');
-                $regex = '/' . str_replace('\\*', '.*?', $regex) . '/i';
+                $regex = '/^' . str_replace('\\*', '.*?', $regex) . '$/i';
             } else {
                 $regex = false;
             }
