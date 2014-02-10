@@ -13,6 +13,9 @@ class Librarian
     protected $filename  = '';
     // Constrcuted libraries // kind of a like registry
     protected $cache     = [];
+    // Set while creating instance of library (and all its dependencies).
+    // Useful to protect
+    protected $producing = false;
 
     /**
      * Init the librarian class. Will accept filename of
@@ -301,11 +304,18 @@ class Librarian
         }
 
         // Instantiate class now...
+        if (!$this->producing) { $this->producing = $library; }
+
         $object = new \ReflectionClass($class);
         if ($object->hasMethod('__construct')) {
-            $dependencies = $this->dependencies_factory($library);
+            try {
+                $dependencies = $this->dependencies_factory($library);
+            } catch (\Exception $e) {
+                $this->producing = false;
+                throw $e;
+            }
             if (\Core\Arr::element('request_info', $info) === true) {
-                $dependencies[]['requested_by'] = $library;
+                $dependencies[]['requested_by'] = $this->producing;
             }
             $object = $object->newInstanceArgs($dependencies);
         } else {
@@ -316,6 +326,8 @@ class Librarian
         if ($info['instantiation'] === 'once') {
             $this->cache[$library] = $object;
         }
+
+        $this->producing = false;
 
         return $object;
     }
@@ -421,17 +433,26 @@ class Librarian
         $info = $this->get_details($library);
 
         // Construct and return
+        if (!$this->producing) { $this->producing = $library; }
         $object = new \ReflectionClass($setup_class_name);
         if ($object->hasMethod('__construct')) {
-            $dependencies = $this->dependencies_factory($library);
+            try {
+                $dependencies = $this->dependencies_factory($library);
+            } catch (\Exception $e) {
+                $this->producing = false;
+                throw $e;
+            }
             // Should we append info about library from where request was made?
             if (\Core\Arr::element('request_info', $info) === true) {
-                $dependencies[]['requested_by'] = $library;
+                $dependencies[]['requested_by'] = $this->producing;
             }
-            return $object->newInstanceArgs($dependencies);
+            $instance = $object->newInstanceArgs($dependencies);
         } else {
-            return $object->newInstanceWithoutConstructor();
+            $instance = $object->newInstanceWithoutConstructor();
         }
+
+        $this->producing = false;
+        return $instance;
     }
 
     /**
