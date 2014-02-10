@@ -25,7 +25,7 @@ class Config
         $this->filename = datpath('config', $library . '.json');
 
         // If we have file, then load contents...
-        if (file_exists($filename)) {
+        if (file_exists($this->filename)) {
             $this->config = \Core\JSON::decode_file($this->filename, true);
         }
     }
@@ -50,7 +50,7 @@ class Config
         // Empty cache and config...
         $this->cache = $this->config = [];
 
-        if ($file_exists($this->filename)) {
+        if (file_exists($this->filename)) {
             return unlink($this->filename);
         } else {
             return true;
