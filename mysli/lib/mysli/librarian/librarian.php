@@ -565,7 +565,7 @@ class Librarian
      * --
      * @return mixed  Result of the execution.
      */
-    public function call($library, $method, array $params = array())
+    public function call($library, $method, array $params = [])
     {
         $object = $this->factory($library);
 
