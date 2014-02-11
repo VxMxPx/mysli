@@ -5,6 +5,7 @@ namespace Mysli\Web;
 class Setup
 {
     protected $config;
+    protected $event;
 
     /**
      * Setup Web
@@ -15,6 +16,7 @@ class Setup
     public function __construct($config, $event)
     {
         $this->config = $config;
+        $this->event = $event;
     }
 
     public function before_enable()
@@ -50,6 +52,9 @@ class Setup
             $index_contents
         );
 
+        // Register final event
+        $this->event->register('mysli/web/index:done', 'mysli/web::output');
+
         // Create index.php
         return !!(file_put_contents(ds($pubpath, 'index.php'), $index_contents));
     }
@@ -64,6 +69,8 @@ class Setup
     {
         $this->config->destroy();
         \Core\FS::dir_remove(ds(datpath(), '/../public'));
+        $this->event->unregister('mysli/web/index:done', 'mysli/web::output');
+
         return true;
     }
 }

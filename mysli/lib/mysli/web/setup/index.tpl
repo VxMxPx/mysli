@@ -59,8 +59,10 @@ $core = new $core_id['class']($datpath, $libpath);
 // Get event library and trigger some events...
 $event_lib = $core->librarian()->resolve('~event');
 $event = $core->librarian()->factory($event_lib);
-$output = '';
-$event->trigger('mysli/web/index/done', [&$output]);
 
+$event->trigger('mysli/web/index:start');
+
+$output = '';
+$event->trigger('mysli/web/index:done', [&$output]);
 // We should have output now, so we'll print it and exit.
 exit($output);

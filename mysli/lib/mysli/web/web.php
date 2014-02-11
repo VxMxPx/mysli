@@ -6,16 +6,36 @@ class Web
 {
     protected $pubpath;
 
+    protected $event;
+    protected $response;
+
     /**
      * Construct Web object.
      * --
      * @param object $config ~config
      * @param object $event  ~event
      */
-    public function __construct($config, $event)
+    public function __construct($config, $event, $response)
     {
         // This is defined in index.php
         $this->pubpath = MYSLI_PUBPATH;
+
+        $this->event = $event;
+        $this->response = $response;
+    }
+
+    /**
+     * Apply headers and set output.
+     * --
+     * @return null
+     */
+    public function output(&$output)
+    {
+        if ($this->response->get_status() === 0) {
+            $this->response->status_200_ok();
+        }
+        $this->response->apply_headers();
+        $output = 'N/A';
     }
 
     /**
