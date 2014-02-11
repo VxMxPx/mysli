@@ -3,9 +3,11 @@
     "instantiation" : "once",
     "version"       : 1,
     "depends_on"    : {
-        "~core"    : ">= 1",
-        "~config"  : ">= 1",
-        "~session" : ">= 1"
+        "~core"        : ">= 1",
+        "mysli/web"    : ">= 1",
+        "mysli/router" : ">= 1",
+        "~config"      : ">= 1",
+        "~session"     : ">= 1"
     },
     "maintainer"    : "Marko Gajšt <marko@gaj.st>",
     "description"   : "Default Mysli Dashboard."
