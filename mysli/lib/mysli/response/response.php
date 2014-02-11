@@ -4,9 +4,12 @@ namespace Mysli;
 
 class Response
 {
+    // All headers to be applied at the end.
     protected $headers = [];
-
+    // The ~event library.
     protected $event;
+    // Current status.
+    protected $status = 0;
 
     /**
      * Construct RESPONSE
@@ -21,15 +24,17 @@ class Response
     /**
      * Will apply headers.
      * --
-     * @return void
+     * @return null
      */
     public function apply_headers()
     {
         if (headers_sent($file, $line)) {
-            throw new ResponseException(
+            throw new \Mysli\Response\ResponseException(
                 "Output was already started: in file : '{$file}', on line: '{$line}'."
             );
         }
+
+        $this->event->trigger('~response/mysli/response/apply_headers', [$this]);
 
         foreach ($this->headers as $type => $header) {
             if (substr($type, 0, 1) !== '-') {
@@ -42,10 +47,12 @@ class Response
     /**
      * Add header to the list of existing headers.
      * --
-     * @param  mixed  $header -- Array or string
-     * @param  string $type   -- Unique header type
+     * @param  mixed  $header Array or string
+     * @param  string $type   Unique header type
+     * --
+     * @return null
      */
-    public function header($header, $type=false)
+    public function header($header, $type = false)
     {
         if (!is_array($header)) { $header = [$type => $header]; }
 
@@ -59,8 +66,10 @@ class Response
      * --
      * @param  mixed $header String or Array
      * @param  mixed $type   String or false
+     * --
+     * @return null
      */
-    public function replace($header, $type=false)
+    public function replace($header, $type = false)
     {
         $this->clear();
         $this->header($header, $type);
@@ -69,11 +78,22 @@ class Response
     /**
      * Will remove all header set so far.
      * --
-     * @return void
+     * @return null
      */
     public function clear()
     {
         $this->headers = [];
+        $this->status = 0;
+    }
+
+    /**
+     * Get currently set status.
+     * --
+     * @return integer
+     */
+    public function get_status()
+    {
+        return $this->status;
     }
 
     /**
@@ -88,9 +108,10 @@ class Response
 
     /**
      * Will redirect (if possible/allowed) withour any special status code.
-     * ---
-     * @param   string  $url    Full url address
-     * @return  void
+     * --
+     * @param  string $url Full url address
+     * --
+     * @return null
      */
     public function to($url)
     {
@@ -101,36 +122,46 @@ class Response
             'Pragma'        => 'no-cache',
             'Location'      => $url,
         ];
-        $this->event->trigger('/mysli/core/lib/http->redirect', $headers);
-        $this->header_replace($headers);
+        $this->event->trigger('~response/mysli/response/to', [&$headers]);
+        if ($headers !== false) {
+            $this->header_replace($headers);
+        }
     }
 
     /**
      * Standard response for successful HTTP requests.
      * --
-     * @return  void
+     * @return null
      */
     public function status_200_ok()
-        { $this->header('HTTP/1.1 200 OK', '-Status'); }
+    {
+        $this->status = 200;
+        $this->header('HTTP/1.1 200 OK', '-Status');
+    }
 
     /**
      * The server successfully processed the request,
      * but is not returning any content.
      * --
-     * @return  void
+     * @return null
      */
     public function status_204_no_content()
-        { $this->header('HTTP/1.1 204 No Content', '-Status'); }
+    {
+        $this->status = 204;
+        $this->header('HTTP/1.1 204 No Content', '-Status');
+    }
 
     /**
      * This and all future requests should be directed to the given URI.
      * This method will ignore directive in configurations you must provide *full* URL.
      * --
-     * @param   string  $url
-     * @return  void
+     * @param  string $url
+     * --
+     * @return null
      */
     public function status_301_moved_permanently($url)
     {
+        $this->status = 301;
         $this->header([
             '-Status'  => 'HTTP/1.1 301 Moved Permanently',
             'Location' => $url
@@ -145,11 +176,13 @@ class Response
      * must be repeated using another POST request.
      * It will ignore directive in configurations you must provide *full* URL.
      * --
-     * @param   string  $url
-     * @return  void
+     * @param  string $url
+     * --
+     * @return null
      */
     public function status_307_temporary_redirect($url)
     {
+        $this->status = 307;
         $this->header([
             '-Status'  => 'HTTP/1.1 307 Temporary Redirect',
             'Location' => $url
@@ -159,20 +192,22 @@ class Response
     /**
      * The request contains bad syntax or cannot be fulfilled.
      * --
-     * @return  void
+     * @return null
      */
     public function status_400_bad_request()
     {
+        $this->status = 400;
         $this->header('HTTP/1.1 400 Bad Request', '-Status');
     }
 
     /**
      * The request requires user authentication.
      * --
-     * @return void
+     * @return null
      */
     public function status_401_unauthorized()
     {
+        $this->status = 401;
         $this->header('HTTP/1.1 401 Unauthorized', '-Status');
     }
 
@@ -180,10 +215,11 @@ class Response
      * The request was a legal request, but the server is refusing to respond to it.
      * Unlike a 401 Unauthorized response, authenticating will make no difference.
      * --
-     * @return  void
+     * @return  null
      */
     public function status_403_forbidden()
     {
+        $this->status = 403;
         $this->header('HTTP/1.1 403 Forbidden', '-Status');
     }
 
@@ -191,10 +227,11 @@ class Response
      * The requested resource could not be found but may be available again in the future.
      * Subsequent requests by the client are permissible.
      * --
-     * @return  void
+     * @return null
      */
     public function status_404_not_found()
     {
+        $this->status = 404;
         $this->header('HTTP/1.0 404 Not Found', '-Status');
     }
 
@@ -207,12 +244,14 @@ class Response
      * the resource again in the future. Clients such as search engines should
      * remove the resource from their indexes.
      * --
-     * @param   string  $message
-     * @param   boolean $die
-     * @return  void
+     * @param  string  $message
+     * @param  boolean $die
+     * --
+     * @return null
      */
     public function status_410_gone()
     {
+        $this->status = 410;
         $this->header('HTTP/1.0 410 Gone', '-Status');
     }
 
@@ -220,13 +259,19 @@ class Response
      * The server is currently unavailable (because it is overloaded or down
      * for maintenance). Generally, this is a temporary state.
      * --
-     * @return  void
+     * @return null
      */
     public function status_503_service_unavailable()
     {
+        $this->status = 503;
         $this->header('HTTP/1.0 503 Service Unavailable', '-Status');
     }
 
+    /**
+     * Set content-type to application/json
+     * --
+     * @return null
+     */
     public function content_type_json()
     {
         $this->header('application/json', 'Content-type');
