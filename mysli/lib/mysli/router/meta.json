@@ -1,0 +1,12 @@
+{
+    "library"       : "mysli/router",
+    "instantiation" : "once",
+    "version"       : 1,
+    "depends_on"    : {
+        "~event"   : ">= 1",
+        "~request" : ">= 1",
+        "~response": ">= 1"
+    },
+    "maintainer"    : "Marko Gajšt <marko@gaj.st>",
+    "description"   : "Mysli Router."
+}
