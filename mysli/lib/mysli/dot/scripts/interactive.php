@@ -4,10 +4,19 @@ namespace Mysli\Dot\Script;
 
 class Interactive
 {
-    public function action_index($args = [])
+    protected $librarian;
+
+    public function __construct($dot, $librarian)
     {
+        $this->librarian = $librarian;
+    }
+
+    public function action_index()
+    {
+        $librarian = $this->librarian;
+
         \Cli\Util::plain(
-            "Hi there! This is an interactive console for the Mysli."
+            "Hi there! This is an interactive console for the Mysli Project."
         );
 
         do {
