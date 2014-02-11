@@ -72,9 +72,9 @@ class Librarian
             return false;
         }
         if (count($dependencies['disabled'])) {
-            \Cli\Util::plain('The following dependencies needs to be enabled: ' .
+            \Cli\Util::plain('The following libraries needs to be enabled: ' .
                 print_r($dependencies['disabled'], true));
-            if (!\Cli\Util::confirm('Continue and enable disabled dependencies?')) {
+            if (!\Cli\Util::confirm('Continue and enable required libraries?')) {
                 \Cli\Util::plain('Process terminated.');
                 return false;
             }
@@ -125,7 +125,7 @@ class Librarian
         }
         $dependees = $this->librarian->get_dependees($lib, true);
         if (!empty($dependees)) {
-            \Cli\Util::plain('The following libraried depends on the `'. $lib .
+            \Cli\Util::plain('The following libraries depends on the `'. $lib .
                 '` and need to be disabled: ' .
                 print_r($dependees, true));
             if (!\Cli\Util::confirm('Disable listed libraries?')) {
