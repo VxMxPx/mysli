@@ -1,5 +1,5 @@
 <?php
 
-namespace Mysli\Core;
+namespace Mysli\Response;
 
 class ResponseException extends \Exception {}
