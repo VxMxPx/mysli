@@ -23,12 +23,12 @@ class Request
 
         // Set list of segments
         $segments = trim($this->get_path_info(), '/');
-        $segments = \Str::explode_trim('/', $segments);
+        $segments = \Core\Str::explode_trim('/', $segments);
 
         // Register segments containing equal sign, to get
         foreach ($segments as $segment) {
             if (strpos($segment, '=') !== false) {
-                $segment_get = \Str::explode_trim('=', $segment, 2);
+                $segment_get = \Core\Str::explode_trim('=', $segment, 2);
                 $this->get[$segment_get[0]] = $segment_get[1];
                 continue;
             }
@@ -98,10 +98,10 @@ class Request
         if (!$key) { return $this->get; }
 
         if (is_array($key)) {
-            return \Arr::elements($key, $this->get, $default);
+            return \Core\Arr::elements($key, $this->get, $default);
         }
         else {
-            return \Arr::element($key, $this->get, $default);
+            return \Core\Arr::element($key, $this->get, $default);
         }
     }
 
@@ -120,10 +120,10 @@ class Request
         if (!$key) { return $_POST; }
 
         if (is_array($key)) {
-            return \Arr::elements($key, $_POST, $default);
+            return \Core\Arr::elements($key, $_POST, $default);
         }
         else {
-            return \Arr::element($key, $_POST, $default);
+            return \Core\Arr::element($key, $_POST, $default);
         }
     }
 
