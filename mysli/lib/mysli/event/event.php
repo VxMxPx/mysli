@@ -119,7 +119,6 @@ class Event
                 unset($events_collection[$event]);
             }
         }
-
         $this->off($event, $call);
         return !!file_put_contents($this->filename, json_encode($events_collection));
     }
@@ -205,7 +204,7 @@ class Event
      * --
      * @return  void
      */
-    public function trigger($event, array $params = null)
+    public function trigger($event, array $params = [])
     {
         $this->history[$event][] = 'Trigger!';
 
@@ -222,7 +221,7 @@ class Event
 
             // Check if anyone at all is waiting for this event.
             if (!$regex && $event !== $waiting_event) { continue; }
-            if ($regex && !preg_match($regex, $waiting_event)) { continue; }
+            if ($regex && !preg_match($regex, $event)) { continue; }
 
             foreach ($calls_array as $call_id => $call) {
                 if (!is_string($call) && !is_array($call) && is_callable($call)) {
