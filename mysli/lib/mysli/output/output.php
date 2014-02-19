@@ -66,7 +66,7 @@ class Output
     public function as_string($key = false)
     {
         if (!$key) { $html = implode("\n", $this->output_cache); }
-        $html = \Arr::element($key, $this->output_cache, null);
+        $html = \Core\Arr::element($key, $this->output_cache, null);
         return htmlentities($html);
     }
 
@@ -80,7 +80,7 @@ class Output
     public function as_html($key = false)
     {
         if (!$key) { return implode("\n", $this->output_cache); }
-        return \Arr::element($key, $this->output_cache, null);
+        return \Core\Arr::element($key, $this->output_cache, null);
     }
 
     /**
