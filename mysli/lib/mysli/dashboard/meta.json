@@ -6,8 +6,8 @@
         "~core"        : ">= 1",
         "mysli/web"    : ">= 1",
         "mysli/router" : ">= 1",
-        "~config"      : ">= 1",
-        "~session"     : ">= 1"
+        "~event"       : ">= 1",
+        "~output"      : ">= 1"
     },
     "maintainer"    : "Marko Gajšt <marko@gaj.st>",
     "description"   : "Default Mysli Dashboard."
