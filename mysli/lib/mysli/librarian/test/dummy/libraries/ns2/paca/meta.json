@@ -1,0 +1,10 @@
+{
+    "library"       : "ns2/paca",
+    "instantiation" : "once",
+    "version"       : 1,
+    "depends_on"    : {
+        "ns1/pac2"  : ">= 1"
+    },
+    "maintainer"    : "Marko Gajšt <marko@gaj.st>",
+    "description"   : "Test Package."
+}

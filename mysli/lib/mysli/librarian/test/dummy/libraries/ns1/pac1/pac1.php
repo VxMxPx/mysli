@@ -1,8 +1,8 @@
 <?php
 
-namespace Mysli;
+namespace Ns1;
 
-class Backend
+class Pac1
 {
     public function say_hi()
     {

@@ -15,16 +15,29 @@ class LibrarianTest extends \PHPUnit_Framework_TestCase
 
     public function __construct()
     {
-        $this->librarian = new Librarian();
+        // Make sure we're working with fresh copy...
+        $this->librarian = $this->reset_libraries();
+    }
+
+    protected function reset_libraries()
+    {
+        file_put_contents(
+            datpath('librarian/registry.json'),
+            // Create dummy reference to itself so that
+            // librarian exceptions autoloader will function correctly.
+            '{"mysli/librarian" : {"library" : "mysli/librarian"}}'
+        );
+        $librarian = new Librarian();
+        $librarian->enable('ns1/pac1');
+        $librarian->enable('ns1/pac2');
+        $librarian->enable('ns2/paca');
+        return $librarian;
     }
 
     public function test_get_enabled()
     {
         $libraries = $this->librarian->get_enabled();
-        $this->assertEquals(
-            'mysli/core',
-            $libraries[0]
-        );
+        $this->assertCount(4, $libraries);
     }
 
     public function test_get_enabled_detailed()
@@ -35,12 +48,20 @@ class LibrarianTest extends \PHPUnit_Framework_TestCase
         );
     }
 
+    public function test_get_details_enabled()
+    {
+        $this->assertEquals(
+            'ns1/pac1',
+            $this->librarian->get_details('ns1/pac1')['library']
+        );
+    }
+
     public function test_get_disabled()
     {
         $disabled = $this->librarian->get_disabled();
         $this->assertTrue(is_array($disabled));
         $this->assertTrue(!empty($disabled));
-        $this->assertTrue(in_array('mysli/manage_settings', $disabled));
+        $this->assertTrue(in_array('ns2/pacb', $disabled));
     }
 
     public function test_get_disabled_detailed()
@@ -48,24 +69,16 @@ class LibrarianTest extends \PHPUnit_Framework_TestCase
         $disabled = $this->librarian->get_disabled(true);
 
         $this->assertEquals(
-            'mysli/manage_settings',
-            $disabled['mysli/manage_settings']['library']
-        );
-    }
-
-    public function test_get_details_enabled()
-    {
-        $this->assertEquals(
-            'mysli/core',
-            $this->librarian->get_details('mysli/core')['library']
+            'ns2/pacb',
+            $disabled['ns2/pacb']['library']
         );
     }
 
     public function test_get_details_disabled()
     {
         $this->assertEquals(
-            'mysli/manage_settings',
-            $this->librarian->get_details('mysli/manage_settings')['library']
+            'ns2/pacb',
+            $this->librarian->get_details('ns2/pacb')['library']
         );
     }
 
@@ -74,33 +87,30 @@ class LibrarianTest extends \PHPUnit_Framework_TestCase
      */
     public function test_get_details_nonexisting()
     {
-        $this->assertEquals(
-            [],
-            $this->librarian->get_details('vendor/library')
-        );
+        $this->librarian->get_details('vendor/library');
     }
 
     public function test_resolve_normal()
     {
         $this->assertEquals(
-            'mysli/core',
-            $this->librarian->resolve('mysli/core')
+            'ns1/pac1',
+            $this->librarian->resolve('ns1/pac1')
         );
     }
 
     public function test_resolve_disabled_normal()
     {
         $this->assertEquals(
-            'mysli/manage_settings',
-            $this->librarian->resolve('mysli/manage_settings')
+            'ns2/pacb',
+            $this->librarian->resolve('ns2/pacb')
         );
     }
 
     public function test_resolve_regex()
     {
         $this->assertEquals(
-            'mysli/core',
-            $this->librarian->resolve('*/core')
+            'ns1/pac1',
+            $this->librarian->resolve('*/pac1')
         );
     }
 
@@ -142,62 +152,61 @@ class LibrarianTest extends \PHPUnit_Framework_TestCase
 
     public function test_factory()
     {
-        $object = $this->librarian->factory('mysli/dot');
-        $this->assertInstanceOf('Mysli\\Dot', $object);
+        $object = $this->librarian->factory('ns1/pac1');
+        $this->assertInstanceOf('Ns1\\Pac1', $object);
     }
 
     public function test_dependencies_factory()
     {
-        $dependencies = $this->librarian->dependencies_factory('mysli/backend');
-        $this->assertInstanceOf('Mysli\\Mjs', $dependencies['mjs']);
-        $this->assertInstanceOf('Mysli\\Session', $dependencies['session']);
+        $dependencies = $this->librarian->dependencies_factory('ns2/paca');
+        $this->assertInstanceOf('Ns1\\Pac2', $dependencies['pac2']);
     }
 
     public function test_construct_setup()
     {
-        $setup = $this->librarian->construct_setup('mysli/mjs');
-        $this->assertInstanceOf('Mysli\\Mjs\\Setup', $setup);
+        $setup = $this->librarian->construct_setup('ns1/pac1');
+        $this->assertInstanceOf('Ns1\\Pac1\\Setup', $setup);
     }
 
     public function test_construct_setup_no_file()
     {
-        $setup = $this->librarian->construct_setup('avrelia/dummy');
+        $setup = $this->librarian->construct_setup('ns1/pac2');
         $this->assertFalse($setup);
     }
 
     public function test_autoloader()
     {
-        $users = new \Mysli\Users();
-        $this->assertInstanceOf('Mysli\\Users', $users);
+        $object = new \Ns2\Paca();
+        $this->assertInstanceOf('Ns2\\Paca', $object);
     }
 
     public function test_autoloader_subclass()
     {
-        $user = new \Mysli\Users\User();
-        $this->assertInstanceOf('Mysli\\Users\\User', $user);
+        $obj = new \Ns2\Paca\PacaSubclass();
+        $this->assertInstanceOf('Ns2\\Paca\\PacaSubclass', $obj);
     }
 
     public function test_autoloader_subclass_exception()
     {
-        $exception = new \Mysli\Users\BaseException();
-        $this->assertInstanceOf('Mysli\\Users\\BaseException', $exception);
+        $exception = new \Ns2\Paca\BaseException();
+        $this->assertInstanceOf('Ns2\\Paca\\BaseException', $exception);
     }
 
     public function test_load_existing()
     {
-        $this->assertTrue($this->librarian->load('mysli/users'));
+        $this->assertTrue($this->librarian->load('ns1/pac1'));
     }
 
     public function test_load_non_existing()
     {
-        $this->assertFalse($this->librarian->load('avrelia/non_existant'));
+        $this->assertFalse($this->librarian->load('vendor/package'));
     }
 
     public function test_call()
     {
         $this->assertEquals(
             'hi',
-            $this->librarian->call('mysli/backend', 'say_hi')
+            $this->librarian->call('ns1/pac1', 'say_hi')
         );
     }
 
@@ -206,20 +215,21 @@ class LibrarianTest extends \PHPUnit_Framework_TestCase
         $random_numer = rand(0, 100);
         $this->assertEquals(
             'The random number is: ' . $random_numer,
-            $this->librarian->call('mysli/backend', 'say_number', [$random_numer])
+            $this->librarian->call('ns1/pac1', 'say_number', [$random_numer])
         );
     }
 
     public function test_is_enabled()
     {
         $this->assertTrue(
-            $this->librarian->is_enabled('mysli/backend')
+            $this->librarian->is_enabled('ns1/pac1')
         );
         $this->assertFalse(
-            $this->librarian->is_enabled('avrelia/writter')
+            $this->librarian->is_enabled('ns2/pacb')
         );
         $this->assertFalse(
-            $this->librarian->is_enabled('avrelia/non_existant')
+            // Non-existant
+            $this->librarian->is_enabled('vendor/package')
         );
     }
 
@@ -228,26 +238,12 @@ class LibrarianTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(
             [
                 'enabled' => [
-                    'mysli/mjs'     => '>= 0.1',
-                    'mysli/core'    => '>= 0.1',
-                    'mysli/session' => '>= 0.1'
+                    'ns1/pac2' => '>= 1'
                 ],
                 'disabled' => [],
                 'missing'  => []
             ],
-            $this->librarian->get_dependencies('mysli/backend')
-        );
-    }
-
-    public function test_get_dependencies_disabled()
-    {
-        $this->assertEquals(
-            [
-                'enabled'  => ['mysli/core'     => '>= 0.1'],
-                'disabled' => ['avrelia/reader' => '>= 0.1'],
-                'missing'  => []
-            ],
-            $this->librarian->get_dependencies('avrelia/backend')
+            $this->librarian->get_dependencies('ns2/paca')
         );
     }
 
@@ -255,49 +251,49 @@ class LibrarianTest extends \PHPUnit_Framework_TestCase
     {
         $this->assertEquals(
             [
-                'enabled'  => ['mysli/core' => '>= 0.1'],
+                'enabled'  => [
+                    'ns1/pac1' => '>= 1',
+                    'ns2/paca' => '>= 0'
+                ],
                 'disabled' => [],
                 'missing'  => [
-                    '*/mailer'    => '>= 0.0',
-                    'avrelia/sql' => '>= 1.0'
+                    '*/pacc' => '>= 4'
                 ]
             ],
-            $this->librarian->get_dependencies('avrelia/dummy')
+            $this->librarian->get_dependencies('ns2/pacb')
         );
     }
 
-    public function test_get_dependencies_deep()
-    {
-        $this->assertEquals(
-            [
-                'enabled' => [
-                    'mysli/core'    => '>= 0.1',
-                    'mysli/session' => '>= 0.1'
-                ],
-                'disabled' => [
-                    'avrelia/writter' => '>= 0.1',
-                    'avrelia/users'   => '>= 0.1',
-                    'avrelia/reader'  => '>= 0.1'
-                ],
-                'missing'  => []
-            ],
-            $this->librarian->get_dependencies('avrelia/backend', true)
-        );
-    }
+    // Deep scan only for disabled packages!
+    // public function test_get_dependencies_deep()
+    // {
+    //     dump($this->librarian->get_dependencies('ns2/paca', true));
+    //     $this->assertEquals(
+    //         [
+    //             'enabled' => [
+    //                 'ns1/pac1' => '>= 1',
+    //                 'ns1/pac2' => '>= 1'
+    //             ],
+    //             'disabled' => [],
+    //             'missing'  => []
+    //         ],
+    //         $this->librarian->get_dependencies('ns2/paca', true)
+    //     );
+    // }
 
     public function test_get_dependees()
     {
         $this->assertEquals(
-            ['mysli/backend'],
-            $this->librarian->get_dependees('mysli/session')
+            ['ns1/pac2'],
+            $this->librarian->get_dependees('ns1/pac1')
         );
     }
 
-    public function test_get_dependees_deep()
-    {
-        $this->assertEquals(
-            ['mysli/backend', 'mysli/session'],
-            $this->librarian->get_dependees('mysli/users', true)
-        );
-    }
+    // public function test_get_dependees_deep()
+    // {
+    //     $this->assertEquals(
+    //         ['mysli/backend', 'mysli/session'],
+    //         $this->librarian->get_dependees('mysli/users', true)
+    //     );
+    // }
 }

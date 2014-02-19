@@ -1,0 +1,9 @@
+{
+    "library"       : "ns1/pac1",
+    "role"          : "pac1",
+    "instantiation" : "once",
+    "version"       : 1,
+    "depends_on"    : [],
+    "maintainer"    : "Marko Gajšt <marko@gaj.st>",
+    "description"   : "Test package."
+}

@@ -522,6 +522,11 @@ class Librarian
     {
         $class = $this->lib_to_ns($library);
         $library_segments = explode('/', $library);
+        if (!isset($library_segments[1])) {
+            throw new \Mysli\Librarian\LibrarianException(
+                "Invalid library: `{$library}`.", 1
+            );
+        }
         $library_base = $library_segments[0] . '/' . $library_segments[1];
 
         if (class_exists($class, false)) { return true; }

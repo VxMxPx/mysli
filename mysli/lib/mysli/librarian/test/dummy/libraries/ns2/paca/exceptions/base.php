@@ -1,5 +1,5 @@
 <?php
 
-namespace Mysli\Users;
+namespace Ns2\Paca;
 
 class BaseException extends \Exception {}

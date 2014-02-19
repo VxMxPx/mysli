@@ -1,0 +1,12 @@
+{
+    "library"       : "ns2/pacb",
+    "instantiation" : "once",
+    "version"       : 2,
+    "depends_on"    : {
+        "*/pac1"    : ">= 1",
+        "*/paca"    : ">= 0",
+        "*/pacc"    : ">= 4"
+    },
+    "maintainer"    : "Marko Gajšt <marko@gaj.st>",
+    "description"   : "Test package."
+}
