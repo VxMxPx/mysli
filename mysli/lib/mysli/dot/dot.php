@@ -72,9 +72,10 @@ class Dot
                 $this->list_scripts();
             }
             $command = isset($arguments[2]) ? $arguments[2] : false;
-            if (!$this->execute($script, $command, array_slice($arguments, 3))) {
-                \Cli\Util::warn('Cannot find the command: ' . $script);
-            }
+            $this->execute($script, $command, array_slice($arguments, 3));
+            // if (!$this->execute($script, $command, array_slice($arguments, 3))) {
+            //     \Cli\Util::warn('Cannot find the command: ' . $script);
+            // }
         } else {
             $this->list_scripts();
         }
