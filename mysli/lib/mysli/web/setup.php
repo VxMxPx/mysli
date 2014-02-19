@@ -22,7 +22,7 @@ class Setup
     public function before_enable()
     {
         // Public path!
-        $pubpath = ds(datpath(), '/../public');
+        $pubpath = datpath('/../public');
         \Core\FS::dir_create($pubpath);
         $pubpath = realpath($pubpath);
 
@@ -31,7 +31,8 @@ class Setup
         }
 
         $this->config->merge([
-            'url'  => null
+            'url'           => null,
+            'relative_path' => relative_path($pubpath, datpath())
         ]);
 
         $this->config->write();

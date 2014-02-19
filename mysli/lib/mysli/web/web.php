@@ -8,20 +8,25 @@ class Web
 
     protected $event;
     protected $response;
+    protected $output;
 
     /**
      * Construct Web object.
      * --
-     * @param object $config ~config
-     * @param object $event  ~event
+     * @param object $config   ~config
+     * @param object $event    ~event
+     * @param object $response ~response
+     * @param object $output   ~output
      */
-    public function __construct($config, $event, $response)
+    public function __construct($config, $event, $response, $output)
     {
         // This is defined in index.php
-        $this->pubpath = MYSLI_PUBPATH;
+        // $this->pubpath = MYSLI_PUBPATH;
+        $this->pubpath = realpath(datpath($config->get('relative_path')));
 
         $this->event = $event;
         $this->response = $response;
+        $this->output = $output;
     }
 
     /**
@@ -35,7 +40,9 @@ class Web
             $this->response->status_200_ok();
         }
         $this->response->apply_headers();
-        $output = 'N/A';
+
+        $output  = is_string($output) ? $output : '';
+        $output .= $this->output->as_html();
     }
 
     /**
