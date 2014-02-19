@@ -14,8 +14,7 @@ class Librarian
     // Constrcuted libraries // kind of a like registry
     protected $cache     = [];
     // Set while creating instance of library (and all its dependencies).
-    // Useful to protect
-    protected $producing = false;
+    protected $producing = [];
 
     /**
      * Init the librarian class. Will accept filename of
@@ -304,14 +303,15 @@ class Librarian
         }
 
         // Instantiate class now...
-        if (!$this->producing) { $this->producing = $library; }
+        // Push current library name to production line...
+        $this->producing[] = $library;
 
         $object = new \ReflectionClass($class);
         if ($object->hasMethod('__construct')) {
             try {
                 $dependencies = $this->dependencies_factory($library);
             } catch (\Exception $e) {
-                $this->producing = false;
+                $this->producing = [];
                 throw $e;
             }
             if (\Core\Arr::element('request_info', $info) === true) {
@@ -327,7 +327,7 @@ class Librarian
             $this->cache[$library] = $object;
         }
 
-        $this->producing = false;
+        array_pop($this->producing);
 
         return $object;
     }
@@ -433,13 +433,13 @@ class Librarian
         $info = $this->get_details($library);
 
         // Construct and return
-        if (!$this->producing) { $this->producing = $library; }
+        $this->producing[] = $library;
         $object = new \ReflectionClass($setup_class_name);
         if ($object->hasMethod('__construct')) {
             try {
                 $dependencies = $this->dependencies_factory($library);
             } catch (\Exception $e) {
-                $this->producing = false;
+                $this->producing = [];
                 throw $e;
             }
             // Should we append info about library from where request was made?
@@ -451,7 +451,7 @@ class Librarian
             $instance = $object->newInstanceWithoutConstructor();
         }
 
-        $this->producing = false;
+        array_pop($this->producing);
         return $instance;
     }
 

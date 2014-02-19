@@ -21,6 +21,8 @@ class Config
         // particular library). In this case, we'll use this info, to construct
         // costumized config, containing only element meant for particular library.
         $library   = \Core\Arr::element('requested_by', $info);
+        array_pop($library); // Remove self
+        $library = array_pop($library);
         $library   = str_replace('/', '.', $library);
         $this->filename = datpath('config', $library . '.json');
 
