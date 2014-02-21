@@ -1,0 +1,12 @@
+{
+    "package"       : "mysli/dot",
+    "role"          : "cli",
+    "instantiation" : "once",
+    "version"       : 1,
+    "depends_on"    : {
+        "~core" : ">= 1",
+        "~pkgm" : ">= 1"
+    },
+    "maintainer"    : "Marko Gajšt <marko@gaj.st>",
+    "description"   : "Mysli Dot: Command Line Interface."
+}

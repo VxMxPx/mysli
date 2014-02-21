@@ -1,9 +1,0 @@
-{
-    "library"       : "mysli/language",
-    "role"          : "i18n",
-    "instantiation" : "once",
-    "version"       : 1,
-    "depends_on"    : {},
-    "maintainer"    : "Marko Gajšt <marko@gaj.st>",
-    "description"   : "Mysli Internationalization Library."
-}

@@ -1,0 +1,11 @@
+{
+    "package"       : "mysli/request",
+    "role"          : "request",
+    "instantiation" : "once",
+    "version"       : 1,
+    "depends_on"    : {
+        "~core"   : ">= 1"
+    },
+    "maintainer"    : "Marko Gajšt <marko@gaj.st>",
+    "description"   : "Mysli Core Request Package."
+}

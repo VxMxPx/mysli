@@ -1,9 +1,0 @@
-{
-    "library"       : "mysli/core",
-    "role"          : "core",
-    "instantiation" : "never",
-    "version"       : 1,
-    "depends_on"    : [],
-    "maintainer"    : "Marko Gajšt <marko@gaj.st>",
-    "description"   : "Mysli Core."
-}

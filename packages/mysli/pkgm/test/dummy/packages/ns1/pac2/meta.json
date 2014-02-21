@@ -1,0 +1,10 @@
+{
+    "package"       : "ns1/pac2",
+    "instantiation" : "once",
+    "version"       : 1,
+    "depends_on"    : {
+        "~pac1"    : ">= 1"
+    },
+    "maintainer"    : "Marko Gajšt <marko@gaj.st>",
+    "description"   : "Test package."
+}

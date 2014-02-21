@@ -10,14 +10,14 @@ Mysli Installer (v" . MYSLI_INSTALLER_VERSION . ")
 
 Usage: ./installer [OPTIONS]...
 
-  -l, --libpath <name>   Path where the libraries are. The default is: ../mysli
+  -p, --pkgpath <name>   Path where packages are. The default is: ../packages
   -d, --datpath <name>   Data / private path (where configuration and databases
                          will be stored. Should not be URL accessible).
                          The default is: ../private
-  -r, -rewrite <options> Rewrite core libraries, in format: role:vendor\lib,...
+  -r, -rewrite <options> Rewrite core packages, in format: role:vendor\package,...
                          The default values are:
                          config:mysli/config,core:mysli/core,cli:mysli/dot,
-                         event:mysli/event,librarian:mysli/librarian
+                         event:mysli/event,pkgm:mysli/pkgm
 
   -y                     Assume `yes` as an answer to all questions.
   -h, --help             Print this help.
@@ -73,8 +73,8 @@ if (!file_exists(__DIR__ . DIRECTORY_SEPARATOR . 'common.php')) {
 include __DIR__ . DIRECTORY_SEPARATOR . 'common.php';
 
 // Get cli parameters...
-$short = 'l:d:r:hy';
-$long  = ['libpath:', 'datpath:', 'rewrite:', 'help'];
+$short = 'p:d:r:hy';
+$long  = ['pkgpath:', 'datpath:', 'rewrite:', 'help'];
 $options = getopt($short, $long);
 
 // Do we have help request?
@@ -83,16 +83,15 @@ if (get_opt_val($options, 'h', 'help', 'not') !== 'not') {
     exit(0);
 }
 
-// Get libpath
-$libraries = [
-    'config'        => 'mysli/config',
-    'core'          => 'mysli/core',
-    'cli'           => 'mysli/dot',
-    'event'         => 'mysli/event',
-    'librarian'     => 'mysli/librarian',
+$packages = [
+    'config' => 'mysli/config',
+    'core'   => 'mysli/core',
+    'cli'    => 'mysli/dot',
+    'event'  => 'mysli/event',
+    'pkgm'   => 'mysli/pkgm',
 ];
 $is_yes  = !get_opt_val($options, 'y', false, true); // Need to invert it
-$libpath = get_opt_val($options, 'l', 'libpath', '../mysli');
+$pkgpath = get_opt_val($options, 'p', 'pkgpath', '../packages');
 $datpath = get_opt_val($options, 'd', 'datpath', '../private');
 $rewrite = get_opt_val($options, 'r', 'rewrite', '');
 $rewrite = explode(',', $rewrite);
@@ -100,18 +99,18 @@ foreach ($rewrite as $rw_item) {
     $rw_item = explode(':', $rw_item);
     if (!isset($rw_item[1])) continue;
     $role = trim($rw_item[0]);
-    $lib  = trim($rw_item[1]);
-    if (!isset($libraries[$role])) continue;
-    $libraries[$role] = $lib;
+    $pac  = trim($rw_item[1]);
+    if (!isset($packages[$role])) continue;
+    $packages[$role] = $pac;
 }
 
 // Absolute full path is needed; if relative path was provided,
 // it needs to be resolved!
 
 // Resolve paths
-$libpath = resolve_path(dst($libpath, 'lib'), __DIR__ . DIRECTORY_SEPARATOR);
-if ($libpath[1]) print_line_and_die('Library path is invalid.');
-$libpath = $libpath[0];
+$pkgpath = resolve_path($pkgpath, __DIR__ . DIRECTORY_SEPARATOR);
+if ($pkgpath[1]) print_line_and_die('Packages path is invalid.');
+$pkgpath = rtrim($pkgpath[0], DIRECTORY_SEPARATOR);
 
 $datpath = resolve_path($datpath, __DIR__ . DIRECTORY_SEPARATOR);
 $datpath = $datpath[1] ? implode('', $datpath) : $datpath[0];
@@ -120,11 +119,11 @@ $datpath = $datpath[1] ? implode('', $datpath) : $datpath[0];
 print_line('Review before setup:');
 print_line(null);
 print_line('--- Paths ---');
-print_line('Private   ' . $datpath);
-print_line('Libraries ' . $libpath);
+print_line('Private  ' . $datpath);
+print_line('Packages ' . $pkgpath);
 print_line(null);
-print_line('--- List of libraries to enable ---');
-print_line(nice_array($libraries));
+print_line('--- List of packages to enable ---');
+print_line(nice_array($packages));
 
 if (!$is_yes) {
     fwrite(STDOUT, 'Proceed? [Y/n] ');
@@ -134,103 +133,29 @@ if (!$is_yes) {
 }
 
 // Validate data...
-if (!file_exists($libpath))
-    print_line_and_die('Cannot continue, libraries path is not valid: ' . $libpath);
+if (!file_exists($pkgpath))
+    print_line_and_die('Cannot continue, packages path is not valid: ' . $pkgpath);
 
 $missing = [];
-foreach ($libraries as $role => $lib)
-    if (!file_exists(dst($libpath, $lib)))
-        $missing[$lib] = dst($libpath, $lib);
+foreach ($packages as $role => $pac)
+    if (!file_exists(dst($pkgpath, $pac)))
+        $missing[$pac] = dst($pkgpath, $pac);
 
 if (!empty($missing))
-    print_line_and_die("Libraries not found:\n" . nice_array($missing));
+    print_line_and_die("Packages not found:\n" . nice_array($missing));
 
-// Enable the core library...
-if ( ! ($core = enable_core($libraries['core'], $libpath, $datpath, 'print_line_and_die')) ) {
+// Enable the core package...
+if ( ! ($core = enable_core($packages['core'], $pkgpath, $datpath, 'print_line_and_die')) ) {
     print_line('Core was successfully enabled.');
 }
 
-// Enable the librarian...
-if ( ! ($librarian = enable_librarian($libraries['librarian'], $libpath, 'print_line_and_die')) ) {
-    print_line('Librarian was successfully enabled.');
+// Enable pkgm...
+if ( ! ($pkgm = enable_pkgm($packages['pkgm'], $pkgpath, 'print_line_and_die')) ) {
+    print_line('Done: `pkgm` (packages manager) was successfully enabled.');
 }
 
-// Librarian add core
-$librarian->enable($libraries['core']);
-lib_enable($librarian, $libraries['config'], 'print_line_and_die');
-lib_enable($librarian, $libraries['cli'], 'print_line_and_die');
-lib_enable($librarian, $libraries['event'], 'print_line_and_die');
-
-die(0);
-
-// Construct core setup
-print_line('Locating setup for core: ' . $core);
-$setup_file = realpath(dst($libpath, $core, 'setup.php'));
-if (!file_exists($setup_file)) {
-    print_line('Cannot find setup file: ' . $setup_file);
-    exit(1);
-}
-include $setup_file;
-$core_arr = explode('/', $core);
-$class_name = to_camelcase($core_arr[0]) . '\\' . to_camelcase($core_arr[1]) . '\\' . 'Setup';
-if (!class_exists($class_name, false)) {
-    print_line('Cannot find setup class: ' . $class_name);
-    exit(1);
-}
-
-
-
-print_line('Setup class was found: ' . $class_name);
-$setup = new $class_name([
-    'pubpath' => $pubpath,
-    'libpath' => $libpath,
-    'datpath' => $datpath
-]);
-if (!method_exists($setup, 'before_enable')) {
-    print_line('Method was not found: before_enable');
-    exit(1);
-}
-
-if (!$setup->before_enable()) {
-    print_line('Error when enabling core!');
-    exit(1);
-}
-
-print_line('Core was successfully enabled.');
-$setup->after_enable();
-
-// Construct Core
-print_line('Locating main core file: ' . $core);
-$core_file = realpath(dst($libpath, $core, 'core.php'));
-if (!file_exists($core_file)) {
-    print_line('Cannot find core file: ' . $core_file);
-    exit(1);
-}
-include $core_file;
-$core_class_name = to_camelcase($core_arr[0]) . '\\' . to_camelcase($core_arr[1]);
-if (!class_exists($core_class_name, false)) {
-    print_line('Cannot find core class: ' . $core_class_name);
-    exit(1);
-}
-$core = new $core_class_name($pubpath, $libpath, $datpath);
-$dot_lib = $core->librarian->resolve('*/dot');
-$dot_dependencies = $core->librarian->get_dependencies($dot_lib);
-if (!empty($dot_dependencies['missing']) || !empty($dot_dependencies['disabled'])) {
-    print_line('Cannot enable DOT libraray. Command line interface will not be available.');
-    exit(6);
-}
-// Deal with the setup...
-$setup = $core->librarian->construct_setup($dot_lib);
-if (!$setup->before_enable()) {
-    print_line('Setup for DOT failed.');
-    exit(6);
-}
-if (!$core->librarian->enable($dot_lib)) {
-    $setup->after_enable();
-    print_line('Failed to enable DOT.');
-    exit(6);
-} else {
-    print_line('DOT was successfully enabled.');
-}
-
-exit(0);
+// Pkgm add core
+$pkgm->enable($packages['core']);
+pkg_enable($pkgm, $packages['config'], 'print_line_and_die');
+pkg_enable($pkgm, $packages['cli'], 'print_line_and_die');
+pkg_enable($pkgm, $packages['event'], 'print_line_and_die');

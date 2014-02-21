@@ -1,15 +1,15 @@
 <?php
-function enable_helper($librarian, $library, callable $errout)
+function enable_helper($pkgm, $package, callable $errout)
 {
-    $setup = $librarian->construct_setup($library);
+    $setup = $pkgm->construct_setup($package);
 
     if (method_exists($setup, 'before_enable') && !$setup->before_enable()) {
-        $errout('Setup failed for: ' . $library);
+        $errout('Setup failed for: ' . $package);
         return false;
     }
 
-    if (!$librarian->enable($library)) {
-        $errout('Failed to enable: ' . $library);
+    if (!$pkgm->enable($package)) {
+        $errout('Failed to enable: ' . $package);
         return false;
     }
 
@@ -19,80 +19,80 @@ function enable_helper($librarian, $library, callable $errout)
 
     return true;
 }
-function lib_enable($librarian, $library, callable $errout)
+function pkg_enable($pkgm, $package, callable $errout)
 {
-    if ($librarian->is_enabled($library)) {
-        $errout("Library is already enabled: `{$library}`.");
+    if ($pkgm->is_enabled($package)) {
+        $errout("Package is already enabled: `{$package}`.");
         return false;
     }
 
-    if (!$librarian->resolve($library, 'disabled')) {
-        $errout("Library not found: `{$library}`.");
+    if (!$pkgm->resolve($package, 'disabled')) {
+        $errout("Package not found: `{$package}`.");
         return false;
     }
 
-    $dependencies = $librarian->get_dependencies($library, true);
+    $dependencies = $pkgm->get_dependencies($package, true);
     if (!empty($dependencies['missing'])) {
-        $errout('Cannot enable, following libraries are missing: ' .
+        $errout('Cannot enable, following packages are missing: ' .
             print_r($dependencies['missing'], true));
         return false;
     }
 
     if (count($dependencies['disabled'])) {
         foreach ($dependencies['disabled'] as $dependency => $version) {
-            if (!enable_helper($librarian, $dependency, $errout)) {
+            if (!enable_helper($pkgm, $dependency, $errout)) {
                 return false;
             }
         }
     }
 
-    return enable_helper($librarian, $library, $errout);
+    return enable_helper($pkgm, $package, $errout);
 }
-function enable_librarian($librarian, $libpath, callable $errout)
+function enable_pkgm($pkgm, $pkgpath, callable $errout)
 {
-    $setup_file = dst($libpath, $librarian, 'setup.php');
-    $setup_class = lib_to_ns($librarian) . '\\Setup';
+    $setup_file = dst($pkgpath, $pkgm, 'setup.php');
+    $setup_class = pkg_to_ns($pkgm) . '\\Setup';
     if (!file_exists($setup_file)) {
-        $errout('Cannot find the librarian setup file in: ' . $setup_file);
+        $errout('Cannot find the `pkgm` setup file in: ' . $setup_file);
         return false;
     }
     include($setup_file);
     $setup = new $setup_class();
     if (method_exists($setup, 'before_enable')) {
         if (!$setup->before_enable()) {
-            $errout('Cannot setup librarian: `before_enable` failed.');
+            $errout('Cannot setup `pkgm`: `before_enable` failed.');
             return false;
         }
     }
     if (method_exists($setup, 'after_enable'))  {
         if (!$setup->after_enable()) {
-            $errout('Cannot setup librarian: `after_enable` failed.');
+            $errout('Cannot setup `pkgm`: `after_enable` failed.');
             return false;
         }
     }
-    $lib_file = dst($libpath, get_lib_index($librarian));
-    $lib_class = lib_to_ns($librarian);
-    if (!file_exists($lib_file)) {
-        $errout('Cannot find librarian class file in: ' . $lib_file);
+    $pkg_file = dst($pkgpath, get_pkg_index($pkgm));
+    $pkg_class = pkg_to_ns($pkgm);
+    if (!file_exists($pkg_file)) {
+        $errout('Cannot find `pkgm` class file in: ' . $pkg_file);
         return false;
     }
-    if (!class_exists($lib_class, false)) {
-        include $lib_file;
+    if (!class_exists($pkg_class, false)) {
+        include $pkg_file;
     }
-    $librarian = new $lib_class();
-    return $librarian;
+    $pkgm = new $pkg_class();
+    return $pkgm;
 }
-function enable_core($corelib, $libpath, $datpath, callable $errout)
+function enable_core($core_pkg, $pkgpath, $datpath, callable $errout)
 {
-    $setup_file = dst($libpath, $corelib, 'setup.php');
-    $setup_class = lib_to_ns($corelib) . '\\Setup';
+    $setup_file = dst($pkgpath, $core_pkg, 'setup.php');
+    $setup_class = pkg_to_ns($core_pkg) . '\\Setup';
     if (!file_exists($setup_file)) {
         $errout('Cannot find core setup file in: ' . $setup_file);
         return false;
     }
     include($setup_file);
     $setup = new $setup_class([
-        'libpath' => $libpath,
+        'pkgpath' => $pkgpath,
         'datpath' => $datpath
     ]);
     if (method_exists($setup, 'before_enable')) {
@@ -107,31 +107,31 @@ function enable_core($corelib, $libpath, $datpath, callable $errout)
             return false;
         }
     }
-    $lib_file = dst($libpath, get_lib_index($corelib));
-    $lib_class = lib_to_ns($corelib);
-    if (!file_exists($lib_file)) {
-        $errout('Cannot find core file in: ' . $lib_file);
+    $pkg_file = dst($pkgpath, get_pkg_index($core_pkg));
+    $pkg_class = pkg_to_ns($core_pkg);
+    if (!file_exists($pkg_file)) {
+        $errout('Cannot find core file in: ' . $pkg_file);
         return false;
     }
-    include $lib_file;
-    $core = new $lib_class($datpath, $libpath);
+    include $pkg_file;
+    $core = new $pkg_class($datpath, $pkgpath);
     return $core;
 }
-// Get library index, for example from: vendor/lib => vendor/lib/lib.php
-function get_lib_index($library)
+// Get package's index, for example from: vendor/pkg => vendor/pkg/pkg.php
+function get_pkg_index($package)
 {
-    $library_segments = explode('/', $library);
-    $library_last = array_pop($library_segments);
-    return dst($library, $library_last . '.php');
+    $package_segments = explode('/', $package);
+    $package_last = array_pop($package_segments);
+    return dst($package, $package_last . '.php');
 }
-// Convert library: `vendor/lib` to class, namespace: Vendor\\Lib
-function lib_to_ns($library)
+// Convert package: `vendor/pkg` to class, namespace: Vendor\\Pkg
+function pkg_to_ns($package)
 {
-    if (strpos($library, '/') === false) {
-        return $library;
+    if (strpos($package, '/') === false) {
+        return $package;
     }
 
-    $class = to_camelcase($library);
+    $class = to_camelcase($package);
     $class = str_replace('/', '\\', $class);
 
     return $class;
