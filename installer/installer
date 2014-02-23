@@ -16,8 +16,8 @@ Usage: ./installer [OPTIONS]...
                          The default is: ../private
   -r, -rewrite <options> Rewrite core packages, in format: role:vendor\package,...
                          The default values are:
-                         config:mysli/config,core:mysli/core,cli:mysli/dot,
-                         event:mysli/event,pkgm:mysli/pkgm
+                         core:mysli/core,cli:mysli/dot,event:mysli/event,
+                         pkgm:mysli/pkgm
 
   -y                     Assume `yes` as an answer to all questions.
   -h, --help             Print this help.
@@ -84,7 +84,6 @@ if (get_opt_val($options, 'h', 'help', 'not') !== 'not') {
 }
 
 $packages = [
-    'config' => 'mysli/config',
     'core'   => 'mysli/core',
     'cli'    => 'mysli/dot',
     'event'  => 'mysli/event',
@@ -154,8 +153,8 @@ if ( ! ($pkgm = enable_pkgm($packages['pkgm'], $pkgpath, 'print_line_and_die')) 
     print_line('Done: `pkgm` (packages manager) was successfully enabled.');
 }
 
-// Pkgm add core
+// Pkgm add core and itself
 $pkgm->enable($packages['core']);
-pkg_enable($pkgm, $packages['config'], 'print_line_and_die');
+$pkgm->enable($packages['pkgm']);
 pkg_enable($pkgm, $packages['cli'], 'print_line_and_die');
 pkg_enable($pkgm, $packages['event'], 'print_line_and_die');
