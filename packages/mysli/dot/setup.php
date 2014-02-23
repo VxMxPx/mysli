@@ -20,6 +20,7 @@ class Setup
         );
         // Create index.php
         file_put_contents(datpath('dot'), $dot_contents);
+        system('cd ' . datpath() . ' && chmod +x dot');
 
         return true;
     }
