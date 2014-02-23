@@ -17,8 +17,6 @@ class Setup
         if (!class_exists('Mysli\\Pkgm', false)) {
             include pkgpath('mysli/pkgm/pkgm.php');
         }
-        $pkgm = new \Mysli\Pkgm();
-        $pkgm->enable('mysli/pkgm');
         return true;
     }
 
