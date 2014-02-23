@@ -5,9 +5,12 @@
     "depends_on"    : {
         "~core"        : ">= 1",
         "mysli/web"    : ">= 1",
-        "mysli/router" : ">= 1",
         "~event"       : ">= 1",
         "~output"      : ">= 1"
+    },
+    "inject"        : {
+        "main" : ["~output"],
+        "setup": ["mysli/web", "~event"]
     },
     "maintainer"    : "Marko Gajšt <marko@gaj.st>",
     "description"   : "Default Mysli Dashboard."

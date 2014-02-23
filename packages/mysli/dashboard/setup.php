@@ -7,7 +7,7 @@ class Setup
     protected $web;
     protected $event;
 
-    public function __construct($web, $router, $event, $output)
+    public function __construct($web, $event)
     {
         $this->web = $web;
         $this->event = $event;
@@ -19,14 +19,14 @@ class Setup
             pkgpath('mysli/dashboard/assets'),
             $this->web->path('mysli/dashboard')
         );
-        $this->event->register('*/router/route:*<dashboard*>', 'mysli/dashboard::display');
+        $this->event->register('mysli/web/route:*<dashboard*>', 'mysli/dashboard::display');
         return true;
     }
 
     public function before_disable()
     {
         \Core\FS::dir_remove($this->web->path('mysli/dashboard'));
-        $this->event->unregister('*/router/route:*<dashboard*>', 'mysli/dashboard::display');
+        $this->event->unregister('mysli/web/route:*<dashboard*>', 'mysli/dashboard::display');
         return true;
     }
 }

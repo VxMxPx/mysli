@@ -4,12 +4,10 @@ namespace Mysli;
 
 class Dashboard
 {
-    protected $web;
     protected $output;
 
-    public function __construct($web, $router, $event, $output)
+    public function __construct($output)
     {
-        $this->web = $web;
         $this->output = $output;
     }
 
