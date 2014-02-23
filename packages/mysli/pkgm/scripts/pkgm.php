@@ -31,7 +31,7 @@ class Pkgm
             'Mysli Core :: Packages Management :: ENABLE',
             'packages enable <PACKAGE NAME>'
         );
-        \Cli\Util::plain('Example: packages enable mysli/backend');
+        \Cli\Util::plain('Example: packages enable mysli/config');
         return true;
     }
     protected function enable_helper($pkg)
@@ -72,8 +72,10 @@ class Pkgm
             return false;
         }
         if (count($dependencies['disabled'])) {
-            \Cli\Util::plain('The following packages needs to be enabled: ' .
-                print_r($dependencies['disabled'], true));
+            \Cli\Util::plain(
+                "The following packages needs to be enabled: \n\n" .
+                \Core\Arr::readable($dependencies['disabled'], 2) . "\n"
+            );
             if (!\Cli\Util::confirm('Continue and enable required packages?')) {
                 \Cli\Util::plain('Process terminated.');
                 return false;
@@ -93,7 +95,7 @@ class Pkgm
             'Mysli Core :: Packages Management :: DISABLE',
             'packages disable <PACKAGE NAME>'
         );
-        \Cli\Util::plain('Example: packages disable mysli/backend');
+        \Cli\Util::plain('Example: packages disable mysli/config');
         return true;
     }
     protected function disable_helper($pkg)
@@ -125,9 +127,10 @@ class Pkgm
         }
         $dependees = $this->pkgm->get_dependees($pkg, true);
         if (!empty($dependees)) {
-            \Cli\Util::plain('The following packages depends on the `'. $pkg .
-                '` and need to be disabled: ' .
-                print_r($dependees, true));
+            \Cli\Util::plain(
+                "The following packages depends on the `{$pkg}` and need to be disabled:\n\n" .
+                \Core\Arr::readable($dependees, 2) . "\n"
+            );
             if (!\Cli\Util::confirm('Disable listed packages?')) {
                 \Cli\Util::plain('Process terminated.');
                 return false;
@@ -155,10 +158,7 @@ class Pkgm
         switch (strtolower($type)) {
             case 'enabled':
                 \Cli\Util::nl();
-                \Cli\Util::plain(\Core\Arr::readable(
-                    $this->pkgm->get_enabled(),
-                    ' : ', "\n", 2, 2
-                ), true);
+                \Cli\Util::plain(\Core\Arr::readable($this->pkgm->get_enabled(), 2), true);
                 break;
 
             case 'disabled':
