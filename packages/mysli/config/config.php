@@ -11,19 +11,18 @@ class Config
     /**
      * Construct CONFIG
      * --
-     * @param array  $info Info from the pkgm
+     * @param array  $pkgm_trace List of requed packages from the pkgm
      */
-    public function __construct(array $info)
+    public function __construct(array $pkgm_trace)
     {
-        // A little bit of magic...
-        // Pkgm always send, as the last element, _information_, which is an
-        // array, containing the information about the request (e.g. - who required
-        // particular package). In this case, we'll use this info, to construct
-        // costumized config, containing only element meant for particular package.
-        $package   = \Core\Arr::element('requested_by', $info);
-        array_pop($package); // Remove self
-        $package = array_pop($package);
-        $package   = str_replace('/', '.', $package);
+        // Pkgm trace is array, list of packages, which required this package.
+        // In this case, we'll use this info, to construct
+        // costumized config, containing only element meant for package, which
+        // required config.
+        array_pop($pkgm_trace); // Remove self
+        $package = array_pop($pkgm_trace); // Get actual package which required config.
+        $package = str_replace('/', '.', $package);
+
         $this->filename = datpath('config', $package . '.json');
 
         // If we have file, then load contents...

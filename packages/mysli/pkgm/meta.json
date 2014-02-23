@@ -6,6 +6,10 @@
     "depends_on"    : {
         "~core" : ">= 1"
     },
+    "inject" : {
+        "exclude": ["~core"],
+        "script" : ["#main"]
+    },
     "maintainer"    : "Marko Gajšt <marko@gaj.st>",
     "description"   : "Mysli Packages Manager (pkgm)."
 }

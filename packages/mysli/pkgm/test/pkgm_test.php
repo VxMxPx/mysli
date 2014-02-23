@@ -21,16 +21,12 @@ class PkgmTest extends \PHPUnit_Framework_TestCase
 
     protected function reset_packages()
     {
-        file_put_contents(
-            datpath('pkgm/registry.json'),
-            // Create dummy reference to itself so that
-            // pkgm exceptions autoloader will function correctly.
-            '{"mysli/pkgm" : {"package" : "mysli/pkgm"}}'
-        );
+        file_put_contents(datpath('pkgm/registry.json'), '{}');
         $pkgm = new Pkgm();
         $pkgm->enable('ns1/pac1');
         $pkgm->enable('ns1/pac2');
         $pkgm->enable('ns2/paca');
+        $pkgm->enable('ns3/pac3a');
         return $pkgm;
     }
 
@@ -158,7 +154,8 @@ class PkgmTest extends \PHPUnit_Framework_TestCase
 
     public function test_dependencies_factory()
     {
-        $dependencies = $this->pkgm->dependencies_factory('ns2/paca');
+        $details = $this->pkgm->get_details('ns2/paca');
+        $dependencies = $this->pkgm->dependencies_factory($details['depends_on']);
         $this->assertInstanceOf('Ns1\\Pac2', $dependencies['pac2']);
     }
 
@@ -284,7 +281,7 @@ class PkgmTest extends \PHPUnit_Framework_TestCase
     public function test_get_dependees()
     {
         $this->assertEquals(
-            ['ns1/pac2'],
+            ['ns1/pac2', 'ns3/pac3a'],
             $this->pkgm->get_dependees('ns1/pac1')
         );
     }
@@ -295,5 +292,10 @@ class PkgmTest extends \PHPUnit_Framework_TestCase
     //         ['mysli/backend', 'mysli/session'],
     //         $this->pkgm->get_dependees('mysli/users', true)
     //     );
+    // }
+
+    // public function test_dump_final()
+    // {
+    //     $this->pkgm->factory('ns3/pac3a');
     // }
 }

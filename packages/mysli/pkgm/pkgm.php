@@ -42,6 +42,14 @@ class Pkgm
             );
         }
 
+        // Manually load exceptions
+        if (!class_exists('Mysli\\Pkgm\\DependencyException', false)) {
+            include ds(__DIR__, 'exceptions/dependency.php');
+        }
+        if (!class_exists('Mysli\\Pkgm\\PackageException', false)) {
+            include ds(__DIR__, 'exceptions/package.php');
+        }
+
         // Register itself as an autoloader
         spl_autoload_register([$this, 'autoloader']);
 
@@ -308,13 +316,10 @@ class Pkgm
         $object = new \ReflectionClass($class);
         if ($object->hasMethod('__construct')) {
             try {
-                $dependencies = $this->dependencies_factory($package);
+                $dependencies = $this->dependencies_factory($info['inject']['main']);
             } catch (\Exception $e) {
                 $this->producing = [];
                 throw $e;
-            }
-            if (\Core\Arr::element('request_info', $info) === true) {
-                $dependencies[]['requested_by'] = $this->producing;
             }
             $object = $object->newInstanceArgs($dependencies);
         } else {
@@ -334,7 +339,7 @@ class Pkgm
     /**
      * Construct dependencies from the list. Will return an array of objects.
      * --
-     * @param  string $package
+     * @param  array $dependencies
      * --
      * @throws DependencyException If can't get details for dependency. (10)
      * @throws DependencyException If dependency is missing. (20)
@@ -343,20 +348,23 @@ class Pkgm
      * --
      * @return array
      */
-    public function dependencies_factory($package)
+    public function dependencies_factory(array $dependencies)
     {
         $result = [];
 
-        $info = $this->get_details($package);
-        if (!$info) {
-            throw new \Mysli\Pkgm\DependencyException(
-                "Cannot get details for: '{$package}'.",
-                10
-            );
-        }
-        $dependencies = $info['depends_on'];
-
         foreach ($dependencies as $dependency => $version) {
+
+            // Check if we have #<speacial instruction>
+            if (substr($dependency, 0 ,1) === '#') {
+                if ($dependency === '#pkgm_trace') {
+                    $result[$dependency] = $this->producing;
+                } else {
+                    $result[$dependency] = null;
+                }
+                continue;
+            }
+
+            // Resolve the dependency
             $dependency_resovled = $this->resolve($dependency, 'enabled');
 
             // Check if we have match
@@ -431,19 +439,21 @@ class Pkgm
         // Get info!
         $info = $this->get_details($package);
 
+        // If this is disabled package,
+        // then we need to resolve dependencies => inject.
+        if (!$this->is_enabled($package)) {
+            $info = $this->process_injections($info);
+        }
+
         // Construct and return
         $this->producing[] = $package;
         $object = new \ReflectionClass($setup_class_name);
         if ($object->hasMethod('__construct')) {
             try {
-                $dependencies = $this->dependencies_factory($package);
+                $dependencies = $this->dependencies_factory($info['inject']['setup']);
             } catch (\Exception $e) {
                 $this->producing = [];
                 throw $e;
-            }
-            // Should we append info about package from where request was made?
-            if (\Core\Arr::element('request_info', $info) === true) {
-                $dependencies[]['requested_by'] = $this->producing;
             }
             $instance = $object->newInstanceArgs($dependencies);
         } else {
@@ -466,6 +476,11 @@ class Pkgm
      */
     public function autoloader($class)
     {
+        // Cannot handle non-namespaced packages
+        if (strpos($class, '\\') === false && strpos($class, '/') === false) {
+            return;
+        }
+
         // Perhaps it's a sub-class of a package? (\Mysli\Package\SubClass)
         if (substr_count($class, '\\') > 1) {
 
@@ -474,15 +489,16 @@ class Pkgm
             // Create an array of path segments
             $segments = explode('/', $path);
             // The actual package name consist of first two segments
-            $package = $segments[0] . '/'  . $segments[1];
+            $package = $segments[0] . '/' . $segments[1];
 
             // The package must be enabled...
             if (!$this->is_enabled($package)) {
-                throw new \Mysli\Pkgm\PackageException(
-                    "Cannot load class: `{$class}`, ".
-                    "package is not enabled: `{$package}`.",
-                    1
-                );
+                return;
+                // throw new \Mysli\Pkgm\PackageException(
+                //     "Cannot load class: `{$class}`, ".
+                //     "package is not enabled: `{$package}`.",
+                //     1
+                // );
             }
 
             // Are we dealing with exception?
@@ -504,8 +520,12 @@ class Pkgm
             // All is ok, include the file.
             include $path;
         } else {
-            $package = $this->ns_to_pkg($class);
-            $this->load($package);
+            try {
+                $package = $this->ns_to_pkg($class);
+                $this->load($package);
+            } catch (\Exception $e) {
+                return;
+            }
         }
     }
 
@@ -805,6 +825,67 @@ class Pkgm
     }
 
     /**
+     * Will properly process inject section of info file.
+     * --
+     * @param  array  $info
+     * --
+     * @return array
+     */
+    protected function process_injections(array $info)
+    {
+        if (!isset($info['inject']) || !is_array($info['inject'])) {
+            $info['inject'] = [];
+        }
+
+        // Get exclude if exists.
+        $exclude = \Core\Arr::element('exclude', $info['inject'], []);
+        if (!is_array($exclude)) {
+            trigger_error(
+                'Badly formatted `meta.json`, for: `' . $info['package'] .
+                '`. Make sure that [inject][exclude] is valid array.',
+                E_USER_WARNING
+            );
+            $exclude = [$exclude];
+        }
+
+        // Dependencies minus exclusion
+        $depends_on = $info['depends_on'];
+        if (!isset($info['inject']['main'])) $info['inject']['main']   = array_keys($depends_on);
+        if (!isset($info['inject']['setup'])) $info['inject']['setup'] = array_keys($depends_on);
+
+        foreach ($info['inject'] as $section => $packages) {
+            if ($section === 'exclude') continue;
+            if (!empty($exclude)) {
+                $info['inject'][$section] = array_diff(
+                    $info['inject'][$section],
+                    $exclude
+                );
+                $packages = $info['inject'][$section];
+            }
+            if (empty($packages)) { continue; }
+            $info['inject'][$section] = [];
+            foreach ($packages as $package) {
+                if (isset($depends_on[$package])) {
+                    // Set version!
+                    $info['inject'][$section][$package] = $depends_on[$package];
+                } elseif (substr($package, 0, 1) === '#') {
+                    // Special directive.
+                    // No version needed in this case.
+                    $info['inject'][$section][$package] = 0;
+                } else {
+                    trigger_error(
+                        'Badly formatted `meta.json`. Package in inject `'.
+                        $package . '` is not included in `depends_on` array.',
+                        E_USER_WARNING
+                    );
+                }
+            }
+        }
+
+        return $info;
+    }
+
+    /**
      * Will enable particular package. Please note that this won't resolve
      * dependencies, you must do that manually.
      * This also won't call the setup automatically!
@@ -840,6 +921,9 @@ class Pkgm
                 $this->enabled[$dependency]['required_by'][] = $package;
             }
         }
+
+        // Process injections
+        $info = $this->process_injections($info);
 
         // Add package's details to the register
         $info['required_by'] = [];

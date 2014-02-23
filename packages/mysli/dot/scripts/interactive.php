@@ -55,6 +55,7 @@ class Interactive
         \Cli\Util::plain('Normal PHP commands are accepted, example: `$var = \'value\'`.');
         \Cli\Util::plain('You don\'t need to enter `echo` and you can omit semicolons.');
         \Cli\Util::plain('If you want command not to be echoed automatically, prefix it with dot `.`.');
+        \Cli\Util::plain('You can use package manager to get packages: `$pkgm->factory`...');
         \Cli\Util::plain('Enter `q` or `exit` to quit.');
     }
 }

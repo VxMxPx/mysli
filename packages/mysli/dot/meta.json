@@ -7,6 +7,10 @@
         "~core" : ">= 1",
         "~pkgm" : ">= 1"
     },
+    "inject"        : {
+        "exclude"   : ["~core"],
+        "script"    : ["#main", "~pkgm"]
+    },
     "maintainer"    : "Marko Gajšt <marko@gaj.st>",
     "description"   : "Mysli Dot: Command Line Interface."
 }

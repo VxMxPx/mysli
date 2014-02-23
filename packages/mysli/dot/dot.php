@@ -119,12 +119,15 @@ class Dot
 
         $object = new \ReflectionClass($class);
         if ($object->hasMethod('__construct')) {
-            $dependencies = [];
-            $dependencies[] = $this->pkgm->factory($package);
-            $dependencies = array_merge(
-                $dependencies,
-                $this->pkgm->dependencies_factory($package)
-            );
+            $info = $this->pkgm->get_details($package);
+            $dependencies_list = array_key_exists('script', $info['inject'])
+                ? $info['inject']['script']
+                : $info['inject']['main'];
+            // Do we need main class?
+            $dependencies = $this->pkgm->dependencies_factory($dependencies_list);
+            if (array_key_exists('#main', $dependencies)) {
+                $dependencies['#main'] = $this->pkgm->factory($package);
+            }
             return $object->newInstanceArgs($dependencies);
         } else {
             return $object->newInstanceWithoutConstructor();

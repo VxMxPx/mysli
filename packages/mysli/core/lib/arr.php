@@ -38,10 +38,10 @@ class Arr
 
         foreach ($input_array as $item)
         {
-            if (!isset($item[$value])) continue;
+            if (!array_key_exists($value, $item)) continue;
 
-            if ($key && isset($item[$key])) {
-                if (!in_array($item[$key], $rewritable) && isset($result[$item[$key]])) {
+            if ($key && array_key_exists($key, $item)) {
+                if (!in_array($item[$key], $rewritable) && array_key_exists($item[$key], $result)) {
                     $result[$position] = $result[$item[$key]];
                 }
                 $result[$item[$key]] = $item[$value];
@@ -53,7 +53,7 @@ class Arr
             $position = 0;
             do {
                 $position++;
-            } while(isset($result[$position]));
+            } while(array_key_exists($position, $result));
         }
 
         return $result;
@@ -109,15 +109,15 @@ class Arr
 
         foreach($input_array as $item)
         {
-            if (isset($item[$index_key]))
+            if (array_key_exists($index_key, $item))
             {
-                if (isset($result[$item[$index_key]]) && !$rewrite) {
+                if (array_key_exists($item[$index_key], $result) && !$rewrite) {
                     $i = 2;
                     do {
                         $new_key = $item[$index_key].'_'.$i;
                         $i++;
                     }
-                    while (isset($result[$new_key]));
+                    while (array_key_exists($new_key, $result));
                     $result[$new_key] = $item;
                 }
                 else {
@@ -130,7 +130,7 @@ class Arr
                     $new_key = $i;
                     $i++;
                 }
-                while (isset($result[$new_key]));
+                while (array_key_exists($new_key, $result));
                 $result[$new_key] = $item;
             }
         }
@@ -269,7 +269,7 @@ class Arr
         foreach($input_array as $val) {
             $value = explode($separator, $val, 2);
 
-            if (isset($value[0]) && isset($value[1])) {
+            if (array_key_exists(0, $value) && array_key_exists(1, $value)) {
                 $new_array[trim($value[0])] = trim($value[1]);
             } elseif (!$ignore_non_existent) {
                 $new_array[] = $val;
@@ -315,7 +315,7 @@ class Arr
 
             $new_array[$key] = $val;
 
-            while (isset($new_array[$position])) {
+            while (array_key_exists($position, $new_array)) {
                 $position++;
             }
         }
@@ -336,7 +336,8 @@ class Arr
     }
 
     /**
-     * Check if input is array and if the required key is set.
+     * Check if input is array and if the required key is exists.
+     * This is using array_key_exists so key => null will return true.
      * --
      * @param  mixed  $input_array
      * @param  string $key
@@ -346,12 +347,13 @@ class Arr
     public static function has_key($input_array, $key)
     {
         if (self::is_empty($input_array)) { return false; }
-        return isset($input_array[$key]);
+        return array_key_exists($key, $input_array);
     }
 
     /**
      * Check if array has ALL required keys. Returns true only if all keys are
      * found, and false otherwise.
+     * This is using array_key_exists so key => null will return true.
      * --
      * @param  array  $input_array
      * @param  array  $keys
@@ -360,11 +362,12 @@ class Arr
      */
     public static function has_keys(array $input_array, array $keys)
     {
-        if (self::is_empty($input_array) || self::is_empty($keys))
-            { return false; }
+        if (self::is_empty($input_array) || self::is_empty($keys)) {
+            return false;
+        }
 
         foreach ($keys as $key) {
-            if (!isset($input_array[$key])) { return false; }
+            if (!array_key_exists($key, $input_array)) { return false; }
         }
 
         return true;
@@ -421,7 +424,7 @@ class Arr
 
             // If we're having default values as array, we'll check them now
             if (is_array($default)) {
-                if (isset($default[$key])) {
+                if (array_key_exists($key, $default)) {
                     $default_current = $default[$key];
                 } else {
                     $default_current = false;
@@ -432,10 +435,9 @@ class Arr
             }
 
             // Set result
-            $result[$key] =
-                isset($input_array[$key])
-                    ? $input_array[$key]
-                    : $default_current;
+            $result[$key] = array_key_exists($key, $input_array)
+                ? $input_array[$key]
+                : $default_current;
         }
 
         return $result;
@@ -482,7 +484,7 @@ class Arr
                     continue;
                 }
 
-                if (!isset($result[$key])) {
+                if (!array_key_exists($key, $result)) {
                     $result[$key] = $item;
                     continue;
                 }
@@ -557,10 +559,11 @@ class Arr
         $get  = $input_array;
 
         foreach ($path as $w) {
-            if (isset($get[$w]))
-                { $get = $get[$w]; }
-            else
-                { return $default; }
+            if (array_key_exists($w, $get)) {
+                $get = $get[$w];
+            } else {
+                return $default;
+            }
         }
 
         return $get;

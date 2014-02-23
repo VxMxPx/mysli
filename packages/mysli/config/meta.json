@@ -2,10 +2,13 @@
     "package"       : "mysli/config",
     "role"          : "config",
     "instantiation" : "always",
-    "request_info"  : true,
     "version"       : 1,
     "depends_on"    : {
         "~core" : ">= 1"
+    },
+    "inject"        : {
+        "exclude" : ["~core"],
+        "main"    : ["#pkgm_trace"]
     },
     "maintainer"    : "Marko Gajšt <marko@gaj.st>",
     "description"   : "Mysli Core Config Package."
