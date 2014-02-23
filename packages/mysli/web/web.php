@@ -7,6 +7,7 @@ class Web
     protected $pubpath;
 
     protected $event;
+    protected $request;
     protected $response;
     protected $output;
 
@@ -15,18 +16,48 @@ class Web
      * --
      * @param object $config   ~config
      * @param object $event    ~event
+     * @param object $request  ~request
      * @param object $response ~response
      * @param object $output   ~output
      */
-    public function __construct($config, $event, $response, $output)
+    public function __construct($config, $event, $request, $response, $output)
     {
         // This is defined in index.php
         // $this->pubpath = MYSLI_PUBPATH;
         $this->pubpath = realpath(datpath($config->get('relative_path')));
 
         $this->event = $event;
+        $this->request = $request;
         $this->response = $response;
         $this->output = $output;
+    }
+
+    /**
+     * Routing!
+     * --
+     * @return null
+     */
+    public function route()
+    {
+        // Get route and remove any * < > character.
+        $route = implode('/', $this->request->segments());
+        $route = str_replace(['*', '<', '>'], '', $route);
+        // Get method (post,delete,put,get)
+        $method = strtolower($this->request->get_method());
+
+        // Events...
+        $this->event->trigger(
+            "mysli/web/route:{$method}<{$route}>",
+            [$this->response]
+        );
+
+        if ($this->response->get_status() === 0) {
+            $this->response->status_404_not_found();
+        }
+
+        if ($this->response->get_status() === 404) {
+            $this->event->trigger('mysli/web/route:404');
+        }
     }
 
     /**

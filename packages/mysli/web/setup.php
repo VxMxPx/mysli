@@ -53,8 +53,9 @@ class Setup
             $index_contents
         );
 
-        // Register final event
+        // Register events
         $this->event->register('mysli/web/index:done', 'mysli/web::output');
+        $this->event->register('mysli/web/index:start', 'mysli/web::route');
 
         // Create index.php
         return !!(file_put_contents(ds($pubpath, 'index.php'), $index_contents));
@@ -70,7 +71,10 @@ class Setup
     {
         $this->config->destroy();
         \Core\FS::dir_remove(ds(datpath(), '/../public'));
+
         $this->event->unregister('mysli/web/index:done', 'mysli/web::output');
+        $this->event->unregister('mysli/web/index:start', 'mysli/web::route');
+
 
         return true;
     }
