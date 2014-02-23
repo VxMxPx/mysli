@@ -153,10 +153,10 @@ class Arr
      */
     public static function readable(
         array $input,
-        $separator = ' : ',
-        $new_line = "\n",
+        $indent = 0,
         $step = 2,
-        $indent = 0
+        $separator = ' : ',
+        $new_line = "\n"
     ) {
         $lkey = 0;
         $out  = '';
