@@ -758,13 +758,13 @@ class Pkgm
 
         foreach ($details['required_by'] as $dependee) {
             $dependees[] = $dependee;
-            $dependees = \Core\Arr::merge(
-                $this->get_dependees($dependee, true),
-                $dependees
+            array_merge(
+                $dependees,
+                $this->get_dependees($dependee, true)
             );
         }
 
-        return $dependees;
+        return array_unique($dependees);
     }
 
     /**
@@ -790,14 +790,14 @@ class Pkgm
         $info = $this->get_details($package);
 
         // Is required by other package?
-        if (!empty($info['required_by'])) {
-            // $this->log->info(
-            //     "Will disable package: '{$package}' ".
-            //     "despite the fact that it's required by: " .
-            //     dump_r($info['required_by']),
-            //     __FILE__, __LINE__
-            // );
-        }
+        // if (!empty($info['required_by'])) {
+        //     $this->log->info(
+        //         "Will disable package: '{$package}' ".
+        //         "despite the fact that it's required by: " .
+        //         dump_r($info['required_by']),
+        //         __FILE__, __LINE__
+        //     );
+        // }
 
         // Remove itself from required_by
         foreach ($info['depends_on'] as $dependency => $version) {
