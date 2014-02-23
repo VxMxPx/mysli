@@ -63,7 +63,7 @@ class Setup
 
     public function after_disable()
     {
-        \FS::dir_remove($this->datpath);
+        \Core\FS::dir_remove($this->datpath);
         return true;
     }
 }
