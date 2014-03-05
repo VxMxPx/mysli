@@ -216,6 +216,21 @@ class PkgmTest extends \PHPUnit_Framework_TestCase
         );
     }
 
+    public function test_obj_to_role()
+    {
+        $object = $this->pkgm->factory('ns1/pac1');
+        $this->assertEquals(
+            'pac1',
+            $this->pkgm->obj_to_role($object)
+        );
+    }
+
+    public function test_obj_to_role_false()
+    {
+        $this->assertFalse($this->pkgm->obj_to_role(false));
+        $this->assertFalse($this->pkgm->obj_to_role('hello-world!'));
+    }
+
     public function test_is_enabled()
     {
         $this->assertTrue(
