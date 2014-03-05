@@ -1,0 +1,14 @@
+{
+    "package"       : "mysli/csi",
+    "role"          : "csi",
+    "instantiation" : "manual",
+    "version"       : 1,
+    "depends_on"    : {
+        "~core" : ">= 1"
+    },
+    "inject" : {
+        "exclude" : ["~core"]
+    },
+    "maintainer"    : "Marko Gajšt <marko@gaj.st>",
+    "description"   : "Mysli Common Setup Interface."
+}
