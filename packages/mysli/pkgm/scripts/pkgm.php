@@ -11,6 +11,9 @@ class Pkgm
         $this->pkgm = $pkgm;
     }
 
+    /**
+     * Print general help.
+     */
     public function help_index()
     {
         \Cli\Util::doc(
@@ -19,13 +22,124 @@ class Pkgm
             [
                 'enable'  => 'Will enable particular package.',
                 'disable' => 'Will disable particular package.',
-                'list'    => 'Will list enabled / disabled packages.'
+                'list'    => 'Will list enabled / disabled / obsolete packages.'
             ]
         );
 
         return true;
     }
 
+    /**
+     * CSI Input.
+     * --
+     * @param  array $properties
+     * --
+     * @return mixed
+     */
+    protected function csi_input(array $properties)
+    {
+        if ($properties['label']) {
+            \Cli\Util::plain($properties['label']);
+        }
+        if ($properties['default']) {
+            \Cli\Util::plain(' [' . $properties['default'] . ']');
+            \Cli\Util::nl();
+        }
+
+        switch ($properties['type']) {
+            case 'input':
+                return \Cli\Util::input('', function ($input) { return $input; });
+                break;
+
+            case 'password':
+                return \Cli\Util::password('', function ($input) { return $input; });
+                break;
+
+            case 'textarea':
+                return \Cli\Util::input_multiline('', function ($input) { return $input; });
+                break;
+
+            case 'radio':
+                $options = $properties['options'];
+                \Cli\Util::plain(\Core\Arr::readable($options));
+                return \Cli\Util::input('', function ($input) use ($options) {
+                    if (!isset($options[$input])) {
+                        return null;
+                    } else {
+                        return $input;
+                    }
+                });
+                break;
+
+            case 'checkbox':
+                $options = $properties['options'];
+                \Cli\Util::plain(\Core\Arr::readable($options));
+                return \Cli\Util::input('', function ($input) use ($options) {
+                    $input = \Core\Str::explode_trim(',', $input);
+                    foreach ($input as $val) {
+                        if (!isset($options[$val])) return null;
+                    }
+                    return $input;
+                });
+                break;
+        }
+    }
+
+    /**
+     * Handle ~csi response.
+     * --
+     * @param object $csi ~csi
+     */
+    protected function csi_run($csi)
+    {
+        // Run forver, until success happened!
+        do {
+            switch ($csi->status()) {
+
+                case 'interrupted':
+                    // All fields with no value!
+                    $fields = [];
+                    foreach ($csi->get_fields() as $field_id => $properties) {
+                        if (!isset($properties['status']) === null) {
+                            $fields[$field_id] = $properties;
+                        }
+                    }
+                    break;
+
+                case 'failed':
+                    $fields = [];
+                    foreach ($csi->get_fields() as $field_id => $properties) {
+                        if (isset($properties['messages'])) {
+                            \Cli\Util::warn(implode("\n", $properties['messages']));
+                            $fields[$field_id] = $properties;
+                        }
+                    }
+                    break;
+
+                case 'none':
+                    $fields = $csi->get_fields();
+                    break;
+            }
+
+            if (empty($fields)) {
+                break;
+            }
+
+            foreach ($fields as $field_id => $properties) {
+                $value = $this->csi_input($properties);
+                $value = $value === '' && $properties['default']
+                    ? $properties['default']
+                    : $value;
+                $csi->set($field_id, $value);
+            }
+        } while (!$csi->validate());
+
+        return $csi->status() === 'success';
+    }
+
+    /**
+     * Print help for package enabling.
+     */
     public function help_enable()
     {
         \Cli\Util::doc(
@@ -37,27 +151,59 @@ class Pkgm
         return true;
     }
 
-    protected function enable_helper($pkg)
+    /**
+     * Enable helper.
+     * --
+     * @param  string $pkg
+     * @param  string $enabled_by By which package this package was enabled.
+     *                            Null if it was enable by user.
+     * --
+     * @return boolean
+     */
+    protected function enable_helper($pkg, $enabled_by = null)
     {
         $setup = $this->pkgm->construct_setup($pkg);
 
-        if (method_exists($setup, 'before_enable') && !$setup->before_enable()) {
-            \Cli\Util::error('Setup failed for: ' . $pkg);
-            return false;
+        if (method_exists($setup, 'before_enable')) {
+            do {
+                $csi = $setup->before_enable();
+                if ($this->pkgm->obj_to_role($csi) === 'csi') {
+                    $csi_result = $this->csi_run($csi);
+                } else {
+                    $csi_result = $csi;
+                }
+            } while(is_object($csi));
+
+            if ($csi_result === false) {
+                \Cli\Util::error('Setup failed for: ' . $pkg);
+                return false;
+            }
         }
 
-        if (!$this->pkgm->enable($pkg)) {
+        if (!$this->pkgm->enable($pkg, $enabled_by)) {
             \Cli\Util::error('Failed to enable: ' . $pkg);
             return false;
         } else {
-            \Cli\Util::success('Enabled: ' . $pkg);
             if (method_exists($setup, 'after_enable')) {
-                $setup->after_enable();
+                $result = $setup->after_enable();
+
+                if ($this->pkgm->obj_to_role($result) === 'csi') {
+                    $result = $this->csi_run($result);
+                }
+
+                if ($result === false) \Cli\Util::warn('Problems with: ' . $pkg);
             }
-            return true;
         }
+
+        \Cli\Util::success('Enabled: ' . $pkg);
+        return true;
     }
 
+    /**
+     * Enable particular package, and dependencies.
+     * --
+     * @param  string $pkg
+     */
     public function action_enable($pkg)
     {
         if (!$pkg) {
@@ -96,7 +242,7 @@ class Pkgm
             }
 
             foreach ($dependencies['disabled'] as $dependency => $version) {
-                if (!$this->enable_helper($dependency)) {
+                if (!$this->enable_helper($dependency, $pkg)) {
                     return false;
                 }
             }
@@ -105,6 +251,9 @@ class Pkgm
         return $this->enable_helper($pkg);
     }
 
+    /**
+     * Print help for package disabling.
+     */
     public function help_disable()
     {
         \Cli\Util::doc(
@@ -116,6 +265,13 @@ class Pkgm
         return true;
     }
 
+    /**
+     * Helper for package disabling.
+     * --
+     * @param  string $pkg
+     * --
+     * @return boolean
+     */
     protected function disable_helper($pkg)
     {
         $setup = $this->pkgm->construct_setup($pkg);
@@ -137,6 +293,11 @@ class Pkgm
         }
     }
 
+    /**
+     * Disable particular package, and sub-packages.
+     * --
+     * @param  string $pkg
+     */
     public function action_disable($pkg)
     {
         if (!$pkg) {
@@ -166,22 +327,38 @@ class Pkgm
                     return false;
                 }
             }
+        } else {
+            \Cli\Util::plain(
+                "This will disable the following package: `{$pkg}`."
+            );
+            if (!\Cli\Util::confirm('Proceed?')) {
+                \Cli\Util::plain('Process terminated.');
+                return false;
+            }
         }
 
         return $this->disable_helper($pkg);
     }
 
+    /**
+     * Print help.
+     */
     public function help_list()
     {
         \Cli\Util::doc(
             'Mysli Core :: Packages Management :: LIST',
-            'packages list <disabled|enabled>'
+            'packages list <disabled|enabled|obsolete>'
         );
         \Cli\Util::plain('Example, list all disabled packages: packages list disabled');
 
         return true;
     }
 
+    /**
+     * List packages.
+     * --
+     * @param  string $type enabled|disabled|obsolete
+     */
     public function action_list($type = null)
     {
         switch (strtolower($type)) {
@@ -197,6 +374,14 @@ class Pkgm
                 \Cli\Util::nl();
                 \Cli\Util::plain(
                     \Core\Arr::readable($this->pkgm->get_disabled(), 2),
+                    true
+                );
+                break;
+
+            case 'obsolete':
+                \Cli\Util::nl();
+                \Cli\Util::plain(
+                    \Core\Arr::readable($this->pkgm->get_obsolete(), 2),
                     true
                 );
                 break;
