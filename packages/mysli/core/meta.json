@@ -3,7 +3,12 @@
     "role"          : "core",
     "instantiation" : "never",
     "version"       : 1,
-    "depends_on"    : [],
+    "depends_on"    : {
+        "~pkgm" : ">= 1"
+    },
+    "inject" : {
+        "exclude" : ["~pkgm"]
+    },
     "maintainer"    : "Marko Gajšt <marko@gaj.st>",
     "description"   : "Mysli Core."
 }
