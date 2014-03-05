@@ -11,7 +11,7 @@ class Pkgm
     // Package filename (from where list of enabled packages is loaded and
     // where all the modifications are saved)
     protected $filename  = '';
-    // Constrcuted packages // kind of a like registry
+    // Constructed packages // kind of a like registry
     protected $cache     = [];
     // Set while creating instance of package (and all its dependencies).
     protected $producing = [];
@@ -654,6 +654,44 @@ class Pkgm
     }
 
     /**
+     * Get role for particular package.
+     * Accept (string) package name, and return role (example: mysli/core => '~core')
+     * --
+     * @param  string $package
+     * --
+     * @return mixed  - String,
+     *                - false if package not found,
+     *                - null if package has not role.
+     */
+    public function pkg_to_role($package)
+    {
+        $details = $this->get_details($package);
+
+        if (!$details) return false;
+
+        if (array_key_exists('role', $details)) {
+            return $details['role'];
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Accept object, and return role (example: $core => '~core')
+     * --
+     * @param  mixed $object Any variable, will check if is object.
+     * --
+     * @return mixed string of false if not successful
+     */
+    public function obj_to_role($object)
+    {
+        if (!is_object($object)) { return false; }
+        $class = get_class($object);
+        $pkg = $this->ns_to_pkg($class);
+        return $this->pkg_to_role($pkg);
+    }
+
+    /**
      * Check if particular package is enabled.
      * --
      * @param  string  $package
@@ -738,14 +776,16 @@ class Pkgm
      * --
      * @param  string  $package
      * @param  boolean $deep
+     * @param  array   $existing  Used internally for recursion.
      * --
      * @throws DataException If details for package couldn't be fetched.
      * --
      * @return array
      */
-    public function get_dependees($package, $deep = false)
+    public function get_dependees($package, $deep = false, array $existing = [])
     {
         $details = $this->get_details($package);
+
         if (!is_array($details) || empty($details)) {
             throw new \Core\DataException(
                 "Could not get details for '{$package}'."
@@ -755,12 +795,14 @@ class Pkgm
         if (!$deep) return $details['required_by'];
 
         $dependees = [];
+        $existing[] = $package;
 
         foreach ($details['required_by'] as $dependee) {
+            if (in_array($dependee, $existing)) continue;
             $dependees[] = $dependee;
             array_merge(
                 $dependees,
-                $this->get_dependees($dependee, true)
+                $this->get_dependees($dependee, true, $existing)
             );
         }
 
@@ -891,12 +933,16 @@ class Pkgm
      * This also won't call the setup automatically!
      * --
      * @param  string $package
+     * @param  string $enabled_by Which package enabled this one.
+     *                            Can be null if this package was enabled
+     *                            directly by user.
+     *                            This will be used for cleanup method.
      * --
      * @throws NotFoundException If can't find main package class.
      * --
      * @return boolean
      */
-    public function enable($package)
+    public function enable($package, $enabled_by = null)
     {
         // Resolve the path
         $package_path   = pkgpath($package);
@@ -925,11 +971,53 @@ class Pkgm
         // Process injections
         $info = $this->process_injections($info);
 
-        // Add package's details to the register
-        $info['required_by'] = [];
+        // Add enabled by info
+        $info['enabled_by'] = $enabled_by;
+
+        // Get all enabled packages
+        $enabled = $this->get_enabled(true);
+
+        // Add itself to the enabled list
         $this->enabled[$package] = $info;
 
+        // By which (enabled) packages this package is required
+        // This might sounds a bit strange, but it's very handy when replacing
+        // existing package (example: disable(va/x_package) enable(vb/x_package))
+        $required_by = [];
+
+        // See all enabled packages, and see if any of them depends on this!
+        foreach ($enabled as $id => $pkg_data) {
+            $enabled_depends_on = $pkg_data['depends_on'];
+            foreach ($enabled_depends_on as $pkg_depends => $version) {
+                if ($this->resolve($pkg_depends, $version) === $package) {
+                    $required_by[] = $id;
+                }
+            }
+        }
+
+        // Add package's details to the register
+        $this->enabled[$package]['required_by'] = $required_by;
+
         return $this->registry_save();
+    }
+
+    /**
+     * Get packages which were automatically enabled and are not required anymore.
+     * --
+     * @return array
+     */
+    public function get_obsolete()
+    {
+        $obsolete = [];
+        $enabled = $this->get_enabled(true);
+
+        foreach ($enabled as $pkg_id => $pkg_data) {
+            if (empty($pkg_data['required_by']) && $pkg_data['enabled_by']) {
+                $obsolete[] = $pkg_id;
+            }
+        }
+
+        return $obsolete;
     }
 
     /**
