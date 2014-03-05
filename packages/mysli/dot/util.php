@@ -35,6 +35,78 @@ class Util
     }
 
     /**
+     * Capture the cursos - wait for user's input. You must pass in a function,
+     * this will run until function is returning null.
+     * This will exit on double enter.
+     * --
+     * @param  string   $title The text displayed for input question.
+     * @param  function $func  Function to be executed for each input,
+     *                         until function is returning null this will run
+     *                         in loop.
+     * --
+     * @return mixed    Value of the function return
+     */
+    public static function input_multiline($title, $func)
+    {
+        $result = null;
+        $stdin  = '';
+        $enter_key = 0;
+
+        do {
+            do {
+                if (function_exists('readline')) {
+                    $stdin_t = readline($title);
+                    readline_add_history($stdin);
+                }
+                else {
+                    fwrite(STDOUT, $title);
+                    $stdin_t = fread(STDIN, 8192);
+                }
+
+                $stdin = $stdin_t;
+
+                if ($stdin_t === "\n")  $enter_key++;
+                elseif ($enter_key > 0) $enter_key--;
+            } while ($enter_key > 1);
+
+            $result = $func($stdin);
+        } while($result === null);
+
+        return $result;
+    }
+
+    /**
+     * Capture the cursos - wait for user's input. You must pass in a function,
+     * this will run until function is returning null.
+     * The user's input will not be displayed.
+     * --
+     * @param  string   $title The text displayed for input question.
+     * @param  function $func  Function to be executed for each input,
+     *                         until function is returning null this will run
+     *                         in loop.
+     * --
+     * @return mixed    Value of the function return
+     */
+    public static function password($title, $func)
+    {
+        $result = null;
+        `stty -echo`;
+        do {
+            if (function_exists('readline')) {
+                $stdin = readline($title);
+                readline_add_history($stdin);
+            }
+            else {
+                fwrite(STDOUT, $title);
+                $stdin = fread(STDIN, 8192);
+            }
+            $result = $func($stdin);
+        } while($result === null);
+        `stty echo`;
+        return $result;
+    }
+
+    /**
      * Ask user a question to while Y/n is the only possible answer.
      * --
      * @param  string  $text
