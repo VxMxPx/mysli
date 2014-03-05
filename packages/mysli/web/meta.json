@@ -8,11 +8,12 @@
         "~event"    : ">= 1",
         "~request"  : ">= 1",
         "~response" : ">= 1",
-        "~output"   : ">= 1"
+        "~output"   : ">= 1",
+        "~csi"      : ">= 1"
     },
     "inject"        : {
         "main" : ["~config", "~event", "~request", "~response", "~output"],
-        "setup": ["~config", "~event"]
+        "setup": ["~config", "~event", "~csi"]
     },
     "maintainer"    : "Marko Gajšt <marko@gaj.st>",
     "description"   : "Mysli Web: Frontend Package."
