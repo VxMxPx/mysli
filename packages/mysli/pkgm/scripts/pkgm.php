@@ -71,6 +71,7 @@ class Pkgm
                 $keys = array_keys($options);
                 $element = 0;
                 \Cli\Util::plain(\Core\Arr::readable(array_values($options)));
+                \Cli\Util::plain('Enter one of the numbers (e.g., 1).');
                 return \Cli\Util::input('> ', function ($input) use ($options, $keys) {
                     if (!isset($keys[$input])) {
                         return null;
@@ -85,6 +86,7 @@ class Pkgm
                 $keys = array_keys($options);
                 $element = 0;
                 \Cli\Util::plain(\Core\Arr::readable(array_values($options)));
+                \Cli\Util::plain('Enter one or more numbers (e.g., 1, 2, 3).');
                 return \Cli\Util::input('> ', function ($input) use ($options, $keys) {
                     $input = \Core\Str::explode_trim(',', $input);
                     $real = [];
