@@ -106,7 +106,7 @@ class CSI
             'id'       => $id,
             'type'     => $type,
             'label'    => $label,
-            'options'  => [],
+            'options'  => $options,
             'default'  => $default,
             'status'   => null,
             'value'    => null,
