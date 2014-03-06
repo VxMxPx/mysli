@@ -38,48 +38,64 @@ class Pkgm
      */
     protected function csi_input(array $properties)
     {
-        if ($properties['label']) {
-            \Cli\Util::plain($properties['label']);
-        }
+        // Formulate a question.
+        $question = '';
+        if ($properties['label'])   $question .= $properties['label'];
+
         if ($properties['default']) {
-            \Cli\Util::plain(' [' . $properties['default'] . ']');
-            \Cli\Util::nl();
+            if (!empty($properties['options'])) {
+                $default = $properties['options'][$properties['default']];
+            } else {
+                $default = $properties['default'];
+            }
+            $question .= ' [' . $default . ']';
         }
+
+        \Cli\Util::plain($question);
 
         switch ($properties['type']) {
             case 'input':
-                return \Cli\Util::input('', function ($input) { return $input; });
+                return \Cli\Util::input('> ', function ($input) { return $input; });
                 break;
 
             case 'password':
-                return \Cli\Util::password('', function ($input) { return $input; });
+                return \Cli\Util::password('> ', function ($input) { return $input; });
                 break;
 
             case 'textarea':
-                return \Cli\Util::input_multiline('', function ($input) { return $input; });
+                return \Cli\Util::input_multiline('> ', function ($input) { return $input; });
                 break;
 
             case 'radio':
                 $options = $properties['options'];
-                \Cli\Util::plain(\Core\Arr::readable($options));
-                return \Cli\Util::input('', function ($input) use ($options) {
-                    if (!isset($options[$input])) {
+                $keys = array_keys($options);
+                $element = 0;
+                \Cli\Util::plain(\Core\Arr::readable(array_values($options)));
+                return \Cli\Util::input('> ', function ($input) use ($options, $keys) {
+                    if (!isset($keys[$input])) {
                         return null;
                     } else {
-                        return $input;
+                        return $keys[$input];
                     }
                 });
                 break;
 
             case 'checkbox':
                 $options = $properties['options'];
-                \Cli\Util::plain(\Core\Arr::readable($options));
-                return \Cli\Util::input('', function ($input) use ($options) {
+                $keys = array_keys($options);
+                $element = 0;
+                \Cli\Util::plain(\Core\Arr::readable(array_values($options)));
+                return \Cli\Util::input('> ', function ($input) use ($options, $keys) {
                     $input = \Core\Str::explode_trim(',', $input);
+                    $real = [];
                     foreach ($input as $val) {
-                        if (!isset($options[$val])) return null;
+                        if (!isset($keys[$val])) {
+                            return null;
+                        } else {
+                            $real[] = $keys[$val];
+                        }
                     }
-                    return $input;
+                    return $real;
                 });
                 break;
         }
@@ -165,6 +181,9 @@ class Pkgm
         $setup = $this->pkgm->construct_setup($pkg);
 
         if (method_exists($setup, 'before_enable')) {
+            \Cli\Util::nl();
+            \Cli\Util::plain('Enabling ' . $pkg . '...');
+            \Cli\Util::plain(str_repeat('-', 12 + strlen($pkg)));
             do {
                 $csi = $setup->before_enable();
                 if ($this->pkgm->obj_to_role($csi) === 'csi') {
@@ -185,13 +204,18 @@ class Pkgm
             return false;
         } else {
             if (method_exists($setup, 'after_enable')) {
-                $result = $setup->after_enable();
+                do {
+                    $csi = $setup->after_enable();
+                    if ($this->pkgm->obj_to_role($csi) === 'csi') {
+                        $csi_result = $this->csi_run($csi);
+                    } else {
+                        $csi_result = $csi;
+                    }
+                } while(is_object($csi));
 
-                if ($this->pkgm->obj_to_role($result) === 'csi') {
-                    $result = $this->csi_run($result);
+                if ($csi_result === false) {
+                    \Cli\Util::warn('Problems with: ' . $pkg);
                 }
-
-                if ($result === false) \Cli\Util::warn('Problems with: ' . $pkg);
             }
         }
 
