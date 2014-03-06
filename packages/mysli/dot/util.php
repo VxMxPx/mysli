@@ -69,7 +69,7 @@ class Util
         do {
             do {
                 $stdin_t = self::simple_input($title);
-                $stdin .= $stdin_t;
+                $stdin .= $stdin_t . "\n";
                 if ($stdin_t === '') {
                     $enter_key++;
                 }
@@ -80,7 +80,7 @@ class Util
                 }
             } while ($enter_key < 1);
 
-            $result = $func($stdin);
+            $result = $func(trim($stdin));
 
         } while($result === null);
 
