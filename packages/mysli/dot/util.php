@@ -4,6 +4,27 @@ namespace Mysli\Dot;
 
 class Util
 {
+
+    /**
+     * Capture the cursor, return user's input.
+     * --
+     * @param  string $title
+     * --
+     * @return string
+     */
+    public static function simple_input($title)
+    {
+        if (function_exists('readline')) {
+            $stdin = readline($title);
+            readline_add_history($stdin);
+        }
+        else {
+            fwrite(STDOUT, $title);
+            $stdin = fread(STDIN, 8192);
+        }
+        return $stdin;
+    }
+
     /**
      * Capture the cursos - wait for user's input. You must pass in a function,
      * this will run until function is returning null.
@@ -20,14 +41,7 @@ class Util
         $result = null;
 
         do {
-            if (function_exists('readline')) {
-                $stdin = readline($title);
-                readline_add_history($stdin);
-            }
-            else {
-                fwrite(STDOUT, $title);
-                $stdin = fread(STDIN, 8192);
-            }
+            $stdin = self::simple_input($title);
             $result = $func($stdin);
         } while($result === null);
 
@@ -54,22 +68,20 @@ class Util
 
         do {
             do {
-                if (function_exists('readline')) {
-                    $stdin_t = readline($title);
-                    readline_add_history($stdin);
+                $stdin_t = self::simple_input($title);
+                $stdin .= $stdin_t;
+                if ($stdin_t === '') {
+                    $enter_key++;
                 }
                 else {
-                    fwrite(STDOUT, $title);
-                    $stdin_t = fread(STDIN, 8192);
+                    if ($enter_key > 0) {
+                        $enter_key--;
+                    }
                 }
-
-                $stdin = $stdin_t;
-
-                if ($stdin_t === "\n")  $enter_key++;
-                elseif ($enter_key > 0) $enter_key--;
-            } while ($enter_key > 1);
+            } while ($enter_key < 1);
 
             $result = $func($stdin);
+
         } while($result === null);
 
         return $result;
@@ -92,14 +104,7 @@ class Util
         $result = null;
         `stty -echo`;
         do {
-            if (function_exists('readline')) {
-                $stdin = readline($title);
-                readline_add_history($stdin);
-            }
-            else {
-                fwrite(STDOUT, $title);
-                $stdin = fread(STDIN, 8192);
-            }
+            $stdin = self::simple_input($title);
             $result = $func($stdin);
         } while($result === null);
         `stty echo`;
