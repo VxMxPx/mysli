@@ -20,6 +20,10 @@ class Setup
         $this->config = $config;
         $this->event = $event;
 
+        $this->dcsi = new $csi('mysli/web/disable');
+        $this->dcsi->hidden('remove_data');
+        $this->dcsi->hidden('remove_config');
+
         $this->ecsi = new $csi('mysli/web/enable');
         $this->ecsi->input(
             'relative_path',
@@ -80,6 +84,12 @@ class Setup
         return true;
     }
 
+    public function before_disable()
+    {
+        if ($this->dcsi->status() !== 'success') return $this->dcsi;
+        else return true;
+    }
+
     /**
      * After disable
      * --
@@ -88,10 +98,14 @@ class Setup
     public function after_disable()
     {
         // Remove public directory
-        \Core\FS::dir_remove(ds(datpath(), $this->config->get('relative_path')));
+        if ($this->dcsi->get('remove_data')) {
+            \Core\FS::dir_remove(ds(datpath(), $this->config->get('relative_path')));
+        }
 
         // Remove configurations
-        $this->config->destroy();
+        if ($this->dcsi->get('remove_config')) {
+            $this->config->destroy();
+        }
 
         // Unregister events
         $this->event->unregister('mysli/web/index:done', 'mysli/web::output');
