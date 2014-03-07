@@ -5,6 +5,8 @@ namespace Mysli\Pkgm\Script;
 class Pkgm
 {
     protected $pkgm;
+    protected $on_disable_remove_data = false;
+    protected $on_disable_remove_config = false;
 
     public function __construct(\Mysli\Pkgm $pkgm)
     {
@@ -38,6 +40,12 @@ class Pkgm
      */
     protected function csi_input(array $properties)
     {
+        // If type not in array, quit right away! :)
+        $allowed = ['input', 'password', 'textarea', 'radio', 'checkbox'];
+        if ( ! in_array($properties['type'], $allowed) ) {
+            return;
+        }
+
         // Formulate a question.
         $question = '';
         if ($properties['label'])   $question .= $properties['label'];
@@ -51,6 +59,7 @@ class Pkgm
             $question .= ' [' . $default . ']';
         }
 
+        \Cli\Util::nl();
         \Cli\Util::plain($question);
 
         switch ($properties['type']) {
@@ -108,14 +117,12 @@ class Pkgm
      * --
      * @param object $csi ~csi
      */
-    protected function csi_run($csi)
+    protected function csi_process($csi)
     {
-        // Run forver, until success happened!
         do {
             switch ($csi->status()) {
-
+                // One of the fields interrupted the process.
                 case 'interrupted':
-                    // All fields with no value!
                     $fields = [];
                     foreach ($csi->get_fields() as $field_id => $properties) {
                         if (!isset($properties['status']) === null) {
@@ -124,6 +131,7 @@ class Pkgm
                     }
                     break;
 
+                // Validation failed.
                 case 'failed':
                     $fields = [];
                     foreach ($csi->get_fields() as $field_id => $properties) {
@@ -134,25 +142,61 @@ class Pkgm
                     }
                     break;
 
+                // Currently there's no data
                 case 'none':
                     $fields = $csi->get_fields();
                     break;
             }
 
+            // No fields, nothing to do!
             if (empty($fields)) {
-                break;
+                return true;
             }
 
+            // Run through fields, and output them!
             foreach ($fields as $field_id => $properties) {
+
+                if ($properties['type'] === 'hidden') { continue; }
+
                 $value = $this->csi_input($properties);
+                // Set either value from the input or the default if exists.
                 $value = $value === '' && $properties['default']
                     ? $properties['default']
                     : $value;
                 $csi->set($field_id, $value);
             }
+        // Until validation succeed!
         } while (!$csi->validate());
 
         return $csi->status() === 'success';
+    }
+
+    /**
+     * Will execute particular setup step.
+     * --
+     * @param  object  $setup package/setup
+     * @param  string  $step
+     * @param  array   $values any values to set to the $csi (if exists!)
+     * --
+     * @return boolean null if method not found!
+     */
+    protected function execute_setup_step($setup, $step, array $values = null)
+    {
+        if (method_exists($setup, $step)) {
+            do {
+                $csi = $setup->{$step}();
+                if ($this->pkgm->obj_to_role($csi) === 'csi') {
+                    if ($values) {
+                        $csi->set_multiple($values);
+                    }
+                    $csi_result = $this->csi_process($csi);
+                } else {
+                    $csi_result = $csi;
+                }
+            } while(is_object($csi));
+
+            return $csi_result;
+        }
     }
 
     /**
@@ -180,47 +224,30 @@ class Pkgm
      */
     protected function enable_helper($pkg, $enabled_by = null)
     {
+        // Get setup object and execute before_enable step!
         $setup = $this->pkgm->construct_setup($pkg);
-
-        if (method_exists($setup, 'before_enable')) {
-            \Cli\Util::nl();
-            \Cli\Util::plain('Enabling ' . $pkg . '...');
-            \Cli\Util::plain(str_repeat('-', 12 + strlen($pkg)));
-            do {
-                $csi = $setup->before_enable();
-                if ($this->pkgm->obj_to_role($csi) === 'csi') {
-                    $csi_result = $this->csi_run($csi);
-                } else {
-                    $csi_result = $csi;
-                }
-            } while(is_object($csi));
-
-            if ($csi_result === false) {
-                \Cli\Util::error('Setup failed for: ' . $pkg);
-                return false;
-            }
+        if ( $this->execute_setup_step($setup, 'before_enable') === false ) {
+            \Cli\Util::error('Setup failed for: ' . $pkg);
+            return false;
         }
 
+        // Print help...
+        \Cli\Util::nl();
+        \Cli\Util::plain('Enabling ' . $pkg . '...');
+        \Cli\Util::plain(str_repeat('-', 12 + strlen($pkg)));
+
+        // If not enabled successfully return false!
         if (!$this->pkgm->enable($pkg, $enabled_by)) {
             \Cli\Util::error('Failed to enable: ' . $pkg);
             return false;
-        } else {
-            if (method_exists($setup, 'after_enable')) {
-                do {
-                    $csi = $setup->after_enable();
-                    if ($this->pkgm->obj_to_role($csi) === 'csi') {
-                        $csi_result = $this->csi_run($csi);
-                    } else {
-                        $csi_result = $csi;
-                    }
-                } while(is_object($csi));
-
-                if ($csi_result === false) {
-                    \Cli\Util::warn('Problems with: ' . $pkg);
-                }
-            }
         }
 
+        // If not successful, print warning, but don't terminate the process
+        if ( $this->execute_setup_step($setup, 'after_enable') === false ) {
+            \Cli\Util::warn('Problems with: ' . $pkg);
+        }
+
+        // Final conformation
         \Cli\Util::success('Enabled: ' . $pkg);
         return true;
     }
@@ -300,23 +327,40 @@ class Pkgm
      */
     protected function disable_helper($pkg)
     {
-        $setup = $this->pkgm->construct_setup($pkg);
+        // Print help...
+        \Cli\Util::nl();
+        \Cli\Util::plain('Disabling ' . $pkg . '...');
+        \Cli\Util::plain(str_repeat('-', 12 + strlen($pkg)));
 
-        if (method_exists($setup, 'before_disable') && !$setup->before_disable()) {
+        // Get setup object, and execute before disable
+        $setup = $this->pkgm->construct_setup($pkg);
+        $result = $this->execute_setup_step(
+            $setup,
+            'before_disable',
+            [
+                'remove_data' => $this->on_disable_remove_data,
+                'remove_config' => $this->on_disable_remove_config
+            ]
+        );
+        if ( $result === false ) {
             \Cli\Util::error('Setup failed for: ' . $pkg);
             return false;
         }
 
-        if (!$this->pkgm->disable($pkg)) {
+        // If disable successfully terminate further execution!
+        if ( ! $this->pkgm->disable($pkg) ) {
             \Cli\Util::error('Failed to disable: ' . $pkg);
             return false;
-        } else {
-            \Cli\Util::success('Disabled: ' . $pkg);
-            if (method_exists($setup, 'after_disable')) {
-                $setup->after_disable();
-            }
-            return true;
         }
+
+        // If not successful, print warning, but don't terminate the process
+        if ( $this->execute_setup_step($setup, 'after_disable') === false ) {
+            \Cli\Util::warn('Problems with: ' . $pkg);
+        }
+
+        // Success
+        \Cli\Util::success('Disabled: ' . $pkg);
+        return true;
     }
 
     /**
@@ -326,17 +370,34 @@ class Pkgm
      */
     public function action_disable($pkg)
     {
+        // Package name is required
         if (!$pkg) {
             return $this->help_disable();
         }
 
-        if (!$this->pkgm->is_enabled($pkg)) {
+        // Can't disable something that isn't enabled
+        if ( ! $this->pkgm->is_enabled($pkg) ) {
             \Cli\Util::warn("Package not enabled: `{$pkg}`.");
             return false;
         }
 
+        // If there's no dependees,
+        // just inform the user which package will be disabled.
+        \Cli\Util::plain(
+            "This will disable the following package: `{$pkg}`."
+        );
+
+        // Ask if data should be removed also
+        $this->on_disable_remove_data =
+            \Cli\Util::confirm('Completely remove all associated data?');
+        // Ask if configurations should be removed also
+        $this->on_disable_remove_config =
+            \Cli\Util::confirm('Completely remove all associated configurations?');
+
+        // Get package dependees!
         $dependees = $this->pkgm->get_dependees($pkg, true);
 
+        // If we have dependees, then disable them all first!
         if (!empty($dependees)) {
             \Cli\Util::plain(
                 "The following packages depends on the `{$pkg}` and need to be disabled:\n\n" .
@@ -353,16 +414,9 @@ class Pkgm
                     return false;
                 }
             }
-        } else {
-            \Cli\Util::plain(
-                "This will disable the following package: `{$pkg}`."
-            );
-            if (!\Cli\Util::confirm('Proceed?')) {
-                \Cli\Util::plain('Process terminated.');
-                return false;
-            }
         }
 
+        // Finally, disable the actual package
         return $this->disable_helper($pkg);
     }
 
