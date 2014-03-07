@@ -207,25 +207,40 @@ class CSI
     }
 
     /**
-     * Set one or more values for field(s).
+     * Set multiple fields' values.
      * --
-     * @param mixed $field_id Either array of full_field_id => value, or simple field id.
-     * @param mixed $value
+     * @param array   $values
+     * @param boolean $check_unique If extracting data from post, then unique
+     *                              identifier might be added.
+     *                              If this is set true, then check
+     *                              if such identifier exists and accept only
+     *                              fields with it.
      * --
      * @return null
      */
-    public function set($field, $value = null)
+    public function set_multiple(array $values, $check_unique = false)
     {
-        if (is_array($field)) {
-            foreach ($this->fields as $field_id => &$properties) {
-                $id_field = 'csi_'. $this->id . '_' . $field_id;
-                if (array_key_exists($id_field, $field)) {
-                    $properties['value'] = $field[$id_field];
-                }
+        foreach ($values as $field_id => $value) {
+            if ($check_unique) {
+                $prefix = 'csi_'. $this->id . '_';
+                if (substr($field_id, 0, strlen($prefix))) {
+                    $field_id = substr($field_id, strlen($prefix));
+                } else continue;
             }
-            return;
+            $this->set($field_id, $value);
         }
+    }
 
+    /**
+     * Set one value for field.
+     * --
+     * @param string $field
+     * @param mixed  $value
+     * --
+     * @return null
+     */
+    public function set($field, $value)
+    {
         if (array_key_exists($field, $this->fields)) {
             $this->fields[$field]['value'] = $value;
         }
@@ -324,6 +339,9 @@ class CSI
             } elseif (in_array(true, $statuses)) {
                 $this->status = 'success';
             }
+        } else {
+            // Nothing to validate, success!
+            $this->status = 'success';
         }
 
         return $this->status === 'success';
