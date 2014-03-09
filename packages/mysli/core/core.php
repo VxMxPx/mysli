@@ -94,12 +94,13 @@ class Core
 
     /**
      * Get pkgm.
+     * In order not to be abused, this method can be called only once!
      * --
      * @throws NotFoundException If pkgm ID file couldn't be found. (1)
      * @throws NotFoundException If pkgm file not found. (2)
      * @throws NotFoundException If pkgm class doesn't exists. (3)
      * --
-     * @return object ~pkgm
+     * @return object ~pkgm once, all calls following, will return true.
      */
     public function pkgm()
     {
@@ -128,7 +129,7 @@ class Core
             );
 
         // Construct pkgm class
-        $this->pkgm = new $pkg_info['class']();
-        return $this->pkgm;
+        $this->pkgm = true;
+        return new $pkg_info['class']();
     }
 }
