@@ -4,140 +4,208 @@ namespace Mysli;
 
 class I18n
 {
-    // All translations
-    protected $dictionary = [];
+    protected $cache = [];
 
-    // List of loaded files (so that we don't load and parse a file twice)
-    protected $loaded     = [];
+    protected $package;
+    protected $filename;
+
+    protected $primary_language;
+    protected $fallback_language;
 
     /**
-     * Will return language debug (info)
+     * Create i18n instance.
+     * --
+     * @param array  $pkgm_trace
+     * @param object $config     ~config
+     */
+    public function __construct(array $pkgm_trace, $config)
+    {
+        // Pkgm trace is array, list of packages, which required this package.
+        // In this case, we'll use this info, to construct
+        // costumized config, containing only element meant for package, which
+        // required config.
+        array_pop($pkgm_trace); // Remove self
+        $this->package = array_pop($pkgm_trace); // Get actual package which required config.
+
+        // Get filename
+        $this->filename = str_replace('/', '.', $this->package);
+        $this->filename = datpath('i18n', $this->filename . '.json');
+
+        // If we have file, then load contents...
+        if (file_exists($this->filename)) {
+            $this->cache = \Core\JSON::decode_file($this->filename, true);
+        }
+
+        // Set primary and secondary language
+        $this->primary_language = $config->get('primary_language');
+        $this->fallback_language = $config->get('fallback_language');
+    }
+
+    /**
+     * Check if particular language exists in cache.
+     * --
+     * @param  string $language
+     * --
+     * @return integer Number of keys for particular language,
+     *                 0 if language doesn't exists.
+     */
+    public function exists($language)
+    {
+        if (isset($this->cache[$language])) {
+            return count($this->cache[$language]);
+        } else return 0;
+    }
+
+    /**
+     * Set primary language for translations. This will be automatically set,
+     * when the i18n is constructed (value read from settings + event triggered).
+     * --
+     * @param string $language
+     * --
+     * @return null
+     */
+    public function set_language($language)
+    {
+        $this->primary_language = $language;
+    }
+
+    /**
+     * Set fallback language, if primary not found. This will be automatically set,
+     * when the i18n is constructed (value read from settings + event triggered).
+     * --
+     * @param string $language
+     * --
+     * @return null
+     */
+    public function set_fallback_language($language)
+    {
+        $this->fallback_language = $language;
+    }
+
+    /**
+     * Return cache as an array.
      * --
      * @return array
      */
-    public function dump()
+    public function cache_as_array()
     {
-        return [$this->loaded, $this->dictionary];
+        return $this->cache;
     }
 
     /**
-     * Return language expressions in json format
-     * --
-     * @return string
-     */
-    public function as_json()
-    {
-        return \JSON::encode($this->dictionary);
-    }
-
-    /**
-     * Return language expressions as an array
-     * --
-     * @return array
-     */
-    public function as_array()
-    {
-        return $this->dictionary;
-    }
-
-    /**
-     * Will load particular language file
-     * --
-     * @param  string  $filename Full absolute file path.
+     * Create cache for current package.
      * --
      * @return boolean
      */
-    public function append($filename)
+    public function cache_create($folder = 'i18n')
     {
-        // Check if file was already loaded
-        if (in_array($filename, $this->loaded)) {
-            // $this->log->info(
-            //     "File is already loaded, won't load it twice: '{$filename}'.",
-            //     __FILE__, __LINE__
-            // );
-            return false;
-        }
-        else {
-            $this->loaded[] = $filename;
+        // pkgpath is packages path, function defined by ~core!
+        $dir = pkgpath($this->package, $folder);
+        if (!file_exists($dir)) {
+            throw new \Core\NotFoundException(
+                "Cannot create cache. Directory doesn't exists: `{$dir}`.", 1
+            );
         }
 
-        $processed = $this->process($filename);
+        $collection = [];
 
-        if (is_array($processed)) {
-            $this->dictionary = array_merge($this->dictionary, $processed);
-            // $this->log->info("Language loaded: '{$file}'", __FILE__, __LINE__);
-            return true;
+        $files = scandir($dir);
+        foreach ($files as $file) {
+            if (substr($file, -3) !== '.mt') { continue; }
+            $collection[substr($file, 0, -3)] = $this->mt_to_array(
+                file_get_contents(ds($dir, $file))
+            );
         }
+
+        $this->cache = $collection;
+        return \Core\JSON::encode_file($this->filename, $collection);
     }
 
     /**
-     * Will process particular file and return an array (of expressions)
+     * Remove cache for current package.
      * --
-     * @param   string  $filename
-     * @return  array
+     * @return boolean
      */
-    private function process($filename)
+    public function cache_remove()
     {
-        $file_contents = \FS::file_read($filename);
-        $file_contents = \Str::to_unix_line_endings($file_contents);
+        if (file_exists($this->filename)) {
+            return unlink($this->filename);
+        } else return true;
+    }
 
-        // Remove comments
-        $file_contents = preg_replace('/^#.*$/m', '', $file_contents);
+    /**
+     * Translate the key!
+     * --
+     * @param  mixed $key      Following options are available:
+     *   - string: key, in format key | KEY
+     *   - array : [key, switch], e.g., ['COMMENTS', $comments->count()]
+     * @param  array $variable Variables to be replaced in string.
+     * --
+     * @return string, null if key not found!
+     */
+    public function translate($key, array $variable = [])
+    {
 
-        // Add end of file notation
-        $file_contents = $file_contents . "\n__#EOF#__";
+    }
 
-        $contents = '';
+    /**
+     * Convert Mysli Translation (mt) to array.
+     * --
+     * @param  string $mt
+     * --
+     * @return array
+     */
+    public function mt_to_array($mt)
+    {
+        $matches;
+        $collection = [
+            '.meta' => [
+                'created_on' => gmdate('YmdHis'),
+                'modified'   => false
+            ]
+        ];
 
+        // Append EOF to the end of string, so that we'll get the last match
+        $mt .= "\n# EOF";
+
+        // Standardize line endings
+        $mt = \Core\Str::to_unix_line_endings($mt);
+
+        // Match
         preg_match_all(
-            '/^!([A-Z0-9_]+):(.*?)(?=^![A-Z0-9_]+:|^#|^__#EOF#__$)/sm',
-            $file_contents,
-            $contents,
-            PREG_SET_ORDER);
+            '/(^@[A-Z_]+)(\[[0-9\>a-z,]+\])?[\ \t\n]+(.*?)(?=^@|^#)/sm',
+            $mt,
+            $matches,
+            PREG_SET_ORDER
+        );
 
-        $result = [];
-
-        foreach($contents as $options) {
-            if (isset($options[1]) && isset($options[2])) {
-                $result[trim($options[1])] = trim($options[2]);
+        foreach ($matches as $match) {
+            if ($match[2]) {
+                $options = trim($match[2], '[]');
+                $options = \Core\Str::explode_trim(',', $options);
+            } else {
+                $options = [];
             }
-        }
-
-        return $result;
-    }
-
-    /**
-     * Will translate particular string
-     * --
-     * @param   string  $key
-     * @param   array   $params
-     * --
-     * @return  string
-     */
-    public function translate($key, array $params = [])
-    {
-        if (isset($this->dictionary[$key]))
-        {
-            $return = $this->dictionary[$key];
-
-            // Check for any variables {1}, ...
-            if ($params) {
-                if (!is_array($params)) { $params = array($params); }
-
-                foreach ($params as $key => $param) {
-                    $key = $key + 1;
-                    $return = preg_replace(
-                                '/{'.$key.' ?(.*?)}/',
-                                str_replace('{?}', '$1', $param),
-                                $return);
+            $key   = trim($match[1], '@');
+            $value = trim($match[3]);
+            if (!in_array('nl', $options)) {
+                $value = str_replace("\n", ' ', $value);
+            }
+            if (!in_array('html', $options)) {
+                $value = htmlentities($value);
+            }
+            foreach ($options as $option) {
+                if (
+                    is_numeric($option) ||
+                    in_array($option, ['true', 'false', '>'])
+                ) {
+                    $collection[$key][$option]['value'] = $value;
+                    continue 2; // Continue outer loop
                 }
             }
+            $collection[$key]['value'] = $value;
+        }
 
-            return $return;
-        }
-        else {
-            trigger_error("Language key not found: '{$key}'.", E_USER_WARNING);
-            return $key;
-        }
+        return $collection;
     }
 }

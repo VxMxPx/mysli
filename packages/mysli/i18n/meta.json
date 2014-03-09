@@ -3,7 +3,16 @@
     "role"          : "i18n",
     "instantiation" : "once",
     "version"       : 1,
-    "depends_on"    : {},
+    "depends_on"    : {
+        "~core"  : ">= 1",
+        "~config": ">= 1",
+        "~csi"   : ">= 1"
+    },
+    "inject" : {
+        "exclude" : ["~core"],
+        "main"    : ["#pkgm_trace", "~config"],
+        "setup"   : ["~csi", "~config"]
+    },
     "maintainer"    : "Marko Gajšt <marko@gaj.st>",
     "description"   : "Mysli Internationalization Package."
 }
