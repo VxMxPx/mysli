@@ -2,7 +2,7 @@
 
 namespace Mysli;
 
-class Language
+class I18n
 {
     // All translations
     protected $dictionary = [];

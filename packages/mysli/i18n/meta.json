@@ -1,5 +1,5 @@
 {
-    "package"       : "mysli/language",
+    "package"       : "mysli/i18n",
     "role"          : "i18n",
     "instantiation" : "once",
     "version"       : 1,
