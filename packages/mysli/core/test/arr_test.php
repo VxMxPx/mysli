@@ -4,7 +4,7 @@ namespace Mysli\Core\Lib;
 
 // Exceptions, etc..
 include(__DIR__.'/../core.php');
-$core = new \Mysli\Core(__DIR__.'/dummy', __DIR__.'/dummy');
+new \Mysli\Core(__DIR__.'/dummy', __DIR__.'/dummy');
 
 class ArrTest extends \PHPUnit_Framework_TestCase
 {
@@ -902,6 +902,34 @@ class ArrTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(
             'nooop',
             Arr::get_by_path('date/i18n/days/short/12', $input, 'nooop')
+        );
+    }
+
+    // -------------------------------------------------------------------------
+
+    public function test_delete_by_value()
+    {
+        $arr = ['one', 'one', 'two', 'three', 'one'];
+        $this->assertEquals(
+            [1 => 'one', 'two', 'three', 'one'],
+            \Core\Arr::delete_by_value('one', $arr)
+        );
+    }
+
+    public function test_delete_by_value_empty()
+    {
+        $this->assertEquals(
+            [],
+            \Core\Arr::delete_by_value('one', [])
+        );
+    }
+
+    public function test_delete_by_value_all()
+    {
+        $arr = ['one', 'one', 'two', 'three', 'one'];
+        $this->assertEquals(
+            [ 2 => 'two', 'three'],
+            \Core\Arr::delete_by_value_all('one', $arr)
         );
     }
 }

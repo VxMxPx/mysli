@@ -171,7 +171,7 @@ class Arr
         foreach ($input as $key => $value) {
             $out .= str_repeat(' ', $indent) . $key;
             if (is_array($value)) {
-                $out .= $new_line . self::readable($value, $separator, $new_line, $step, $indent + $step);
+                $out .= $new_line . self::readable($value, $indent + $step, $step, $separator, $new_line);
             } else {
                 $out .= str_repeat(' ', $lkey - strlen($key)) . $separator . $value;
             }
@@ -712,4 +712,37 @@ class Arr
         return key($array);
     }
 
+    /**
+     * Remove array element, by value.
+     * This will remove the first element.
+     * --
+     * @param  string $needle
+     * @param  array $haystack
+     * --
+     * @return array
+     */
+    public static function delete_by_value($needle, $haystack)
+    {
+        if ( ($key = array_search($needle, $haystack)) !== false ) {
+            unset($haystack[$key]);
+        }
+        return $haystack;
+    }
+
+    /**
+     * Remove array element, bt value.
+     * This will remobe all elements with particular value.
+     * --
+     * @param  string $needle
+     * @param  array $haystack
+     * --
+     * @return array
+     */
+    public static function delete_by_value_all($needle, $haystack)
+    {
+        while ( ($key = array_search($needle, $haystack)) !== false ) {
+            unset($haystack[$key]);
+        }
+        return $haystack;
+    }
 }
