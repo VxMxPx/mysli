@@ -180,30 +180,27 @@ class I18n
         );
 
         foreach ($matches as $match) {
-            if ($match[2]) {
-                $options = trim($match[2], '[]');
-                $options = \Core\Str::explode_trim(',', $options);
-            } else {
-                $options = [];
-            }
+            // Assign key and value
             $key   = trim($match[1], '@');
             $value = trim($match[3]);
-            if (!in_array('nl', $options)) {
+
+            $options = trim($match[2], '[]');
+            $options = \Core\Str::explode_trim(',', $options);
+
+            if (in_array('nl', $options)) {
+                $options = \Core\Arr::delete_by_value_all('nl', $options);
+            } else {
+                // Eliminate new-lines
                 $value = str_replace("\n", ' ', $value);
             }
-            if (!in_array('html', $options)) {
-                $value = htmlentities($value);
-            }
-            foreach ($options as $option) {
-                if (
-                    is_numeric($option) ||
-                    in_array($option, ['true', 'false', '>'])
-                ) {
+
+            if (empty($options)) {
+                $collection[$key]['value'] = $value;
+            } else {
+                foreach ($options as $option) {
                     $collection[$key][$option]['value'] = $value;
-                    continue 2; // Continue outer loop
                 }
             }
-            $collection[$key]['value'] = $value;
         }
 
         return $collection;
