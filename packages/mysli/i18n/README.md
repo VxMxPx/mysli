@@ -88,7 +88,7 @@ The following configurations are available:
 | Key               | Default | Description                                |
 |-------------------|---------|--------------------------------------------|
 | primary_language  | en      | The language which is primarily used.      |
-| fallback_language | en      | Fallback language, if primary not found.   |
+| fallback_language | null    | Fallback language, if primary not found.   |
 
 ## File Syntax and Usage
 
@@ -129,7 +129,7 @@ Use curly brackets to define a variable:
 ```
 
 ```php
-$i18n->translate('greet_user', ['Jasna']); // => Hello Jasna.
+$i18n->translate('greet_user', 'Jasna'); // => Hello Jasna.
 ```
 
 Multiple variables:
@@ -151,9 +151,7 @@ Use strings inside variables:
 ```php
 $i18n->translate(
     'login',
-    [
-        '<a href="#login">%s</a>'
-    ]
+    '<a href="#login">%s</a>'
 ); // => Please <a href="#login">login here</a>.
 ```
 
@@ -266,12 +264,10 @@ at the end of the key, for example:
 ```
 @COMMENTS[0] No comments.
 @COMMENTS[1] There's one comment.
-@COMMENTS    Many comments!
 ```
 
 The above example will display text `No comments.` when there's no comments and
-`There's one comment.` when there's one comment. In all the other situations
-(when there's more than one comment), the `Many comments!` text will be displayed.
+`There's one comment.` when there's one comment.
 
 You can add more keys yourself, if you need them. For example, Slovene language,
 have additional to singular and plural form, also dual, so I could add:
@@ -284,7 +280,7 @@ To cover all numbers greater than particular number, you can add plus
 symbol to the left of the number:
 
 ```
-@COMMENTS[5+] Wow, there's more than five comments!
+@COMMENTS[3+] Wow, there are three or more comments!
 ```
 
 You can do the same for negative, using minus:
@@ -322,6 +318,16 @@ You can combine more than one rules using comma:
 @ODD[*1,*3,*5,*7,*9] I'm odd! :S
 @TWO_AND_NINE[2,9]   I'm either two or nine!
 ```
+
+Usually pluralized translations will contain variables, which will look like this:
+
+```
+COMMENTS[2+] {n} comments
+```
+
+This simply mean, that when there's two or more comments, replace `{n}` with
+number of comments. In case we have 12 comments, the above translation would
+be displayed as `12 comments`.
 
 ### Multiline Text
 
