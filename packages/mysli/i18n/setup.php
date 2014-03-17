@@ -23,8 +23,8 @@ class Setup
         \Core\FS::dir_create(datpath('i18n'), \Core\FS::EXISTS_MERGE);
 
         $this->config->merge([
-            'primary_language'  => 'en-us',
-            'fallback_language' => 'en'
+            'primary_language'  => 'en',
+            'fallback_language' => null
         ]);
         $this->config->write();
 
