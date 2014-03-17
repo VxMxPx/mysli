@@ -503,10 +503,8 @@ class Str
 
         $f = array();
 
-        if (is_array($d)) {
-            foreach($d as $i) {
-                $f[] = $trim_mask ? trim($i, $trim_mask) : trim($i);
-            }
+        foreach($d as $i) {
+            $f[] = $trim_mask ? trim($i, $trim_mask) : trim($i);
         }
 
         return $f;
