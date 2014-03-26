@@ -1,0 +1,15 @@
+{
+    "package"       : "mysli/tplp",
+    "role"          : "tplp",
+    "instantiation" : "always",
+    "version"       : 1,
+    "depends_on"    : {
+        "~core"     : ">= 1"
+    },
+    "inject"        : {
+        "exclude"   : ["~core"],
+        "main"      : ["#pkgm_trace"]
+    },
+    "maintainer"    : "Marko Gajšt <marko@gaj.st>",
+    "description"   : "Default template parser."
+}
