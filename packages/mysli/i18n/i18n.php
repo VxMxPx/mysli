@@ -112,7 +112,7 @@ class I18n
         $files = scandir($dir);
         foreach ($files as $file) {
             if (substr($file, -3) !== '.mt') { continue; }
-            $collection[substr($file, 0, -3)] = $this->mt_to_array(
+            $collection[substr($file, 0, -3)] = $this->process_translation(
                 file_get_contents(ds($dir, $file))
             );
         }
@@ -301,7 +301,7 @@ class I18n
      * --
      * @return array
      */
-    public function mt_to_array($mt)
+    public function process_translation($mt)
     {
         $matches;
         $collection = [
