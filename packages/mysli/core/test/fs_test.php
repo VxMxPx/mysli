@@ -213,6 +213,23 @@ class FsTest extends \PHPUnit_Framework_TestCase
         unlink($file);
     }
 
+    // Test File Create With Dir -----------------------------------------------
+    public function test_file_create_with_dir()
+    {
+        $filename = $this->data('subdirectory/test_file.txt');
+
+        if (file_exists($filename)) {
+            unlink($filename);
+        }
+        $this->assertFalse(file_exists($filename));
+        $this->assertTrue(
+            \Core\FS::file_create_with_dir($filename)
+        );
+        $this->assertFileExists($filename);
+        unlink($filename);
+        rmdir(dirname($filename));
+    }
+
     // Test File Create --------------------------------------------------------
     public function test_file_create()
     {

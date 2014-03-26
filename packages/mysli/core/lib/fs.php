@@ -165,6 +165,30 @@ class FS
     }
 
     /**
+     * Will create new file, if doesn't exists already. This can create directory
+     * also, if is not there already.
+     * --
+     * @param  string  $filename
+     * @param  boolean $empty
+     * --
+     * @throws FSException If directory couldn't be created. (2)
+     * --
+     * @return boolean
+     */
+    public static function file_create_with_dir($filename, $empty = false)
+    {
+        $dir = dirname($filename);
+
+        if (!file_exists($dir)) {
+            if (!self::dir_create($dir, self::EXISTS_IGNORE, 0777, true)) {
+                throw new \Core\FsException("Couln't create directory: '{$dir}'.", 2);
+            }
+        }
+
+        return self::file_create($filename, $empty);
+    }
+
+    /**
      * Will create new file, if doesn't exists already.
      * If it does exists (and $empty = true) it will remove existing content.
      * --
@@ -973,16 +997,18 @@ class FS
      *     EXISTS_RENAME  // Rename the (new) destination
      *     EXISTS_ERROR   // Throw FSException
      *     EXISTS_IGNORE  // Skip quietly, return null
-     * @param integer $mode       The mode is 0777 by default, which means
-     *                            the widest possible access.
-     * @param boolean $recursive  Allows the creation of nested directories
-     *                            specified in the pathname.
+     * @param integer $mode
+     *     The mode is 0777 by default, which means
+     *     the widest possible access.
+     * @param boolean $recursive
+     *     Allows the creation of nested directories
+     *     specified in the pathname.
      * --
      * @throws FSException If directory could not be created.
      * @throws FSException If destination exists and $on_exists set to:
-     *                             EXISTS_MERGE (and destination is file) or
-     *                             EXISTS_ERROR
-     * @throws ValueException      If Invalid $on_exists value is set.
+     *     EXISTS_MERGE (and destination is file) or
+     *     EXISTS_ERROR
+     * @throws ValueException If Invalid $on_exists value is set.
      * --
      * @return mixed  string on success (full path), false on failure
      */
