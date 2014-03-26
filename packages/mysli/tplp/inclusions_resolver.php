@@ -43,7 +43,7 @@ class InclusionsResolver
      */
     protected function resolve_template($handle, $template)
     {
-        if (!in_array($handle, $this->processing)) {
+        if (in_array($handle, $this->processing)) {
             throw new \Mysli\Tplp\ParserException(
                 'Trying to resolve template, which is already processing.'.
                 "Seems like infinite loop.\nTemplate: '{$handle}'" .
@@ -55,20 +55,14 @@ class InclusionsResolver
         // And itself to processing array...
         $this->processing[] = $handle;
 
-        // If template contains: ::use layout as master
-        // Then this will be set to mater's content
-        $master = false;
-
+        // Find regular inclusions
         $template =
         preg_replace_callback(
-            '/::use ([a-zA-Z0-9_\-]+)( as master)?/',
-            function($match) use (&$master) {
+            '/::use ([a-zA-Z0-9_\-]+)$/m',
+            function($match) {
 
                 // File to include (handle)
                 $file = trim($match[1]);
-
-                // Is file master?
-                $master = isset($match[2]) && trim($match[2]) === 'as master';
 
                 if (!isset($this->templates[$file])) {
                     throw new \Core\NotFoundException("Template file doesn't exists: `{$file}`.", 1);
@@ -78,17 +72,43 @@ class InclusionsResolver
                     $this->resolved[$file] = $this->resolve_template($file, $this->templates[$file]);
                 }
 
-                $master = $master ? $this->resolved[$file] : false;
-                return $master ? '' : $this->resolved[$file];
+                return $this->resolved[$file];
             },
             $template
         );
 
+        // Find master
+        // If template contains: ::use layout as master
+        // Then this will be set to mater's content
+        $master = false;
+        $template =
+        preg_replace_callback(
+            '/([[:cntrl:]]+)?::use ([a-zA-Z0-9_\-]+) as master/',
+            function($match) use (&$master) {
+
+                // File to include (handle)
+                $file = trim($match[2]);
+
+                if (!isset($this->templates[$file])) {
+                    throw new \Core\NotFoundException("Template file doesn't exists: `{$file}`.", 1);
+                }
+
+                if (!isset($this->resolved[$file])) {
+                    $this->resolved[$file] = $this->resolve_template($file, $this->templates[$file]);
+                }
+
+                $master = $this->resolved[$file];
+                return '';
+            },
+            $template
+        );
+        if ($master) {
+            $template = str_replace('::yield', trim($template), $master);
+        }
+
         $this->processing = \Core\Arr::delete_by_value_all($handle, $this->processing);
 
-        if ($master) {
-            return str_replace('::yield', $template, $master);
-        } else return $template;
+        return $template;
     }
 
     /**
@@ -99,7 +119,7 @@ class InclusionsResolver
     public function resolve()
     {
         foreach ($this->templates as $handle => $template) {
-            $this->resolve_template($handle, $template);
+            $this->resolved[$handle] = $this->resolve_template($handle, $template);
         }
 
         return $this->resolved;
