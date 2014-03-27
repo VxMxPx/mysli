@@ -45,15 +45,32 @@ class Template
      * @param mixed $key - string|array
      * @param mixed $value
      * --
+     * @throws \Core\ValueException If variable name is not valid: a-zA-Z0-9_ (1)
+     * @throws \Core\ValueException If Variable start with: tplp_ (2)
+     * --
      * @return null
      */
     public function data($key, $value = null)
     {
         if (is_array($key)) {
-            $this->variables = array_merge($this->variables, $variables);
-        } else {
-            $this->variables[$key] = $value;
+            foreach ($key as $var => $val) {
+                $this->data($var, $val);
+            }
+            return;
         }
+
+        if (!preg_match('/^[a-z_][a-z0-9_]*?$/i', $key)) {
+            throw new \Core\ValueException(
+                "Invalid variable name: `{$key}`.".
+                'Variable can contain only: `a-zA-Z0-9_`.', 1
+            );
+        }
+
+        if (substr($key, 0, 5) === 'tplp_') {
+            throw new \Core\ValueException("Variable cannot start with: `tplp_`.", 2);
+        }
+
+        $this->variables[$key] = $value;
     }
 
     /**
