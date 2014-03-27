@@ -23,6 +23,8 @@ class InclusionsResolver
     protected $resolved  = [];
 
     /**
+     * Contruct object.
+     * --
      * @param array $templates List of templates handle => string
      */
     public function __construct(array $templates)
@@ -122,16 +124,6 @@ class InclusionsResolver
             $this->resolved[$handle] = $this->resolve_template($handle, $template);
         }
 
-        return $this->resolved;
-    }
-
-    /**
-     * Get list of resolved templates.
-     * --
-     * @return array
-     */
-    public function get_resolved()
-    {
         return $this->resolved;
     }
 }

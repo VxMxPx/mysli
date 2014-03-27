@@ -17,6 +17,12 @@ class Tplp
     private $cache_dir;
 
     /**
+     * Translator object, used in templates
+     * @var object ~i18n
+     */
+    private $translator = null;
+
+    /**
      * Instance of Tplp
      * --
      * @param array $pkgm_trace
@@ -24,8 +30,108 @@ class Tplp
     public function __construct(array $pkgm_trace)
     {
         array_pop($pkgm_trace); // Remove self
-        $this->package = array_pop($pkgm_trace); // Get actual package which required config.
-        $this->cache_root = datpath('tplp', str_replace('/', '.', $this->package));
+        $this->package = array_pop($pkgm_trace);
+        $this->cache_dir = datpath('tplp', str_replace('/', '.', $this->package));
+    }
+
+    /**
+     * Set translator!
+     * --
+     * @param object $translator
+     * --
+     * @return null
+     */
+    public function set_translator($translator)
+    {
+        $this->translator = $translator;
+    }
+
+    /**
+     * Get template (object) by name.
+     * --
+     * @param  string $name
+     * --
+     * @throws \Core\NotFoundException If template couln't be found.
+     * --
+     * @return object \Mysli\Tplp\Template
+     */
+    public function template($name)
+    {
+        $filename = ds($this->cache_dir, $name . '.php');
+
+        if (!file_exists($filename)) {
+            throw new \Core\NotFoundException(
+                "Template not found: `{$name}` in `{$filename}`.", 1
+            );
+        }
+
+        return new \Mysli\Tplp\Template($filename, $translator);
+    }
+
+    /**
+     * Create cache for package.
+     * --
+     * @param string $folder Templates root folder (relative).
+     * --
+     * @throws \Core\NotFoundException If templates directory couldn't be found.
+     * --
+     * @return integer Number of created files.
+     */
+    public function cache_create($folder = 'templates')
+    {
+        // Check if templates dir exists...
+        $templates_dir = pkgpath($this->package, $folder);
+
+        if (!is_dir($templates_dir)) {
+            throw new \Core\NotFoundException(
+                "Cannot find templates directory: '{$templates_dir}'.", 1
+            );
+        }
+
+        $templates = $this->templates_find($templates_dir);
+
+        // Create cache directory if not there already
+        if (!file_exists($this->cache_dir)) {
+            \Core\FS::dir_create($this->cache_dir);
+        }
+
+        // Parse all templates...
+        foreach ($templates as $handle => &$template) {
+            $parser = new \Mysli\Tplp\Parser(
+                \Core\Str::to_unix_line_endings(
+                    file_get_contents(
+                        ds($templates_dir, $handle . '.tplm.html')
+                    )
+                )
+            );
+            $template = $parser->parse();
+        }
+
+        // Resolve templates' inner dependencies (::use <file>)
+        $resover = new \Mysli\Tplp\InclusionsResolver($templates);
+        $templates = $resover->resolve();
+
+        // Save files
+        $created = 0;
+        foreach ($templates as $handle => $template) {
+            $cache_filename = ds($this->cache_dir, $handle . '.php');
+            \Core\FS::file_create_with_dir($cache_filename, true);
+            $created += file_put_contents($cache_filename, $template);
+        }
+
+        return $created;
+    }
+
+    /**
+     * Remove cache for package.
+     * --
+     * @return boolean
+     */
+    public function cache_remove()
+    {
+        if (file_exists($this->cache_dir)) {
+            return \Core\FS::dir_remove($this->cache_dir);
+        } else return true;
     }
 
 
@@ -77,79 +183,5 @@ class Tplp
         }
 
         return $templates;
-    }
-
-    /**
-     * Get template (object) by name.
-     * --
-     * @param  string $name
-     * --
-     * @return object \Mysli\Tplp\Template
-     */
-    public function template($name)
-    {
-        return new \Mysli\Tplp\Template($this->package, $name);
-    }
-
-    /**
-     * Create cache for package.
-     * --
-     * @param string $folder Templates root folder (relative).
-     * --
-     * @throws \Core\NotFoundException If templates directory couldn't be found.
-     * --
-     * @return integer Number of created files.
-     */
-    public function cache_create($folder = 'templates')
-    {
-        // Check if templates dir exists...
-        $templates_dir = pkgpath($this->package, $folder);
-
-        if (!is_dir($templates_dir)) {
-            throw new \Core\NotFoundException(
-                "Cannot find templates directory: '{$templates_dir}'.", 1
-            );
-        }
-
-        $templates = $this->templates_find($templates_dir);
-
-        // Create cache directory if not there already
-        if (!file_exists($this->cache_root)) {
-            \Core\FS::dir_create($this->cache_root);
-        }
-
-        // Parse all templates...
-        foreach ($templates as $handle => &$template) {
-            $parser = new \Mysli\Tplp\Parser(
-                file_get_contents(ds($templates_dir, $handle . '.tplm.html'))
-            );
-            $template = $parser->parse();
-        }
-
-        // Resolve templates' inner dependencies (::use <file>)
-        $resover = new \Mysli\Tplp\InclusionsResolver($templates);
-        $templates = $resover->resolve();
-
-        // Save files
-        $created = 0;
-        foreach ($templates as $handle => $template) {
-            $cache_filename = ds($this->cache_root, $handle . '.php');
-            \Core\FS::file_create_with_dir($cache_filename, true);
-            $created += file_put_contents($cache_filename, $template);
-        }
-
-        return $created;
-    }
-
-    /**
-     * Remove cache for package.
-     * --
-     * @return boolean
-     */
-    public function cache_remove()
-    {
-        if (file_exists($this->cache_root)) {
-            return \Core\FS::dir_remove($this->cache_root);
-        } else return true;
     }
 }

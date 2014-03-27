@@ -6,6 +6,11 @@ class Parser
 {
     private $template;
 
+    /**
+     * Construct Parser.
+     * --
+     * @param string $template
+     */
     public function __construct($template)
     {
         $this->template = $template;
