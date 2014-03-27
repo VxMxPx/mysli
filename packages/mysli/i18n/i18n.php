@@ -18,12 +18,8 @@ class I18n
      */
     public function __construct(array $pkgm_trace, $config)
     {
-        // Pkgm trace is array, list of packages, which required this package.
-        // In this case, we'll use this info, to construct
-        // customized config, containing only element meant for package, which
-        // required config.
         array_pop($pkgm_trace); // Remove self
-        $this->package = array_pop($pkgm_trace); // Get actual package which required config.
+        $this->package = array_pop($pkgm_trace);
 
         // Get filename
         $this->filename = str_replace('/', '.', $this->package);

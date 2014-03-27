@@ -537,6 +537,10 @@ Please see API section bellow for list of methods to be implemented.
 
 This class will be automatically constructed for you package.
 
+#### object translator ( void )
+
+Get translator object. Return `\Mysli\I18n\Translator`.
+
 #### boolean cache_create ( string $folder = 'i18n' )
 
 Create cache for current package.
