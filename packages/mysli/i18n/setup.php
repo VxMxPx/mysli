@@ -24,7 +24,7 @@ class Setup
 
         $this->config->merge([
             'primary_language'  => 'en',
-            'fallback_language' => null
+            'secondary_language' => null
         ]);
         $this->config->write();
 

@@ -58,12 +58,15 @@ public function __construct($i18n)
 {
     // No need to specify anything, i18n require pkgm_trance when constructed,
     // and automatically load according language for your package.
-    $hello = $i18n->translate('hello_world');
+
+    $translator = $i18n->translator();
+
+    $hello = $translator->translate('hello_world');
 
     // Current language was read from configuration, but you can change it...
-    $i18n->set_language('ru');
-    $i18n->set_fallback_language('en');
-    $privet = $i18n->translate('hello');
+    $translator->primary('ru');
+    $translator->secondary('en');
+    $privet = $translator->translate('hello');
 }
 ```
 
@@ -71,10 +74,10 @@ public function __construct($i18n)
 
 The following configurations are available:
 
-| Key               | Default | Description                                |
-|-------------------|---------|--------------------------------------------|
-| primary_language  | en      | The language which is primarily used.      |
-| fallback_language | null    | Fallback language, if primary not found.   |
+| Key                | Default | Description                                |
+|--------------------|---------|--------------------------------------------|
+| primary_language   | en      | The language which is primarily used.      |
+| secondary_language | null    | Fallback language, if primary not found.   |
 
 ## File Syntax and Usage
 
@@ -103,7 +106,7 @@ You can access translation with `translate` method, required parameter is key,
 which can be lower case, and without _at_ symbol:
 
 ```php
-$i18n->translate('key'); // => Value
+$translator->translate('key'); // => Value
 ```
 
 ### Variables
@@ -115,7 +118,7 @@ Use curly brackets to define a variable:
 ```
 
 ```php
-$i18n->translate('greet_user', 'Jasna'); // => Hello Jasna.
+$translator->translate('greet_user', 'Jasna'); // => Hello Jasna.
 ```
 
 Multiple variables:
@@ -125,7 +128,7 @@ Multiple variables:
 ```
 
 ```php
-$i18n->translate('greet_user', ['Jasna', 21]); // => Hello Jasna, you're 21 years old.
+$translator->translate('greet_user', ['Jasna', 21]); // => Hello Jasna, you're 21 years old.
 ```
 
 Use strings inside variables:
@@ -135,7 +138,7 @@ Use strings inside variables:
 ```
 
 ```php
-$i18n->translate(
+$translator->translate(
     'login',
     '<a href="#login">%s</a>'
 ); // => Please <a href="#login">login here</a>.
@@ -153,7 +156,7 @@ When calling _translate_ method, you should pass `$key` as an array, first eleme
 being actual key, send second number. See the example bellow...
 
 ```php
-$i18n->translate(['comments', 2]); // => Two comments!
+$translator->translate(['comments', 2]); // => Two comments!
 ```
 
 To cover all numbers greater (or smaller) than particular number, you can use
@@ -165,9 +168,9 @@ plus or minus symbol to the right of the number:
 ```
 
 ```php
-$i18n->translate(['comments', 3]); // => Three or more comments!
-$i18n->translate(['comments', 23]); // => Three or more comments!
-$i18n->translate(['temperature', -12]); // => It's freezing!
+$translator->translate(['comments', 3]); // => Three or more comments!
+$translator->translate(['comments', 23]); // => Three or more comments!
+$translator->translate(['temperature', -12]); // => It's freezing!
 ```
 
 You can also target particular range of numbers, putting three dots between two values:
@@ -178,8 +181,8 @@ You can also target particular range of numbers, putting three dots between two 
 ```
 
 ```php
-$i18n->translate(['age', 1]); // => Hopes
-$i18n->translate(['age', 3]); // => Will
+$translator->translate(['age', 1]); // => Hopes
+$translator->translate(['age', 3]); // => Will
 ```
 
 Using asterisk (*) symbol you can even match particular numeric patterns:
@@ -191,11 +194,11 @@ Using asterisk (*) symbol you can even match particular numeric patterns:
 ```
 
 ```php
-$i18n->translate(['num', 7]); // => I'm ending with 7!
-$i18n->translate(['num', -7]); // => I'm ending with 7!
-$i18n->translate(['num', 1127]); // => I'm ending with 7!
-$i18n->translate(['num', 43]); // => I'm starting with 4!
-$i18n->translate(['num', 1992]); // => I'm starting with 1 and ending with 2!
+$translator->translate(['num', 7]); // => I'm ending with 7!
+$translator->translate(['num', -7]); // => I'm ending with 7!
+$translator->translate(['num', 1127]); // => I'm ending with 7!
+$translator->translate(['num', 43]); // => I'm starting with 4!
+$translator->translate(['num', 1992]); // => I'm starting with 1 and ending with 2!
 ```
 
 You can use variables in combination with pluralization:
@@ -205,7 +208,7 @@ You can use variables in combination with pluralization:
 ```
 
 ```php
-$i18n->translate(['comments', 6], 6); // => 6 Comments
+$translator->translate(['comments', 6], 6); // => 6 Comments
 ```
 
 Note, in the example above, the first parameter is an array, containing key,
@@ -217,7 +220,7 @@ This repetition can be avoided using `{n}` in the translation:
 ```
 
 ```php
-$i18n->translate(['comments', 6]); // => 6 Comments
+$translator->translate(['comments', 6]); // => 6 Comments
 ```
 
 It's possible to combine multiple rules, using comma:
@@ -228,9 +231,9 @@ It's possible to combine multiple rules, using comma:
 ```
 
 ```php
-$i18n->translate(['numbers', 12]); // => I'm either 12 or 24!
-$i18n->translate(['numbers', 5]); // => I'm odd!
-$i18n->translate(['numbers', 4537]); // => I'm odd!
+$translator->translate(['numbers', 12]); // => I'm either 12 or 24!
+$translator->translate(['numbers', 5]); // => I'm odd!
+$translator->translate(['numbers', 4537]); // => I'm odd!
 ```
 
 ### Multiline Text
@@ -249,8 +252,8 @@ adipisicing elit.
 ```
 
 ```php
-$i18n->translate('lorem'); // => Lorem ipsum dolor sit amet, consectetur adipisicing elit.
-$i18n->translate('ipsum'); // => Ipsum dolor sit amet, consectetur adipisicing elit.
+$translator->translate('lorem'); // => Lorem ipsum dolor sit amet, consectetur adipisicing elit.
+$translator->translate('ipsum'); // => Ipsum dolor sit amet, consectetur adipisicing elit.
 ```
 
 If you want to preserve new lines, the `[n]` can be used in translation:
@@ -262,7 +265,7 @@ adipisicing elit.
 ```
 
 ```php
-$i18n->translate('lorem'); // => Lorem ipsum dolor sit amet, consectetur adipisicing elit.
+$translator->translate('lorem'); // => Lorem ipsum dolor sit amet, consectetur adipisicing elit.
 ```
 
 ### Other
@@ -275,8 +278,8 @@ In some situation true/false value can be assigned to the key:
 ```
 
 ```php
-$i18n->translate(['loggedin', true]); // => You're logged in!
-$i18n->translate(['loggedin', false]); // => You're not logged in!
+$translator->translate(['loggedin', true]); // => You're logged in!
+$translator->translate(['loggedin', false]); // => You're not logged in!
 ```
 
 ## For Translators
@@ -524,69 +527,81 @@ This package has a standard role `~i18n`.
 You can make your own implementation of i18n package. You can extend the file
 format, but make sure to fully support existing syntax.
 
-Following methods are required:
-
-| Return      | Method Name           | Parameters                             |
-|-------------|-----------------------|----------------------------------------|
-| integer     | exists                | string $language                       |
-| null        | set_language          | string $language                       |
-| null        | set_fallback_language | string $language                       |
-| array       | cache_as_array        | void                                   |
-| boolean     | cache_create          | string $folder                         |
-| boolean     | cache_remove          | void                                   |
-| string      | translate             | string,array $key, array $variable     |
-| array       | mt_to_array           | string $mt                             |
+Please see API section bellow for list of methods to be implemented.
 
 ## API
 
-### integer exists ( string $language )
+### \Mysli\I18n
+
+#### null __construct ( array $pkg_trace, object $config )
+
+This class will be automatically constructed for you package.
+
+#### boolean cache_create ( string $folder = 'i18n' )
+
+Create cache for current package.
+
+#### boolean  cache_remove ( void )
+
+Remove cache for current package.
+
+### \Mysli\I18n\Translator
+
+#### null __construct ( array $dictionary, string $primary, string $secondary )
+
+You don't need to manually construct translator, you can just use `$i18n->translator()`
+and dictionaries + languages will be automatically set for your package.
+
+```
+$translator = new \Mysli\I18n\Translator($dictionary, 'ru', null);
+// Better...
+$translator = $i18n->translator();
+```
+
+#### integer exists ( string $language )
 
 Check if particular language exists in a dictionary. Return number of keys
 for particular language, 0 if language doesn't exists.
 
 ```php
-$i18n->exists('ru'); // 230
+$translator->exists('ru'); // 230
 
-if ( ! $i18n->exists('ru')) {
+if ( ! $translator->exists('ru')) {
     // Do something
 }
 
-if ($i18n->exists('ru') === 0) {
+if ($translator->exists('ru') === 0) {
     // Do something
 }
 ```
 
-### null set_language ( string $language )
+#### string primary ( string $language = null )
 
-Set primary language for translations. This will be automatically set, when the
-i18n is constructed (value read from settings).
-
-```php
-$i18n->set_language('ru');
-```
-
-### null set_fallback_language ( string $language )
-
-Set fallback language, if primary language not found. This will be automatically set,
-when the i18n is constructed (value read from settings).
+Set primary language for translations.
+This will be automatically set, when the translator is constructed
+(value from i18n, from config).
 
 ```php
-$i18n->set_fallback_language('en');
+$translator->primary('ru');
+$translator->primary(); // => ru
 ```
 
-### array as_array ( void )
+#### string secondary ( string $language = null )
+
+Set / Get secondary language, if primary language not found.
+This will be automatically set, when the translator is constructed
+(value from i18n, from config).
+
+```php
+$translator->secondary('en');
+$translator->secondary(); // => en
+```
+
+#### array as_array ( void )
 
 Return dictionary (cache) as an array.
 
-### boolean cache_create ( string $folder = 'i18n' )
-
-Create cache for current package.
-
-### boolean  cache_remove ( void )
-
-Remove cache for current package.
-
-### string translate ( string|array $key, array $variable = [] )
+#### string translate ( string|array $key, array $variable = [] )
 
 Translate the key! If key not found in either primary or fallback language cache,
 null is returned.
@@ -594,32 +609,59 @@ null is returned.
 ```php
 // Simple key
 // .mt = @HELLO Hello!
-$i18n->translate('hello'); // => Hello!
+$translator->translate('hello'); // => Hello!
 
 // Key with variables
 // .mt = @HELLO_MY_NAME_IS Hello, my name is {1}.
-$i18n->translate('hello_my_name_is', ['Lada']); // => Hello, my name is Lada.
+$translator->translate('hello_my_name_is', ['Lada']); // => Hello, my name is Lada.
 
 // Key with enumeration
 // .mt = @COMMENTS[0] No comments
 // .mt = @COMMENTS[1] One comment.
-$i18n->translate(['comments', 0]); // => No comments.
+$translator->translate(['comments', 0]); // => No comments.
 // More than ...
-// .mt = @COMMENTS[1+] {1} comments.
-$i18n->translate(['comments', 3], [3]); // => 3 comments.
+// .mt = @COMMENTS[1+] {n} comments.
+$translator->translate(['comments', 3]); // => 3 comments.
 // Less than ...
 // .mt = @TEMPERATURE[0-] It's {1}°C bellow the zero.
-$i18n->translate(['temperature', -12], [12]); // => It's 12°C bellow the zero.
+$translator->translate(['temperature', -12], [12]); // => It's 12°C bellow the zero.
 // Range
 // .mt = @AGE[10...19] Teenage!
-$i18n->translate(['age', 15]); // => Teenage!
+$translator->translate(['age', 15]); // => Teenage!
 
 // Boolean key
 // .mt = @LOGGEDIN[true]  You're logged in!
 // .mt = @LOGGEDIN[false] You're NOT logged in!
-$i18n->translate(['loggedin', false]); // => You're NOT logged in!
+$translator->translate(['loggedin', false]); // => You're NOT logged in!
 ```
 
-### array process_translation ( string $mt )
+#### string translate_as ( string|array $key, $language, array $variable = [] )
+
+Translate the ket to particular language. If key not found, null is returned.
+
+```php
+$translator->translate('hello', 'ru'); // => privet
+```
+
+### \Mysli\I18n\Parser
+
+#### (static) array parse ( string $trasnaltion )
 
 Process Mysli Translation (mt) and return an array.
+
+```php
+$translation = <<<EOD
+@HELLO hello
+@WORLD world
+EOD;
+
+\Mysli\I18n\Parser::parse($translation); // =>
+// [
+//     '.meta' => [
+//         'created_on' => 20140327104900, // gmdate('YmdHis')
+//         'modified'   => false
+//     ],
+//     'HELLO' => 'hello',
+//     'WORLD' => 'world'
+// ]
+```
