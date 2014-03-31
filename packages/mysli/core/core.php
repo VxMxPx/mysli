@@ -129,7 +129,6 @@ class Core
             );
 
         // Construct pkgm class
-        $this->pkgm = true;
-        return new $pkg_info['class']();
+        return ($this->pkgm = new $pkg_info['class']());
     }
 }
