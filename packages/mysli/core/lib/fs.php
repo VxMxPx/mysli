@@ -732,14 +732,16 @@ class FS
      * --
      * @param  string  $directory
      * @param  boolean $deep
+     * @param  boolean $ignore_dot Ignore dot files and folders.
      * --
      * @return array
      */
-    public static function dir_signatures($directory, $deep = true)
+    public static function dir_signatures($directory, $deep = true, $ignore_dot = true)
     {
         $result = [];
         $files = array_diff(scandir($directory), ['.','..']);
         foreach ($files as $file) {
+            if ($ignore_dot && substr($file, 0, 1) === '.') continue;
             $filename = ds($directory, $file);
             if (is_dir($filename)) {
                 $result = array_merge($result, self::dir_signatures($filename));
