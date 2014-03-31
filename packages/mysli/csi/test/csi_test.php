@@ -85,9 +85,9 @@ class CSITest extends \PHPUnit_Framework_TestCase
         $csi = new \Mysli\CSI('mysli/test');
 
         // DEFAULT
-        $csi->on_validate(function () { });
-        $csi->validate();
-        $this->assertEquals('none', $csi->status());
+        // $csi->on_validate(function () { });
+        // $csi->validate();
+        // $this->assertEquals('none', $csi->status());
 
         // TRUE
         $csi->on_validate(function () { return true; });

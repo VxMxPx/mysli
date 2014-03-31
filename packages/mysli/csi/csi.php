@@ -223,7 +223,7 @@ class CSI
         foreach ($values as $field_id => $value) {
             if ($check_unique) {
                 $prefix = 'csi_'. $this->id . '_';
-                if (substr($field_id, 0, strlen($prefix))) {
+                if (substr($field_id, 0, strlen($prefix)) === $prefix ) {
                     $field_id = substr($field_id, strlen($prefix));
                 } else continue;
             }
@@ -286,29 +286,28 @@ class CSI
     {
         // Parse values!
         if ($values) {
-            $this->set($values);
+            $this->set_multiple($values, true);
         }
+
+        $statuses = [];
 
         if (is_callable($this->on_validate)) {
             $status = call_user_func_array($this->on_validate, [&$this->fields]);
-            if     ($status === true)  $this->status = 'success';
-            elseif ($status === false) $this->status = 'failed';
+            $statuses[] = $status;
+            // if     ($status === true)  $this->status = 'success';
+            // elseif ($status === false) $this->status = 'failed';
         }
 
         // Collection of statuses
-        $statuses = [];
         foreach ($this->fields as $field => &$properties) {
 
             // Reset field's messages
             $properties['messages'] = [];
 
             if (is_callable($properties['callback'])) {
-                $status = call_user_func_array(
-                    $properties['callback'],
-                    [
-                        &$properties
-                    ]
-                );
+
+                // Call costume function
+                $status = call_user_func_array($properties['callback'], [&$properties]);
 
                 // Set field's status
                 $properties['status'] = $status;
@@ -323,10 +322,10 @@ class CSI
                 $statuses[] = $status;
 
                 // Check if we've got -1
-                if ($status === -1) {
-                    $this->status = 'interrupted';
-                    return false;
-                }
+                // if ($status === -1) {
+                //     $this->status = 'interrupted';
+                //     return false;
+                // }
             } else {
                 $properties['status'] = true;
                 $statuses[] = true;
