@@ -20,7 +20,7 @@ class Pkgm
     {
         \Cli\Util::doc(
             'Mysli Core :: Packages Management',
-            'packages <OPTION> [ARGUMENTS...]',
+            'pkgm <OPTION> [ARGUMENTS...]',
             [
                 'enable'  => 'Will enable particular package.',
                 'disable' => 'Will disable particular package.',
@@ -136,6 +136,7 @@ class Pkgm
                     $fields = [];
                     foreach ($csi->get_fields() as $field_id => $properties) {
                         if (isset($properties['messages'])) {
+                            if (!is_array($properties['messages'])) $properties['messages'] = [$properties['messages']];
                             \Cli\Util::warn(implode("\n", $properties['messages']));
                             $fields[$field_id] = $properties;
                         }
@@ -393,6 +394,8 @@ class Pkgm
         // Ask if configurations should be removed also
         $this->on_disable_remove_config =
             \Cli\Util::confirm('Completely remove all associated configurations?');
+
+        \Cli\Util::nl();
 
         // Get package dependees!
         $dependees = $this->pkgm->get_dependees($pkg, true);
