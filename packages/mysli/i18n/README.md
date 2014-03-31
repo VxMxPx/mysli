@@ -93,10 +93,8 @@ You should save them as `UTF-8`, `no BOM`, with `LF` line endings, preferably to
 
 The basic syntax is:
 
-```
-# Comment
-@KEY Value
-```
+    # Comment
+    @KEY Value
 
 The key must always be in all upper case letters, prefixed with _at_ (@) symbol,
 at the very beginning of the line. Between key and value needs to be at least
@@ -289,11 +287,9 @@ $translator->translate(['loggedin', false]); // => You're not logged in!
 When editing a file which has an extension .mt, you'll be presented with a content
 like the one in the example below:
 
-```
-# I'm a Comment!
-@WHATS_YOUR_NAME What's your name
-@LOGOUT Logout
-```
+    # I'm a Comment!
+    @WHATS_YOUR_NAME What's your name
+    @LOGOUT Logout
 
 Everything that **starts with a hash symbol (#)** is a **comment**. Comments are there
 only to give you an idea of what's going on and / or to give you the further

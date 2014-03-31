@@ -11,7 +11,8 @@
     "inject" : {
         "exclude" : ["~core"],
         "main"    : ["#pkgm_trace", "~config"],
-        "setup"   : ["~csi", "~config"]
+        "setup"   : ["~csi", "~config"],
+        "script"  : ["~config"]
     },
     "maintainer"    : "Marko Gajšt <marko@gaj.st>",
     "description"   : "Mysli Internationalization Package."
