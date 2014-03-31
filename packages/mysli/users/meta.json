@@ -3,7 +3,7 @@
     "instantiation" : "once",
     "version"       : 1,
     "depends_on"    : {
-        "~core"     : ">= 0.1"
+        "~core"     : ">= 1"
     },
     "maintainer"    : "Marko Gajšt <marko@gaj.st>",
     "description"   : "Basic users collections."
