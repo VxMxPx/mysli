@@ -10,6 +10,7 @@ class Web
     protected $request;
     protected $response;
     protected $output;
+    protected $config;
 
     /**
      * Construct Web object.
@@ -26,6 +27,7 @@ class Web
         // $this->pubpath = MYSLI_PUBPATH;
         $this->pubpath = realpath(datpath($config->get('relative_path')));
 
+        $this->config = $config;
         $this->event = $event;
         $this->request = $request;
         $this->response = $response;
@@ -48,7 +50,7 @@ class Web
         // Events...
         $this->event->trigger(
             "mysli/web/route:{$method}<{$route}>",
-            [$this->response]
+            [$this->response, $method, $route]
         );
 
         if ($this->response->get_status() === 0) {
