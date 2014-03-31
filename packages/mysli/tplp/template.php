@@ -35,7 +35,7 @@ class Template
     {
         $this->translator = $translator;
         $this->variables['tplp_translator_service'] = function () {
-            call_user_func_array([$translator, 'translate'], func_get_args());
+            return call_user_func_array([$this->translator, 'translate'], func_get_args());
         };
     }
 

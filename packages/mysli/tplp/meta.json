@@ -5,11 +5,12 @@
     "version"       : 1,
     "depends_on"    : {
         "~core"     : ">= 1",
-        "~i18n"     : ">= 1"
+        "~csi"      : ">= 1"
     },
     "inject"        : {
         "exclude"   : ["~core"],
-        "main"      : ["#pkgm_trace"]
+        "main"      : ["#pkgm_trace"],
+        "setup"     : ["~csi"]
     },
     "maintainer"    : "Marko Gajšt <marko@gaj.st>",
     "description"   : "Default template parser."

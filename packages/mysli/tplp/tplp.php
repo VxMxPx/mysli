@@ -65,7 +65,7 @@ class Tplp
             );
         }
 
-        return new \Mysli\Tplp\Template($filename, $translator);
+        return new \Mysli\Tplp\Template($filename, $this->translator);
     }
 
     /**
