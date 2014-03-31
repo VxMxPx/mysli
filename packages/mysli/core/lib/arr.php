@@ -559,7 +559,7 @@ class Arr
         $get  = $input_array;
 
         foreach ($path as $w) {
-            if (array_key_exists($w, $get)) {
+            if (array_key_exists($w, $get) && $get[$w] !== null) {
                 $get = $get[$w];
             } else {
                 return $default;
