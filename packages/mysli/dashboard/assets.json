@@ -1,0 +1,26 @@
+{
+	"css/main.css" : [
+		"css/fonts.css"
+	],
+	"css/login.css" : [
+		"css/fonts.css",
+		"css/variables.styl",
+		"css/elements.styl",
+		"css/login.styl"
+	],
+	"js/ext.js" : [
+		"js/zepto/zepto.js",
+		"js/zepto/event.js",
+		"js/zepto/ajax.js",
+		"js/zepto/form.js",
+		"js/zepto/ie.js",
+		"js/zepto/fx.js",
+		"js/zepto/fx_methods.js"
+	],
+	"js/mysli.js" : [
+		"js/mysli/mysli.js"
+	],
+	"js/login.js" : [
+		"js/dash/login.js"
+	]
+}

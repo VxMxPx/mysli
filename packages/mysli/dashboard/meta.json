@@ -3,14 +3,20 @@
     "instantiation" : "once",
     "version"       : 1,
     "depends_on"    : {
-        "~core"        : ">= 1",
-        "mysli/web"    : ">= 1",
-        "~event"       : ">= 1",
-        "~output"      : ">= 1"
+        "~core"         : ">= 1",
+        "mysli/web"     : ">= 1",
+        "mysli/session" : ">= 1",
+        "mysli/users"   : ">= 1",
+        "~csi"          : ">= 1",
+        "~event"        : ">= 1",
+        "~output"       : ">= 1",
+        "~i18n"         : ">= 1",
+        "~tplp"         : ">= 1"
     },
     "inject"        : {
-        "main" : ["~output"],
-        "setup": ["mysli/web", "~event"]
+        "main"   : ["mysli/web", "mysli/session", "~output", "~tplp", "~i18n"],
+        "setup"  : ["~csi", "mysli/web", "mysli/users", "~event", "~tplp", "~i18n"],
+        "script" : ["mysli/web"]
     },
     "maintainer"    : "Marko Gajšt <marko@gaj.st>",
     "description"   : "Default Mysli Dashboard."

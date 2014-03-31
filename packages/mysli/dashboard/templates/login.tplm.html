@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>{@MYSLI_LOGIN}</title>
+    {'css/login.css'|$assets}
+</head>
+<body id="login">
+    <h1>
+        {@HI_THERE}
+        <small>{@LOGIN_TO_PROCEED}</small>
+    </h1>
+    <div class="messages"></div>
+    <div class="box">
+        <form action="{'login'|$dashurl}" method="post" class="styled mysli">
+            <fieldset>
+                <div class="field">
+                    <input type="text" name="username" placeholder="{@USERNAME}" />
+                </div>
+                <div class="field">
+                    <input type="password" name="password" placeholder="{@PASSWORD}">
+                </div>
+            </fieldset>
+            <div class="field">
+                <input type="checkbox" name="remember_me" id="remember_me">
+                <label for="remember_me">{@REMEMBER_ME}</label>
+            </div>
+            <div class="controls">
+                <button type="submit" class="primary">{@LOGIN}</button>
+            </div>
+        </form>
+    </div>
+    <div class="logo">
+        <a href="http://mysli.io"><span>MYSLI.io</span></a>
+    </div>
+    {'js/ext.js'|$assets}
+    {'js/mysli.js'|$assets}
+    {'js/login.js'|$assets}
+</body>
+</html>
