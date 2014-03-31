@@ -21,13 +21,13 @@ class Setup
             'change_id_on_renew' => false,
         ]);
         $this->config->write();
-        \FS::dir_create(datpath('session'), \FS::EXISTS_MERGE);
+        \Core\FS::dir_create(datpath('session'), \Core\FS::EXISTS_MERGE);
         return true;
     }
 
     public function before_disable()
     {
         $this->config->destroy();
-        return \FS::dir_remove(datpath('session'));
+        return \Core\FS::dir_remove(datpath('session'));
     }
 }

@@ -4,11 +4,14 @@
     "instantiation" : "once",
     "version"       : 1,
     "depends_on"    : {
-        "~core"    : ">= 1",
-        "~config"  : ">= 1",
-        "*/cookie" : ">= 1",
-        "*/users"  : ">= 1",
-        "*/logger" : ">= 1"
+        "~core"        : ">= 1",
+        "~config"      : ">= 1",
+        "mysli/cookie" : ">= 1",
+        "mysli/users"  : ">= 1"
+    },
+    "inject" : {
+        "exclude" : ["~core"],
+        "setup"   : ["~config"]
     },
     "maintainer"    : "Marko Gajšt <marko@gaj.st>",
     "description"   : "Basic session functionality."
