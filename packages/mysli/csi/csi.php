@@ -117,6 +117,16 @@ class CSI
     }
 
     /**
+     * Output particular text...
+     * --
+     * @return object $this
+     */
+    public function paragraph($text)
+    {
+        $this->generic(count($this->fields), 'paragraph', $text);
+    }
+
+    /**
      * Input field. HTML: <input type="text" ...
      * --
      * @param  string   $id
