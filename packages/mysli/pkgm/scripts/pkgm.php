@@ -134,8 +134,10 @@ class Pkgm
                 // Validation failed.
                 case 'failed':
                     $fields = [];
+                    \Cli\Util::nl();
+                    \Cli\Util::plain('Please correct following errors:');
                     foreach ($csi->get_fields() as $field_id => $properties) {
-                        if (isset($properties['messages'])) {
+                        if ($properties['messages']) {
                             if (!is_array($properties['messages'])) $properties['messages'] = [$properties['messages']];
                             \Cli\Util::warn(implode("\n", $properties['messages']));
                             $fields[$field_id] = $properties;
@@ -159,12 +161,38 @@ class Pkgm
 
                 if ($properties['type'] === 'hidden') { continue; }
 
-                $value = $this->csi_input($properties);
-                // Set either value from the input or the default if exists.
-                $value = $value === '' && $properties['default']
-                    ? $properties['default']
-                    : $value;
-                $csi->set($field_id, $value);
+                if ($properties['type'] === 'paragraph') {
+                    \Cli\Util::nl();
+                    \Cli\Util::plain($properties['label']);
+                }
+
+                do {
+                    $value = $this->csi_input($properties);
+                    $properties['value'] = $value === '' && $properties['default']
+                        ? $properties['default']
+                        : $value;
+                    // Validate individual field (if it has callback)
+                    if ($properties['callback']) {
+                        $status = call_user_func_array($properties['callback'], [&$properties]);
+                        if (!$status) {
+                            if (isset($properties['messages'])) {
+                                $properties['messages'] = is_array($properties['messages'])
+                                    ? $properties['messages']
+                                    : [$properties['messages']];
+                                \Cli\Util::nl();
+                                \Cli\Util::warn(implode("\n", $properties['messages']));
+                            }
+                        }
+                    } else {
+                        $status = true;
+                    }
+
+                    // Set either value from the input or the default if exists.
+                    // $value = $value === '' && $properties['default']
+                    //     ? $properties['default']
+                    //     : $value;
+                    $csi->set($field_id, $properties['value']);
+                } while (!$status);
             }
         // Until validation succeed!
         } while (!$csi->validate());
