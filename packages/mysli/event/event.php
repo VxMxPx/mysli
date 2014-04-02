@@ -82,6 +82,11 @@ class Event
             $events[$event] = [];
         }
 
+        // Prevent duplicates...
+        if (in_array($call, $evens[$event])) {
+            return true;
+        }
+
         if ($priority === self::PRIORITY_LOW) {
             $events[$event][] = $call;
         } else {
