@@ -4,10 +4,13 @@ namespace Mysli\Tplp;
 
 class Template
 {
-    protected $translator;
-    protected $filename;
+    use \Mysli\Tplp\ExtData;
 
-    protected $variables = [];
+    private $translator;
+    private $filename;
+
+    private $functions = [];
+    private $variables = [];
 
     /**
      * Construct template object.
@@ -15,13 +18,20 @@ class Template
      * @param string $filename
      * @param object $translator -- Used in translations!
      */
-    public function __construct($filename, $translator = null)
-    {
-        if (is_object($translator) && method_exists($translator, 'translate')) {
-            $this->set_translator($translator);
-        }
-
+    public function __construct(
+        $filename,
+        $translator = null,
+        array $variables = [],
+        array $functions = []
+    ) {
         $this->filename = $filename;
+
+        $this->functions = $functions;
+        $this->variables = $variables;
+
+        if (is_object($translator) && method_exists($translator, 'translate')) {
+            $this->translator_set($translator);
+        }
     }
 
     /**
@@ -31,46 +41,12 @@ class Template
      * --
      * @return null
      */
-    public function set_translator($translator)
+    public function translator_set($translator)
     {
         $this->translator = $translator;
         $this->variables['tplp_translator_service'] = function () {
             return call_user_func_array([$this->translator, 'translate'], func_get_args());
         };
-    }
-
-    /**
-     * Set variables.
-     * --
-     * @param mixed $key - string|array
-     * @param mixed $value
-     * --
-     * @throws \Core\ValueException If variable name is not valid: a-zA-Z0-9_ (1)
-     * @throws \Core\ValueException If Variable start with: tplp_ (2)
-     * --
-     * @return null
-     */
-    public function data($key, $value = null)
-    {
-        if (is_array($key)) {
-            foreach ($key as $var => $val) {
-                $this->data($var, $val);
-            }
-            return;
-        }
-
-        if (!preg_match('/^[a-z_][a-z0-9_]*?$/i', $key)) {
-            throw new \Core\ValueException(
-                "Invalid variable name: `{$key}`.".
-                'Variable can contain only: `a-zA-Z0-9_`.', 1
-            );
-        }
-
-        if (substr($key, 0, 5) === 'tplp_') {
-            throw new \Core\ValueException("Variable cannot start with: `tplp_`.", 2);
-        }
-
-        $this->variables[$key] = $value;
     }
 
     /**
@@ -81,8 +57,8 @@ class Template
     public function render()
     {
         // Assign variables...
-        foreach($this->variables as $var => $val) {
-            $$var = $val;
+        foreach(array_merge( $this->variables, $this->functions ) as $tplp_template_var => $tplp_template_val) {
+            $$tplp_template_var = $tplp_template_val;
         }
 
         ob_start();

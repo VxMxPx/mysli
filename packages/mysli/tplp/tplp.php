@@ -4,6 +4,26 @@ namespace Mysli;
 
 class Tplp
 {
+    use \Mysli\Tplp\ExtData;
+
+    /**
+     * Registry is an array of globally registered functions and variables.
+     * --
+     * @var array
+     */
+    static private $registry = [
+        'functions' => [],
+        'variables' => []
+    ];
+
+    /**
+     * Collection of instantiated classes, used for costume function calls in
+     * template(s).
+     * --
+     * @var array
+     */
+    static private $objects  = [];
+
     /**
      * Package which required tplp
      * @var string
@@ -23,6 +43,13 @@ class Tplp
     private $translator = null;
 
     /**
+     * Collection of user defined variables and functions.
+     */
+    private $functions = [];
+    private $variables = [];
+
+
+    /**
      * Instance of Tplp
      * --
      * @param array $pkgm_trace
@@ -32,6 +59,71 @@ class Tplp
         array_pop($pkgm_trace); // Remove self
         $this->package = array_pop($pkgm_trace);
         $this->cache_dir = datpath('tplp', str_replace('/', '.', $this->package));
+
+        $this->functions = array_merge($this->functions, self::$registry['functions']);
+        $this->variables = array_merge($this->variables, self::$registry['variables']);
+    }
+
+    /**
+     * Add globally available function...
+     * --
+     * @param  string   $name
+     * @param  callable $function
+     * --
+     * @return null
+     */
+    public function function_register($name, $function)
+    {
+        try {
+            $this->function_set($name, $function);
+            self::$registry['functions']['tplp_func_' . $name] = $function;
+        } catch (\Exception $e) {
+            throw $e;
+        }
+    }
+
+    /**
+     * Remove globally available function...
+     * --
+     * @param  string $name
+     * --
+     * @return null
+     */
+    public function function_unregister($name)
+    {
+        unset(self::$registry['functions']['tplp_func_' . $name]);
+        unset($this->functions['tplp_func_' . $name]);
+    }
+
+    /**
+     * Add globally available variable...
+     * --
+     * @param  string $name
+     * @param  mixed  $value
+     * --
+     * @return null
+     */
+    public function variable_register($name, $value)
+    {
+        try {
+            $this->variable_set($name, $value);
+            self::$registry['variables'][$name] = $value;
+        } catch (\Exception $e) {
+            throw $e;
+        }
+    }
+
+    /**
+     * Remove globally available variable...
+     * --
+     * @param  string $name
+     * --
+     * @return null
+     */
+    public function variable_unregister($name)
+    {
+        unset(self::$registry['variables'][$name]);
+        unset($this->variables[$name]);
     }
 
     /**
@@ -41,7 +133,7 @@ class Tplp
      * --
      * @return null
      */
-    public function set_translator($translator)
+    public function translator_set($translator)
     {
         $this->translator = $translator;
     }
@@ -65,7 +157,12 @@ class Tplp
             );
         }
 
-        return new \Mysli\Tplp\Template($filename, $this->translator);
+        return new \Mysli\Tplp\Template(
+            $filename,
+            $this->translator,
+            $this->variables,
+            $this->functions
+        );
     }
 
     /**

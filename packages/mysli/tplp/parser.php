@@ -5,6 +5,38 @@ namespace Mysli\Tplp;
 class Parser
 {
     private $template;
+    private static $native_functions = [
+        'abs'           => 'abs(%seg)',
+        'ucfirst'       => 'ucfirst(%seg)',
+        'ucwords'       => 'ucwords(%seg)',
+        'lower'         => 'strtolower(%seg)',
+        'upper'         => 'strtoupper(%seg)',
+        'date'          => 'date(%1, strtotime(%seg))',
+        'join'          => 'implode(%1, %seg)',
+        'split'         => 'explode(%1, %seg, ...)',
+        'length'        => 'strlen(%seg)',
+        'word_count'    => 'str_word_count(%seg)',
+        'count'         => 'count(%seg)',
+        'nl2br'         => 'nl2br(%seg)',
+        'number_format' => 'number_format(%seg, ...)',
+        'replace'       => 'sprintf(%seg, ...)',
+        'round'         => 'round(%seg, ...)',
+        'floor'         => 'floor(%seg)',
+        'ceil'          => 'ceil(%seg)',
+        'strip_tags'    => 'strip_tags(%seg, ...)',
+        'show_tags'     => 'htmlspecialchars(%seg)',
+        'trim'          => 'trim(%seg, ...)',
+        'slice'         => '( is_array(%seg) ? array_slice(%seg, ...) : substr(%seg, ...) )',
+        'word_wrap'     => 'wordwrap(%seg, %1, \'<br/>\')',
+        'max'           => 'max(%seg, ...)',
+        'min'           => 'min(%seg, ...)',
+        'column'        => 'array_column(%seg, %1, ...)',
+        'reverse'       => '( is_array(%seg) ? array_reverse(%seg) : strrev(%seg) )',
+        'contains'      => '( (is_array(%seg) ? in_array(%1, %seg) : strpos(%seg, %1)) !== false )',
+        'key_exists'    => 'array_key_exists(%1, %seg)',
+        'sum'           => 'array_sum(%seg)',
+        'unique'        => 'array_unique(%seg)'
+    ];
 
     /**
      * Construct Parser.
@@ -17,51 +49,59 @@ class Parser
     }
 
     /**
-     * Process variable + function string.
-     * --
-     * @param  string $input
-     * --
-     * @return string
-     */
-    private function parse_variable_with_functions($input)
-    {
-        $input = trim($input);
-        if (!$input) return $input;
-
-        $segments = explode('|', $input);
-        $variable = array_shift($segments);
-        $variable = $this->parse_variable($variable);
-
-        $processed = '%seg';
-        $segments = array_reverse($segments);
-        foreach ($segments as $segment) {
-            $processed = str_replace('%seg', $this->parse_functions($segment), $processed);
-        }
-
-        return str_replace('%seg', $variable, $processed);
-    }
-
-    /**
      * Convert functions to PHP format.
      * --
      * @param  string $function
+     * --
+     * @throws \Mysli\Tplp\ParserException If function parameters are missing.
      * --
      * @return string
      */
     private function parse_functions($function)
     {
+        // Put function to meaningful pieces
         $function = trim($function);
         $segments = explode(':', $function);
-        $function = array_shift($segments);
+        $function = trim(array_shift($segments));
 
-        if (!isset($segments[0])) return $function . '(%seg)';
+        // Check if we any have segments...
+        if (!isset($segments[0])) $segments = [];
         else $segments = explode(',', $segments[0]);
 
-        foreach ($segments as &$segment) {
-            $segment = $this->parse_variable($segment);
+        // Process segments (parameters)
+        foreach ($segments as $key => $segment) {
+            $segments[$key] = $this->parse_variable($segment);
         }
 
-        return $function . '(%seg, ' . implode(', ', $segments) . ')';
+        // If it's one of the native function, then we'll set it as such...
+        if (isset(self::$native_functions[$function])) {
+            $function = self::$native_functions[$function];
+            if (strpos($function, '%1') !== false) {
+                foreach ($segments as $key => $segment) {
+                    if (strpos($function, '%' . ($key + 1))) {
+                        $function = str_replace('%' . ($key + 1), $segment, $function);
+                        unset($segments[$key]);
+                    }
+                }
+                if (preg_match('/%[0-9]+/', $function)) {
+                    throw new \Mysli\Tplp\ParserException(
+                        "Missing parameters: `{$function}`", 1
+                    );
+                }
+            }
+            return str_replace(
+                ', ...',
+                ( $segments ? ', ' . implode(', ', $segments) : '' ),
+                $function
+            );
+        }
+
+        // NOT a native function, set it to be variable (func)...
+        if (empty($segments)) {
+            return '$tplp_func_' . $function . '(%seg)';
+        } else {
+            return '$tplp_func_' . $function . '(%seg, ' . implode(', ', $segments) . ')';
+        }
     }
 
     /**
@@ -91,6 +131,31 @@ class Parser
             } else return "['{$match[1]}']";
         }, $variable);
         return '$' . $variable;
+    }
+
+    /**
+     * Process variable + function string.
+     * --
+     * @param  string $input
+     * --
+     * @return string
+     */
+    private function parse_variable_with_functions($input)
+    {
+        $input = trim($input);
+        if (!$input) return $input;
+
+        $segments = explode('|', $input);
+        $variable = array_shift($segments);
+        $variable = $this->parse_variable($variable);
+
+        $processed = '%seg';
+        $segments = array_reverse($segments);
+        foreach ($segments as $segment) {
+            $processed = str_replace('%seg', $this->parse_functions($segment), $processed);
+        }
+
+        return str_replace('%seg', $variable, $processed);
     }
 
     /**
@@ -192,7 +257,7 @@ class Parser
         preg_replace_callback('/::for ([a-zA-Z0-9\_]+\,\ ?)?([a-zA-Z0-9\_]+) in (.*)/', function ($match) {
             $key = $this->parse_variable(trim($match[1], ', '));
             $val = $this->parse_variable($match[2]);
-            $var = $this->parse_variable($match[3]);
+            $var = $this->parse_variable_with_functions($match[3]);
             $exp = $key ? "{$key} => {$val}" : $val;
             return '<?php foreach (' . $var . ' as ' . $exp . '): ?>';
         }, $template);
