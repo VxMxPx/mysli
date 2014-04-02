@@ -25,6 +25,7 @@ class Setup
         $this->dcsi->hidden('remove_data');
 
         $this->ecsi = new $csi('mysli/dashboard/enable');
+        $this->ecsi->paragraph('Create your first user!');
         $this->ecsi->input(
             'username',
             'Username',
@@ -71,7 +72,9 @@ class Setup
             'password' => $this->ecsi->get('password'),
             'is_super' => true
         ]);
-        $user->save();
+        if ($user) {
+            $user->save();
+        }
 
         return true;
     }

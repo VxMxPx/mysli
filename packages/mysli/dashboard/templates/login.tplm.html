@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <title>{@MYSLI_LOGIN}</title>
-    {'css/login.css'|$assets}
+    {'css/login.css'|assets}
 </head>
 <body id="login">
     <h1>
@@ -12,7 +12,7 @@
     </h1>
     <div class="messages"></div>
     <div class="box">
-        <form action="{'login'|$dashurl}" method="post" class="styled mysli">
+        <form action="{'login'|dashurl}" method="post" class="styled mysli">
             <fieldset>
                 <div class="field">
                     <input type="text" name="username" placeholder="{@USERNAME}" />
@@ -33,8 +33,8 @@
     <div class="logo">
         <a href="http://mysli.io"><span>MYSLI.io</span></a>
     </div>
-    {'js/ext.js'|$assets}
-    {'js/mysli.js'|$assets}
-    {'js/login.js'|$assets}
+    {'js/ext.js'|assets}
+    {'js/mysli.js'|assets}
+    {'js/login.js'|assets}
 </body>
 </html>

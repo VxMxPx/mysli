@@ -11,24 +11,23 @@ class Dashboard
     protected $assets;
     protected $debug = true;
 
-    public function __construct($web, $output, $tplp, $i18n)
+    public function __construct($web, $session, $output, $tplp, $i18n)
     {
         $this->web = $web;
         $this->output = $output;
         $this->tplp = $tplp;
-        $this->tplp->set_translator($i18n->translator());
+        $this->tplp->translator_set($i18n->translator());
 
         $this->assets = \Core\JSON::decode_file(ds(__DIR__, 'assets.json'), true);
+        $this->register_functions();
     }
 
-    public function process_request($response, $method, $route)
+    private function register_functions()
     {
-        $response->status_200_ok();
-        $template = $this->tplp->template('login');
-        $template->data('dashurl', function ($value) {
+        $this->tplp->function_register('dashurl', function ($value) {
             return $this->web->url('dashboard/' . $value);
         });
-        $template->data('assets', function ($name) {
+        $this->tplp->function_set('assets', function ($name) {
 
             // Invalid filename
             if (!isset($this->assets[$name])) return;
@@ -53,6 +52,12 @@ class Dashboard
             }
             return $scripts;
         });
+    }
+
+    public function process_request($response, $method, $route)
+    {
+        $response->status_200_ok();
+        $template = $this->tplp->template('login');
         $this->output->add($template->render());
     }
 }
