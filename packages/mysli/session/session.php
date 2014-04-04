@@ -187,8 +187,9 @@ class Session
      * Create session (set cookie, etc...)
      * --
      * @param   object  $user    Valid user object.
-     * @param   boolean $expires Null for default or costume expiration in seconds,
-     *                           0, to expires when browser is closed.
+     * @param   boolean $expires Null for default
+     *                           init costume expiration in seconds,
+     *                           0 to expires when browser is closed.
      * --
      * @return  boolean
      */
