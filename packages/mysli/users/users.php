@@ -24,9 +24,9 @@ class Users
     {
         $user = $this->get_by_uname($email);
 
-        if (!$user)                         return false;
-        if (!$user->auth_passwd($password)) return false;
-        if (!$user->is_active())            return false;
+        if (!$user)                           return false;
+        if (!$user->auth_password($password)) return false;
+        if (!$user->is_active())              return false;
 
         return $user;
     }
