@@ -14,7 +14,7 @@
         "~tplp"         : ">= 1"
     },
     "inject"        : {
-        "main"   : ["mysli/web", "mysli/session", "~output", "~tplp", "~i18n"],
+        "main"   : ["mysli/web", "mysli/session", "mysli/users", "~output", "~tplp", "~i18n"],
         "setup"  : ["~csi", "mysli/web", "mysli/users", "~event", "~tplp", "~i18n"],
         "script" : ["mysli/web"]
     },

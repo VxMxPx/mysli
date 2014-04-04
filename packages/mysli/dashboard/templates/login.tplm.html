@@ -10,19 +10,31 @@
         {@HI_THERE}
         <small>{@LOGIN_TO_PROCEED}</small>
     </h1>
-    <div class="messages"></div>
     <div class="box">
-        <form action="{'login'|dashurl}" method="post" class="styled mysli">
+
+        ::if messages
+            <div class="messages">
+                ::for message in messages
+                    <p>{message}</p>
+                ::/for
+            </div>
+        ::/if
+
+        <form action="{null|dashurl}" method="post" class="styled mysli">
             <fieldset>
                 <div class="field">
-                    <input type="text" name="username" placeholder="{@USERNAME}" />
+                    <input type="text" name="username" placeholder="{@USERNAME}" value="{username}" />
                 </div>
                 <div class="field">
                     <input type="password" name="password" placeholder="{@PASSWORD}">
                 </div>
             </fieldset>
             <div class="field">
-                <input type="checkbox" name="remember_me" id="remember_me">
+                <input type="checkbox" name="remember_me" id="remember_me"
+                ::if remember_me
+                    checked="checked"
+                ::/if
+                >
                 <label for="remember_me">{@REMEMBER_ME}</label>
             </div>
             <div class="controls">

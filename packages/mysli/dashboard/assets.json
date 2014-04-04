@@ -1,6 +1,8 @@
 {
 	"css/main.css" : [
-		"css/fonts.css"
+		"css/fonts.css",
+		"css/variables.styl",
+		"css/elements.styl"
 	],
 	"css/login.css" : [
 		"css/fonts.css",
