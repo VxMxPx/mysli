@@ -10,6 +10,8 @@ class Response
     protected $event;
     // Current status.
     protected $status = 0;
+    // Protocol
+    protected $protocol = 'HTTP/1.1';
 
     /**
      * Construct RESPONSE
@@ -19,6 +21,7 @@ class Response
     public function __construct($event)
     {
         $this->event = $event;
+        $this->protocol = $_SERVER['SERVER_PROTOCOL'];
     }
 
     /**
@@ -107,28 +110,6 @@ class Response
     }
 
     /**
-     * Will redirect (if possible/allowed) withour any special status code.
-     * --
-     * @param  string $url Full url address
-     * --
-     * @return null
-     */
-    public function to($url)
-    {
-        $headers = [
-            'Expires'       => 'Mon, 16 Apr 1984 02:40:00 GMT',
-            'Last-Modified' => gmdate('D, d M Y H:i:s') . ' GMT',
-            'Cache-Control' => 'no-cache, must-revalidate, max-age=0',
-            'Pragma'        => 'no-cache',
-            'Location'      => $url,
-        ];
-        $this->event->trigger('~response/mysli/response/to', [&$headers]);
-        if ($headers !== false) {
-            $this->header_replace($headers);
-        }
-    }
-
-    /**
      * Standard response for successful HTTP requests.
      * --
      * @return null
@@ -136,7 +117,7 @@ class Response
     public function status_200_ok()
     {
         $this->status = 200;
-        $this->header('HTTP/1.1 200 OK', '-Status');
+        $this->header($this->protocol . ' 200 OK', '-Status');
     }
 
     /**
@@ -148,7 +129,7 @@ class Response
     public function status_204_no_content()
     {
         $this->status = 204;
-        $this->header('HTTP/1.1 204 No Content', '-Status');
+        $this->header($this->protocol . ' 204 No Content', '-Status');
     }
 
     /**
@@ -161,9 +142,52 @@ class Response
      */
     public function status_301_moved_permanently($url)
     {
+        $this->clear();
         $this->status = 301;
         $this->header([
-            '-Status'  => 'HTTP/1.1 301 Moved Permanently',
+            '-Status'  => $this->protocol . ' 301 Moved Permanently',
+            'Location' => $url
+        ]);
+    }
+
+    /**
+     * The HTTP response status code 302 Found is a common way of performing a redirection.
+     * The User Agent (e.g. a web browser) is invited by a response with this code to make a second,
+     * otherwise identical, request, to the new URL specified in the Location field.
+     * The HTTP/1.0 specification (RFC 1945) defines this code, and gives it the description phrase "Moved Temporarily".
+     * --
+     * @param  string $url
+     * --
+     * @return null
+     */
+    public function status_302_found($url)
+    {
+        $this->clear();
+        $this->status = 302;
+        $this->header([
+            '-Status'  => $this->protocol . ' 302 Found',
+            'Location' => $url
+        ]);
+    }
+
+    /**
+     * The HTTP response status code 303 See Other is the correct way to redirect
+     * web applications to a new URI, particularly after an HTTP POST has been performed,
+     * since RFC 2616 (HTTP 1.1).
+     * This response indicates that the correct response can be found
+     * under a different URI and should be retrieved using a GET method.
+     * The specified URI is not a substitute reference for the original resource.
+     * --
+     * @param  string $url
+     * --
+     * @return null
+     */
+    public function status_303_see_other($url)
+    {
+        $this->clear();
+        $this->status = 303;
+        $this->header([
+            '-Status'  => $this->protocol . ' 303 See Other',
             'Location' => $url
         ]);
     }
@@ -182,9 +206,10 @@ class Response
      */
     public function status_307_temporary_redirect($url)
     {
+        $this->clear();
         $this->status = 307;
         $this->header([
-            '-Status'  => 'HTTP/1.1 307 Temporary Redirect',
+            '-Status'  => $this->protocol . ' 307 Temporary Redirect',
             'Location' => $url
         ]);
     }
@@ -196,8 +221,9 @@ class Response
      */
     public function status_400_bad_request()
     {
+        $this->clear();
         $this->status = 400;
-        $this->header('HTTP/1.1 400 Bad Request', '-Status');
+        $this->header($this->protocol . ' 400 Bad Request', '-Status');
     }
 
     /**
@@ -207,8 +233,9 @@ class Response
      */
     public function status_401_unauthorized()
     {
+        $this->clear();
         $this->status = 401;
-        $this->header('HTTP/1.1 401 Unauthorized', '-Status');
+        $this->header($this->protocol . ' 401 Unauthorized', '-Status');
     }
 
     /**
@@ -219,8 +246,9 @@ class Response
      */
     public function status_403_forbidden()
     {
+        $this->clear();
         $this->status = 403;
-        $this->header('HTTP/1.1 403 Forbidden', '-Status');
+        $this->header($this->protocol . ' 403 Forbidden', '-Status');
     }
 
     /**
@@ -231,8 +259,9 @@ class Response
      */
     public function status_404_not_found()
     {
+        $this->clear();
         $this->status = 404;
-        $this->header('HTTP/1.0 404 Not Found', '-Status');
+        $this->header($this->protocol . ' 404 Not Found', '-Status');
     }
 
     /**
@@ -251,8 +280,9 @@ class Response
      */
     public function status_410_gone()
     {
+        $this->clear();
         $this->status = 410;
-        $this->header('HTTP/1.0 410 Gone', '-Status');
+        $this->header($this->protocol . ' 410 Gone', '-Status');
     }
 
     /**
@@ -263,8 +293,9 @@ class Response
      */
     public function status_503_service_unavailable()
     {
+        $this->clear();
         $this->status = 503;
-        $this->header('HTTP/1.0 503 Service Unavailable', '-Status');
+        $this->header($this->protocol . ' 503 Service Unavailable', '-Status');
     }
 
     /**
