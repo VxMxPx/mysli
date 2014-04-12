@@ -1,6 +1,6 @@
 <?php
 
-namespace Mysli;
+namespace Mysli\Cookie;
 
 class Cookie
 {

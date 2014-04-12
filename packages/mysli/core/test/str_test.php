@@ -1,10 +1,8 @@
 <?php
 
-namespace Mysli\Core\Lib;
-
 // Exceptions, etc..
 include(__DIR__.'/../core.php');
-$core = new \Mysli\Core(__DIR__.'/dummy', __DIR__.'/dummy');
+$core = new \Mysli\Core\Core(__DIR__.'/dummy', __DIR__.'/dummy');
 
 class StrTest extends \PHPUnit_Framework_TestCase
 {

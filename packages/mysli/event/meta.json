@@ -1,12 +1,22 @@
 {
-    "package"       : "mysli/event",
-    "role"          : "event",
-    "instantiation" : "once",
-    "version"       : 1,
-    "depends_on"    : {
-        "~core" : ">= 1",
-        "~pkgm" : ">= 1"
+    "package" : "mysli/event",
+    "role"    : "@event",
+    "version" : 1,
+
+    "depends_on" : {
+        "@core" : ">= 1",
+        "@pkgm" : ">= 1"
     },
-    "maintainer"    : "Marko Gajšt <marko@gaj.st>",
-    "description"   : "Mysli Event Package."
+
+    "factory" : {
+        "event" : "singleton(@pkgm)",
+        "setup" : "construct()"
+    },
+
+    "about" : {
+        "license"     : "GPLv3",
+        "upstream"    : "http://github.com/mysli/event",
+        "maintainer"  : "Marko Gajšt <marko@gaj.st>",
+        "description" : "Event Handler Library."
+    }
 }

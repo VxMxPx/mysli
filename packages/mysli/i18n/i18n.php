@@ -1,6 +1,6 @@
 <?php
 
-namespace Mysli;
+namespace Mysli\I18n;
 
 class I18n
 {
@@ -14,16 +14,15 @@ class I18n
      * Create i18n instance.
      * --
      * @param array  $pkgm_trace
-     * @param object $config     ~config
+     * @param object $config
      */
     public function __construct(array $pkgm_trace, $config)
     {
-        array_pop($pkgm_trace); // Remove self
-        $this->package = array_pop($pkgm_trace);
+        $this->package = array_pop($pkgm_trace)[0];
 
         // Get filename
         $this->filename = str_replace('/', '.', $this->package);
-        $this->filename = datpath('i18n', $this->filename . '.json');
+        $this->filename = datpath('mysli.i18n', $this->filename . '.json');
 
         $this->config = $config;
     }

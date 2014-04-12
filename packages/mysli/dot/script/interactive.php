@@ -6,7 +6,7 @@ class Interactive
 {
     protected $pkgm;
 
-    public function __construct($dot, $pkgm)
+    public function __construct($pkgm)
     {
         $this->pkgm = $pkgm;
     }

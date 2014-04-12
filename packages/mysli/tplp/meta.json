@@ -1,17 +1,20 @@
 {
-    "package"       : "mysli/tplp",
-    "role"          : "tplp",
-    "instantiation" : "always",
-    "version"       : 1,
-    "depends_on"    : {
-        "~core"     : ">= 1",
-        "~csi"      : ">= 1"
+    "package" : "mysli/tplp",
+    "version" : 1,
+
+    "depends_on" : {
+        "@core" : ">= 1"
     },
-    "inject"        : {
-        "exclude"   : ["~core"],
-        "main"      : ["#pkgm_trace"],
-        "setup"     : ["~csi"]
+
+    "factory" : {
+        "tplp"  : "construct(#pkgm_trace)",
+        "setup" : "construct()"
     },
-    "maintainer"    : "Marko Gajšt <marko@gaj.st>",
-    "description"   : "Default template parser."
+
+    "about" : {
+        "license"     : "GPLv3",
+        "upstream"    : "http://github.com/mysli/tplp",
+        "maintainer"  : "Marko Gajšt <marko@gaj.st>",
+        "description" : "Template parser."
+    }
 }

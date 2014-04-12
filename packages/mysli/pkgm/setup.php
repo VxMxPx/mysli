@@ -9,12 +9,12 @@ class Setup
         \Core\FS::dir_create(datpath('pkgm'), \Core\FS::EXISTS_MERGE);
         \Core\JSON::encode_file(datpath('pkgm/id.json'), [
             'file'  => 'mysli/pkgm/pkgm.php',
-            'class' => 'Mysli\\Pkgm',
+            'class' => 'Mysli\\Pkgm\\Pkgm',
         ]);
-        \Core\JSON::encode_file(datpath('pkgm/registry.json'), []);
+        \Core\JSON::encode_file(datpath('pkgm/registry.json'), ['enabled' => [], 'roles' => []]);
 
         // Add self to packages list oO
-        if (!class_exists('Mysli\\Pkgm', false)) {
+        if (!class_exists('Mysli\\Pkgm\\Pkgm', false)) {
             include pkgpath('mysli/pkgm/pkgm.php');
         }
         return true;

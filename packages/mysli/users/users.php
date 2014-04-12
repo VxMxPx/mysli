@@ -1,6 +1,6 @@
 <?php
 
-namespace Mysli;
+namespace Mysli\Users;
 
 class Users
 {
@@ -9,7 +9,7 @@ class Users
 
     public function __construct()
     {
-        $this->path = datpath('users');
+        $this->path = datpath('mysli.users');
     }
 
     /**

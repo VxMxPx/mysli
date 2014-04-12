@@ -1,6 +1,6 @@
 <?php
 
-namespace Mysli;
+namespace Mysli\Session;
 
 class Session
 {
@@ -19,7 +19,7 @@ class Session
         $this->cookie = $cookie;
         $this->users  = $users;
 
-        $this->path = datpath('session');
+        $this->path = datpath('mysli.session');
 
         $this->discover();
     }

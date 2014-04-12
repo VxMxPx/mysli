@@ -1,11 +1,19 @@
 {
     "package"       : "mysli/output",
-    "role"          : "output",
-    "instantiation" : "once",
     "version"       : 1,
-    "depends_on"    : {
-        "~core"   : ">= 1"
+
+    "depends_on" : {
+        "@core" : ">= 1"
     },
-    "maintainer"    : "Marko Gajšt <marko@gaj.st>",
-    "description"   : "Mysli Core Output Package."
+
+    "factory" : {
+        "output" : "singleton()"
+    },
+
+    "about" : {
+        "license"     : "GPLv3",
+        "upstream"    : "http://github.com/mysli/output",
+        "maintainer"  : "Marko Gajšt <marko@gaj.st>",
+        "description" : "Output Library."
+    }
 }

@@ -1,14 +1,21 @@
 {
-    "package"       : "mysli/core",
-    "role"          : "core",
-    "instantiation" : "never",
-    "version"       : 1,
-    "depends_on"    : {
-        "~pkgm" : ">= 1"
+    "package" : "mysli/core",
+    "role"    : "@core",
+    "version" : 1,
+
+    "depends_on" : {
+        "@pkgm" : ">= 1"
     },
-    "inject" : {
-        "exclude" : ["~pkgm"]
+
+    "factory" : {
+        "core"  : "null()",
+        "setup" : "construct(@pkgm)"
     },
-    "maintainer"    : "Marko Gajšt <marko@gaj.st>",
-    "description"   : "Mysli Core."
+
+    "about" : {
+        "license"       : "GPLv3",
+        "upstream"      : "http://github.com/mysli/core",
+        "maintainer"    : "Marko Gajšt <marko@gaj.st>",
+        "description"   : "MYSLI CORE."
+    }
 }

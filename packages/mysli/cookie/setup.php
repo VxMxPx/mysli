@@ -21,9 +21,4 @@ class Setup
 
         return $this->config->write();
     }
-
-    public function before_disable()
-    {
-        $this->config->destroy();
-    }
 }

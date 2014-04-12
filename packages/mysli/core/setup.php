@@ -48,22 +48,10 @@ class Setup
             ds($this->datpath, '/core/id.json'),
             json_encode([
                 'file'  => 'mysli/core/core.php',
-                'class' => 'Mysli\\Core',
+                'class' => 'Mysli\\Core\\Core',
             ])
         );
 
-        return true;
-    }
-
-    public function after_enable()
-    { return true; }
-
-    public function before_disable()
-    { return true; }
-
-    public function after_disable()
-    {
-        \Core\FS::dir_remove($this->datpath);
         return true;
     }
 }

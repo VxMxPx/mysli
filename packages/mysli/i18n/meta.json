@@ -1,19 +1,22 @@
 {
-    "package"       : "mysli/i18n",
-    "role"          : "i18n",
-    "instantiation" : "once",
-    "version"       : 1,
-    "depends_on"    : {
-        "~core"  : ">= 1",
-        "~config": ">= 1",
-        "~csi"   : ">= 1"
+    "package" : "mysli/i18n",
+    "version" : 1,
+
+    "depends_on" : {
+        "@core"        : ">= 1",
+        "mysli/config" : ">= 1"
     },
-    "inject" : {
-        "exclude" : ["~core"],
-        "main"    : ["#pkgm_trace", "~config"],
-        "setup"   : ["~csi", "~config"],
-        "script"  : ["~config"]
+
+    "factory" : {
+        "i18n"         : "singleton(#pkgm_trace, mysli/config)",
+        "setup"        : "construct(mysli/config)",
+        "scripts/i18n" : "construct(mysli/config)"
     },
-    "maintainer"    : "Marko Gajšt <marko@gaj.st>",
-    "description"   : "Mysli Internationalization Package."
+
+    "about" : {
+        "license"     : "GPLv3",
+        "upstream"    : "http://github.com/mysli/i18n",
+        "maintainer"  : "Marko Gajšt <marko@gaj.st>",
+        "description" : "Internationalization Library."
+    }
 }

@@ -1,11 +1,19 @@
 {
-    "package"       : "mysli/request",
-    "role"          : "request",
-    "instantiation" : "once",
-    "version"       : 1,
-    "depends_on"    : {
-        "~core"   : ">= 1"
+    "package" : "mysli/request",
+    "version" : 1,
+
+    "depends_on" : {
+        "@core" : ">= 1"
     },
-    "maintainer"    : "Marko Gajšt <marko@gaj.st>",
-    "description"   : "Mysli Core Request Package."
+
+    "factory" : {
+        "request" : "singleton()"
+    },
+
+    "about" : {
+        "license"     : "GPLv3",
+        "upstream"    : "http://github.com/mysli/request",
+        "maintainer"  : "Marko Gajšt <marko@gaj.st>",
+        "description" : "Request Library."
+    }
 }

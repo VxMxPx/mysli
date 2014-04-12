@@ -4,7 +4,7 @@ namespace Mysli\Core\Lib;
 
 // Exceptions, etc..
 include(__DIR__.'/../core.php');
-new \Mysli\Core(__DIR__.'/dummy', __DIR__.'/dummy');
+new \Mysli\Core\Core(__DIR__.'/dummy', __DIR__.'/dummy');
 
 class ArrTest extends \PHPUnit_Framework_TestCase
 {

@@ -9,20 +9,16 @@ class Setup
     private $tplp;
     private $i18n;
 
-    private $dcsi;
     private $ecsi;
 
     public function __construct($csi, $web, $users, $event, $tplp, $i18n)
     {
-        $this->web = $web;
+        $this->web   = $web;
         $this->event = $event;
-        $this->tplp = $tplp;
-        $this->i18n = $i18n;
+        $this->tplp  = $tplp;
+        $this->i18n  = $i18n;
 
         $this->users = $users;
-
-        $this->dcsi = new $csi('mysli/dashboard/disable');
-        $this->dcsi->hidden('remove_data');
 
         $this->ecsi = new $csi('mysli/dashboard/enable');
         $this->ecsi->paragraph('Create your first user!');
@@ -79,19 +75,11 @@ class Setup
         return true;
     }
 
-    public function before_disable()
-    {
-        if ($this->dcsi->status() !== 'success') return $this->dcsi;
-        else return true;
-    }
-
     public function after_disable()
     {
-        if ($this->dcsi->get('remove_data')) {
-            \Core\FS::dir_remove($this->web->path('mysli/dashboard'));
-            $this->tplp->cache_remove();
-            $this->i18n->cache_remove();
-        }
+        \Core\FS::dir_remove($this->web->path('mysli/dashboard'));
+        $this->tplp->cache_remove();
+        $this->i18n->cache_remove();
         $this->event->unregister('mysli/web/route:*<dashboard*>', 'mysli/dashboard::init_request');
         return true;
     }

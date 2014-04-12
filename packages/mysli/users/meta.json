@@ -1,10 +1,20 @@
 {
-    "package"       : "mysli/users",
-    "instantiation" : "once",
-    "version"       : 1,
-    "depends_on"    : {
-        "~core"     : ">= 1"
+    "package" : "mysli/users",
+    "version" : 1,
+
+    "depends_on" : {
+        "@core" : ">= 1"
     },
-    "maintainer"    : "Marko Gajšt <marko@gaj.st>",
-    "description"   : "Basic users collections."
+
+    "factory" : {
+        "users" : "singleton()",
+        "setup" : "construct()"
+    },
+
+    "about" : {
+        "license"     : "GPLv3",
+        "upstream"    : "http://github.com/mysli/users",
+        "maintainer"  : "Marko Gajšt <marko@gaj.st>",
+        "description" : "Users collections library. Will use JSON files to save users."
+    }
 }

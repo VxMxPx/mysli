@@ -1,6 +1,6 @@
 <?php
 
-namespace Mysli;
+namespace Mysli\Core;
 
 class Core
 {
@@ -64,7 +64,7 @@ class Core
         // Load common functions
         if (!function_exists('ds')) {
             if (!file_exists($path . DIRECTORY_SEPARATOR . 'common.php'))
-                throw new \Mysli\Core\NotFoundException("Cannot find: `common.php`.", 1);
+                throw new NotFoundException("Cannot find: `common.php`.", 1);
             else include $path . DIRECTORY_SEPARATOR . 'common.php';
         }
 
@@ -83,7 +83,7 @@ class Core
             $filename = ds($path, 'lib', strtolower(substr($alias, strpos($alias, '\\'))) . '.php');
 
             if (!file_exists($filename)) {
-                throw new \Mysli\Core\NotFoundException(
+                throw new NotFoundException(
                     "File not found: '{$filename}'.", 2
                 );
             }
@@ -109,7 +109,7 @@ class Core
         // Get pkgm id file path
         $pkgm_id_path = datpath('pkgm/id.json');
         if (!file_exists($pkgm_id_path))
-            throw new \Mysli\Core\NotFoundException(
+            throw new NotFoundException(
                 "Could not found pkgm ID file: `{$pkgm_id_path}`.", 1
             );
 
@@ -117,14 +117,14 @@ class Core
         $pkg_info = \Core\JSON::decode_file($pkgm_id_path, true);
         $pkg_file = $pkg_info['file'];
         if (!file_exists(pkgpath($pkg_file)))
-            throw new \Mysli\Core\NotFoundException(
+            throw new NotFoundException(
                 "`pkgm` file not found: `{$pkg_file}`.", 2
             );
         else include pkgpath($pkg_file);
 
         // pkgm class should now be available
         if (!class_exists($pkg_info['class'], false))
-            throw new \Mysli\Core\NotFoundException(
+            throw new NotFoundException(
                 "The pkgm class not found: `{$pkg_info['class']}`.", 3
             );
 

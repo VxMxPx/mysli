@@ -5,10 +5,8 @@ namespace Mysli\Pkgm\Script;
 class Pkgm
 {
     protected $pkgm;
-    protected $on_disable_remove_data = false;
-    protected $on_disable_remove_config = false;
 
-    public function __construct(\Mysli\Pkgm $pkgm)
+    public function __construct(\Mysli\Pkgm\Pkgm $pkgm)
     {
         $this->pkgm = $pkgm;
     }
@@ -22,9 +20,9 @@ class Pkgm
             'Mysli Core :: Packages Management',
             'pkgm <OPTION> [ARGUMENTS...]',
             [
-                'enable'  => 'Will enable particular package.',
-                'disable' => 'Will disable particular package.',
-                'list'    => 'Will list enabled / disabled / obsolete packages.'
+                'enable'  => 'Enable particular package.',
+                'disable' => 'Disable particular package.',
+                'list'    => 'List enabled / disabled / obsolete packages.'
             ]
         );
 
@@ -40,16 +38,20 @@ class Pkgm
      */
     protected function csi_input(array $properties)
     {
-        // If type not in array, quit right away! :)
+        // If type not in array, quit right away!
         $allowed = ['input', 'password', 'textarea', 'radio', 'checkbox'];
-        if ( ! in_array($properties['type'], $allowed) ) {
+
+        if (!in_array($properties['type'], $allowed)) {
             return;
         }
 
         // Formulate a question.
         $question = '';
-        if ($properties['label'])   $question .= $properties['label'];
+        if ($properties['label']) {
+            $question .= $properties['label'];
+        }
 
+        // Add default if exists
         if ($properties['default']) {
             if (!empty($properties['options'])) {
                 $default = $properties['options'][$properties['default']];
@@ -59,6 +61,7 @@ class Pkgm
             $question .= ' [' . $default . ']';
         }
 
+        // Print question
         \Cli\Util::nl();
         \Cli\Util::plain($question);
 
@@ -81,6 +84,7 @@ class Pkgm
                 $element = 0;
                 \Cli\Util::plain(\Core\Arr::readable(array_values($options)));
                 \Cli\Util::plain('Enter one of the numbers (e.g., 1).');
+
                 return \Cli\Util::input('> ', function ($input) use ($options, $keys) {
                     if (!isset($keys[$input])) {
                         return null;
@@ -96,6 +100,7 @@ class Pkgm
                 $element = 0;
                 \Cli\Util::plain(\Core\Arr::readable(array_values($options)));
                 \Cli\Util::plain('Enter one or more numbers (e.g., 1, 2, 3).');
+
                 return \Cli\Util::input('> ', function ($input) use ($options, $keys) {
                     $input = \Core\Str::explode_trim(',', $input);
                     $real = [];
@@ -211,10 +216,12 @@ class Pkgm
      */
     protected function execute_setup_step($setup, $step, array $values = null)
     {
+        if (!is_object($setup)) { return; }
+
         if (method_exists($setup, $step)) {
             do {
                 $csi = $setup->{$step}();
-                if ($this->pkgm->obj_to_role($csi) === 'csi') {
+                if (is_object($csi) && is_a($csi, '\\Mysli\\CSI\\CSI')) {
                     if ($values) {
                         $csi->set_multiple($values);
                     }
@@ -254,8 +261,15 @@ class Pkgm
     protected function enable_helper($pkg, $enabled_by = null)
     {
         // Get setup object and execute before_enable step!
-        $setup = $this->pkgm->construct_setup($pkg);
-        if ( $this->execute_setup_step($setup, 'before_enable') === false ) {
+        $factory = $this->pkgm->factory($pkg);
+
+        if ($factory->can_produce('setup')) {
+            $setup = $factory->produce('setup');
+        } else {
+            $setup = null;
+        }
+
+        if ($this->execute_setup_step($setup, 'before_enable') === false) {
             \Cli\Util::error('Setup failed for: ' . $pkg);
             return false;
         }
@@ -266,13 +280,13 @@ class Pkgm
         \Cli\Util::plain(str_repeat('-', 12 + strlen($pkg)));
 
         // If not enabled successfully return false!
-        if (!$this->pkgm->enable($pkg, $enabled_by)) {
+        if (!$this->pkgm->control($pkg)->enable($enabled_by)) {
             \Cli\Util::error('Failed to enable: ' . $pkg);
             return false;
         }
 
         // If not successful, print warning, but don't terminate the process
-        if ( $this->execute_setup_step($setup, 'after_enable') === false ) {
+        if ($this->execute_setup_step($setup, 'after_enable') === false) {
             \Cli\Util::warn('Problems with: ' . $pkg);
         }
 
@@ -292,17 +306,17 @@ class Pkgm
             return $this->help_enable();
         }
 
-        if ($this->pkgm->is_enabled($pkg)) {
+        if ($this->pkgm->registry()->is_enabled($pkg)) {
             \Cli\Util::warn("Package is already enabled: `{$pkg}`.");
             return false;
         }
 
-        if (!$this->pkgm->resolve($pkg, 'disabled')) {
+        if (!$this->pkgm->registry()->exists($pkg)) {
             \Cli\Util::warn("Package not found: `{$pkg}`.");
             return false;
         }
 
-        $dependencies = $this->pkgm->get_dependencies($pkg, true);
+        $dependencies = $this->pkgm->registry()->list_dependencies($pkg, true);
 
         if (!empty($dependencies['missing'])) {
             \Cli\Util::warn(
@@ -362,28 +376,28 @@ class Pkgm
         \Cli\Util::plain(str_repeat('-', 12 + strlen($pkg)));
 
         // Get setup object, and execute before disable
-        $setup = $this->pkgm->construct_setup($pkg);
-        $result = $this->execute_setup_step(
-            $setup,
-            'before_disable',
-            [
-                'remove_data' => $this->on_disable_remove_data,
-                'remove_config' => $this->on_disable_remove_config
-            ]
-        );
-        if ( $result === false ) {
+        $factory = $this->pkgm->factory($pkg);
+        if ($factory->can_produce('setup')) {
+            $setup = $factory->produce('setup');
+        } else {
+            $setup = null;
+        }
+
+        $result = $this->execute_setup_step($setup, 'before_disable');
+
+        if ($result === false) {
             \Cli\Util::error('Setup failed for: ' . $pkg);
             return false;
         }
 
         // If disable successfully terminate further execution!
-        if ( ! $this->pkgm->disable($pkg) ) {
+        if ( ! $this->pkgm->control($pkg)->disable()) {
             \Cli\Util::error('Failed to disable: ' . $pkg);
             return false;
         }
 
         // If not successful, print warning, but don't terminate the process
-        if ( $this->execute_setup_step($setup, 'after_disable') === false ) {
+        if ($this->execute_setup_step($setup, 'after_disable') === false) {
             \Cli\Util::warn('Problems with: ' . $pkg);
         }
 
@@ -405,7 +419,7 @@ class Pkgm
         }
 
         // Can't disable something that isn't enabled
-        if ( ! $this->pkgm->is_enabled($pkg) ) {
+        if (!$this->pkgm->registry()->is_enabled($pkg)) {
             \Cli\Util::warn("Package not enabled: `{$pkg}`.");
             return false;
         }
@@ -417,21 +431,21 @@ class Pkgm
         );
 
         // Ask if data should be removed also
-        $this->on_disable_remove_data =
-            \Cli\Util::confirm('Completely remove all associated data?');
-        // Ask if configurations should be removed also
-        $this->on_disable_remove_config =
-            \Cli\Util::confirm('Completely remove all associated configurations?');
+        // $this->on_disable_remove_data =
+        //     \Cli\Util::confirm('Completely remove all associated data?');
+        // // Ask if configurations should be removed also
+        // $this->on_disable_remove_config =
+        //     \Cli\Util::confirm('Completely remove all associated configurations?');
 
         \Cli\Util::nl();
 
         // Get package dependees!
-        $dependees = $this->pkgm->get_dependees($pkg, true);
+        $dependees = $this->pkgm->registry()->list_dependees($pkg, true);
 
         // If we have dependees, then disable them all first!
         if (!empty($dependees)) {
             \Cli\Util::plain(
-                "The following packages depends on the `{$pkg}` and need to be disabled:\n\n" .
+                "The following packages depends on the `{$pkg}` and need to be disabled also:\n\n" .
                 \Core\Arr::readable($dependees, 2) . "\n"
             );
 
@@ -476,7 +490,7 @@ class Pkgm
             case 'enabled':
                 \Cli\Util::nl();
                 \Cli\Util::plain(
-                    \Core\Arr::readable($this->pkgm->get_enabled(), 2),
+                    \Core\Arr::readable($this->pkgm->registry()->list_enabled(), 2),
                     true
                 );
                 break;
@@ -484,7 +498,7 @@ class Pkgm
             case 'disabled':
                 \Cli\Util::nl();
                 \Cli\Util::plain(
-                    \Core\Arr::readable($this->pkgm->get_disabled(), 2),
+                    \Core\Arr::readable($this->pkgm->registry()->list_disabled(), 2),
                     true
                 );
                 break;
@@ -492,7 +506,7 @@ class Pkgm
             case 'obsolete':
                 \Cli\Util::nl();
                 \Cli\Util::plain(
-                    \Core\Arr::readable($this->pkgm->get_obsolete(), 2),
+                    \Core\Arr::readable($this->pkgm->registry()->list_obsolete(), 2),
                     true
                 );
                 break;

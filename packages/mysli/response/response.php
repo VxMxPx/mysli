@@ -1,6 +1,6 @@
 <?php
 
-namespace Mysli;
+namespace Mysli\Response;
 
 class Response
 {
@@ -21,7 +21,9 @@ class Response
     public function __construct($event)
     {
         $this->event = $event;
-        $this->protocol = $_SERVER['SERVER_PROTOCOL'];
+        if (isset($_SERVER['SERVER_PROTOCOL'])) {
+            $this->protocol = $_SERVER['SERVER_PROTOCOL'];
+        }
     }
 
     /**
@@ -32,7 +34,7 @@ class Response
     public function apply_headers()
     {
         if (headers_sent($file, $line)) {
-            throw new \Mysli\Response\ResponseException(
+            throw new ResponseException(
                 "Output was already started: in file : '{$file}', on line: '{$line}'."
             );
         }

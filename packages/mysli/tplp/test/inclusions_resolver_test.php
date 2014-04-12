@@ -5,7 +5,7 @@ namespace Mysli\Tplp;
 include(__DIR__.'/../exceptions/parser_exception.php');
 include(__DIR__.'/../inclusions_resolver.php');
 include(__DIR__.'/../../core/core.php'); // CORE needed for utility!
-new \Mysli\Core(
+new \Mysli\Core\Core(
     realpath(__DIR__.'/dummy'),
     realpath(__DIR__.'/dummy')
 );

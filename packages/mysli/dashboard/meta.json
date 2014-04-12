@@ -1,23 +1,29 @@
 {
     "package"       : "mysli/dashboard",
-    "instantiation" : "once",
     "version"       : 1,
-    "depends_on"    : {
-        "~core"         : ">= 1",
+
+    "depends_on" : {
+        "@core"         : ">= 1",
+        "@event"        : ">= 1",
         "mysli/web"     : ">= 1",
         "mysli/session" : ">= 1",
         "mysli/users"   : ">= 1",
-        "~csi"          : ">= 1",
-        "~event"        : ">= 1",
-        "~output"       : ">= 1",
-        "~i18n"         : ">= 1",
-        "~tplp"         : ">= 1"
+        "mysli/csi"     : ">= 1",
+        "mysli/output"  : ">= 1",
+        "mysli/i18n"    : ">= 1",
+        "mysli/tplp"    : ">= 1"
     },
-    "inject"        : {
-        "main"   : ["mysli/web", "mysli/session", "mysli/users", "~output", "~tplp", "~i18n"],
-        "setup"  : ["~csi", "mysli/web", "mysli/users", "~event", "~tplp", "~i18n"],
-        "script" : ["mysli/web"]
+
+    "factory" : {
+        "dashboard"         : "singleton(mysli/web, mysli/session, mysli/users, mysli/output, mysli/tplp, mysli/i18n)",
+        "setup"             : "construct(mysli/csi, mysli/web, mysli/users, @event, mysli/tplp, mysli/i18n)",
+        "scripts/dashboard" : "construct(mysli/web)"
     },
-    "maintainer"    : "Marko Gajšt <marko@gaj.st>",
-    "description"   : "Default Mysli Dashboard."
+
+    "about" : {
+        "license"     : "GPLv3",
+        "upstream"    : "http://github.com/mysli/dashboard",
+        "maintainer"  : "Marko Gajšt <marko@gaj.st>",
+        "description" : "Default Dashboard Interface."
+    }
 }

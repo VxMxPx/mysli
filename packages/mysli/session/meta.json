@@ -1,18 +1,23 @@
 {
-    "package"       : "mysli/session",
-    "role"          : "session",
-    "instantiation" : "once",
-    "version"       : 1,
-    "depends_on"    : {
-        "~core"        : ">= 1",
-        "~config"      : ">= 1",
+    "package" : "mysli/session",
+    "version" : 1,
+
+    "depends_on" : {
+        "@core"        : ">= 1",
+        "mysli/config" : ">= 1",
         "mysli/cookie" : ">= 1",
         "mysli/users"  : ">= 1"
     },
+
     "inject" : {
-        "exclude" : ["~core"],
-        "setup"   : ["~config"]
+        "session" : "singleton(mysli/config, mysli/cookie, mysli/users)",
+        "setup"   : "construct(mysli/config)"
     },
-    "maintainer"    : "Marko Gajšt <marko@gaj.st>",
-    "description"   : "Basic session functionality."
+
+    "about" : {
+        "license"     : "GPLv3",
+        "upstream"    : "http://github.com/mysli/session",
+        "maintainer"  : "Marko Gajšt <marko@gaj.st>",
+        "description" : "Session library. Will keep sessions in JSON files."
+    }
 }

@@ -1,36 +1,33 @@
 <?php
 
-namespace Mysli;
+namespace Mysli\Event;
 
 include(__DIR__.'/../event.php');        // Include self
 include(__DIR__.'/../../core/core.php'); // Mysli CORE is needed!
-new \Mysli\Core(
+new \Mysli\Core\Core(
     realpath(__DIR__.'/dummy'),
     realpath(__DIR__.'/dummy')
 );
 
 class EventTest extends \PHPUnit_Framework_TestCase
 {
-    protected function get_instance()
+    protected function get_instance($empty = true)
     {
-        return new Event(null);
-    }
+        if ($empty)
+            file_put_contents(pkgpath('event/registry.json'), '[]');
 
-    protected function reset_file()
-    {
-        file_put_contents(pkgpath('event/registry.json'), '[]');
+        return new Event(null);
     }
 
     public function test_register()
     {
-        $this->reset_file();
         $event = $this->get_instance();
         $this->assertTrue($event->register(
             'mysli/event/test/event_test::test_register',
             'vendor/package::method'
         ));
 
-        $event2 = $this->get_instance();
+        $event2 = $this->get_instance(false);
         $data = $event2->dump();
 
         $this->assertEquals(
@@ -41,7 +38,6 @@ class EventTest extends \PHPUnit_Framework_TestCase
 
     public function test_unregister()
     {
-        $this->reset_file();
         $event = $this->get_instance();
         $this->assertTrue($event->register(
             'mysli/event/test/event_test::test_unregister',
@@ -64,7 +60,7 @@ class EventTest extends \PHPUnit_Framework_TestCase
             'vendor/package::method_one'
         );
 
-        $event2 = $this->get_instance();
+        $event2 = $this->get_instance(false);
         $data2 = $event2->dump();
 
         $this->assertEquals(
@@ -79,7 +75,6 @@ class EventTest extends \PHPUnit_Framework_TestCase
 
     public function test_on()
     {
-        $this->reset_file();
         $event = $this->get_instance();
         $event_name = 'mysli/event/test/event_test::test_register';
 
@@ -91,7 +86,6 @@ class EventTest extends \PHPUnit_Framework_TestCase
 
     public function test_off_name()
     {
-        $this->reset_file();
         $event = $this->get_instance();
         $event_name = 'mysli/event/test/event_test::test_register';
 
@@ -104,7 +98,6 @@ class EventTest extends \PHPUnit_Framework_TestCase
 
     public function test_off_id()
     {
-        $this->reset_file();
         $event = $this->get_instance();
         $event_name = 'mysli/event/test/event_test::test_register';
 
@@ -116,7 +109,6 @@ class EventTest extends \PHPUnit_Framework_TestCase
 
     public function test_off_id_two()
     {
-        $this->reset_file();
         $event = $this->get_instance();
         $event_name = 'mysli/event/test/event_test::test_register';
 
@@ -130,7 +122,6 @@ class EventTest extends \PHPUnit_Framework_TestCase
 
     public function test_trigger()
     {
-        $this->reset_file();
         $event = $this->get_instance();
         $event_name = 'mysli/event/test/event_test::test_register';
 
@@ -146,7 +137,6 @@ class EventTest extends \PHPUnit_Framework_TestCase
 
     public function test_trigger_regex()
     {
-        $this->reset_file();
         $event = $this->get_instance();
         $event_name = 'mysli/event/test/event_test::test_register';
 
@@ -162,7 +152,6 @@ class EventTest extends \PHPUnit_Framework_TestCase
 
     public function test_trigger_many()
     {
-        $this->reset_file();
         $event = $this->get_instance();
         $event_name = 'mysli/event/test/event_test::test_register';
 
@@ -187,7 +176,6 @@ class EventTest extends \PHPUnit_Framework_TestCase
 
     public function test_trigger_many_params()
     {
-        $this->reset_file();
         $event = $this->get_instance();
         $event_name = 'mysli/event/test/event_test::test_register';
 
@@ -207,7 +195,6 @@ class EventTest extends \PHPUnit_Framework_TestCase
 
     public function test_trigger_many_params_no_ref()
     {
-        $this->reset_file();
         $event = $this->get_instance();
         $event_name = 'mysli/event/test/event_test::test_register';
 

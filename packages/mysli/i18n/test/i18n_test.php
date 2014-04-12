@@ -1,12 +1,12 @@
 <?php
 
-namespace Mysli;
+namespace Mysli\I18n;
 
 include(__DIR__.'/../i18n.php');
 include(__DIR__.'/../parser.php');
 include(__DIR__.'/../translator.php');
 include(__DIR__.'/../../core/core.php'); // CORE is needed!
-new \Mysli\Core(
+new \Mysli\Core\Core(
     realpath(__DIR__.'/dummy'),
     realpath(__DIR__.'/dummy')
 );
@@ -20,7 +20,7 @@ class I18nTest extends \PHPUnit_Framework_TestCase
 
     public function __construct()
     {
-        $this->i18n = new \Mysli\I18n(['test/package', null], new DummyConfig());
+        $this->i18n = new I18n([['test/package', null], null], new DummyConfig());
 
         // Always create fresh cache
         $this->i18n->cache_create();
@@ -30,7 +30,7 @@ class I18nTest extends \PHPUnit_Framework_TestCase
 
     public function test_instance()
     {
-        $this->assertInstanceOf('\\Mysli\\I18n', $this->i18n);
+        $this->assertInstanceOf('\\Mysli\\I18n\\I18n', $this->i18n);
     }
 
     public function test_translate()

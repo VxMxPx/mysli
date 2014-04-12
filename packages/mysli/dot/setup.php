@@ -25,12 +25,6 @@ class Setup
         return true;
     }
 
-    public function after_enable()
-    { return true; }
-
-    public function before_disable()
-    { return true; }
-
     public function after_disable()
     {
         \Core\FS::file_remove(datpath('dot'));

@@ -1,6 +1,6 @@
 <?php
 
-namespace Mysli;
+namespace Mysli\Event;
 
 class Event
 {
@@ -83,7 +83,7 @@ class Event
         }
 
         // Prevent duplicates...
-        if (in_array($call, $evens[$event])) {
+        if (in_array($call, $events[$event])) {
             return true;
         }
 

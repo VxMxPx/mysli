@@ -11,9 +11,9 @@ class Setup
     /**
      * Setup Web
      * --
-     * @param object $config ~config
-     * @param object $event  ~event
-     * @param object $csi    ~csi
+     * @param object $config
+     * @param object $event
+     * @param object $csi
      */
     public function __construct($config, $event, $csi)
     {
@@ -84,12 +84,6 @@ class Setup
         return true;
     }
 
-    public function before_disable()
-    {
-        if ($this->dcsi->status() !== 'success') return $this->dcsi;
-        else return true;
-    }
-
     /**
      * After disable
      * --
@@ -97,16 +91,6 @@ class Setup
      */
     public function after_disable()
     {
-        // Remove public directory
-        if ($this->dcsi->get('remove_data')) {
-            \Core\FS::dir_remove(ds(datpath(), $this->config->get('relative_path')));
-        }
-
-        // Remove configurations
-        if ($this->dcsi->get('remove_config')) {
-            $this->config->destroy();
-        }
-
         // Unregister events
         $this->event->unregister('mysli/web/index:done', 'mysli/web::output');
         $this->event->unregister('mysli/web/index:start', 'mysli/web::route');

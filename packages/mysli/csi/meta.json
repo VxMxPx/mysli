@@ -1,14 +1,19 @@
 {
-    "package"       : "mysli/csi",
-    "role"          : "csi",
-    "instantiation" : "manual",
-    "version"       : 1,
-    "depends_on"    : {
-        "~core" : ">= 1"
+    "package" : "mysli/csi",
+    "version" : 1,
+
+    "depends_on" : {
+        "@core" : ">= 1"
     },
-    "inject" : {
-        "exclude" : ["~core"]
+
+    "factory" : {
+        "csi" : "name()"
     },
-    "maintainer"    : "Marko Gajšt <marko@gaj.st>",
-    "description"   : "Mysli Common Setup Interface."
+
+    "about" : {
+        "license"     : "GPLv3",
+        "upstream"    : "http://github.com/mysli/csi",
+        "maintainer"  : "Marko Gajšt <marko@gaj.st>",
+        "description" : "Common Setup Interface Library."
+    }
 }

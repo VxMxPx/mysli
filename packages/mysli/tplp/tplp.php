@@ -1,6 +1,6 @@
 <?php
 
-namespace Mysli;
+namespace Mysli\Tplp;
 
 class Tplp
 {
@@ -56,9 +56,8 @@ class Tplp
      */
     public function __construct(array $pkgm_trace)
     {
-        array_pop($pkgm_trace); // Remove self
-        $this->package = array_pop($pkgm_trace);
-        $this->cache_dir = datpath('tplp', str_replace('/', '.', $this->package));
+        $this->package = array_pop($pkgm_trace)[0];
+        $this->cache_dir = datpath('mysli.tplp', str_replace('/', '.', $this->package));
 
         $this->functions = array_merge($this->functions, self::$registry['functions']);
         $this->variables = array_merge($this->variables, self::$registry['variables']);

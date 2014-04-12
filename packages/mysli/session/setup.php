@@ -21,13 +21,7 @@ class Setup
             'change_id_on_renew' => false,
         ]);
         $this->config->write();
-        \Core\FS::dir_create(datpath('session'), \Core\FS::EXISTS_MERGE);
+        \Core\FS::dir_create(datpath('mysli.session'), \Core\FS::EXISTS_MERGE);
         return true;
-    }
-
-    public function before_disable()
-    {
-        $this->config->destroy();
-        return \Core\FS::dir_remove(datpath('session'));
     }
 }

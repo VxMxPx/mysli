@@ -1,10 +1,10 @@
 <?php
 
-namespace Mysli;
+namespace Mysli\CSI;
 
 include(__DIR__.'/../csi.php');    // Include self
 include(__DIR__.'/../../core/core.php'); // CORE is needed!
-new \Mysli\Core(
+new \Mysli\Core\Core(
     realpath(__DIR__.'/dummy'),
     realpath(__DIR__.'/dummy')
 );
@@ -13,7 +13,7 @@ class CSITest extends \PHPUnit_Framework_TestCase
 {
     protected function new_instance($id)
     {
-        return new \Mysli\CSI($id);
+        return new CSI($id);
     }
 
     public function test_get_id()
@@ -36,7 +36,7 @@ class CSITest extends \PHPUnit_Framework_TestCase
 
     public function test_validate_value_assignation()
     {
-        $csi = new \Mysli\CSI('mysli/test');
+        $csi = new CSI('mysli/test');
         $csi->input('email');
         $csi->input('name');
         $csi->validate([
@@ -56,7 +56,7 @@ class CSITest extends \PHPUnit_Framework_TestCase
 
     public function test_validate_callback()
     {
-        $csi = new \Mysli\CSI('mysli/test');
+        $csi = new CSI('mysli/test');
         $csi->input('email');
         $csi->input('name');
         $csi->on_validate(function (&$fields) {
@@ -82,7 +82,7 @@ class CSITest extends \PHPUnit_Framework_TestCase
 
     public function test_validate_modify_status()
     {
-        $csi = new \Mysli\CSI('mysli/test');
+        $csi = new CSI('mysli/test');
 
         // DEFAULT
         // $csi->on_validate(function () { });
@@ -102,7 +102,7 @@ class CSITest extends \PHPUnit_Framework_TestCase
 
     public function test_validate_field_callback()
     {
-        $csi = new \Mysli\CSI('mysli/test');
+        $csi = new CSI('mysli/test');
         $csi->input('email', '', '', function (&$field) {
             $field['value'] = 'modified@mysli.io';
         });

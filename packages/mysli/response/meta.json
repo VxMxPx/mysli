@@ -1,12 +1,20 @@
 {
-    "package"       : "mysli/response",
-    "role"          : "response",
-    "instantiation" : "once",
-    "version"       : 1,
-    "depends_on"    : {
-        "~core"   : ">= 1",
-        "~event"  : ">= 1"
+    "package" : "mysli/response",
+    "version" : 1,
+
+    "depends_on" : {
+        "@core"  : ">= 1",
+        "@event" : ">= 1"
     },
-    "maintainer"    : "Marko Gajšt <marko@gaj.st>",
-    "description"   : "Mysli Core Response Package."
+
+    "factory" : {
+        "response" : "singleton(@event)"
+    },
+
+    "about" : {
+        "license"     : "GPLv3",
+        "upstream"    : "http://github.com/mysli/response",
+        "maintainer"  : "Marko Gajšt <marko@gaj.st>",
+        "description" : "Response Library."
+    }
 }

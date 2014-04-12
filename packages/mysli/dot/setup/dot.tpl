@@ -52,6 +52,5 @@ include($pkgpath . $ds . str_replace('/', $ds, $core_id['file']));
 $core = new $core_id['class']($datpath, $pkgpath);
 
 // Dot execution
-$dot_pkg = $core->pkgm()->resolve('~cli');
-$dot = $core->pkgm()->factory($dot_pkg);
+$dot = $core->pkgm()->factory('@cli')->produce();
 $dot->run($_SERVER['argv']);

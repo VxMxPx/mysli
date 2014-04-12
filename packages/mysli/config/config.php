@@ -1,6 +1,6 @@
 <?php
 
-namespace Mysli;
+namespace Mysli\Config;
 
 class Config
 {
@@ -15,15 +15,10 @@ class Config
      */
     public function __construct(array $pkgm_trace)
     {
-        // Pkgm trace is array, list of packages, which required this package.
-        // In this case, we'll use this info, to construct
-        // costumized config, containing only element meant for package, which
-        // required config.
-        array_pop($pkgm_trace); // Remove self
-        $package = array_pop($pkgm_trace); // Get actual package which required config.
+        $package = array_pop($pkgm_trace)[0]; // Get actual package which required config.
         $package = str_replace('/', '.', $package);
 
-        $this->filename = datpath('config', $package . '.json');
+        $this->filename = datpath('mysli.config', $package . '.json');
 
         // If we have file, then load contents...
         if (file_exists($this->filename)) {
