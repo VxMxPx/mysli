@@ -1,19 +1,26 @@
 <?php
 function enable_helper($pkgm, $package, callable $errout)
 {
-    $setup = $pkgm->construct_setup($package);
 
-    if (method_exists($setup, 'before_enable') && !$setup->before_enable()) {
+    $factory = $pkgm->factory($package);
+
+    if ($factory->can_produce('setup')) {
+        $setup = $pkgm->factory($package)->produce('setup');
+    } else {
+        $setup = false;
+    }
+
+    if ($setup && method_exists($setup, 'before_enable') && !$setup->before_enable()) {
         $errout('Setup failed for: ' . $package);
         return false;
     }
 
-    if (!$pkgm->enable($package)) {
+    if (!$pkgm->control($package)->enable()) {
         $errout('Failed to enable: ' . $package);
         return false;
     }
 
-    if (method_exists($setup, 'after_enable')) {
+    if ($setup && method_exists($setup, 'after_enable')) {
         $setup->after_enable();
     }
 
@@ -21,17 +28,12 @@ function enable_helper($pkgm, $package, callable $errout)
 }
 function pkg_enable($pkgm, $package, callable $errout)
 {
-    if ($pkgm->is_enabled($package)) {
+    if ($pkgm->registry()->is_enabled($package)) {
         $errout("Package is already enabled: `{$package}`.");
         return false;
     }
 
-    if (!$pkgm->resolve($package, 'disabled')) {
-        $errout("Package not found: `{$package}`.");
-        return false;
-    }
-
-    $dependencies = $pkgm->get_dependencies($package, true);
+    $dependencies = $pkgm->registry()->list_dependencies($package, true);
     if (!empty($dependencies['missing'])) {
         $errout('Cannot enable, following packages are missing: ' .
             print_r($dependencies['missing'], true));
@@ -51,7 +53,7 @@ function pkg_enable($pkgm, $package, callable $errout)
 function enable_pkgm($pkgm, $pkgpath, callable $errout)
 {
     $setup_file = dst($pkgpath, $pkgm, 'setup.php');
-    $setup_class = pkg_to_ns($pkgm) . '\\Setup';
+    $setup_class = pkg_to_ns($pkgm . '/setup');
     if (!file_exists($setup_file)) {
         $errout('Cannot find the `pkgm` setup file in: ' . $setup_file);
         return false;
@@ -85,7 +87,7 @@ function enable_pkgm($pkgm, $pkgpath, callable $errout)
 function enable_core($core_pkg, $pkgpath, $datpath, callable $errout)
 {
     $setup_file = dst($pkgpath, $core_pkg, 'setup.php');
-    $setup_class = pkg_to_ns($core_pkg) . '\\Setup';
+    $setup_class = pkg_to_ns($core_pkg . '/setup');
     if (!file_exists($setup_file)) {
         $errout('Cannot find core setup file in: ' . $setup_file);
         return false;
@@ -130,11 +132,14 @@ function pkg_to_ns($package)
     if (strpos($package, '/') === false) {
         return $package;
     }
-
     $class = to_camelcase($package);
-    $class = str_replace('/', '\\', $class);
+    $class = explode('/', $class);
 
-    return $class;
+    if (count($class) === 2) {
+        $class[] = $class[1];
+    }
+
+    return implode('\\', $class);
 }
 // Convert strign to camel case
 function to_camelcase($string, $uc_first=true)
