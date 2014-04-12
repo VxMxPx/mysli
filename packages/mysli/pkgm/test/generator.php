@@ -36,7 +36,7 @@ class Generator
             'pkgm' => [
                 'classes' => [
                     'exceptions/dependency.php' => [0, 'DependencyException'],
-                    'script/pkgm.php'           => ['Script', 'Pkgm'],
+                    'script/pkgm.php'           => ['\\Script', 'Pkgm'],
                     'factory.php'               => [0, 'Factory']
                 ],
                 'require' => ['@core' => 1],
@@ -87,9 +87,9 @@ class Generator
             foreach ($packages as $package => $meta) {
                 \Core\FS::dir_create(pkgpath($vendor, $package));
 
-                $role = isset($meta['role']) ? '"role" : "' . $role . '",' : '';
-                $class     = Util::to_class(ds($vendor, $package), Util::FILE);
-                $namespace = ltrim( Util::to_class(ds($vendor, $package), Util::BASE), '\\' );
+                $role       = isset($meta['role']) ? '"role" : "' . $meta['role'] . '",' : '';
+                $class      = Util::to_class(ds($vendor, $package), Util::FILE);
+                $namespace  = ltrim( Util::to_class(ds($vendor, $package), Util::BASE), '\\' );
                 $depends_on = [];
 
                 foreach ($meta['require'] as $reqpkg => $reqver) {
@@ -99,6 +99,7 @@ class Generator
                 // Check for sub-classes
                 if (isset($meta['classes'])) {
                     foreach ($meta['classes'] as $file => $instr) {
+                        $file = pkgpath($vendor, $package, $file);
                         \Core\FS::file_create_with_dir($file);
                         \Core\FS::file_replace(
                             $file,
