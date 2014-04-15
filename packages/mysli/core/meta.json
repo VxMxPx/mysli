@@ -3,13 +3,11 @@
     "role"    : "@core",
     "version" : 1,
 
-    "depends_on" : {
-        "@pkgm" : ">= 1"
-    },
+    "depends_on" : [],
 
     "factory" : {
         "core"  : "null()",
-        "setup" : "construct(@pkgm)"
+        "setup" : "construct()"
     },
 
     "about" : {
