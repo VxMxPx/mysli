@@ -2,12 +2,7 @@
 
 namespace Mysli\Pkgm;
 
-include(__DIR__.'/../util.php');         // Include self
-include(__DIR__.'/../../core/core.php'); // CORE is needed!
-new \Mysli\Core\Core(
-    realpath(__DIR__.'/dummy/private'),
-    realpath(__DIR__.'/dummy/packages')
-);
+include(__DIR__.'/_common.php');
 
 class UtilTest extends \PHPUnit_Framework_TestCase
 {

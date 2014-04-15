@@ -34,44 +34,6 @@ class Control
         $this->registry = $registry;
     }
 
-
-    /**
-     * Will disable particular package. Please note that this won't resolve
-     * dependencies, you must do that manually.
-     * This also won't call the setup automatically!
-     * --
-     * @throws ValueException If package is already disabled.
-     * --
-     * @return boolean
-     */
-    public function disable()
-    {
-        // Is enabled at all?
-        if (!$this->registry->is_enabled($this->package)) {
-            throw new \Core\ValueException(
-                "Cannot disable package: '{$this->package}' it's not enabled."
-            );
-        }
-
-        $info = $this->registry->get_details($this->package);
-
-        // Remove role if there
-        if (isset($info['role'])) {
-            $this->registry->unset_role($info['role']);
-        }
-
-        // Remove itself from required_by
-        foreach ($info['depends_on'] as $dependency => $version) {
-            $this->registry->remove_dependee($this->registry->get_role($dependency), $this->package);
-        }
-
-        // Remove itself
-        $this->registry->remove_package($this->package);
-
-        // Save changes
-        return $this->registry->save();
-    }
-
     /**
      * Enable particular package. Please note that this won't resolve
      * dependencies, you must do that manually.
@@ -126,6 +88,44 @@ class Control
                     $info['required_by'][] = $lpkg;
 
         $this->registry->add_package($this->package, $info);
+        return $this->registry->save();
+    }
+
+
+    /**
+     * Will disable particular package. Please note that this won't resolve
+     * dependencies, you must do that manually.
+     * This also won't call the setup automatically!
+     * --
+     * @throws ValueException If package is already disabled.
+     * --
+     * @return boolean
+     */
+    public function disable()
+    {
+        // Is enabled at all?
+        if (!$this->registry->is_enabled($this->package)) {
+            throw new \Core\ValueException(
+                "Cannot disable package: '{$this->package}' it's not enabled."
+            );
+        }
+
+        $info = $this->registry->get_details($this->package);
+
+        // Remove role if there
+        if (isset($info['role'])) {
+            $this->registry->unset_role($info['role']);
+        }
+
+        // Remove itself from required_by
+        foreach ($info['depends_on'] as $dependency => $version) {
+            $this->registry->remove_dependee($this->registry->get_role($dependency), $this->package);
+        }
+
+        // Remove itself
+        $this->registry->remove_package($this->package);
+
+        // Save changes
         return $this->registry->save();
     }
 

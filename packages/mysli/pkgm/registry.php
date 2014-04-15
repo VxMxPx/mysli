@@ -39,7 +39,6 @@ class Registry
      */
     private $disabled;
 
-
     /**
      * Instance of Registry.
      * --
@@ -147,6 +146,7 @@ class Registry
 
                 if ($this->is_enabled($package)) continue;
 
+                // Will use array_keys to get proper array if details not required...
                 $disabled[$package] = true;
 
                 if (!$details) continue;
@@ -179,6 +179,7 @@ class Registry
         }
 
         // Disabled!
+
         $meta_file = pkgpath(ds($package, 'meta.json'));
         if (!file_exists($meta_file)) {
             throw new \Core\NotFoundException(
@@ -208,12 +209,15 @@ class Registry
      * --
      * @param  string  $package
      * @param  boolean $deep
+     * @param  array   $process Use internally. Prevent infinite loop,
+     * if cross dependency situation occurs (a require b and b require a).
      * --
+     * @throws DependencyException If there's cross reference - which could cause infinite loop.
      * @throws DataException If details for package couldn't be fetched.
      * --
      * @return array
      */
-    public function list_dependencies($package, $deep = false)
+    public function list_dependencies($package, $deep = false, array $process = [])
     {
         $details = $this->get_details($package);
 
@@ -230,7 +234,6 @@ class Registry
         ];
 
         foreach ($details['depends_on'] as $dependency => $version) {
-
             if (!$this->exists($dependency)) {
                 $list['missing'][$dependency] = $version;
             } else {
@@ -244,11 +247,25 @@ class Registry
 
         if (!$deep) return $list;
 
-        foreach ($list['disabled'] as $dependency => $version) {
-            $list = \Core\Arr::merge(
-                $list,
-                $this->list_dependencies($dependency, true)
+        // Check if we don't have infinite loop!
+        $hash = $package . ': ' . implode(', ', array_keys($details['depends_on']));
+        if (in_array($hash, $process)) {
+            $process[count($process) - 1] = ' >> ' . $process[count($process) - 1];
+            $process[] = ' >> ' . $hash;
+            array_unshift($process, '----------');
+            $process[] = '----------';
+            throw new DependencyException(
+                "Infinite loop, cross dependencies...\n" . implode("\n", $process)
             );
+        }
+        $process[] = $hash;
+
+        foreach ($list['disabled'] as $dependency => $version) {
+            $nlist = $this->list_dependencies($dependency, true, $process);
+
+            $list['enabled']  = ( array_merge($nlist['enabled'],  $list['enabled']) );
+            $list['disabled'] = ( array_merge($nlist['disabled'], $list['disabled']) );
+            $list['missing']  = ( array_merge($nlist['missing'],  $list['missing']) );
         }
 
         return $list;
@@ -262,14 +279,16 @@ class Registry
      * --
      * @param  string  $package
      * @param  boolean $deep
-     * @param  array   $existing  Used internally for recursion.
      * --
      * @throws DataException If details for package couldn't be fetched.
      * --
      * @return array
      */
-    public function list_dependees($package, $deep = false, array $existing = [])
+    public function list_dependees($package, $deep = false, array &$listed = [])
     {
+        if (in_array($package, $listed)) { return []; }
+        $listed[] = $package;
+
         $details = $this->get_details($package);
 
         if (!is_array($details) || empty($details)) {
@@ -281,18 +300,16 @@ class Registry
         if (!$deep) return $details['required_by'];
 
         $dependees = [];
-        $existing[] = $package;
 
         foreach ($details['required_by'] as $dependee) {
-            if (in_array($dependee, $existing)) continue;
             $dependees[] = $dependee;
             array_merge(
-                $dependees,
-                $this->list_dependees($dependee, true, $existing)
+                $this->list_dependees($dependee, true, $listed),
+                $dependees
             );
         }
 
-        return array_unique($dependees);
+        return array_unique( array_reverse($dependees) );
     }
 
     /**
@@ -303,13 +320,29 @@ class Registry
      */
     public function list_obsolete()
     {
+        $enabled = $this->enabled;
         $obsolete = [];
 
-        foreach ($this->enabled as $pkg_id => $pkg_data) {
-            if (empty($pkg_data['required_by']) && $pkg_data['enabled_by']) {
-                $obsolete[] = $pkg_id;
+        do {
+            $chg = false;
+
+            foreach ($enabled as $pkg_id => &$pkg_data) {
+                if (!empty($pkg_data['required_by'])) {
+                    foreach ($pkg_data['required_by'] as $id => $req_pkg) {
+                        if (in_array($req_pkg, $obsolete)) {
+                            unset($pkg_data['required_by'][$id]);
+                            $chg = true;
+                        }
+                    }
+                }
+                if (empty($pkg_data['required_by']) && $pkg_data['enabled_by']) {
+                    unset($enabled[$pkg_id]);
+                    $obsolete[] = $pkg_id;
+                    $chg = true;
+                }
             }
-        }
+
+        } while ($chg);
 
         return $obsolete;
     }
@@ -345,6 +378,14 @@ class Registry
         $this->enabled[$package] = $meta;
     }
 
+    /**
+     * Add package's dependee.
+     * --
+     * @param string $package
+     * @param string $dependee
+     * --
+     * @return null
+     */
     public function add_dependee($package, $dependee)
     {
         // Resolve dependee before adding it!
@@ -397,7 +438,7 @@ class Registry
      * --
      * @param string $role
      * --
-     * @return boolean
+     * @return null
      */
     public function unset_role($role)
     {
@@ -408,7 +449,7 @@ class Registry
     }
 
     /**
-     * Get core role.
+     * Get package's role.
      * --
      * @param string $role
      * --

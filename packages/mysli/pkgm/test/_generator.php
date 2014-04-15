@@ -30,7 +30,7 @@ class Generator
     private static $packages  = [
         'mysliio' => [
             'core' => [
-                'require' => ['@pkgm' => 1],
+                'require' => [],
                 'role'    => '@core'
             ],
             'pkgm' => [
@@ -39,7 +39,7 @@ class Generator
                     'script/pkgm.php'           => ['\\Script', 'Pkgm'],
                     'factory.php'               => [0, 'Factory']
                 ],
-                'require' => ['@core' => 1],
+                'require' => ['@core' => 1, '@event' => 1],
                 'role'    => '@pkgm'
             ],
             'config' => [
@@ -53,22 +53,25 @@ class Generator
         'avrelia' => [
             'dash' => [
                 'require' => [
-                    '@core' => 1,
-                    'mysli/config' => 1,
-                    '@event' => 1,
-                    'avrelia/web' => 1,
-                    'avrelia/users' => 1,
-                    'avrelia/session' => 1
+                    'avrelia/web'     => 1,
+                    'avrelia/session' => 1,
+                    'avrelia/users'   => 1,
+                    '@event'          => 1,
+                    'mysliio/config'  => 1,
+                    '@core'           => 1,
                 ]
             ],
             'web' => [
-                'require' => ['@core' => 1, '@event' => 1, 'mysli/config' => 1]
+                'require' => ['@core' => 1, '@event' => 1, 'mysliio/config' => 1]
             ],
             'users' => [
-                'require' => ['@core' => 1, 'avrelia/config' => 1]
+                'require' => ['@event' => 1, 'mysliio/config' => 1]
             ],
             'session' => [
-                'require' => ['@core' => 1, 'mysli/config' => 1, 'avrelia/users' => 1]
+                'require' => ['@core' => 1, 'mysliio/config' => 1, 'avrelia/users' => 1]
+            ],
+            'bad' => [
+                'require' => ['@core' => 1, 'avrelia/non_existant' => 1]
             ]
         ]
     ];

@@ -2,14 +2,7 @@
 
 namespace Mysli\Pkgm;
 
-include(__DIR__.'/generator.php');
-include(__DIR__.'/../util.php');
-include(__DIR__.'/../autoloader.php');
-include(__DIR__.'/../../core/core.php');
-new \Mysli\Core\Core(
-    realpath(__DIR__.'/dummy/private'),
-    realpath(__DIR__.'/dummy/packages')
-);
+include(__DIR__.'/_common.php');
 
 class AutoloaderTest extends \PHPUnit_Framework_TestCase
 {
