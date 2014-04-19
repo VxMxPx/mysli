@@ -75,6 +75,7 @@ class Dashboard
         $path = pkgpath('mysli/dashboard/assets/');
 
         while (true) {
+            sleep(2);
             $rsignature = \Core\FS::dir_signatures(ds($path, 'src'));
             if ($rsignature === $signature) { continue; }
             \Cli\Util::plain("What changed: \n" . \Core\Arr::readable(
@@ -84,7 +85,6 @@ class Dashboard
             $signature = $rsignature;
             $this->assets_merge();
             \Core\FS::dir_copy(ds($path), $this->web->path('mysli/dashboard'), \Core\FS::EXISTS_REPLACE);
-            sleep(2);
         }
     }
 
