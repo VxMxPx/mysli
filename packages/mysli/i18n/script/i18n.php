@@ -43,7 +43,7 @@ class I18n
         \Cli\Util::plain('Press CTRL+C to quit.');
 
         $signature = null;
-        $i18n = new \Mysli\I18n([$package, null], $this->config);
+        $i18n = new \Mysli\I18n\I18n([[$package, null]], $this->config);
 
         while (true) {
             $rsignature = implode('', \Core\FS::dir_signatures($path));
