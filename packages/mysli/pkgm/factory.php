@@ -62,13 +62,10 @@ class Factory
     public function can_produce($file = null)
     {
         if (!$file) {
-            $file    = Util::to_pkg($this->package, Util::FILE);
-            $package = $this->package;
-        } else {
-            $package = $this->package . '/' . $file;
+            $file = Util::to_pkg($this->package, Util::FILE);
         }
 
-        if (!file_exists(pkgpath($package))) {
+        if (!file_exists(pkgpath($this->package, $file . '.php'))) {
             return false;
         }
 
@@ -110,13 +107,13 @@ class Factory
     public function produce($file = null)
     {
         if (!$file) {
-            $file    = Util::to_pkg($this->package, Util::FILE);
-            $package = $this->package;
+            $file = Util::to_pkg($this->package, Util::FILE);
+            $pkgf = $this->package;
         } else {
-            $package = $this->package . '/' . $file;
+            $pkgf = $this->package . '/' . $file;
         }
 
-        $class = Util::to_class($package);
+        $class = Util::to_class($pkgf);
 
         // Check if I'm enabled...
         // if (!$this->registry->is_enabled($this->package)) {
@@ -126,8 +123,8 @@ class Factory
         // }
 
         // Check if we have it cached...
-        if ($this->cache->has($package)) {
-            return $this->cache->get($package);
+        if ($this->cache->has($pkgf)) {
+            return $this->cache->get($pkgf);
         }
 
         // Get package info
@@ -136,7 +133,7 @@ class Factory
         // Key exists for this class?
         if (!isset($info['factory']) || !isset($info['factory'][$file])) {
             throw new \Core\ValueException(
-                "Missing entry: `factory { '{$file}' : 'instantiation_type()' }` in `meta.json` for: `{$package}`.",  2
+                "Missing entry: `factory { '{$file}' : 'instantiation_type()' }` in `meta.json` for: `{$pkgf}`.",  2
             );
         }
 
@@ -153,7 +150,7 @@ class Factory
         }
 
         // Instantiate class now...
-        self::$producing[] = [$this->package, $package];
+        self::$producing[] = [$this->package, $pkgf];
 
         $rfc = new \ReflectionClass($class);
 
@@ -174,8 +171,8 @@ class Factory
         }
 
         // Do we have instruction to be instantiated once?
-        if ($instantiation === 'construct') {
-            $this->cache->add($package, $instance);
+        if ($instantiation === 'singleton') {
+            $this->cache->add($pkgf, $instance);
         }
 
         array_pop(self::$producing);
