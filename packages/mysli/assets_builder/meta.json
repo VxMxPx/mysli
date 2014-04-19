@@ -1,0 +1,21 @@
+{
+    "package"       : "mysli/assets_builder",
+    "version"       : 1,
+
+    "depends_on" : {
+        "@core"     : ">= 1",
+        "@cli"      : ">= 1",
+        "mysli/web" : ">= 1"
+    },
+
+    "factory" : {
+        "script/abuild" : "construct(mysli/web)"
+    },
+
+    "about" : {
+        "license"     : "GPLv3",
+        "upstream"    : "http://github.com/mysli/assets_builder",
+        "maintainer"  : "Marko Gajšt <marko@gaj.st>",
+        "description" : "Help build CSS / Stylus and JavaScript files."
+    }
+}
