@@ -62,10 +62,10 @@ class Factory
     public function can_produce($file = null)
     {
         if (!$file) {
-            $file    = Util::to_path($this->package, Util::FILE);
+            $file    = Util::to_pkg($this->package, Util::FILE);
             $package = $this->package;
         } else {
-            $package = Util::to_path($this->package . '/' . $file);
+            $package = $this->package . '/' . $file;
         }
 
         if (!file_exists(pkgpath($package))) {
@@ -193,7 +193,7 @@ class Factory
      * --
      * @return array
      */
-    public function get_dependencies(array $dependencies)
+    private function get_dependencies(array $dependencies)
     {
         $result = [];
 

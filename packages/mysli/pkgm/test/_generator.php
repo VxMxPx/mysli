@@ -15,7 +15,7 @@ class Generator
     },
 
     "factory" : {
-        "{{package}}" : "construct()"
+        {{factory}}
     },
 
     "about" : {
@@ -39,6 +39,10 @@ class Generator
                     'script/pkgm.php'           => ['\\Script', 'Pkgm'],
                     'factory.php'               => [0, 'Factory']
                 ],
+                'factory' => [
+                    'pkgm'        => 'construct()',
+                    'script/pkgm' => 'construct(@event)'
+                ],
                 'require' => ['@core' => 1, '@event' => 1],
                 'role'    => '@pkgm'
             ],
@@ -59,6 +63,9 @@ class Generator
                     '@event'          => 1,
                     'mysliio/config'  => 1,
                     '@core'           => 1,
+                ],
+                'factory' => [
+                    'dash' => 'construct(avrelia/web, avrelia/session, avrelia/users, @event, mysliio/config)'
                 ]
             ],
             'web' => [
@@ -113,9 +120,25 @@ class Generator
                     }
                 }
 
+                // Create factory entries
+                if (isset($meta['factory'])) {
+                    $factory = [];
+                    foreach ($meta['factory'] as $fac_package => $instructions) {
+                        $factory[] = '"' . $fac_package . '" : "' . $instructions . '"';
+                    }
+                    $factory = implode(',', $factory);
+                } else {
+                    $factory = '"'.$package.'" : "construct()"';
+                    if (isset($meta['classes'])) {
+                        foreach ($meta['classes'] as $class => $class_info) {
+                            $factory = '"'.substr($class, 0, -4).'" : "construct()"';
+                        }
+                    }
+                }
+
                 $meta_final = str_replace(
-                    ['{{vendor}}', '{{package}}', '{{role}}', '{{version}}', '{{depends_on}}'],
-                    [$vendor, $package, $role, 1, implode(', ', $depends_on)],
+                    ['{{vendor}}', '{{package}}', '{{role}}', '{{version}}', '{{depends_on}}', '{{factory}}'],
+                    [$vendor, $package, $role, 1, implode(', ', $depends_on), $factory],
                     self::$meta_template
                 );
 
