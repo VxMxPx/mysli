@@ -8,9 +8,9 @@
     },
 
     "factory" : {
-        "i18n"         : "singleton(#pkgm_trace, mysli/config)",
-        "setup"        : "construct(mysli/config)",
-        "scripts/i18n" : "construct(mysli/config)"
+        "i18n"        : "singleton(#pkgm_trace, mysli/config)",
+        "setup"       : "construct(mysli/config)",
+        "script/i18n" : "construct(mysli/config)"
     },
 
     "about" : {
