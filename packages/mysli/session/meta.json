@@ -9,7 +9,7 @@
         "mysli/users"  : ">= 1"
     },
 
-    "inject" : {
+    "factory" : {
         "session" : "singleton(mysli/config, mysli/cookie, mysli/users)",
         "setup"   : "construct(mysli/config)"
     },
