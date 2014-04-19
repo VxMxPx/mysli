@@ -7,8 +7,9 @@
     },
 
     "factory" : {
-        "tplp"  : "construct(#pkgm_trace)",
-        "setup" : "construct()"
+        "tplp"        : "construct(#pkgm_trace)",
+        "setup"       : "construct()",
+        "script/tplp" : "construct()"
     },
 
     "about" : {
