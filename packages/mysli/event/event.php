@@ -232,9 +232,9 @@ class Event
                 if (!is_string($call) && !is_array($call) && is_callable($call)) {
                     $result = call_user_func_array($call, $params);
                 } else {
-                    if (!is_array($call)) { $call = explode('::', $call, 2); }
-                    $this->history[$event][] = 'Call: ' . implode('::', $call);
-                    $result = $this->pkgm->call($call[0], $call[1], $params);
+                    //if (!is_array($call)) { $call = explode('::', $call, 2); }
+                    $this->history[$event][] = 'Call: ' . $call;
+                    $result = $this->pkgm->call($call, $params);
                 }
             }
         }
