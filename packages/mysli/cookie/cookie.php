@@ -21,13 +21,17 @@ class Cookie
      * --
      * @param  string $name
      * @param  string $value
+     * @param  string $path    The path on the server in which the cookie will be available on.
+     *                         If set to '/', the cookie will be available within the entire domain.
+     *                         If set to '/foo/', the cookie will only be available within the /foo/ directory
+     *                         and all sub-directories such as /foo/bar/ of domain.
      * @param  string $expire  Use false for default expire time (set in
      *                         configuration), or enter value (actual value so
      *                         must be time() + seconds)
      * --
      * @return boolean
      */
-    public function create($name, $value, $expire = false)
+    public function create($name, $value, $path = '/', $expire = false)
     {
         if ($expire === false) {
             $expire = time() + $this->config->get('timeout');
@@ -36,7 +40,7 @@ class Cookie
         $domain = $this->config->get('domain', $_SERVER['SERVER_NAME']);
         $prefix = $this->config->get('prefix');
 
-        return setcookie($prefix . $name, $value, $expire, '/', $domain);
+        return setcookie($prefix . $name, $value, $expire, $path, $domain);
     }
 
     /**
@@ -65,14 +69,18 @@ class Cookie
      * Remove cookie
      * --
      * @param  string $name
+     * @param  string $path    The path on the server in which the cookie will be available on.
+     *                         If set to '/', the cookie will be available within the entire domain.
+     *                         If set to '/foo/', the cookie will only be available within the /foo/ directory
+     *                         and all sub-directories such as /foo/bar/ of domain.
      * --
      * @return boolean
      */
-    public function remove($name)
+    public function remove($name, $path = '/')
     {
         $domain = $this->config->get('domain', $_SERVER['SERVER_NAME']);
         $prefix = $this->config->get('prefix');
 
-        return setcookie($prefix . $name, '', time() - 3600, '/', $domain);
+        return setcookie($prefix . $name, '', time() - 3600, $path, $domain);
     }
 }
