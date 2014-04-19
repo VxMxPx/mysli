@@ -36,7 +36,7 @@ class Tplp
         \Cli\Util::plain('Press CTRL+C to quit.');
 
         $signature = null;
-        $tplp = new \Mysli\Tplp([$package, null]);
+        $tplp = new \Mysli\Tplp\Tplp([[$package, null]]);
 
         while (true) {
             $rsignature = implode('', \Core\FS::dir_signatures($path));
