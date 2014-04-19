@@ -115,16 +115,20 @@ class Factory
 
         $class = Util::to_class($pkgf);
 
-        // Check if I'm enabled...
-        // if (!$this->registry->is_enabled($this->package)) {
-        //     throw new \Core\ValueException(
-        //         "Cannot call `produce` if package is not enabled, for: '{$package}'.", 1
-        //     );
-        // }
+        // Previous package (the one which required this...)
+        if (isset(self::$producing[count(self::$producing) - 1])) {
+            $required_by = self::$producing[count(self::$producing) - 1][0];
+        } else {
+            $required_by = false;
+        }
 
         // Check if we have it cached...
         if ($this->cache->has($pkgf)) {
             return $this->cache->get($pkgf);
+        }
+
+        if ($required_by && $this->cache->has("{$pkgf}::{$required_by}")) {
+            return $this->cache->get("{$pkgf}::{$required_by}");
         }
 
         // Get package info
@@ -173,6 +177,10 @@ class Factory
         // Do we have instruction to be instantiated once?
         if ($instantiation === 'singleton') {
             $this->cache->add($pkgf, $instance);
+        } else if ($required_by && $instantiation === 'construct') {
+            // Even if not singleton, we'll still cache it for when is required
+            // by the same package twice
+            $this->cache->add("{$pkgf}::{$required_by}", $instance);
         }
 
         array_pop(self::$producing);
