@@ -78,8 +78,8 @@ class Setup
         file_put_contents(ds($pubpath, 'index.php'), $index_contents);
 
         // Register events
-        $this->event->register('mysli/web/index:done', 'mysli/web::output');
-        $this->event->register('mysli/web/index:start', 'mysli/web::route');
+        $this->event->register('mysli/web/index:done', 'mysli/web->output');
+        $this->event->register('mysli/web/index:start', 'mysli/web->route');
 
         return true;
     }
@@ -92,7 +92,7 @@ class Setup
     public function after_disable()
     {
         // Unregister events
-        $this->event->unregister('mysli/web/index:done', 'mysli/web::output');
-        $this->event->unregister('mysli/web/index:start', 'mysli/web::route');
+        $this->event->unregister('mysli/web/index:done', 'mysli/web->output');
+        $this->event->unregister('mysli/web/index:start', 'mysli/web->route');
     }
 }
