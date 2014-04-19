@@ -10,6 +10,7 @@ if (!class_exists('\\Mysli\\Core\\Core')) {
     include(__DIR__.'/../cache.php');
     include(__DIR__.'/../registry.php');
     include(__DIR__.'/../factory.php');
+    include(__DIR__.'/../pkgm.php');
     include(__DIR__.'/../../core/core.php');
     new \Mysli\Core\Core(
         realpath(__DIR__.'/dummy/private'),

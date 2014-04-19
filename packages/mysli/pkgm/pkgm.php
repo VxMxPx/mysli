@@ -72,7 +72,7 @@ class Pkgm
         $class   = Util::to_class($package);
 
         if (!class_exists($class, false)) {
-            if (!$this->autoload($class)) {
+            if (!Autoloader::load($class)) {
                 throw new PackageException(
                     "Cannot autoload: `" . $class . "` for: `{$what}`.", 1
                 );

@@ -43,7 +43,7 @@ class Generator
                 'role'    => '@pkgm'
             ],
             'config' => [
-                'require' => ['@core' => 1]
+                'require'  => ['@core' => 1],
             ],
             'event' => [
                 'require' => ['@core' => 1],
@@ -65,7 +65,9 @@ class Generator
                 'require' => ['@core' => 1, '@event' => 1, 'mysliio/config' => 1]
             ],
             'users' => [
-                'require' => ['@event' => 1, 'mysliio/config' => 1]
+                'require' => ['@event' => 1, 'mysliio/config' => 1],
+                'methods' => 'public function say_hi($name) { return "Hi, {$name}"; }
+                              public static function say_hello($name, $number) { return "Hello {$name}! Your number is: {$number}."; }'
             ],
             'session' => [
                 'require' => ['@core' => 1, 'mysliio/config' => 1, 'avrelia/users' => 1]
@@ -118,14 +120,21 @@ class Generator
                 );
 
                 file_put_contents(pkgpath($vendor, $package, 'meta.json'), $meta_final);
-                file_put_contents(pkgpath($vendor, $package, $package . '.php'), self::mk_class($class, $namespace));
+                file_put_contents(
+                    pkgpath($vendor, $package, $package . '.php'),
+                    self::mk_class(
+                        $class,
+                        $namespace,
+                        (isset($meta['methods']) ? $meta['methods'] : '')
+                    )
+                );
                 file_put_contents(pkgpath($vendor, $package, 'setup.php'), self::mk_class('Setup', $namespace));
             }
         }
     }
 
-    private static function mk_class($class, $namespace)
+    private static function mk_class($class, $namespace, $methods = '')
     {
-        return "<?php\nnamespace {$namespace};\nclass {$class} { public function __construct() {} }";
+        return "<?php\nnamespace {$namespace};\nclass {$class} { public function __construct() {} {$methods} }";
     }
 }

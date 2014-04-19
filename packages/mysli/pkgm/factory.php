@@ -83,7 +83,7 @@ class Factory
         $instantiation = Control::process_factory_entry($info['factory'][$file])['instantiation'];
 
         if ($instantiation === 'null') {
-                return false;
+            return false;
         }
 
         return true;

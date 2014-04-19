@@ -13,7 +13,8 @@ class RegistryTest extends \PHPUnit_Framework_TestCase
 
     public function __construct()
     {
-        file_put_contents(datpath('registry.json'), json_encode(['enabled' => [], 'roles' => []]));
+        \Core\FS::dir_create(datpath('pkgm'));
+        file_put_contents(datpath('pkgm/registry.json'), json_encode(['enabled' => [], 'roles' => []]));
         $this->registry = new Registry(datpath('registry.json'));
     }
 
