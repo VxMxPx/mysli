@@ -2,6 +2,7 @@
 	"css/main.css" : [
 		"css/fonts.css",
 		"css/variables.styl",
+		"css/dashboard.styl",
 		"css/elements.styl"
 	],
 	"css/login.css" : [

@@ -5,9 +5,16 @@
     <title>{@MYSLI_DASHBOARD}</title>
     {'css/main.css'|assets}
 </head>
-<body id="dashboard">
-    <h1>Hi there! :)</h1>
-    <p><a href="{'logout'|dashurl}">Logout!</a></p>
+<body id="mysli-dashboard">
+    <div class="panel navigation main">
+        <div class="header">
+
+        </div>
+        <div class="footer">
+            <a class="settings" href="#!mysli/dashboard/settings"><span>{@SETTINGS}</span></a>
+            <a class="logout"   href="{'logout'|dashurl}"><span>{@LOGOUT}</span></a>
+        </div>
+    </div>
     {'js/ext.js'|assets}
     {'js/mysli.js'|assets}
 </body>

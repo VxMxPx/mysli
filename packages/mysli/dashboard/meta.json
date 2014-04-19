@@ -17,8 +17,7 @@
     "factory" : {
         "dashboard"        : "construct()",
         "service"          : "singleton(mysli/web, mysli/session, mysli/users, mysli/output, mysli/tplp, mysli/i18n)",
-        "setup"            : "construct(mysli/csi, mysli/web, mysli/users, @event, mysli/tplp, mysli/i18n)",
-        "script/dashboard" : "construct(mysli/web)"
+        "setup"            : "construct(mysli/csi, mysli/web, mysli/users, @event, mysli/tplp, mysli/i18n)"
     },
 
     "about" : {
