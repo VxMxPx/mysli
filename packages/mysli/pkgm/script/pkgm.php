@@ -328,7 +328,7 @@ class Pkgm
 
         if (count($dependencies['disabled'])) {
             \Cli\Util::plain(
-                "The following packages needs to be enabled: \n\n" .
+                "The following packages need to be enabled: \n\n" .
                 \Core\Arr::readable($dependencies['disabled'], 2) . "\n"
             );
 
