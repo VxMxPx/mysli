@@ -60,7 +60,7 @@ class Setup
         $this->tplp->cache_create();
         $this->i18n->cache_create();
 
-        $this->event->register('mysli/web/route:*<dashboard*>', 'mysli/dashboard::init_request');
+        $this->event->register('mysli/web/route:*<dashboard*>', 'mysli/dashboard->init_request');
 
         // Add default user...
         $user = $this->users->create([
@@ -80,7 +80,7 @@ class Setup
         \Core\FS::dir_remove($this->web->path('mysli/dashboard'));
         $this->tplp->cache_remove();
         $this->i18n->cache_remove();
-        $this->event->unregister('mysli/web/route:*<dashboard*>', 'mysli/dashboard::init_request');
+        $this->event->unregister('mysli/web/route:*<dashboard*>', 'mysli/dashboard->init_request');
         return true;
     }
 }
