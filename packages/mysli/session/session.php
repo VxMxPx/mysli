@@ -83,7 +83,6 @@ class Session
     {
         // Check if we can find session id in cookies.
         if ( ! ($session_id = $this->cookie->read($this->config->get('cookie_name'))) ) {
-            // $this->logger->info('No session found.', __FILE__, __LINE__);
             return false;
         }
 
@@ -93,10 +92,6 @@ class Session
         // Does such session_id exists?
         $session_path = $this->get_filename_from_id($session_id);
         if ( ! file_exists($session_path) ) {
-            // $this->logger->info(
-            //     "Session found in cookies but not in database: `{$session_id}`.",
-            //     __FILE__, __LINE__
-            // );
             // Remove cookie!
             $this->destroy($session_id);
             return false;
@@ -105,22 +100,12 @@ class Session
         // Read session file
         $session = \Core\JSON::decode_file($session_path, true);
         if (!is_array($session)) {
-            // $this->logger->warn(
-            //     'Corrupted file for session: `' .
-            //     $session_id . '`, containing: ' .
-            //     print_r($session, true),
-            //     __FILE__, __LINE__
-            // );
             $this->destroy($session_id);
             return false;
         }
 
         // Is it expired?
         if ((int) $session['expires_on'] < time()) {
-            // $this->logger->info(
-            //     'Session found, but it\'s expired.',
-            //     __FILE__, __LINE__
-            // );
             $this->destroy($session_id);
             return false;
         }
@@ -128,11 +113,6 @@ class Session
         // Do we need identical IP address?
         if ($this->config->get('require_ip')) {
             if ($session['ip'] !== $_SERVER['REMOTE_ADDR']) {
-                // $this->logger->info(
-                //     "The session's IP: `{$session['ip']}`, " .
-                //     "is not the same as the actual IP: `{$_SERVER['REMOTE_ADDR']}`.",
-                //     __FILE__, __LINE__
-                // );
                 $this->destroy($session_id);
                 return false;
             }
@@ -142,11 +122,6 @@ class Session
         if ($this->config->get('require_agent')) {
             $current_agent = $this->get_agent();
             if ($session['agent'] !== $current_agent) {
-                // $this->logger->info(
-                //     "The agent set in session: `{$session['agent']}`, " .
-                //     "doesn't match with the actual agent: `{$current_agent}`.",
-                //     __FILE__, __LINE__
-                // );
                 $this->destroy($session_id);
                 return false;
             }
@@ -155,31 +130,18 @@ class Session
         // Get user finally...
         $user = $this->users->get_by_id($session['user_id']);
         if (!$user) {
-            // $this->logger->info(
-            //     "No user with such id: `{$session['user_id']}`.",
-            //     __FILE__, __LINE__
-            // );
             $this->destroy($session_id);
             return false;
         }
 
         if (!$user->is_active()) {
-            // $this->logger->info(
-            //     "User's account is not active: `{$session['user_id']}`.",
-            //     __FILE__, __LINE__
-            // );
             $this->destroy($session_id);
             return false;
         }
 
-        // $this->logger->info(
-        //     "Session was found for `{$session['user_id']}`, user will be set!",
-        //     __FILE__, __LINE__
-        // );
-
         $this->user = $user;
         $this->info = $session;
-        $this->renew($session_id, $session, $user);
+        $this->renew($session, $user);
         return true;
     }
 
@@ -214,15 +176,16 @@ class Session
         $id  = time() . '_' . \Core\Str::random(20, 'aA1');
 
         // Store cookie
-        $this->cookie->create($this->config->get('cookie_name'), $id, $expires);
+        $this->cookie->create($this->config->get('cookie_name'), $id, '/', $expires);
 
         // Set session file
         $session = [
-            'id'         => $id,
-            'user_id'    => $user->id(),
-            'expires_on' => $expires === 0 ? time() + 60 * 60 : $expires,
-            'ip'         => $_SERVER['REMOTE_ADDR'],
-            'agent'      => $this->get_agent(),
+            'id'          => $id,
+            'user_id'     => $user->id(),
+            'expires_on'  => $expires === 0 ? time() + 60 * 60 : $expires,
+            'expires_rel' => $expires,
+            'ip'          => $_SERVER['REMOTE_ADDR'],
+            'agent'       => $this->get_agent(),
         ];
 
         $this->user = $user;
@@ -233,16 +196,17 @@ class Session
     /**
      * Renew session (extend timeout, etc...)
      * --
-     * @param  string  $id
      * @param  array   $session
      * @param  object  $user
-     * @param  boolean $expires Null for default or costume expiration in seconds,
-     *                           0, to expires when browser is closed.
      * --
      * @return boolean
      */
-    protected function renew($id, array $session, $user, $expires = null)
+    protected function renew(array $session, $user)
     {
+        if ($session['expires_rel'] === 0) {
+            return true;
+        }
+
         // If we have to change id on renew,
         // then we'll destroy current session and set new one.
         if ($this->config->get('change_id_on_renew')) {
@@ -253,6 +217,7 @@ class Session
 
         // Set expires to some time in future. It 0 was set in config, then we
         // set it to expires immediately when browser window is closed.
+        $expires = $session['expires_rel'];
         if ($expires === null) {
             $expires = (int) $this->config->get('expires');
             $expires = $expires > 0 ? $expires + time() : 0;
@@ -260,13 +225,18 @@ class Session
             $expires = (int) $expires;
         }
 
-        $session['expires_on'] = $expires === 0 ? time() + 60 * 60 : $expires;
+        $session['expires_on'] = $expires;
         $session['ip']         = $_SERVER['REMOTE_ADDR'];
         $session['agent']      = $this->get_agent();
 
-        $this->cookie->create($this->config->get('cookie_name'), $id, $expires);
+        $this->cookie->create(
+            $this->config->get('cookie_name'),
+            $session['id'],
+            '/',
+            $expires
+        );
 
-        return $this->write($id, $session);
+        return $this->write($session['id'], $session);
     }
 
     /**
