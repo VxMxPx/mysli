@@ -98,7 +98,7 @@ class Abuild
             $valid = false;
         }
         if (empty($uglify) || !$uglify[0]) {
-            \Cli\Util::warn('Missing: uglify, some functions might not work properly.');
+            \Cli\Util::warn('Missing: uglifyjs, some functions might not work properly.');
             $valid = false;
         }
         if (empty($cat) || strpos($cat[0], 'GNU') === false) {
