@@ -1,0 +1,20 @@
+{
+    "package"       : "mysli/zepto",
+    "version"       : 1,
+
+    "depends_on" : {
+        "@core"     : ">= 1",
+        "mysli/web" : ">= 1"
+    },
+
+    "factory" : {
+        "setup" : "construct(mysli/web)"
+    },
+
+    "about" : {
+        "license"     : "MIT",
+        "upstream"    : "http://zeptojs.com/",
+        "maintainer"  : "Marko Gajšt <marko@gaj.st>",
+        "description" : "Zepto.js – a minimalist JavaScript library."
+    }
+}
