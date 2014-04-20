@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mysli UI Toolkit :: Examples</title>
+    <link rel="stylesheet" type="text/css" href="assets/dist/css/mysli_ui_toolkit.css">
+    <style type="text/css">
+        h1 {
+            text-align: center;
+        }
+        .section {
+            max-width: 960px;
+            margin: 10px auto 10px auto;
+            padding: 10px;
+        }
+        .section .heading {
+            text-align: center;
+        }
+        .container {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            /*background-color: #eee;*/
+            /*outline: 1px solid #ddd;*/
+            /*border: 1px solid #ddd;*/
+            box-shadow: 0 0 4px rgba(0, 0, 0, .2);
+            overflow: hidden;
+            border-radius: 8px;
+        }
+        .container.spaced {
+            padding: 20px;
+        }
+        .column {
+            background-color: #b00a0a;
+            border: 1px solid #d07979;
+            padding: 10px;
+            color: #d07979;
+            text-align: center;
+            font-size: 24px;
+        }
+        .box {
+            width: 400px;
+            height: 200px;
+            margin: 100px auto 0 auto;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Mysli UI Toolkit :: Examples</h1>
+
+    <div class="section">
+        <h2>Introduction</h2>
+        <p>This is an example of UI Toolkit. To use it properly run PHP build-in server,
+        in the root of this package's directory (ui_toolkit):</p>
+        <code>php -S localhost:8000</code>
+        <p>Then open the following url: <em>http://localhost:8000/examples</em></p>
+        <p>Please note: this Toolkit is used above all, for <em>mysli/dashboard</em> and
+        components related to it. This is alpha version, still under heavy development.</p>
+        <p>It's not recommended that you're use this toolkit on frontend.</p>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="section">
+        <h2>Contents</h2>
+        <ul>
+            <li><a href="#panel">Panels</a></li>
+            <li><a href="#grid">Grid</a></li>
+            <li><a href="#box">Box</a></li>
+            <li><a href="#button">Buttons</a></li>
+            <li><a href="#menus">Menus</a></li>
+
+
+            <!-- <li><a href="#calendar">Calendar</a></li>
+            <li><a href="#carousel">Carousel</a></li>
+            <li><a href="#collapese">Collapse</a></li>
+            <li><a href="#forms">Form Elements</a></li>
+            <li><a href="#icons">Icons</a></li>
+            <li><a href="#modal">Modal</a></li>
+            <li><a href="#navigation">Navigation</a></li>
+            <li><a href="#tabs">Tabs</a></li>
+            <li><a href="#tables">Tables</a></li> -->
+        </ul>
+    </div>
+
+    <!-- PANELS -->
+    <div class="section">
+        <a id="panel"></a>
+        <h2>Panels</h2>
+        <h3>Default</h3>
+        <pre><code>&lt;div class="panel"&gt;
+&lt;/div&gt;</code></pre>
+        <div class="container default">
+            <div class="panel" style="z-index:1;">
+            </div>
+            <div class="panel">
+            </div>
+        </div>
+        <h3>Headers</h3>
+        <pre><code>&lt;div class="panel"&gt;
+    &lt;header&gt;
+        &lt;a class="close fade left" href="#close"&gt;&lt;i class="fa fa-times"&gt;&lt;/i&gt;&lt;/a&gt;
+        &lt;h2&gt;#2&lt;/h2&gt;
+        &lt;a class="icon menu fade right" href="#menu"&gt;&lt;i class="fa fa-cog"&gt;&lt;/i&gt;&lt;/a&gt;
+    &lt;/header&gt;
+&lt;/div&gt;</code></pre>
+        <div class="container default">
+            <div class="panel" style="z-index:1;">
+                <header>
+                    <h2>#1</h2>
+                </header>
+            </div>
+            <div class="panel">
+                <header>
+                    <a class="close fade left" href="#close"><i class="fa fa-times"></i></a>
+                    <h2>#2</h2>
+                    <a class="icon menu fade right" href="#menu"><i class="fa fa-cog"></i></a>
+                </header>
+            </div>
+        </div>
+        <h3>Inverted Colors</h3>
+        <div class="container inverted">
+            <div class="panel inverted" style="z-index:1;">
+                <header>
+                    <h2>#1</h2>
+                </header>
+            </div>
+            <div class="panel inverted">
+                <header>
+                    <a class="close fade left" href="#close"><i class="fa fa-times"></i></a>
+                    <h2>#2</h2>
+                    <a class="icon menu fade right" href="#menu"><i class="fa fa-cog"></i></a>
+                </header>
+            </div>
+        </div>
+    </div>
+
+    <!-- GRID -->
+    <div class="section">
+        <a id="grid"></a>
+        <h2>Grid</h2>
+        <div class="container default">
+            <div class="row">
+                <div class="column x1">&hearts;</div>
+                <div class="column x1">&hearts;</div>
+                <div class="column x1">&hearts;</div>
+                <div class="column x1">&hearts;</div>
+                <div class="column x1">&hearts;</div>
+                <div class="column x1">&hearts;</div>
+                <div class="column x1">&hearts;</div>
+                <div class="column x1">&hearts;</div>
+            </div>
+            <div class="row">
+                <div class="column x2">&hearts;</div>
+                <div class="column x2">&hearts;</div>
+                <div class="column x2">&hearts;</div>
+                <div class="column x2">&hearts;</div>
+            </div>
+            <div class="row">
+                <div class="column x4">&hearts;</div>
+                <div class="column x2">&hearts;</div>
+                <div class="column x2">&hearts;</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BOX -->
+    <div class="section">
+        <a id="box"></a>
+        <h2>Box</h2>
+        <h3>Default</h3>
+        <div class="container default">
+            <div class="box">
+                <h3>Hello World!</h3>
+            </div>
+        </div>
+        <h3>Inverted Colors</h3>
+        <div class="container inverted">
+            <div class="box inverted">
+                <h3>Hello World!</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- BUTTON -->
+    <div class="section">
+        <a id="button"></a>
+        <h2>Buttons</h2>
+        <h3>Default</h3>
+        <div class="container default spaced">
+            <button type="button"><span>Button</span></button>
+            <button class="inverted" type="button"><span>Inverted</span></button>
+            <button class="primary" type="button"><span>Primary</span></button>
+            <button class="attention" type="button"><span>Attention</span></button>
+        </div>
+        <h3>Inverted</h3>
+        <div class="container inverted spaced">
+            <button type="button"><span>Button</span></button>
+            <button class="inverted" type="button"><span>Inverted</span></button>
+            <button class="primary" type="button"><span>Primary</span></button>
+            <button class="attention" type="button"><span>Attention</span></button>
+        </div>
+    </div>
+
+    <script src="http://zeptojs.com/zepto.js"></script>
+    <script src="assets/dist/js/mysli_ui_toolkit.js"></script>
+</body>
+</html>

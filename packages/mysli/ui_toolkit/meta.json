@@ -1,0 +1,20 @@
+{
+    "package"       : "mysli/ui_toolkit",
+    "version"       : 1,
+
+    "depends_on" : {
+        "@core"     : ">= 1",
+        "mysli/web" : ">= 1"
+    },
+
+    "factory" : {
+        "setup" : "construct(mysli/web)"
+    },
+
+    "about" : {
+        "license"     : "GPLv3",
+        "upstream"    : "http://github.com/mysli/ui_toolkit",
+        "maintainer"  : "Marko Gajšt <marko@gaj.st>",
+        "description" : "Front-end framework for Mysli Backend."
+    }
+}

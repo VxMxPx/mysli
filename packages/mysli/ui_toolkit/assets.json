@@ -1,0 +1,32 @@
+{
+    "css/mysli_ui_toolkit.css" : [
+        "css/fonts.css",
+        "css/font-awesome.css",
+        "css/variables.styl",
+        "css/common.styl",
+        "css/grid.styl",
+        "css/table.styl",
+        "css/form.styl",
+        "css/button.styl",
+        "css/icons.styl",
+        "css/navigation.styl",
+        "css/panel.styl",
+        "css/box.styl",
+        "css/alert.styl",
+        "css/modal.styl",
+        "css/tab.styl",
+        "css/collapse.styl",
+        "css/carousel.styl",
+        "css/calendar.styl"
+    ],
+    "js/mysli_ui_toolkit.js" : [
+        "js/form.js",
+        "js/tab.js",
+        "js/overlay.js",
+        "js/modal.js",
+        "js/tab.js",
+        "js/carousel.js",
+        "js/collapse.js",
+        "js/calendar.js"
+    ]
+}

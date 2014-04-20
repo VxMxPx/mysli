@@ -1,0 +1,63 @@
+*
+    padding: 0
+    marin: 0
+
+*, *:before, *:after
+    -moz-box-sizing: border-box
+    -webkit-box-sizing: border-box
+    box-sizing: border-box
+
+body
+    font-family : font-family
+    font-size   : font-size-normal
+    line-height : 1.4em
+
+h1, h2, h3, h4, h5, h6
+    font-family: font-family-headers
+    font-weight: normal
+    margin-top: 20px
+    margin-bottom: 10px
+
+h1
+    font-size: 36px
+
+h2
+    font-size: 30px
+
+.default
+    color            : color-font
+    background-color : color-background
+.inverted
+    background-color: color-background-inverted
+    color           : color-font-inverted
+
+code, .code
+    font-family: Menlo, Monaco, Consolas, "Courier New", monospace
+    font-size: font-size-small
+    background-color: #fdf6e3
+    color: #002b36
+    &.inverted
+        background-color: #073642
+        color: #fdf6e3
+code
+    line-height: 1.2em
+    padding: 10px 20px
+    border-bottom: 2px solid #eee8d5
+    &.inverted
+        border-bottom: 2px solid #002b36
+pre code
+    display: block
+    overflow: hidden
+
+small
+    font-size: 85%
+
+.fade
+    color: color-font-fade
+
+.close
+    font-size: font-size-normal
+    text-decoration: none
+    color: color-font
+    &.fade
+        color: color-font-fade

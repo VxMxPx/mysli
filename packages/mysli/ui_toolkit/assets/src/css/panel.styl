@@ -1,0 +1,31 @@
+.panel
+    width: 250px
+    height: 100%
+    position: relative
+    background-color: color-background-box
+    box-shadow: 5px 0 10px rgba(0, 0, 0, .1)
+    float: left
+    header
+        position: relative
+        background-color: #f1f1f0
+        font-size: font-size-normal
+        overflow: hidden
+        padding: 10px 0
+        a
+            position: absolute
+            top: 10px
+            z-index: 1
+        .left
+            left: 20px
+        .right
+            right: 20px
+        h2
+            z-index: 0
+            position: relative
+            font-size: font-size-normal
+            text-align: center
+            margin: 0
+    &.inverted
+        background-color: color-background-box-inverted
+        header
+            background-color: #2a2a2a
