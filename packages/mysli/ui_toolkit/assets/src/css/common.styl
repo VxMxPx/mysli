@@ -1,6 +1,6 @@
 *
     padding: 0
-    marin: 0
+    margin: 0
 
 *, *:before, *:after
     -moz-box-sizing: border-box
@@ -27,23 +27,44 @@ h2
 .default
     color            : color-font
     background-color : color-background
-.inverted
-    background-color: color-background-inverted
-    color           : color-font-inverted
+.inverse
+    background-color: color-background-inverse
+    color           : color-font-inverse
+
+.spaced
+    padding: 20px
+
+.s-left
+    margin-left: 10px
+.s-right
+    margin-right: 10px
+
+.to-left
+    text-align: left
+.to-center
+    text-align: center
+.to-right
+    text-align: right
+
+a
+    color: #24a
+.inverse
+    a
+        color: #68e
 
 code, .code
     font-family: Menlo, Monaco, Consolas, "Courier New", monospace
     font-size: font-size-small
     background-color: #fdf6e3
     color: #002b36
-    &.inverted
+    &.inverse
         background-color: #073642
         color: #fdf6e3
 code
     line-height: 1.2em
     padding: 10px 20px
     border-bottom: 2px solid #eee8d5
-    &.inverted
+    &.inverse
         border-bottom: 2px solid #002b36
 pre code
     display: block
@@ -54,10 +75,16 @@ small
 
 .fade
     color: color-font-fade
+.fade-real
+    opacity: .5
 
-.close
-    font-size: font-size-normal
+.close:before
+    display: inline-block;
+    font-family: FontAwesome;
+    font-style: normal;
+    font-weight: normal;
+    line-height: 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    content: "\f00d"
     text-decoration: none
-    color: color-font
-    &.fade
-        color: color-font-fade

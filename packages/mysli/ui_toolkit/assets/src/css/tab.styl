@@ -1,0 +1,30 @@
+.tabs
+    position: relative
+    background-color: #f1f1f0
+    font-size: font-size-small
+    &.center
+       text-align: center
+    .tab
+        padding: 5px 20px
+        margin: 0
+        display: inline-block
+        user-select: none
+        color: color-font
+        position: relative
+        text-decoration: none
+        // border-left: 1px solid color-border
+        // border-right: 1px solid color-background-box
+        &:last-child
+            border-right: none
+        &.active
+            border-radius: 3px 3px 0 0
+            background-color: color-background-box
+            border: none
+            border-top: 2px solid color-field-selected
+.inverse > .tabs
+    background-color: #2a2a2a
+    .tab
+        color: color-font-inverse
+        // border-right-color: color-background-box-inverse
+        &.active
+            background-color: color-background-box-inverse

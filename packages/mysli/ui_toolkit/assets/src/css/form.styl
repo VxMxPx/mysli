@@ -1,0 +1,131 @@
+.field
+    margin-bottom: 20px
+    position: relative
+    label
+        display: block
+        font-size: font-size-small
+    span
+        font-size: font-size-small
+    &.divided
+        &.top
+            border-top: 1px solid color-border
+            padding-top: 20px
+    &:last-child
+        margin-bottom: 0
+    input[type=text], input[type=password], textarea, select
+        font-size: font-size-normal
+        border: 2px solid color-border
+        border-top: 3px solid color-border
+        padding: 7px
+        border-radius: 3px
+        background-color: #fff
+        color: color-font
+        transition: border .5s
+        width: 100%
+        &:focus
+            border-color: color-field-selected
+            outline: none
+        &:disabled
+            background-color: color-border
+            color: color-font-fade
+    select
+        min-width: 200px
+    textarea
+        resize: vertical
+        min-height: 40px
+        &.resizable
+            resize: both
+        &.fixed
+            resize: none
+    input[type=radio]
+        display: none
+        & + label
+            cursor: pointer
+            position: relative
+        & + label:before
+            content: ""
+            position: relative
+            width: 20px
+            height: 20px
+            border-radius: 20px
+            background-color: #eee
+            border: 2px solid color-border
+            display: inline-block
+            margin-right: 5px
+            top: 4px
+            transition: border .5s
+        &:checked + label:before
+            border-color: color-field-selected
+        &:checked + label:after
+            content: ""
+            position: absolute
+            z-index: 1
+            top: 10px
+            left: 6px
+            width: 8px
+            height: 8px
+            border-radius: 8px
+            background-color: color-field-selected
+            display: block
+        &:disabled + label
+            color: color-font-fade
+        &:disabled + label:before
+            background-color: color-border
+    input[type=checkbox]
+        display: none
+        & + label
+            cursor: pointer
+            position: relative
+        & + label:before
+            content: ""
+            position: relative
+            width: 20px
+            height: 20px
+            border-radius: 3px
+            background-color: #eee
+            border: 2px solid color-border
+            display: inline-block
+            margin-right: 5px
+            top: 4px
+            transition: border .5s
+        &:checked + label:before
+            border-color: color-field-selected
+        &:checked + label:after
+            display: inline-block;
+            font-family: FontAwesome;
+            font-style: normal;
+            font-weight: normal;
+            line-height: 1;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            content: "\f00c"
+            position: absolute
+            z-index: 1
+            top: 7px
+            left: 3px
+            color: color-field-selected
+            background: none
+            border-radius: none
+        &:disabled + label
+            color: color-font-fade
+        &:disabled + label:before
+            background-color: color-border
+
+form.inverse, field.inverse
+    background-color: transparent
+    &.divided, .divided
+        &.top, &.bottom
+            border-color: color-border-inverse
+    input[type=text], input[type=password], textarea, select
+        border: 2px solid color-border-inverse
+        border-top: 3px solid color-border-inverse
+        &:disabled
+            background-color: color-border-inverse
+            color: color-font-fade-inverse
+    input[type=radio], input[type=checkbox]
+        & + label:before
+            border: 2px solid color-border-inverse
+        &:disabled + label
+            color: color-font-fade
+        &:disabled + label:before
+            background-color: color-border-inverse

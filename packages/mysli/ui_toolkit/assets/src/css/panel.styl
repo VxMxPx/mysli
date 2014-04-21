@@ -5,6 +5,7 @@
     background-color: color-background-box
     box-shadow: 5px 0 10px rgba(0, 0, 0, .1)
     float: left
+    color: color-font
     header
         position: relative
         background-color: #f1f1f0
@@ -15,6 +16,7 @@
             position: absolute
             top: 10px
             z-index: 1
+            color: color-font-fade
         .left
             left: 20px
         .right
@@ -25,7 +27,10 @@
             font-size: font-size-normal
             text-align: center
             margin: 0
-    &.inverted
-        background-color: color-background-box-inverted
+    &.inverse
+        background-color: color-background-box-inverse
+        color: color-font-inverse
         header
             background-color: #2a2a2a
+            a
+                color: color-font-fade-inverse
