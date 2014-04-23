@@ -4,6 +4,7 @@
         "css/font-awesome.css",
         "css/variables.styl",
         "css/common.styl",
+        "css/menu.styl",
         "css/grid.styl",
         "css/table.styl",
         "css/form.styl",

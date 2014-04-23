@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Mysli UI Toolkit :: Examples</title>
+    <title>Mysli UI Toolkit :: <?php echo get_title(); ?></title>
     <link rel="stylesheet" type="text/css" href="/assets/dist/css/mysli_ui_toolkit.css">
     <style type="text/css">
         h1 {
@@ -93,12 +93,15 @@
         $inverse = $double ? !$inverse : $inverse;
         return ($inverse ? 'inverse' : '');
     }
+    function get_title()
+    {
+        return ( isset($_GET['file']) ? ucwords(str_replace('_', ' ', $_GET['file'])) : 'Examples' );
+    }
     ?>
 
     <div class="section" style="margin-top:0;">
         <h1>
-            <a href="<?php echo $_SERVER['SCRIPT_NAME']; ?>">Mysli UI Toolkit</a> &rarr;
-            <?php print( isset($_GET['file']) ? ucwords(str_replace('_', ' ', $_GET['file'])) : 'Examples' ); ?>
+            <a href="<?php echo $_SERVER['SCRIPT_NAME']; ?>">Mysli UI Toolkit</a> &rarr; <?php echo get_title(); ?>
         </h1>
     </div>
 

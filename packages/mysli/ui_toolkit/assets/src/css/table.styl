@@ -1,0 +1,64 @@
+.spaced > table.data
+    border-radius: 3px
+
+table.data
+    width: 100%
+    border-spacing: 0
+    color: color-font
+    overflow: hidden
+    th
+        background-color: color-background-el
+        text-align: left
+        font-weight: bold
+        padding: 10px
+        font-size: font-size-small
+    td
+        padding: 10px
+        background-color: color-background
+    tr.selected td
+        background-color: #ff8
+        box-shadow: inset 0 -3px 0 #cccc6d
+        text-shadow: 0, 0, 1px #fff
+        color: #282828
+        border-bottom: 1px solid #cccc6d
+    &.zebra
+        tr:nth-child(even) td
+            background-color: #fefefe
+    &.sh
+        border-bottom: 2px solid color-border
+        th
+            border-bottom: 2px solid color-border
+        td
+            border-bottom: 1px solid color-border
+        tr:last-child td
+            border-bottom: none
+    &.sv
+        tr.selected td
+            border-right: 1px solid #cccc6d
+        th, td
+            border-right: 1px solid color-border
+            &:last-child
+                border-right: none
+
+table.data.inverse
+    color: color-font-inverse
+    th
+        background-color: color-background-el-inverse
+    td
+        background-color: color-background-inverse
+    tr.selected td
+        border-bottom: 1px solid #cccc6d
+    &.zebra
+        tr:nth-child(even) td
+            background-color: #242424
+    &.sh
+        border-bottom: 2px solid color-border-inverse
+        th
+            border-bottom: 2px solid color-border-inverse
+        td
+            border-bottom: 1px solid color-border-inverse
+    &.sv
+        tr.selected td
+            border-right: 1px solid #cccc6d
+        th, td
+            border-right: 1px solid color-border-inverse
