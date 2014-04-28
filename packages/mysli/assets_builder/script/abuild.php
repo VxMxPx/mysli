@@ -35,6 +35,57 @@ class Abuild
         return true;
     }
 
+
+    /**
+     * Observe particular directory for changes.
+     * --
+     * @param  string $package
+     * @param  string $assets_file
+     * @param  string $assets_dir
+     * @param  string $web_dir
+     * --
+     * @return void
+     */
+    public function action_observe(
+        $package = null,
+        $assets_file = 'assets.json',
+        $assets_dir = 'assets',
+        $web_dir = null
+    ) {
+        $this->observe_or_build($package, $assets_file, $assets_dir, $web_dir, true);
+    }
+
+    /**
+     * Build directory.
+     * --
+     * @param  string $package
+     * @param  string $assets_file
+     * @param  string $assets_dir
+     * @param  string $web_dir
+     * --
+     * @return void
+     */
+    public function action_build(
+        $package = null,
+        $assets_file = 'assets.json',
+        $assets_dir = 'assets',
+        $web_dir = null
+    ) {
+        $this->observe_or_build($package, $assets_file, $assets_dir, $web_dir, false);
+    }
+
+    /**
+     * Command not found.
+     * --
+     * @param  string $command
+     * --
+     * @return null
+     */
+    public function not_found($command)
+    {
+        \Cli\Util::warn('Command not found: `' . $command . '`. Try to use `observe` or `build`.');
+    }
+
     /**
      * Get assets instruction from _assets.json_ file.
      * --
@@ -55,26 +106,27 @@ class Abuild
      * What are the changes between two directories
      * (diff \Core\FS::dir_signatures).
      * --
-     * @param  array $one
-     * @param  array $two
+     * @param  array   $one
+     * @param  array   $two
+     * @param  integer $cutoff -- Portion of path to be removed for readability purposes.
      * --
      * @return array
      */
-    private function what_changed(array $one, array $two) {
+    private function what_changed(array $one, array $two, $cutoff = 0) {
         $changes = [];
         foreach ($one as $file => $hash) {
             if (!isset($two[$file])) {
-                $changes[] = 'Added: ' . $file;
+                $changes[] = 'Added: ' . substr($file, $cutoff);
             } else {
                 if ($two[$file] !== $hash) {
-                    $changes[] = 'Updated: ' . $file;
+                    $changes[] = 'Updated: ' . substr($file, $cutoff);
                 }
                 unset($two[$file]);
             }
         }
         if (!empty($two)) {
             foreach ($two as $file => $hash) {
-                $changes[] = 'Removed: ' . $file;
+                $changes[] = 'Removed: ' . substr($file, $cutoff);
             }
         }
         return $changes;
@@ -134,7 +186,6 @@ class Abuild
         foreach ($contents as $file => $content) {
             $filename = ds($dir, 'dist', $file);
             if (file_put_contents($filename, $content) !== false) {
-                \Cli\Util::success('Merged: ' . $file);
                 if (substr($file, -3) === '.js') {
                     // Rewrite itself
                     system('uglifyjs -c -o ' . $filename . ' ' . $filename);
@@ -143,6 +194,7 @@ class Abuild
                     exec('cat ' . $filename . ' | stylus -c', $out);
                     file_put_contents($filename, implode('', $out));
                 }
+                \Cli\Util::success('Merged: ' . $file);
             } else {
                 \Cli\Util::error('Failed to create: ' . $file);
             }
@@ -201,7 +253,7 @@ class Abuild
             $rsignature = \Core\FS::dir_signatures(ds($assets_path, 'src'));
             if ($rsignature !== $signature) {
                 \Cli\Util::plain("What changed: \n" . \Core\Arr::readable(
-                    $this->what_changed($rsignature, $signature)
+                    $this->what_changed($rsignature, $signature, strlen($assets_path))
                 ));
                 \Cli\Util::plain('Rebuilding assets...');
                 $signature = $rsignature;
@@ -213,43 +265,5 @@ class Abuild
                 );
             } else $loop and sleep(3);
         } while ($loop);
-    }
-
-    /**
-     * Observe particular directory for changes.
-     * --
-     * @param  string $package
-     * @param  string $assets_file
-     * @param  string $assets_dir
-     * @param  string $web_dir
-     * --
-     * @return void
-     */
-    public function action_observe(
-        $package = null,
-        $assets_file = 'assets.json',
-        $assets_dir = 'assets',
-        $web_dir = null
-    ) {
-        $this->observe_or_build($package, $assets_file, $assets_dir, $web_dir, true);
-    }
-
-    /**
-     * Build directory.
-     * --
-     * @param  string $package
-     * @param  string $assets_file
-     * @param  string $assets_dir
-     * @param  string $web_dir
-     * --
-     * @return void
-     */
-    public function action_build(
-        $package = null,
-        $assets_file = 'assets.json',
-        $assets_dir = 'assets',
-        $web_dir = null
-    ) {
-        $this->observe_or_build($package, $assets_file, $assets_dir, $web_dir, false);
     }
 }
