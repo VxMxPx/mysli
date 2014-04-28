@@ -1,10 +1,7 @@
-.menu
-    position: absolute
-    max-width: 200px
-    background-color: color-background-box
-    padding: 10px
-    border-radius: 8px
-    box-shadow: 0 0 8px rgba(0,0,0,.2)
+.popup.menu
+    .field.item
+        padding: 0
+        margin: 20px
     hr.item
         padding: 0
         margin-top: 10px
@@ -12,11 +9,27 @@
         margin-bottom: 10px
     .item
         position: relative
-        padding: 5px 10px
+        padding: 5px 20px
+        margin: 10px 0
         color: color-font
         display: block
     a.item
         text-decoration: none
+        &:focus
+            outline: none
         &:hover
-            background-color: #6ee
-            border-radius: 4px
+            text-shadow: 1px 1px 0 rgba(0, 0, 0, .2)
+            background-color: color-selected
+            color: color-selected-font
+        &:active
+            top: 3px
+
+.popup.menu.alt
+    hr.item
+        border-bottom: 1px solid color-border-alt
+    .item
+        color: color-font-alt
+    a.item
+        &:hover
+            background-color: color-selected-alt
+            color: color-selected-font-alt

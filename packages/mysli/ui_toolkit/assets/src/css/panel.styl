@@ -7,6 +7,19 @@
     float: left
     color: color-font
     border-right: 1px solid color-border
+    & > div.loading
+        position: absolute
+        z-index: 100
+        width: 10px
+        height: 100%
+        width: 100%
+        top: 0
+        left: 0
+        // bottom: 0
+        // right: -1px
+        background: url(../../common/img/panel-loading.gif) repeat-y right top rgba(255, 255, 255, .8)
+    &.selected header
+        border-top: 3px solid color-selected-border
     &.multi
         perspective: 900px
         -webkit-perspective: 900px
@@ -48,6 +61,8 @@
         font-size: font-size-normal
         overflow: hidden
         padding: 10px 0
+        border-bottom: 1px solid rgba(255, 255, 255, .4)
+        box-shadow: inset 0 -1px 0 color-border
         a
             position: absolute
             top: 10px
@@ -63,11 +78,15 @@
             font-size: font-size-normal
             text-align: center
             margin: 0
-    &.inverse
-        background-color: color-background-box-inverse
-        color: color-font-inverse
-        border-color: color-border-inverse
+    &.alt
+        background-color: color-background-box-alt
+        color: color-font-alt
+        border-color: color-border-alt
+        &.selected header
+            border-top: 3px solid color-selected-border-alt
         header
-            background-color: color-background-el-inverse
+            background-color: color-background-el-alt
+            border-bottom: 1px solid rgba(255, 255, 255, .1)
+            box-shadow: inset 0 -1px 0 #101010
             a
-                color: color-font-fade-inverse
+                color: color-font-fade-alt

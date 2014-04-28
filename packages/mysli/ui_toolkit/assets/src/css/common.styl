@@ -27,11 +27,9 @@ h2
     font-size: 30px
 
 .default
-    color            : color-font
-    background-color : color-background
-.inverse
-    background-color: color-background-inverse
-    color           : color-font-inverse
+    color : color-font
+.alt
+    color : color-font-alt
 
 .spaced
     padding: 20px
@@ -50,7 +48,7 @@ h2
 
 a
     color: #24a
-.inverse
+.alt
     a
         color: #68e
 
@@ -59,18 +57,23 @@ code, .code
     font-size: font-size-small
     background-color: #fdf6e3
     color: #002b36
-    &.inverse
+    &.alt
         background-color: #073642
         color: #fdf6e3
 code
     line-height: 1.2em
     padding: 10px 20px
     border-bottom: 2px solid #eee8d5
-    &.inverse
+    &.alt
         border-bottom: 2px solid #002b36
 pre code
     display: block
     overflow: hidden
+
+.container
+    background-color: color-background
+    &.alt
+        background-color: color-background-alt
 
 small
     font-size: font-size-small

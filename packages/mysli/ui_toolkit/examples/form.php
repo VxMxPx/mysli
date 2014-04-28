@@ -1,6 +1,6 @@
 <div class="section">
-    <div class="container default <?php echo get_inverse(); ?>">
-        <form class="<?php echo get_inverse(); ?>">
+    <div class="container default <?php echo get_alt(); ?>">
+        <form class="<?php echo get_alt(); ?>">
         <div class="row">
             <div class="column spaced x4">
                 <div class="field">
@@ -43,6 +43,10 @@
                 </div>
             </div>
             <div class="column spaced x4">
+                <div class="field search">
+                    <input type="text" placeholder="Find..." />
+                    <button class="action go" type="button"></button>
+                </div>
                 <div class="field">
                     <label>Gender:</label>
                     <input type="radio" id="ff_gender_male" name="gender" />
@@ -84,5 +88,5 @@
         </div>
         </form>
     </div>
-    <?php echo inverse_link(); ?>
+    <?php echo alt_link(); ?>
 </div>

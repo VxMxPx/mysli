@@ -15,15 +15,21 @@ table.data
     td
         padding: 10px
         background-color: color-background
-    tr.selected td
+    tr.selected td, td.selected
         background-color: #ff8
-        box-shadow: inset 0 -3px 0 #cccc6d
+        // box-shadow: inset 0 -3px 0 #cccc6d
         text-shadow: 0, 0, 1px #fff
         color: #282828
         border-bottom: 1px solid #cccc6d
+    td.selected
+        border-radius: 3px
+        border-bottom: none
+        box-shadow: inset 0 -1px rgba(0, 0, 0, .2)
     &.zebra
         tr:nth-child(even) td
             background-color: #fefefe
+        tr.selected:nth-child(even) td
+            background-color: #ff8
     &.sh
         border-bottom: 2px solid color-border
         th
@@ -40,25 +46,30 @@ table.data
             &:last-child
                 border-right: none
 
-table.data.inverse
-    color: color-font-inverse
+table.data.alt
+    color: color-font-alt
     th
-        background-color: color-background-el-inverse
+        background-color: color-background-el-alt
     td
-        background-color: color-background-inverse
-    tr.selected td
-        border-bottom: 1px solid #cccc6d
+        background-color: color-background-alt
     &.zebra
         tr:nth-child(even) td
             background-color: #242424
+        tr.selected:nth-child(even) td
+            background-color: #ff8
+    tr.selected td
+        border-bottom: 1px solid #cccc6d
+    tr.selected td, td.selected
+        background-color: #ff8
+        color: #282828
     &.sh
-        border-bottom: 2px solid color-border-inverse
+        border-bottom: 2px solid color-border-alt
         th
-            border-bottom: 2px solid color-border-inverse
+            border-bottom: 2px solid color-border-alt
         td
-            border-bottom: 1px solid color-border-inverse
+            border-bottom: 1px solid color-border-alt
     &.sv
         tr.selected td
             border-right: 1px solid #cccc6d
         th, td
-            border-right: 1px solid color-border-inverse
+            border-right: 1px solid color-border-alt

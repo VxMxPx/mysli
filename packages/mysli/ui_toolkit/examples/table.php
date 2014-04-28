@@ -1,11 +1,11 @@
 <div class="section">
-    <div class="container default <?php echo get_inverse(); ?>">
-        <div class="panel <?php echo get_inverse(); ?>" style="width:50%;">
+    <div class="container default <?php echo get_alt(); ?>">
+        <div class="panel <?php echo get_alt(); ?>" style="width:50%;">
         <header>
             <h2>List of Slovene Cities</h2>
         </header>
         <div class="">
-        <table class="data sh sv <?php echo get_inverse(); ?>">
+        <table class="data sh sv zebra <?php echo get_alt(); ?>">
             <thead>
                 <tr>
                     <th>Name</th>
@@ -69,5 +69,5 @@
         </div>
         </div>
     </div>
-    <?php echo inverse_link(); ?>
+    <?php echo alt_link(); ?>
 </div>

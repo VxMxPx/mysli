@@ -9,22 +9,14 @@
         "css/table.styl",
         "css/form.styl",
         "css/button.styl",
+        "css/popup.styl",
         "css/panel.styl",
-        "css/box.styl",
         "css/alert.styl",
-        "css/modal.styl",
         "css/tab.styl",
-        "css/carousel.styl",
         "css/calendar.styl"
     ],
     "js/mysli_ui_toolkit.js" : [
-        "js/form.js",
-        "js/tab.js",
-        "js/overlay.js",
-        "js/modal.js",
-        "js/tab.js",
-        "js/carousel.js",
-        "js/collapse.js",
-        "js/calendar.js"
+        "js/mu.js",
+        "js/button.js"
     ]
 }

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="utf-8" />
     <title>Mysli UI Toolkit :: <?php echo get_title(); ?></title>
     <link rel="stylesheet" type="text/css" href="/assets/dist/css/mysli_ui_toolkit.css">
     <style type="text/css">
@@ -24,12 +25,12 @@
         }
         ul.examples li {
             float: left;
-            margin: 10px;
+            margin: 5px;
         }
         ul.examples li a {
+            border-radius: 4px;
+            box-shadow: inset 0 -2px 0 rgba(0, 0, 0, .2);
             background-color: #eee;
-            box-shadow: 0 0 12px rgba(0, 0, 0, .1);
-            border: 1px solid #ddd;
             display: block;
             width: 120px;
             height: 120px;
@@ -40,26 +41,24 @@
             transition: background-color .4s, color .4s;
         }
         ul.examples li a:hover {
-            background-color: #222;
+            background-color: #333;
             color: #fff;
         }
         .container {
             position: relative;
             width: 100%;
-            /*height: 400px;*/
-            /*background-color: #eee;*/
-            /*outline: 1px solid #ddd;*/
-            /*border: 1px solid #ddd;*/
             box-shadow: 0 0 4px rgba(0, 0, 0, .2);
             overflow: hidden;
             border-radius: 8px;
             margin-bottom: 20px;
         }
+        .container.alt {
+        }
         .colorful .column {
-            background-color: #b00a0a;
-            border: 1px solid #d07979;
+            background-color: #900a0a;
+            border: 1px solid #a05959;
             padding: 10px;
-            color: #d07979;
+            color: #fe4;
             text-align: center;
             font-size: 24px;
         }
@@ -78,20 +77,20 @@
         $query[$key] = $val;
         return $_SERVER['SCRIPT_NAME'] . '?' . http_build_query($query);
     }
-    function inverse_link() {
+    function alt_link() {
         return '<a href="' . url(
-            'inverse', (isset($_GET['inverse']) && $_GET['inverse'] === 'true' ? 'false' : 'true')
+            'alt', (isset($_GET['alt']) && $_GET['alt'] === 'true' ? 'false' : 'true')
         ) .
         '">Inverse</a>';
     }
-    function get_inverse($double = false) {
-        if ((isset($_GET['inverse']) and $_GET['inverse'] === 'true')) {
-            $inverse = true;
+    function get_alt($double = false) {
+        if ((isset($_GET['alt']) and $_GET['alt'] === 'true')) {
+            $alt = true;
         } else {
-            $inverse = false;
+            $alt = false;
         }
-        $inverse = $double ? !$inverse : $inverse;
-        return ($inverse ? 'inverse' : '');
+        $alt = $double ? !$alt : $alt;
+        return ($alt ? 'alt' : '');
     }
     function get_title()
     {

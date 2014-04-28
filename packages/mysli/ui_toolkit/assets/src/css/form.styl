@@ -1,6 +1,7 @@
 .field
     margin-bottom: 20px
     position: relative
+    background-color: transparent
     label
         display: block
         font-size: font-size-small
@@ -10,24 +11,59 @@
         &.top
             border-top: 1px solid color-border
             padding-top: 20px
-    &:last-child
-        margin-bottom: 0
+    // &:last-child
+    //     margin-bottom: 0
     input[type=text], input[type=password], textarea, select
         font-size: font-size-normal
         border: 2px solid color-border
         border-top: 3px solid color-border
         padding: 7px
         border-radius: 3px
-        background-color: #fff
-        color: color-font
+        background-color: color-field
+        color: color-font-field
         transition: border .5s
         width: 100%
         &:focus
-            border-color: color-field-selected
+            border-color: color-selected-border
             outline: none
         &:disabled
             background-color: color-border
             color: color-font-fade
+    &.search
+        input[type=text]
+            font-size: font-size-small
+            border-radius: 20px
+            position: relative
+            padding-right: 35px
+        button.action, .button.action
+            border-radius: 12px
+            box-shadow: none
+            width: 24px
+            height: 24px
+            top: 7px
+            right: 7px
+            position: absolute
+            z-index: 1
+            background-color: color-background-el
+            &.go:after
+                content: "\f002"
+                top: 4px
+                left: 5px
+            &.clear:after
+                content: "\f00d"
+                top: 5px
+                left: 6px
+            &:after
+                position: absolute
+                display: inline-block
+                font-family: FontAwesome
+                font-style: normal
+                font-weight: normal
+                line-height: 1
+                -webkit-font-smoothing: antialiased
+                -moz-osx-font-smoothing: grayscale
+                font-size: font-size-small
+                color: color-font-fade
     select
         min-width: 200px
     textarea
@@ -48,14 +84,14 @@
             width: 20px
             height: 20px
             border-radius: 20px
-            background-color: #eee
+            background-color: color-field
             border: 2px solid color-border
             display: inline-block
             margin-right: 5px
             top: 4px
             transition: border .5s
         &:checked + label:before
-            border-color: color-field-selected
+            border-color: color-selected-border
         &:checked + label:after
             content: ""
             position: absolute
@@ -65,7 +101,7 @@
             width: 8px
             height: 8px
             border-radius: 8px
-            background-color: color-field-selected
+            background-color: color-selected-border
             display: block
         &:disabled + label
             color: color-font-fade
@@ -82,14 +118,14 @@
             width: 20px
             height: 20px
             border-radius: 3px
-            background-color: #eee
+            background-color: color-field
             border: 2px solid color-border
             display: inline-block
             margin-right: 5px
             top: 4px
             transition: border .5s
         &:checked + label:before
-            border-color: color-field-selected
+            border-color: color-selected-border
         &:checked + label:after
             display: inline-block;
             font-family: FontAwesome;
@@ -103,7 +139,7 @@
             z-index: 1
             top: 7px
             left: 3px
-            color: color-field-selected
+            color: color-selected-border
             background: none
             border-radius: none
         &:disabled + label
@@ -111,21 +147,32 @@
         &:disabled + label:before
             background-color: color-border
 
-form.inverse, field.inverse
-    background-color: transparent
+form.alt .field, .field.alt
     &.divided, .divided
         &.top, &.bottom
-            border-color: color-border-inverse
+            border-color: color-border-alt
+    &.search
+        button.action, .button.action
+            background-color: color-background-el-alt
+            &:after
+                color: color-font-fade-alt
     input[type=text], input[type=password], textarea, select
-        border: 2px solid color-border-inverse
-        border-top: 3px solid color-border-inverse
+        color: color-font-field-alt
+        background-color: color-field-alt
+        border: 2px solid color-border-alt
+        border-top: 3px solid color-border-alt
         &:disabled
-            background-color: color-border-inverse
-            color: color-font-fade-inverse
+            background-color: color-border-alt
+            color: color-font-fade-alt
+        &:focus
+            border-color: color-selected-border-alt
     input[type=radio], input[type=checkbox]
         & + label:before
-            border: 2px solid color-border-inverse
+            border: 2px solid color-border-alt
+            background-color: color-field-alt
+        &:checked + label:before
+            border-color: color-selected-border-alt
         &:disabled + label
             color: color-font-fade
         &:disabled + label:before
-            background-color: color-border-inverse
+            background-color: color-border-alt

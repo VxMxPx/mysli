@@ -1,6 +1,7 @@
 .tabs
     position: relative
     background-color: color-background-el
+    padding-top: 10px
     font-size: font-size-small
     box-shadow: inset 0 -4px 4px -4px rgba(0, 0, 0, .2)
     &.center
@@ -21,11 +22,11 @@
             border-radius: 3px 3px 0 0
             background-color: color-background-box
             border: none
-            border-top: 3px solid color-field-selected
-.inverse > .tabs
-    background-color: color-background-el-inverse
+            border-top: 3px solid color-selected-border
+.alt > .tabs, .tabs.alt
+    background-color: color-background-el-alt
     .tab
-        color: color-font-inverse
-        // border-right-color: color-background-box-inverse
+        color: color-font-alt
         &.active
-            background-color: color-background-box-inverse
+            border-top-color: color-selected-border-alt
+            background-color: color-background-box-alt

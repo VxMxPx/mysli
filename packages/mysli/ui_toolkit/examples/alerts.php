@@ -1,5 +1,5 @@
 <div class="section">
-    <div class="container spaced default <?php echo get_inverse(); ?>">
+    <div class="container spaced default <?php echo get_alt(); ?>">
         <div class="alert">
             <div class="message warn">
                 This is a Warning!
@@ -25,5 +25,5 @@
             </div>
         </div>
     </div>
-    <p><?php echo inverse_link(); ?></p>
+    <p><?php echo alt_link(); ?></p>
 </div>
