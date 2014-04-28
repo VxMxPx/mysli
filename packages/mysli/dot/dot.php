@@ -117,6 +117,9 @@ class Dot
         } elseif (method_exists($script_obj, 'help_' . $command)) {
             call_user_func([$script_obj, 'help_' . $command]);
             return true;
+        } elseif (method_exists($script_obj, 'not_found')) {
+            call_user_func([$script_obj, 'not_found'], $command);
+            return false;
         }
 
         return false;

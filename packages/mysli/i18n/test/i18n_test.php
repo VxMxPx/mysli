@@ -20,7 +20,7 @@ class I18nTest extends \PHPUnit_Framework_TestCase
 
     public function __construct()
     {
-        $this->i18n = new I18n([['test/package', null], null], new DummyConfig());
+        $this->i18n = new I18n([['test/package', null]], new DummyConfig());
 
         // Always create fresh cache
         $this->i18n->cache_create();
