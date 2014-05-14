@@ -8,105 +8,132 @@
             this.$element.text('<span>' + this.$element.text() + '</span>');
             this.$label = this.$element.find('span');
         }
+
+        // Those are original values of element, before busy state is set...
+        this.busy_org = {
+            'content' : '',
+            'disabled': null
+        };
     };
 
     Button.prototype = {
 
         constructor : Button,
 
-        // return: boolean
-        is_disabled : function () {
-            var state = this.$element.attr('disabled');
-            return (state === 'true' || state === 'disabled');
+        // get button element
+        // return : object
+        element : function () {
+            return this.$element;
         },
 
-        // set button to be disabled
-        // state: boolean
+        // add event handlers to the element
+        on : function (evnt, call) {
+            return this.$element.on(evnt, call);
+        },
+
+        // detach event handlers added with on
+        off : function (evnt) {
+            return this.$element.off(evnt);
+        },
+
+        // set /get disabled state
+        // state  : boolean
+        // return : boolean
         disabled : function (state) {
+            if (typeof state === 'undefined') {
+                state = this.$element.attr('disabled');
+                return (state === 'true' || state === 'disabled');
+            }
+
             if (state)
                 this.$element.attr('disabled', true);
             else
                 this.$element.removeAttr('disabled');
         },
 
-        // return: boolean
-        is_pressed : function () {
-            return this.$element.hasClass('pressed');
-        },
-
-        // set button pressed on/off
-        // state: boolean
+        // set / get pressed state
+        // state  : boolean
+        // return : boolean
         pressed : function (state) {
+            if (typeof state === 'undefined')
+                return this.$element.hasClass('pressed');
+
             if (state)
                 this.$element.addClass('pressed');
             else
                 this.$element.removeClass('pressed');
         },
 
-        // get current button's style:
-        // return: string (alt, primary, attention, default)
-        get_style : function () {
-            if      (this.$element.hasClass('alt'))       return 'alt';
-            else if (this.$element.hasClass('primary'))   return 'primary';
-            else if (this.$element.hasClass('attention')) return 'attention';
-            else                                          return 'default';
-        },
-
-        // set button's style
+        // set / get button's style
         // variant: string (alt, primary, attention, default)
+        // return : string
         style : function (variant) {
             var classes = 'alt primary attention';
+            // Get style
+            if (typeof variant === 'undefined') {
+                for (var i = classes.length - 1; i >= 0; i--) {
+                    if (this.$element.hasClass(classes[i])) return classes[i];
+                }
+                return;
+            }
+            // Set style
             this.$element.removeClass(classes);
             if (variant !== 'default')
                 this.$element.addClass(variant);
         },
 
-        // get button's label
-        // return: string
-        get_lablel : function () {
-            return this.$label.text();
-        },
-
-        // set label
-        // text: string
+        // set /get label
+        // text   : string
+        // return : string
         label : function (text) {
+            if (typeof text === 'undefined') {
+                return this.$label.text();
+            }
             this.$label.text(text);
         },
 
-        // is button busy
+        // set / get button busy state
+        // state : boolean
         // return: boolean
-        is_busy : function () {
-            return this.$element.hasClass('busy');
-        },
+        busy : function (state, label) {
+            if (typeof state === 'undefined')
+                return this.$element.hasClass('busy');
 
-        // set button busy
-        // state: boolean
-        busy : function (state) {
-            if (state)
+            if (state) {
+                if (this.busy()) { return; }
                 this.$element.addClass('busy');
-            else
+                this.busy_org.content = this.$element.html();
+                this.busy_org.disabled = this.disabled();
+                this.$element.html(' ' + (label ? label : this.label()));
+                this.icon('spinner', 'left', true);
+                this.disabled(true);
+            } else {
+                if ( ! this.busy()) { return; }
                 this.$element.removeClass('busy');
+                this.$element.html(this.busy_org.content);
+                this.disabled(this.busy_org.disabled);
+            }
         },
 
-        // get current icon
-        // return: string | false (if no icon)
-        get_icon : function () {
-            var icon = this.$element.find('i');
-            if (!icon.length) return false;
-            return icon.attr('class').match(/fa-([a-z\-]+)/)[1];
-        },
-
-        // set button's icon
+        // set /get button's icon
         // name     : string
         // position : string (left, right)
-        icon : function (name, position) {
-            this.$element.find('i').remove(); // Remove icons in any case...
+        // return   : string
+        icon : function (name, position, spin) {
+            var icon = this.$element.find('i');
+
+            if (typeof name === 'undefined') {
+                if (!icon.length) return false;
+                return icon.attr('class').match(/fa-([a-z\-]+)/)[1];
+            }
+
+            icon.remove(); // Remove icons in any case...
             if (!name) return; // icons were removed, and replacement not needed.
             this
-                .$element[(position === 'left' ? 'prepend' : 'append')]('<i></i>')
+                .$element[(position === 'right' ? 'append' : 'prepend')]('<i></i>')
                 .find('i')
                 .removeClass()
-                .addClass('fa fa-' + name);
+                .addClass('fa fa-' + name + (spin ? ' fa-spin' : ''));
         }
     };
 

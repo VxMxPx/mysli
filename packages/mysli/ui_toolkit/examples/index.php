@@ -131,6 +131,15 @@
     ?>
 
     <script src="http://zeptojs.com/zepto.js"></script>
-    <script src="/assets/dist/js/mysli_ui_toolkit.js"></script>
+    <script src="https://raw.githubusercontent.com/madrobby/zepto/master/src/fx.js"></script>
+    <script src="https://raw.githubusercontent.com/madrobby/zepto/master/src/fx_methods.js"></script>
+    <script src="https://raw.githubusercontent.com/madrobby/zepto/master/src/selector.js"></script>
+    <?php
+        $scripts = file_get_contents(__DIR__ . '/../assets.json');
+        $scripts = json_decode($scripts, true);
+        foreach ($scripts['js/mysli_ui_toolkit.js'] as $script) {
+            echo '<script src="/assets/src/'.$script.'"></script>'."\n";
+        }
+    ?>
 </body>
 </html>

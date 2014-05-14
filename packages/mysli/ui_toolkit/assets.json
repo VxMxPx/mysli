@@ -4,6 +4,7 @@
         "css/font-awesome.css",
         "css/variables.styl",
         "css/common.styl",
+        "css/overlay.styl",
         "css/menu.styl",
         "css/grid.styl",
         "css/table.styl",
@@ -17,6 +18,7 @@
     ],
     "js/mysli_ui_toolkit.js" : [
         "js/mu.js",
-        "js/button.js"
+        "js/button.js",
+        "js/overlay.js"
     ]
 }
