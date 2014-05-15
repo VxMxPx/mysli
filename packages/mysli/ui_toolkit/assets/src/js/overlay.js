@@ -14,6 +14,7 @@
         };
     }
 
+    // Options:
     // loading   : boolean  Loading indicator will be displayed
     // text      : string   Text will be displayed
     // padding   : integer  When appended to the element, padding will be applied,
@@ -23,6 +24,8 @@
     // classes   : array    List of classes.
     //
     var Overlay = function (parent, options) {
+
+        var _this = this;
 
         this.options = $.extend({}, {
             loading     : false,
@@ -58,8 +61,15 @@
         if (this.options.classes.length)
             this.$element.addClass(this.options.classes.join(' '));
 
-        this.is_visible  = false;
-        this.is_appended = false;
+        if (this.options.can_close)
+            this.$element.on('click', _this.hide);
+
+        this.is_visible   = false;
+        this.is_appended  = false;
+        this.resize       = {
+            timer : false,
+            event : false
+        };
 
         // Increase count of initialized objects by one (Used for ID)
         count = count + 1;
@@ -124,10 +134,15 @@
                 });
             }
 
-            // Add events
-            if (this.options.can_close) {
-                this.$element.on('click', function() {
-                    _this.hide();
+            // Add resize event
+            if (this.$parent) {
+                this.resize.event = $(window).on('resize', function () {
+                    if (_this.resize.timer)
+                        clearTimeout(_this.resize.timer);
+                    _this.resize.timer = setTimeout(function () {
+                        _this.update(false);
+                        console.log('Fire!!');
+                    }, 200);
                 });
             }
 
@@ -150,6 +165,10 @@
         hide : function () {
             this.is_visible = false;
             this.$element.fadeOut();
+            if (this.resize.event) {
+                $(window).off(this.resize.event);
+                this.resize.event = false;
+            }
         }
     };
 

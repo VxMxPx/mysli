@@ -17,6 +17,7 @@
         "css/calendar.styl"
     ],
     "js/mysli_ui_toolkit.js" : [
+        "js/ext.js",
         "js/mu.js",
         "js/button.js",
         "js/overlay.js"
