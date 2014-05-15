@@ -11,33 +11,31 @@ class Service
     private $users;
     private $translator;
 
-    private $assets;
-    private $debug = true;
-
     /**
      * Construct Dashboard
      * --
-     * @param object $web     mysli/web
-     * @param object $session mysli/session
-     * @param object $users   mysli/users
-     * @param object $output  mysli/output
-     * @param object $tplp    mysli/tplp
-     * @param object $i18n    mysli/i18n
+     * @param object $web        mysli/web
+     * @param object $session    mysli/session
+     * @param object $users      mysli/users
+     * @param object $output     mysli/output
+     * @param object $tplp       mysli/tplp
+     * @param object $i18n       mysli/i18n
+     * @param object $zepto      mysli/zepto
+     * @param object $ui_toolkit mysli/ui_toolkit
      */
     public function __construct($web, $session, $users, $output, $tplp, $i18n)
     {
-        $this->web     = $web;
-        $this->output  = $output;
-        $this->tplp    = $tplp;
-        $this->session = $session;
-        $this->users   = $users;
+        $this->web        = $web;
+        $this->output     = $output;
+        $this->tplp       = $tplp;
+        $this->session    = $session;
+        $this->users      = $users;
 
         // Set translator
         $this->translator = $i18n->translator();
-        $this->tplp->translator_set($this->translator);
+        $this->tplp->set_translator($this->translator);
 
-        // Get assets dir and register template functions
-        $this->assets = \Core\JSON::decode_file(ds(__DIR__, 'assets.json'), true);
+        // Register template functions
         $this->register_functions();
     }
 
@@ -49,37 +47,8 @@ class Service
     private function register_functions()
     {
         // dashurl
-        $this->tplp->function_register('dashurl', function ($value) {
+        $this->tplp->register_function('dashurl', function ($value) {
             return $this->web->url('dashboard/' . $value);
-        });
-
-        // assets
-        $this->tplp->function_set('assets', function ($name) {
-
-            // Invalid filename
-            if (!isset($this->assets[$name])) return;
-
-            // Include styles
-            if (substr($name, -3) === 'css') {
-                return '<link rel="stylesheet" type="text/css" href="' .
-                        $this->web->url('mysli/dashboard/dist/' . $name) .
-                        '">' . "\n";
-            }
-
-            // Include script(s)
-            $process = $this->debug
-                ? $this->assets[$name]
-                : [$name];
-
-            $scripts = '';
-            foreach ($process as $asset) {
-                $url = $this->debug
-                    ? $this->web->url('mysli/dashboard/src/' . $asset)
-                    : $this->web->url('mysli/dashboard/dist/' . $asset);
-
-                $scripts .= '<script src="' . $url . '"></script>' . "\n";
-            }
-            return $scripts;
         });
     }
 
@@ -122,9 +91,9 @@ class Service
         $response->status_200_ok();
 
         $template = $this->tplp->template('login');
-        $template->variable_set('messages', []);
-        $template->variable_set('username', '');
-        $template->variable_set('remember_me', false);
+        $template->set_variable('messages', []);
+        $template->set_variable('username', '');
+        $template->set_variable('remember_me', false);
 
         if ($method === 'post') {
             $user = $this->users->auth($_POST['username'], $_POST['password']);
@@ -134,9 +103,9 @@ class Service
                 $response->status_303_see_other($this->web->url('dashboard'));
                 return;
             } else {
-                $template->variable_set('username', $_POST['username']);
-                $template->variable_set('remember_me', isset($_POST['remember_me']));
-                $template->variable_set('messages', [
+                $template->set_variable('username', $_POST['username']);
+                $template->set_variable('remember_me', isset($_POST['remember_me']));
+                $template->set_variable('messages', [
                     $this->translator->translate('login_invalid_auth')
                 ]);
             }

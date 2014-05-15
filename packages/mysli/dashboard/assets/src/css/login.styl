@@ -1,4 +1,13 @@
-box-width = 280px
+box-width = 340px
+color-background-primary = #202020
+color-font-primary       = #f8f8f8
+
+// font = sans-serif
+
+font-size-huge   = 40px
+font-size-large  = 20px
+font-size-normal = 18px
+font-size-small  = 14px
 
 *
     padding: 0
@@ -6,7 +15,6 @@ box-width = 280px
 
 body
     background-color: color-background-primary
-    font-family: font
     color: color-font-primary
     font-size: font-size-normal
 
@@ -18,34 +26,28 @@ h1
     font-weight: normal
     font-size: font-size-huge
     small
-        margin-top: -15px
+        margin-top: 10px
         font-size: font-size-large
         display: block
 
 .box
+    color: #fff
     background-color: #333333
     padding: 30px
     border-radius: 2px
     width: box-width
     margin: 30px auto
-    .messages
+    .alert
         margin-bottom: 20px
-        p
-            display: block
-            width: box-width - 28px
-            padding: 14px
-            border-radius: 2px
-            margin-bottom: 10px
-            background-color: #994145
 
 input[type=text],
 input[type=password]
-    width: 280px - 28px
+    width: 100%
 
 button
     padding-left: 0
     padding-right: 0
-    width: 280px
+    width: 100%
 
 .logo
     width: 90px

@@ -1,14 +1,8 @@
 {
-	"css/main.css" : [
-		"css/fonts.css",
-		"css/variables.styl",
-		"css/dashboard.styl",
-		"css/elements.styl"
+	"css/mysli.css" : [
+		"css/dashboard.styl"
 	],
 	"css/login.css" : [
-		"css/fonts.css",
-		"css/variables.styl",
-		"css/elements.styl",
 		"css/login.styl"
 	],
 	"js/mysli.js" : [

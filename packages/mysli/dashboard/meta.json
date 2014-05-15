@@ -3,15 +3,18 @@
     "version"       : 1,
 
     "depends_on" : {
-        "@core"         : ">= 1",
-        "@event"        : ">= 1",
-        "mysli/web"     : ">= 1",
-        "mysli/session" : ">= 1",
-        "mysli/users"   : ">= 1",
-        "mysli/csi"     : ">= 1",
-        "mysli/output"  : ">= 1",
-        "mysli/i18n"    : ">= 1",
-        "mysli/tplp"    : ">= 1"
+        "@core"            : ">= 1",
+        "@event"           : ">= 1",
+        "mysli/web"        : ">= 1",
+        "mysli/session"    : ">= 1",
+        "mysli/users"      : ">= 1",
+        "mysli/csi"        : ">= 1",
+        "mysli/output"     : ">= 1",
+        "mysli/i18n"       : ">= 1",
+        "mysli/tplp"       : ">= 1",
+        "mysli/assets"     : ">= 1",
+        "mysli/zepto"      : ">= 1",
+        "mysli/ui_toolkit" : ">= 1"
     },
 
     "factory" : {

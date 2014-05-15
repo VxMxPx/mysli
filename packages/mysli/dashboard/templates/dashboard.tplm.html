@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <title>{@MYSLI_DASHBOARD}</title>
-    {'css/main.css'|assets}
+    {'mysli/ui_toolkit,mysli/dashboard:mysli.css'|css_assets}
 </head>
 <body id="mysli-dashboard">
     <div class="panel navigation main">
@@ -15,7 +15,6 @@
             <a class="logout"   href="{'logout'|dashurl}"><span>{@LOGOUT}</span></a>
         </div>
     </div>
-    {'js/ext.js'|assets}
-    {'js/mysli.js'|assets}
+    {'mysli/zepto,mysli/ui_toolkit,mysli/dashboard:mysli.js'|javascript_assets}
 </body>
 </html>

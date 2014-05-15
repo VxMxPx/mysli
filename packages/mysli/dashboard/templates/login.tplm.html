@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <title>{@MYSLI_LOGIN}</title>
-    {'css/login.css'|assets}
+    {'mysli/ui_toolkit,mysli/dashboard:login.css'|css_assets}
 </head>
 <body id="login">
     <h1>
@@ -13,9 +13,9 @@
     <div class="box">
 
         ::if messages
-            <div class="messages">
+            <div class="alert">
                 ::for message in messages
-                    <p>{message}</p>
+                    <div class="message warn">{message}</div>
                 ::/for
             </div>
         ::/if
@@ -45,8 +45,6 @@
     <div class="logo">
         <a href="http://mysli.io"><span>MYSLI.io</span></a>
     </div>
-    {'js/ext.js'|assets}
-    {'js/mysli.js'|assets}
-    {'js/login.js'|assets}
+    {'mysli/zepto,mysli/ui_toolkit,mysli/dashboard:login.js'|javascript_assets}
 </body>
 </html>

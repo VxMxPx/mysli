@@ -57,8 +57,8 @@ class Setup
             $this->web->path('mysli/dashboard')
         );
 
-        $this->tplp->cache_create();
-        $this->i18n->cache_create();
+        $this->tplp->create_cache();
+        $this->i18n->create_cache();
 
         $this->event->register('mysli/web/route:*<dashboard*>', 'mysli/dashboard/service->init');
 
@@ -78,8 +78,8 @@ class Setup
     public function after_disable()
     {
         \Core\FS::dir_remove($this->web->path('mysli/dashboard'));
-        $this->tplp->cache_remove();
-        $this->i18n->cache_remove();
+        $this->tplp->remove_cache();
+        $this->i18n->remove_cache();
         $this->event->unregister('mysli/web/route:*<dashboard*>', 'mysli/dashboard/service->init');
         return true;
     }
