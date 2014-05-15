@@ -1,8 +1,8 @@
 <?php
 
-namespace Mysli\AssetsBuilder\Script;
+namespace Mysli\Assets\Script;
 
-class Abuild
+class Assets
 {
     private $web;
 
@@ -23,7 +23,7 @@ class Abuild
     {
         \Cli\Util::doc(
             'Mysli Assets Builder',
-            'abuild <OPTION> [ARGUMENTS...]',
+            'assets <OPTION> [ARGUMENTS...]',
             [
                 'observe <PACKAGE> [assets.json FILE] [assets DIR] [public DIR]' =>
                     'Will observe files according to instructions in assets.json file.',
