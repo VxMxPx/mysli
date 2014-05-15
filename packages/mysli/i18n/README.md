@@ -25,9 +25,9 @@ vendor/
             ru.mt
 ```
 
-When your package is enabled you can use method `cache_create`, which will parse
+When your package is enabled you can use method `create_cache`, which will parse
 all files in `i18n` folder of your package, and saved them as regular JSON.
-When your package is disabled, use method `cache_remove`, to remove previously
+When your package is disabled, use method `remove_cache`, to remove previously
 created JSON file.
 
 Your package gets injected instance of i18n, which you can start using without
@@ -537,11 +537,11 @@ This class will be automatically constructed for you package.
 
 Get translator object. Return `\Mysli\I18n\Translator`.
 
-#### boolean cache_create ( string $folder = 'i18n' )
+#### boolean create_cache ( string $folder = 'i18n' )
 
 Create cache for current package.
 
-#### boolean  cache_remove ( void )
+#### boolean  remove_cache ( void )
 
 Remove cache for current package.
 

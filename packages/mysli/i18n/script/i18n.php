@@ -50,7 +50,7 @@ class I18n
             if ($rsignature !== $signature) {
                 $signature = $rsignature;
                 \Cli\Util::plain('I18n: Changes detected, rebuilding...');
-                if ($i18n->cache_create($directory)) {
+                if ($i18n->create_cache($directory)) {
                     \Cli\Util::success('I18n: OK!');
                 } else {
                     \Cli\Util::warn('I18n: FAILED!');

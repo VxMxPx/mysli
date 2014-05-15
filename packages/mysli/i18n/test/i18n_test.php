@@ -23,7 +23,7 @@ class I18nTest extends \PHPUnit_Framework_TestCase
         $this->i18n = new I18n([['test/package', null]], new DummyConfig());
 
         // Always create fresh cache
-        $this->i18n->cache_create();
+        $this->i18n->create_cache();
         $this->translator = $this->i18n->translator();
         $this->translator->primary('en');
     }

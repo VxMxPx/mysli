@@ -55,7 +55,7 @@ class I18n
      * --
      * @return boolean
      */
-    public function cache_create($folder = 'i18n')
+    public function create_cache($folder = 'i18n')
     {
         // pkgpath is packages path, function defined by ~core!
         $dir = pkgpath($this->package, $folder);
@@ -84,7 +84,7 @@ class I18n
      * --
      * @return boolean
      */
-    public function cache_remove()
+    public function remove_cache()
     {
         if (file_exists($this->filename)) {
             return unlink($this->filename);
