@@ -106,7 +106,7 @@ foreach ($rewrite as $rw_item) {
 
 // Resolve paths
 $pkgpath = resolve_path($pkgpath, __DIR__ . DIRECTORY_SEPARATOR);
-if ($pkgpath[1]) print_line_and_die('Packages path is invalid.');
+if ($pkgpath[1]) print_line_and_die('Packages path is invalid: ' . implode('', $pkgpath));
 $pkgpath = rtrim($pkgpath[0], DIRECTORY_SEPARATOR);
 
 $datpath = resolve_path($datpath, __DIR__ . DIRECTORY_SEPARATOR);

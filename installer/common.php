@@ -184,19 +184,19 @@ function resolve_path($path, $relative_to)
 {
     // We're dealing with absolute path
     if (substr($path, 1, 1) !== ':' && substr($path, 0, 1) !== '/') {
-        $path = $relative_to . ltrim($path, '\\/');
+        $path = rtrim($relative_to, '\\/') . DIRECTORY_SEPARATOR . ltrim($path, '\\/');
     }
 
-    $existing  = '/';
-    $segments  = explode(DIRECTORY_SEPARATOR, $path);
-    foreach ($segments as $key => &$segment) {
-        if (!is_dir(realpath($existing . $segment))) {
-            break;
-        }
-        $existing = realpath($existing . $segment) . DIRECTORY_SEPARATOR;
-        unset($segments[$key]);
-    }
-    return [$existing, implode('/', $segments)];
+    $existing = $path;
+    $cut_off  = '';
+    do {
+        if (is_dir($existing)) break;
+        if ($existing === dirname($existing)) break;
+        $cut_off .= $cut_off . DIRECTORY_SEPARATOR . basename($existing);
+        $existing = dirname($existing);
+    } while (true);
+
+    return [realpath($existing), $cut_off];
 }
 
 // Correct path
