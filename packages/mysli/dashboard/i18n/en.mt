@@ -12,3 +12,4 @@
 @MYSLI_DASHBOARD Mysli Dashboard
 @SETTINGS        Settings
 @LOGOUT          Logout
+@HI              Hi

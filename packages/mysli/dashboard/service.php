@@ -25,11 +25,11 @@ class Service
      */
     public function __construct($web, $session, $users, $output, $tplp, $i18n)
     {
-        $this->web        = $web;
-        $this->output     = $output;
-        $this->tplp       = $tplp;
-        $this->session    = $session;
-        $this->users      = $users;
+        $this->web     = $web;
+        $this->output  = $output;
+        $this->tplp    = $tplp;
+        $this->session = $session;
+        $this->users   = $users;
 
         // Set translator
         $this->translator = $i18n->translator();
@@ -83,6 +83,7 @@ class Service
         $response->status_200_ok();
 
         $template = $this->tplp->template('dashboard');
+        $template->set_variable('user', $this->session->user());
         $this->output->add($template->render());
     }
 
