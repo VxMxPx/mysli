@@ -127,6 +127,7 @@ class Factory
             return $this->cache->get($pkgf);
         }
 
+        // Check if we have it cached in relation to the package that required it.
         if ($required_by && $this->cache->has("{$pkgf}::{$required_by}")) {
             return $this->cache->get("{$pkgf}::{$required_by}");
         }
