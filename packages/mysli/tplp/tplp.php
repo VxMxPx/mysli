@@ -67,6 +67,8 @@ class Tplp
         if (!self::$f_instantiated) {
             self::$f_instantiated = true;
             $event->trigger('mysli/tplp/tplp:instantiated', [$this]);
+            ini_set('pcre.backtrack_limit', '23001337');
+            ini_set('pcre.recursion_limit', '23001337');
         }
 
         $this->package = array_pop($pkgm_trace)[0];
