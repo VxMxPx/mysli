@@ -30,7 +30,7 @@ class Template
         $this->variables = $variables;
 
         if (is_object($translator) && method_exists($translator, 'translate')) {
-            $this->translator_set($translator);
+            $this->set_translator($translator);
         }
     }
 
@@ -41,7 +41,7 @@ class Template
      * --
      * @return null
      */
-    public function translator_set($translator)
+    public function set_translator($translator)
     {
         $this->translator = $translator;
         $this->variables['tplp_translator_service'] = function () {

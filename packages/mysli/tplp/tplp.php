@@ -17,6 +17,13 @@ class Tplp
     ];
 
     /**
+     * In case this is first instance, the event will be triggered.
+     * --
+     * @var boolean
+     */
+    static private $f_instantiated = false;
+
+    /**
      * Collection of instantiated classes, used for costume function calls in
      * template(s).
      * --
@@ -52,10 +59,16 @@ class Tplp
     /**
      * Instance of Tplp
      * --
-     * @param array $pkgm_trace
+     * @param array  $pkgm_trace
+     * @param object $event       mysli/event
      */
-    public function __construct(array $pkgm_trace)
+    public function __construct(array $pkgm_trace, $event)
     {
+        if (!self::$f_instantiated) {
+            self::$f_instantiated = true;
+            $event->trigger('mysli/tplp/tplp:instantiated', [$this]);
+        }
+
         $this->package = array_pop($pkgm_trace)[0];
         $this->cache_dir = datpath('mysli.tplp', str_replace('/', '.', $this->package));
 
@@ -71,10 +84,10 @@ class Tplp
      * --
      * @return null
      */
-    public function function_register($name, $function)
+    public function register_function($name, $function)
     {
         try {
-            $this->function_set($name, $function);
+            $this->set_function($name, $function);
             self::$registry['functions']['tplp_func_' . $name] = $function;
         } catch (\Exception $e) {
             throw $e;
@@ -88,7 +101,7 @@ class Tplp
      * --
      * @return null
      */
-    public function function_unregister($name)
+    public function unregister_function($name)
     {
         unset(self::$registry['functions']['tplp_func_' . $name]);
         unset($this->functions['tplp_func_' . $name]);
@@ -102,10 +115,10 @@ class Tplp
      * --
      * @return null
      */
-    public function variable_register($name, $value)
+    public function register_variable($name, $value)
     {
         try {
-            $this->variable_set($name, $value);
+            $this->set_variable($name, $value);
             self::$registry['variables'][$name] = $value;
         } catch (\Exception $e) {
             throw $e;
@@ -119,7 +132,7 @@ class Tplp
      * --
      * @return null
      */
-    public function variable_unregister($name)
+    public function unregister_variable($name)
     {
         unset(self::$registry['variables'][$name]);
         unset($this->variables[$name]);
@@ -132,7 +145,7 @@ class Tplp
      * --
      * @return null
      */
-    public function translator_set($translator)
+    public function set_translator($translator)
     {
         $this->translator = $translator;
     }
@@ -173,7 +186,7 @@ class Tplp
      * --
      * @return integer Number of created files.
      */
-    public function cache_create($folder = 'templates')
+    public function create_cache($folder = 'templates')
     {
         // Check if templates dir exists...
         $templates_dir = pkgpath($this->package, $folder);
@@ -184,7 +197,7 @@ class Tplp
             );
         }
 
-        $templates = $this->templates_find($templates_dir);
+        $templates = $this->find_templates($templates_dir);
 
         // Create cache directory if not there already
         if (!file_exists($this->cache_dir)) {
@@ -223,7 +236,7 @@ class Tplp
      * --
      * @return boolean
      */
-    public function cache_remove()
+    public function remove_cache()
     {
         if (file_exists($this->cache_dir)) {
             return \Core\FS::dir_remove($this->cache_dir);
@@ -238,7 +251,7 @@ class Tplp
      * --
      * @return string
      */
-    private function template_get_content($filename)
+    private function get_template_content($filename)
     {
         $template = file_get_contents($filename);
         $template = \Core\Str::to_unix_line_endings($template);
@@ -254,7 +267,7 @@ class Tplp
      * --
      * @return array
      */
-    private function templates_find($root, $sub = null)
+    private function find_templates($root, $sub = null)
     {
         $templates = [];
 
@@ -266,7 +279,7 @@ class Tplp
             if (is_dir(ds($root, $sub, $file))) {
                 $templates = array_merge(
                     $templates,
-                    $this->templates_find($root, ds($sub, $file))
+                    $this->find_templates($root, ds($sub, $file))
                 );
             }
 
@@ -275,7 +288,7 @@ class Tplp
             }
 
             $handler = trim(ds($sub, substr($file, 0, -10)), '/');
-            $templates[$handler] = $this->template_get_content(ds($root, $sub, $file));
+            $templates[$handler] = $this->get_template_content(ds($root, $sub, $file));
         }
 
         return $templates;

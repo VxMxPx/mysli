@@ -15,7 +15,7 @@ trait ExtData
      * --
      * @return null
      */
-    public function function_set($name, $function)
+    public function set_function($name, $function)
     {
         if (!preg_match('/^[a-z_][a-z0-9_]*?$/i', $name)) {
             throw new \Core\ValueException(
@@ -54,7 +54,7 @@ trait ExtData
      * --
      * @return null
      */
-    public function variable_set($name, $value = null)
+    public function set_variable($name, $value = null)
     {
         if (is_array($name)) {
             foreach ($name as $var => $val) {
@@ -84,7 +84,7 @@ trait ExtData
      * --
      * @return null
      */
-    public function variable_remove($name)
+    public function remove_variable($name)
     {
         unset($this->variables[$name]);
     }
@@ -96,7 +96,7 @@ trait ExtData
      * --
      * @return mixed  Null if variable not set.
      */
-    public function variable_get($name)
+    public function get_variable($name)
     {
         if (isset($this->variables[$name])) {
             return $this->variables[$name];

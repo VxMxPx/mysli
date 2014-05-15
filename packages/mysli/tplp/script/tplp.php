@@ -4,6 +4,13 @@ namespace Mysli\Tplp\Script;
 
 class Tplp
 {
+    private $event;
+
+    public function __construct($event)
+    {
+        $this->event = $event;
+    }
+
     /**
      * Print general help.
      */
@@ -36,14 +43,14 @@ class Tplp
         \Cli\Util::plain('Press CTRL+C to quit.');
 
         $signature = null;
-        $tplp = new \Mysli\Tplp\Tplp([[$package, null]]);
+        $tplp = new \Mysli\Tplp\Tplp([[$package, null]], $this->event);
 
         while (true) {
             $rsignature = implode('', \Core\FS::dir_signatures($path));
             if ($rsignature !== $signature) {
                 $signature = $rsignature;
                 \Cli\Util::plain('Tplp: Changes detected, rebuilding...');
-                if ($tplp->cache_create($directory)) {
+                if ($tplp->create_cache($directory)) {
                     \Cli\Util::success('Tplp: OK!');
                 } else {
                     \Cli\Util::warn('Tplp: FAILED!');
