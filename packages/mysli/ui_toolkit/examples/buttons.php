@@ -45,7 +45,7 @@
 
     <!-- Scripts -->
     <script>
-    function buttons_events() {
+    function buttonsEvents() {
         var disable = new MU.Button('button.disable');
         var enable  = new MU.Button('button.enable');
         disable.on('click', function () {
@@ -69,7 +69,7 @@
     var ready = setInterval(function () {
         if (typeof MU === 'undefined') { return; }
         clearInterval(ready);
-        buttons_events();
+        buttonsEvents();
     }, 1000);
     </script>
 </div>

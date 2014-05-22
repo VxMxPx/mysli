@@ -20,6 +20,11 @@
         "js/ext.js",
         "js/mu.js",
         "js/button.js",
-        "js/overlay.js"
+        "js/overlay.js",
+        "js/aarray.js",
+        "js/calc.js",
+        "js/panel_side.js",
+        "js/panel.js",
+        "js/panels.js"
     ]
 }

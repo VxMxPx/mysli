@@ -1,5 +1,7 @@
 ;(function ($, MU) {
 
+    'use strict';
+
     var Button = function (element, options) {
         this.$element = $(element);
 
@@ -10,7 +12,7 @@
         }
 
         // Those are original values of element, before busy state is set...
-        this.busy_org = {
+        this.originalContent = {
             'content' : '',
             'disabled': null
         };
@@ -45,23 +47,26 @@
                 return (state === 'true' || state === 'disabled');
             }
 
-            if (state)
+            if (state) {
                 this.$element.attr('disabled', true);
-            else
+            } else {
                 this.$element.removeAttr('disabled');
+            }
         },
 
         // set / get pressed state
         // state  : boolean
         // return : boolean
         pressed : function (state) {
-            if (typeof state === 'undefined')
+            if (typeof state === 'undefined') {
                 return this.$element.hasClass('pressed');
+            }
 
-            if (state)
+            if (state) {
                 this.$element.addClass('pressed');
-            else
+            } else {
                 this.$element.removeClass('pressed');
+            }
         },
 
         // set / get button's style
@@ -69,17 +74,21 @@
         // return : string
         style : function (variant) {
             var classes = 'alt primary attention';
+
             // Get style
             if (typeof variant === 'undefined') {
-                for (var i = classes.length - 1; i >= 0; i--) {
+                for (var i = classes.split(' ').length - 1; i >= 0; i--) {
                     if (this.$element.hasClass(classes[i])) return classes[i];
                 }
-                return;
+                return 'default';
             }
+
             // Set style
             this.$element.removeClass(classes);
-            if (variant !== 'default')
+
+            if (variant !== 'default') {
                 this.$element.addClass(variant);
+            }
         },
 
         // set /get label
@@ -96,22 +105,23 @@
         // state : boolean
         // return: boolean
         busy : function (state, label) {
-            if (typeof state === 'undefined')
+            if (typeof state === 'undefined') {
                 return this.$element.hasClass('busy');
+            }
 
             if (state) {
                 if (this.busy()) { return; }
                 this.$element.addClass('busy');
-                this.busy_org.content = this.$element.html();
-                this.busy_org.disabled = this.disabled();
+                this.originalContent.content = this.$element.html();
+                this.originalContent.disabled = this.disabled();
                 this.$element.html(' ' + (label ? label : this.label()));
                 this.icon('spinner', 'left', true);
                 this.disabled(true);
             } else {
                 if ( ! this.busy()) { return; }
                 this.$element.removeClass('busy');
-                this.$element.html(this.busy_org.content);
-                this.disabled(this.busy_org.disabled);
+                this.$element.html(this.originalContent.content);
+                this.disabled(this.originalContent.disabled);
             }
         },
 
@@ -138,4 +148,5 @@
     };
 
     MU.Button = Button;
+
 }(Zepto, MU));

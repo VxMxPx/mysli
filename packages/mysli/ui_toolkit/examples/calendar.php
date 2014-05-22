@@ -77,7 +77,7 @@
 <script>
 function initCalendar() {}
 var ready = setInterval(function () {
-    if (!$) { return; }
+    if (typeof $ === 'undefined') { return; }
     clearInterval(ready);
     initCalendar();
 }, 1000);
