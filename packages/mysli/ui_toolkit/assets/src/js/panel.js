@@ -25,6 +25,7 @@
             size      : 'small',
             expand    : false,
             flippable : false,
+            closable  : true,
             shrink    : false,
             id        : false,
             position  : 0
@@ -59,6 +60,19 @@
         // List of childs panels which will be closed together with this one!
         this._s.children = [];
 
+        // Is panel in away mode
+        // If away on blur, then panel will go away when lose focus!
+        // Away width is the size of panel when away.
+        this._s.away = false;
+        this._s.awayOnBlur = false;
+        this._s.awayWidth = 10;
+
+        // If insensitive, then panel cannot be focused
+        this._s.insensitive = false;
+
+        // weather panel is busy
+        this._s.busy = false;
+
         // DOM elements
         this.element = (function () {
             var wrapper = $('<div class="panel multi" />'),
@@ -71,13 +85,39 @@
 
             this.front = new MU.PanelSide(options.front);
             this.front.style('front');
-            this.front.append(sides);
+            if (options.closable) {
+                this.front.header_add('close', {
+                    icon           : 'times',
+                    type           : 'link',
+                    action         : 'self/close',
+                    preventDefault : true
+                });
+            }
+            if (options.front.title) {
+                this.front.header_add('title', {
+                    label : options.front.title,
+                    type  : 'title'
+                });
+            }
+            sides.append(this.front.element);
+
 
             // Append back side
             if (options.flippable) {
                 this.back = new MU.PanelSide(options.back);
                 this.back.style('back alt');
-                this.back.append(sides);
+                this.back.header_add('close', {
+                    icon   : 'arrow-left',
+                    type   : 'link',
+                    action : 'self/flip'
+                });
+                if (options.back.title) {
+                    this.back.header_add('title', {
+                        label : options.front.title,
+                        type  : 'title'
+                    });
+                }
+                sides.append(this.back.element);
             } else {
                 this.back = false;
                 sides.append('<div class="dummy"/>');
@@ -100,6 +140,81 @@
     Panel.prototype = {
 
         constructor : Panel,
+
+        // toggle panel flip (must be flippable)
+        flip : function () {
+            if (this.back) {
+                this.element.toggleClass('flipped');
+            }
+        },
+
+        // get/set away status
+        // value   : boolean
+        // refresh : boolean  weather refresh even should be tirggered
+        // return  : boolean
+        away : function (value, refresh) {
+            var width;
+
+            if (value === undefined) { return this._s.away; }
+
+            if (value) {
+                if (this.focus() || this._s.away) {
+                    this._s.awayOnBlur = true;
+                    return;
+                }
+                this._s.away = true;
+                width = -(this.width() - this._s.awayWidth);
+            } else {
+                if (!this._s.away) {
+                    this._s.awayOnBlur = false;
+                    return;
+                }
+                this._s.away = false;
+                this._s.awayOnBlur = false;
+                width = this.width() - this._s.awayWidth;
+            }
+
+            $(document).trigger('MU/panels/updateSum', [width]);
+
+            if (refresh === undefined || refresh === true) {
+                $(document).trigger('MU/panels/refresh');
+            }
+        },
+
+        // if insensitive, then panel cannot be focused
+        // value : boolean
+        insensitive : function (value) {
+            if (value === undefined) { return this._s.insensitive; }
+            if (value) {
+               if (this.focus()) {
+                    this.focus(false);
+                    this._s.insensitive = true;
+                    $(document).trigger('MU/panels/focusNext', [this.id()]);
+                } else {
+                    this._s.insensitive = true;
+                }
+            } else {
+                this._s.insensitive = false;
+            }
+        },
+
+        // weather panel is busy
+        // value : boolean
+        busy : function (value) {
+            if (value === undefined) { return this._s.busy; }
+            if (value) {
+                if (this._s.busy) { return; }
+                var busy = $('<div class="loading panel-busy" style="opacity:0;" />').prependTo(this.element);
+                busy.animate({'opacity': 0.75});
+                this._s.busy = true;
+            } else {
+                if (!this._s.busy) { return; }
+                this.element.find('div.panel-busy').fadeOut(400, function () {
+                    this.remove();
+                });
+                this._s.busy = false;
+            }
+        },
 
         // Animate all the changes made to the element.
         animate : function () {
@@ -205,42 +320,20 @@
         // Turn this panel's focus on/off
         // state : boolean
         focus : function (state) {
+            if (this.insensitive()) { return; }
             if (state === undefined) { return this.element.hasClass('selected'); }
             if (state) {
                 this.element.addClass('selected');
+                if (this.away()) {
+                    this.away(false, false);
+                    this._s.awayOnBlur = true;
+                }
             } else {
                 this.element.removeClass('selected');
-            }
-        },
-
-        // Remove this panel
-        remove : function () {
-            var that = this.element;
-
-            if (this.locked()) {
-                throw new Error('Panel is locked, cannot close it!');
-            }
-
-            this.closing = true;
-
-            this.element.animate({
-                left    : (this._s.position + this._s.offset) - (this.width + this._s.expandedFor) - 10,
-                opacity : 0
-            }, 'normal', function () {
-                that.remove();
-            });
-
-            if (this._s.children.length) {
-                for (var i = this._s.children.length - 1; i >= 0; i--) {
-                    this._s.children[i].remove();
+                if (this._s.awayOnBlur) {
+                    this.away(true, false);
                 }
             }
-        },
-
-        // Append this panel to the parent
-        // parent : string
-        append : function (parent) {
-            this.element.appendTo(parent);
         }
     };
 

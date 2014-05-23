@@ -77,20 +77,26 @@
         },
 
         each : function (callback) {
+            var r;
             for (var i = 0; i < this.idsStack.length; i++) {
-                callback(i, this.stack[this.idsStack[i]]);
+                r = callback(i, this.stack[this.idsStack[i]]);
+                if (r !== undefined) { return r; }
             }
         },
 
         eachAfter : function (id, callback) {
+            var r;
             for (var i = this.getIndex(id) + 1; i < this.idsStack.length; i++) {
-                callback(i, this.stack[this.idsStack[i]]);
+                r = callback(i, this.stack[this.idsStack[i]]);
+                if (r !== undefined) { return r; }
             }
         },
 
         eachBefore : function (id, callback) {
+            var r;
             for (var i = 0; i < this.getIndex(id); i++) {
-                callback(i, this.stack[this.idsStack[i]]);
+                r = callback(i, this.stack[this.idsStack[i]]);
+                if (r !== undefined) { return r; }
             }
         }
     };

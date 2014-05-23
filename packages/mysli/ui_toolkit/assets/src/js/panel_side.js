@@ -7,23 +7,19 @@
     var PanelSide = function (options) {
         options = $.extend({}, {
             header  : true,
-            title   : null,
             style   : null,
-            close   : true,
-            flip    : false,
             content : null,
-            menu    : null,
             footer  : false
         }, options);
 
         this.element = $('<div class="side panel" />');
+        this._s = {};
+
+        // header icons count
+        this._s.headerItems = {left: 0, right: 0};
 
         if (options.header) {
             this.header(true);
-        }
-
-        if (options.title) {
-            this.title(options.title);
         }
 
         if (options.style) {
@@ -49,6 +45,56 @@
             }
         },
 
+        // add header's item
+        // id      : string  unique item's id
+        // options : object  item's properties:
+        //      type           : string   link|title
+        //      action         : string   action to be triggered on click
+        //      preventDefault : boolean  weather to prevent default action
+        //      icon           : string   icon name
+        header_add : function (id, options) {
+            var element,
+                pos = 0,
+                _this = this,
+                action = options.action,
+                preventDefault = options.preventDefault;
+
+            switch (options.type) {
+                case 'link':
+                    element = $('<a href="#" />');
+                    break;
+                case 'title':
+                    element = $('<h2/>');
+                    break;
+                default:
+                    throw new Error('Invalid type: ' + options.type);
+            }
+
+            if (action) {
+                element.on('click', function (e) {
+                    if (preventDefault) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
+                    _this.element.trigger(action);
+                });
+            }
+            if (options.icon) {
+                element.append('<i class="fa fa-' + options.icon + '" />');
+            }
+            if (options.label) {
+                element.append('<span>' + options.label + '</span>');
+            }
+            if (options.type !== 'title') {
+                // position could be undefined, in that case, default to left
+                options.position = options.position === 'right' ? 'right' : 'left';
+                pos = ++this._s.headerItems[options.position];
+                pos = (pos === 1 ? pos * 20 : pos * 25);
+                element.css(options.position, pos + 'px');
+            }
+            element.appendTo(this.header());
+        },
+
         // add/remove/get footer
         // value  : boolean  true - append footer, false - remove footer
         // return : object   $('footer')
@@ -61,14 +107,6 @@
             } else {
                 this.element.remove('footer.main');
             }
-        },
-
-        // Get / set title.
-        // value : string
-        title : function (value) {
-            if (!this.header()) { return; }
-            if (value === undefined) { return this.header().find('h2').text(); }
-            this.header().find('h2').text(value);
         },
 
         // Get / set style
@@ -95,7 +133,7 @@
 
         // Append panel side to the parent
         // parent : object  MU.Panel
-        append : function (parent) {
+        appendTo : function (parent) {
             this.element.appendTo(parent);
         }
 
