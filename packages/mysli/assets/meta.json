@@ -13,7 +13,7 @@
     "factory" : {
         "assets"        : "singleton(mysli/web, mysli/config)",
         "setup"         : "construct(@event, mysli/config)",
-        "script/assets" : "construct(mysli/web)"
+        "script/assets" : "construct(mysli/web, mysli/config)"
     },
 
     "about" : {

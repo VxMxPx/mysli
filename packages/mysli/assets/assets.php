@@ -4,6 +4,8 @@ namespace Mysli\Assets;
 
 class Assets
 {
+    use Util;
+
     private $web;
     private $config;
 
@@ -21,15 +23,14 @@ class Assets
      * Make one tag.
      * --
      * @param  sring   $type  - js, css
-     * @param  boolean $debug
      * @param  string  $pkg   - vendor/package
      * @param  string  $file  - css/my_file.css
      * --
      * @return string
      */
-    private function make_tag($type, $debug, $pkg, $file)
+    private function make_tag($type, $pkg, $file)
     {
-        $url = $this->web->url($pkg . '/' . ($debug ? 'src' : 'dist') . '/' . $file);
+        $url = $this->web->url($pkg . '/' . 'dist' . '/' . $file);
         if ($type === 'css')
             return '<link rel="stylesheet" type="text/css" href="' . $url . '" />';
         else
@@ -70,11 +71,17 @@ class Assets
                 if ($allowed && !in_array(basename($asset_main), $allowed)) continue;
                 if (substr($asset_main, -(strlen($type))) !== $type) continue;
 
-                if (!$debug || $type === 'css')
-                    $collection[] = $this->make_tag($type, $debug, $pkg, $asset_main);
+                if (!$debug)
+                    $collection[] = $this->make_tag($type, $pkg, $asset_main);
                 else
-                    foreach ($asset_files as $asset_file)
-                        $collection[] = $this->make_tag($type, $debug, $pkg, $asset_file);
+                    foreach ($asset_files as $asset_file) {
+                        $asset_file = $this->convert_ext($asset_file);
+                        $collection[] = $this->make_tag(
+                            $type,
+                            $pkg,
+                            $asset_file
+                        );
+                    }
             }
         }
         return implode("\n", $collection);

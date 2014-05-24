@@ -15,9 +15,7 @@ class Setup
 
     public function after_enable()
     {
-        $this->config->merge([
-            'debug' => false
-        ]);
+        $this->config->merge(\Core\JSON::decode_file(ds(__DIR__, 'config.json'), true));
         $this->config->write();
 
         $this->event->register(
