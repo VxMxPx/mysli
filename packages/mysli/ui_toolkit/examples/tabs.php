@@ -1,5 +1,5 @@
 <div class="section">
-    <div class="container default <?php echo get_alt(); ?>">
+    <div class="container default <?php echo get_alt(); ?>" style="height:400px">
     <div class="panel <?php echo get_alt(); ?>" style="width:50%;min-height:400px;">
         <header>
             <a href="#close" class="left close"></a>
@@ -13,7 +13,7 @@
     </div>
     </div>
 
-    <div class="container default <?php echo get_alt(); ?>">
+    <div class="container default <?php echo get_alt(); ?>" style="height:500px">
     <div class="panel <?php echo get_alt(); ?>" style="width:50%;min-height:400px;">
         <header>
             <a href="#close" class="left close"></a>

@@ -1,0 +1,36 @@
+.alert .message {
+  padding: 8px 8px;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #fff;
+  margin-bottom: 5px;
+  position: relative;
+}
+.alert .message .close {
+  color: #fff;
+  position: absolute;
+  top: 4px;
+  right: 10px;
+}
+.alert .message .spinner {
+  text-shadow: none;
+  font-size: 18px;
+  margin-right: 5px;
+}
+.alert .message.warn {
+  background-color: #994145;
+}
+.alert .message.error {
+  background-color: #c42635;
+}
+.alert .message.info {
+  text-shadow: 1px 1px 0 rgba(255,255,255,0.2);
+  background-color: #7ed1cc;
+  color: #004f4a;
+}
+.alert .message.info .close {
+  color: #004f4a;
+}
+.alert .message.success {
+  background-color: #348a00;
+}

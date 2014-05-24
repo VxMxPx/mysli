@@ -1,5 +1,5 @@
 <div class="section">
-    <div class="container default <?php echo get_alt(); ?>">
+    <div class="container default <?php echo get_alt(); ?>" style="height:600px">
         <div class="panel <?php echo get_alt(); ?>" style="width:50%;">
         <header>
             <h2>List of Slovene Cities</h2>

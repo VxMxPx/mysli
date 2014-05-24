@@ -3,7 +3,16 @@
 <head>
     <meta charset="utf-8" />
     <title>Mysli UI Toolkit :: <?php echo get_title(); ?></title>
-    <link rel="stylesheet" type="text/css" href="/assets/dist/css/mysli_ui_toolkit.css">
+    <?php
+        $scripts = file_get_contents(__DIR__ . '/../assets.json');
+        $scripts = json_decode($scripts, true);
+        foreach ($scripts['css/mysli_ui_toolkit.css'] as $script) {
+            if (substr($script, -5) === '.styl') {
+                $script = substr($script, 0, -4) . 'css';
+            }
+            echo '<link rel="stylesheet" type="text/css" href="/assets/dist/' . $script . '">'."\n";
+        }
+    ?>
     <style type="text/css">
         h1 {
             text-align: center;
@@ -39,10 +48,10 @@
             padding: 40px 0;
             text-decoration: none;
             transition: background-color .4s, color .4s;
+            text-shadow: 0 1px 1px rgba(255, 255, 255, .8);
         }
         ul.examples li a:hover {
-            background-color: #333;
-            color: #fff;
+            background-color: #fea;
         }
         .container {
             position: relative;
@@ -51,8 +60,6 @@
             overflow: hidden;
             border-radius: 8px;
             margin-bottom: 20px;
-        }
-        .container.alt {
         }
         .colorful .column {
             background-color: #900a0a;
@@ -135,7 +142,7 @@
         $scripts = file_get_contents(__DIR__ . '/../assets.json');
         $scripts = json_decode($scripts, true);
         foreach ($scripts['js/mysli_ui_toolkit.js'] as $script) {
-            echo '<script src="/assets/src/'.$script.'"></script>'."\n";
+            echo '<script src="/assets/dist/'.$script.'"></script>'."\n";
         }
     ?>
 </body>
