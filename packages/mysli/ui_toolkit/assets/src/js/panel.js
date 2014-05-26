@@ -285,6 +285,7 @@
         expand : function (value) {
             if (value === undefined) { return this._s.expand; }
             this._s.expand = !!value;
+            $(document).trigger('MU/panels/refresh');
         },
 
         // For how much panel should be epanded.
@@ -362,6 +363,7 @@
         },
 
         // get information about focus (can't set it)
+        // to set focus trigger event
         focus : function () {
             return this.element.hasClass('selected');
         }

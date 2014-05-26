@@ -156,8 +156,6 @@
                 options = {};
             }
 
-            options.panels = this;
-
             var panel = new MU.Panel(options),
                 beforeSize = 0,
                 stackIndex = 0;
@@ -316,7 +314,7 @@
             panel.element.addClass('selected');
             if (panel.away()) {
                 panel.away(false, false);
-                paenl._s.awayOnBlur = true;
+                panel._s.awayOnBlur = true;
             }
             this.activeId = id;
 
