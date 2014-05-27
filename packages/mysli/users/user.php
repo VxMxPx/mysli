@@ -8,7 +8,6 @@ class User
     protected $properties = [
         'email'         => '',
         'password'      => '',
-        'salt'          => '',
         'name'          => '',
         'last_seen_on'  => '',
         'updated_on'    => '',
@@ -64,18 +63,6 @@ class User
     public function as_array()
     {
         return $this->properties;
-    }
-
-    /**
-     * Check if password is correct.
-     * --
-     * @param  string $password
-     * --
-     * @return boolean
-     */
-    public function auth_password($password)
-    {
-        return $this->password() === $this->generate_password($password, $this->salt());
     }
 
     /**
@@ -163,24 +150,36 @@ class User
     }
 
     /**
-     * Set / get salt. If $value is true, salt will be auto generated.
+     * Generate the password.
      * --
-     * @param  mixed $value String / boolean (true)
+     * @param  string $password
      * --
      * @return string
      */
-    public function salt($value = null)
+    protected function generate_password($password)
     {
-        if ($value !== null) {
-            if ($value === true) {
-                $value = \Core\Str::random(8);
-            }
-            $this->properties['salt'] = $value;
+        if (function_exists('password_hash')) {
+            return password_hash($password, PASSWORD_DEFAULT);
+        } else {
+            return crypt($password);
         }
-
-        return $this->properties['salt'];
     }
 
+    /**
+     * Check if password (plain) match saved hash.
+     * --
+     * @param  string $password
+     * --
+     * @return boolean
+     */
+    public function auth_password($password)
+    {
+        if (function_exists('password_verify')) {
+            return password_verify($password, $this->password());
+        } else {
+            return crypt($password, $this->password()) === $this->password();
+        }
+    }
 
     /**
      * Set / get new password.
@@ -192,8 +191,7 @@ class User
     public function password($value = null)
     {
         if ($value !== null) {
-            $salt = $this->salt(true);
-            $this->properties['password'] = $this->generate_password($value, $salt);
+            $this->properties['password'] = $this->generate_password($value);
         }
 
         return $this->properties['password'];
@@ -250,20 +248,6 @@ class User
     {
         $this->properties['deleted_on'] = gmdate('YmdHis');
         return $this->save();
-    }
-
-    /**
-     * Generate the password.
-     * --
-     * @param  string $password
-     * @param  string $salt
-     * --
-     * @return string
-     */
-    protected function generate_password($password, $salt)
-    {
-        // p[assword] t[ype] m[ysli] [version] 0 f[in]
-        return 'ptm0f' . sha1( sha1( sha1( $password ) . sha1( $salt ) ) );
     }
 
     /**
