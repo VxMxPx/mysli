@@ -2,7 +2,8 @@
 
     'use strict';
 
-    var count = 0,
+    // static private properties
+    var count = 1,
         dimensions = {
             tiny  : 160,
             small : 260,
@@ -10,13 +11,16 @@
             big   : 800
         };
 
-    // options : object
+    // container : object  parent container
+    // options   : object
     //      size      : string  tiny|small|medium|big
+    //      front     : object  settings passed to the front side of panel
+    //      back      : object  settings passes to the back side of panel
     //      expand    : boolean
     //      flippable : boolean
     //      shrink    : mixed   false|tiny|small|medium
     //      id        : mixed   string|false
-    var Panel = function (options) {
+    var Panel = function (container, options) {
 
         options = $.extend({}, {
             size      : 'small',
@@ -30,112 +34,97 @@
             position  : 0
         }, options);
 
-        // Current panel's state
-        this._s = {};
+        // panel's properties
+        this.properties = {
+            // position in px from left
+            position : options.position,
+            // when there's a lot of panels,
+            // they start being pushed aside and partly hidden
+            offset : 0,
+            // weather panel is locked
+            locked : false,
+            // weather panel can be expanded to fill the available space
+            expand : options.expand,
+            // how much panel's width was increased (only if expand is true)
+            expandFor : 0,
+            // for how much weather panel can shrink (0 if can't shrink)
+            shrink : 0,
+            // panel size by word
+            size : typeof dimensions[options.size] === 'undefined' ? 'small' : options.size,
+            // panel's size by px
+            width : 0,
+            // list of child panels
+            children : [],
+            // is panel in away mode
+            away : false,
+            // if away on blur, then panel will go away when lose focus
+            awayOnBlur : false,
+            // the width (px) of panel when away
+            awayWidth : 10,
+            // if insensitive, then panel cannot be focused
+            insensitive : false,
+            // weather panel is busy (display loading indicator)
+            busy : false,
+            // if panel is full screen
+            full : false,
+            // when panel goes to full screen highest zIndex is set, this is the
+            // original zIndex, to be restored, when full screen is turned off
+            oldZIndex : 0,
+            // panel's unique id
+            id : (options.id ? options.id : 'mu-panel-' + count),
+            // when true, some events will be prevented on the panel,
+            // like further animations
+            closing : false
+        };
 
-        // Position in px from left
-        this._s.position = options.position;
+        // parent - container
+        this.container = container;
 
-        // When there's a lot of panels,
-        // they start beeing pushed aside and partly hidden.
-        this._s.offset = 0;
+        // front + back side
+        this.front = false;
+        this.back = false;
 
-        // Panel lock state
-        this._s.locked = false;
-
-        // Exapnd state
-        this._s.expand = options.expand;
-
-        // Weather panel can shrink
+        // apply shrink
         this.shrink(options.shrink ? options.shrink : false);
+        // apply width
+        this.properties.width = dimensions[this.properties.size];
 
-        // If expand is allowed, then here's how much panel's width was increased!
-        this._s.expandFor = 0;
+        // panel's dom element
+        this.element = $('<div class="panel multi" id="' + this.properties.id + '" />');
+        this.element.width(this.properties.width + 'px');
+        // panel's sides
+        this.sides = $('<div class="sides" />').appendTo(this.element);
 
-        // Set panel's size
-        this._s.size = typeof dimensions[options.size] === 'undefined' ? 'small' : options.size;
-        this._s.width = dimensions[this._s.size];
+        // add front side
+        options.front.id = this.properties.id + '-side-front';
+        this.front = new MU.PanelSide(this, options.front);
+        this.front.style('front' + (options.front.style ? ' ' + options.front.style : ''));
+        if (options.closable) {
+            this.front.headerPrepend({
+                icon           : 'times',
+                type           : 'link',
+                action         : 'self/close',
+                preventDefault : true
+            });
+        }
+        this.sides.append(this.front.element);
 
-        // List of childs panels which will be closed together with this one!
-        this._s.children = [];
+        // add back side
+        if (options.flippable) {
+            options.back.id = this.properties.id + '-side-back';
+            this.back = new MU.PanelSide(this, options.back);
+            this.back.style('back' + (options.back.style ? ' ' + options.back.style : ' alt'));
+            this.back.headerPrepend({
+                icon   : 'arrow-left',
+                type   : 'link',
+                action : 'self/flip'
+            });
+            this.sides.append(this.back.element);
+        } else {
+            this.sides.append('<div class="dummy"/>');
+        }
 
-        // Is panel in away mode
-        // If away on blur, then panel will go away when lose focus!
-        // Away width is the size of panel when away.
-        this._s.away = false;
-        this._s.awayOnBlur = false;
-        this._s.awayWidth = 10;
-
-        // If insensitive, then panel cannot be focused
-        this._s.insensitive = false;
-
-        // weather panel is busy
-        this._s.busy = false;
-
-        // If full screen
-        this._s.full = false;
-        this._s.oldZIndex = 0;
-
-        // Id
-        options.id = (options.id ? options.id : 'mu-panel-' + count);
-
-        // DOM elements
-        this.element = (function () {
-            var wrapper = $('<div class="panel multi" id="' + options.id + '" />'),
-                sides = $('<div class="sides" />').appendTo(wrapper);
-
-            wrapper.width(this._s.width + 'px');
-
-            options.front.id = options.id + '-side-front';
-            this.front = new MU.PanelSide(options.front);
-            this.front.style('front');
-            if (options.closable) {
-                this.front.header_add('close', {
-                    icon           : 'times',
-                    type           : 'link',
-                    action         : 'self/close',
-                    preventDefault : true
-                });
-            }
-            if (options.front.title) {
-                this.front.header_add('title', {
-                    label : options.front.title,
-                    type  : 'title'
-                });
-            }
-            sides.append(this.front.element);
-
-
-            // Append back side
-            if (options.flippable) {
-                options.back.id = options.id + '-side-back';
-                this.back = new MU.PanelSide(options.back);
-                this.back.style('back alt');
-                this.back.header_add('close', {
-                    icon   : 'arrow-left',
-                    type   : 'link',
-                    action : 'self/flip'
-                });
-                if (options.back.title) {
-                    this.back.header_add('title', {
-                        label : options.front.title,
-                        type  : 'title'
-                    });
-                }
-                sides.append(this.back.element);
-            } else {
-                this.back = false;
-                sides.append('<div class="dummy"/>');
-            }
-
-            return wrapper;
-        }).call(this);
-
-        // When this is true, some events will be prevented on the panel
-        // Like further animations
-        this._s.closing = false;
-
-        // Increase number of panels!
+        // increase panels count
         count++;
     };
 
@@ -150,57 +139,50 @@
             }
         },
 
-        // get/set away status
+        // set away status
         // value   : boolean
-        // refresh : boolean  weather refresh even should be tirggered
-        // return  : boolean
-        away : function (value, refresh) {
+        away : function (value) {
             var width;
 
-            if (value === undefined) { return this._s.away; }
-
             if (value) {
-                if (this.focus() || this._s.away) {
-                    this._s.awayOnBlur = true;
+                if (this.hasFocus() || this.properties.away) {
+                    this.properties.awayOnBlur = true;
                     return;
                 }
-                this._s.away = true;
-                width = -(this.width() - this._s.awayWidth);
+                this.properties.away = true;
+                width = -(this.properties.width - this.properties.awayWidth);
             } else {
-                if (!this._s.away) {
-                    this._s.awayOnBlur = false;
+                if (!this.properties.away) {
+                    this.properties.awayOnBlur = false;
                     return;
                 }
-                this._s.away = false;
-                this._s.awayOnBlur = false;
-                width = this.width() - this._s.awayWidth;
+                this.properties.away = false;
+                this.properties.awayOnBlur = false;
+                width = this.properties.width - this.properties.awayWidth;
             }
 
-            $(document).trigger('MU/panels/updateSum', [width]);
-
-            if (refresh === undefined || refresh === true) {
-                $(document).trigger('MU/panels/refresh');
-            }
+            this.container.updateSum(width);
+            this.container.refresh();
         },
 
         // set panel to be full screen
         // value : boolean
         full : function (value) {
-            if (value === undefined) { return this._s.full; }
-            if (value === this._s.full) { return; }
+            // calling it twice with the same value will mess things
+            if (value === this.properties.full) { return; }
             if (value) {
-                this._s.full = true;
-                $(document).trigger('MU/panels/focus', [this.id()]);
-                this._s.oldZIndex = this.element.css('z-index');
+                this.properties.full = true;
+                this.container.focus(this.properties.id);
+                this.properties.oldZIndex = this.element.css('z-index');
                 this.element.css('z-index', 10000);
                 this.element.animate({
                     left : 0,
                     width : '100%'
                 });
             } else {
-                this._s.full = false;
+                this.properties.full = false;
                 this.animate(function () {
-                    this.element.css('z-index', this._s.oldZIndex);
+                    this.element.css('z-index', this.properties.oldZIndex);
                 });
             }
         },
@@ -208,46 +190,42 @@
         // if insensitive, then panel cannot be focused
         // value : boolean
         insensitive : function (value) {
-            if (value === undefined) { return this._s.insensitive; }
             if (value) {
-               if (this.focus()) {
-                    this.blur();
-                    this._s.insensitive = true;
-                    $(document).trigger('MU/panels/focusNext', [this.id()]);
+               if (this.hasFocus()) {
+                    this.setFocus(false);
+                    this.properties.insensitive = true;
+                    this.container.focusNext(this.properties.id);
                 } else {
-                    this._s.insensitive = true;
+                    this.properties.insensitive = true;
                 }
             } else {
-                this._s.insensitive = false;
+                this.properties.insensitive = false;
             }
         },
 
         // weather panel is busy
         // value : boolean
         busy : function (value) {
-            if (value === undefined) { return this._s.busy; }
+            if (this.properties.busy === value) { return; }
             if (value) {
-                if (this._s.busy) { return; }
                 var busy = $('<div class="loading panel-busy" style="opacity:0;" />').prependTo(this.element);
                 busy.animate({'opacity': 0.75});
-                this._s.busy = true;
+                this.properties.busy = true;
             } else {
-                if (!this._s.busy) { return; }
                 this.element.find('div.panel-busy').fadeOut(400, function () {
                     this.remove();
                 });
-                this._s.busy = false;
+                this.properties.busy = false;
             }
         },
 
-        // Animate all the changes made to the element.
+        // animate all the changes made to the element.
         animate : function (callback) {
-            if (this._s.closing) { return; }
-            // console.log(this._s.width + this._s.expandFor);
+            if (this.properties.closing) { return; }
             var _this = this;
             this.element.animate({
-                left    : this._s.position + this._s.offset,
-                width   : this._s.width + this._s.expandFor,
+                left    : this.properties.position + this.properties.offset,
+                width   : this.properties.width + this.properties.expandFor,
                 opacity : 1
             }, 400, 'ease', function () {
                 if (typeof callback === 'function') {
@@ -256,116 +234,76 @@
             });
         },
 
-        // Set locked state. If no value is provided, locked state will be returned.
-        // value : boolean
-        locked : function (value) {
-            if (value === undefined) { return this._s.locked; }
-            this._s.locked = !!value;
-        },
-
-        // Take the amount in px, (how far the panel should be pushed).
-        // If no value is provided, return current offset.
-        // offset : integer  amount of px to be pushed to the left.
-        offset : function (offset) {
-            if (offset === undefined) { return this._s.offset; }
-            this._s.offset = offset;
-        },
-
-        // Set panel's position (left). If not position if provided,
-        // return current position.
-        // position : integer
-        position : function (position) {
-            if (position === undefined) { return this._s.position; }
-            this._s.position = position;
-        },
-
-        // Weather panel will be expanded to full the available space.
-        // If no value provided, current state is returned.
+        // weather panel will be expanded to full the available space.
         // value : boolean
         expand : function (value) {
-            if (value === undefined) { return this._s.expand; }
-            this._s.expand = !!value;
-            $(document).trigger('MU/panels/refresh');
+            this.properties.expand = !!value;
+            this.container.refresh();
         },
 
-        // For how much panel should be epanded.
-        // width : integer
-        expandFor : function (width) {
-            if (width === undefined) { return this._s.expandFor; }
-            this._s.expandFor = width;
-        },
-
-        // When there's no more space, can panel shrink (instead of being offseted).
-        // If no value provided, current state is returned.
+        // when there's no more space, can panel shrink (instead of being offset)
         // value : string  false|tiny|small|medium
         shrink : function (value) {
-            if (value === undefined) { return this._s.shrink; }
-            if (value === false) {
-                this._s.shrink = false;
+            if (value) {
+                this.properties.shrink = dimensions[value] ? dimensions[value] : dimensions.tiny;
             } else {
-                this._s.shrink = dimensions[value] ? dimensions[value] : dimensions.tiny;
+                this.properties.shrink = false;
             }
         },
 
-        // get/set panel's size by word
+        // set panel's size by word
         // value  : string   tiny|small|medium|big
-        // update : boolean  apply changes
         size : function (value) {
-            if (value === undefined) { return this._s.size; }
             var sizeDiff = 0;
             // set new size by word
-            this._s.size = typeof dimensions[value] === 'undefined' ? 'small' : value;
-            sizeDiff = -(this._s.width - dimensions[this._s.size]);
-            this._s.width = dimensions[this._s.size];
+            this.properties.size = typeof dimensions[value] === 'undefined' ? 'small' : value;
+            sizeDiff = -(this.properties.width - dimensions[this.properties.size]);
+            this.properties.width = dimensions[this.properties.size];
             this.animate();
-            $(document).trigger('MU/panels/updateSum', [sizeDiff, this.id()]);
-            $(document).trigger('MU/panels/refresh');
+            this.container.updateSum(sizeDiff, this.properties.id);
+            this.container.refresh();
         },
 
-        // get panel's size in px
-        // return : integer
-        width : function () {
-            return this._s.width;
-        },
-
-        // Set / get id.
-        // id : string
-        id : function (id) {
-            if (id === undefined) { return this.element.prop('id'); }
-            this.element.prop('id', id);
-        },
-
-        // Add another panel which will depend on this one. - It means, when this
-        // panel will be closed, child will be closed also.
+        // add another panel which will depend on this one
+        // it means, when this panel will be closed, child will be closed also
         // child : object  MU.Panel
         addChild : function (child) {
-            this._s.children.push(child);
+            this.properties.children.push(child);
         },
 
         // return : array
         getChildren : function () {
-            return this._s.children;
+            return this.properties.children;
         },
 
-        // Set / get panel's zIndex.
+        // set/get panel's zIndex.
         // value : integer
         zIndex : function (value) {
-            if (value === undefined) { return this.element.css('z-index'); }
+            if (typeof value === 'undefined') { return this.element.css('z-index'); }
             this.element.css({'z-index' : value});
         },
 
-        // take focus away from panels
-        blur : function () {
-            this.element.removeClass('selected');
-            if (this._s.awayOnBlur) {
-                this.away(true, false);
-            }
+        // get focus state
+        // return : boolean
+        hasFocus : function () {
+            return this.element.hasClass('selected');
         },
 
-        // get information about focus (can't set it)
-        // to set focus trigger event
-        focus : function () {
-            return this.element.hasClass('selected');
+        // set panel's focus
+        // value : boolean
+        setFocus : function (value) {
+            if (value) {
+                this.element.addClass('selected');
+                if (this.properties.away) {
+                    this.away(false);
+                    this.properties.awayOnBlur = true;
+                }
+            } else {
+                this.element.removeClass('selected');
+                if (this.properties.awayOnBlur) {
+                    this.away(true);
+                }
+            }
         }
     };
 

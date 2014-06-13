@@ -4,13 +4,13 @@
     <?php echo alt_link(); ?>
 </div> -->
 <script>
-var resizeTimeout = false;
-window.onresize = function () {
-    if (resizeTimeout) clearTimeout(resizeTimeout);
-    resizeTimeout = setTimeout(function () {
-        $(document).trigger('MU/panels/refresh', [true]);
-    }, 1000);
-};
+// var resizeTimeout = false;
+// window.onresize = function () {
+//     if (resizeTimeout) clearTimeout(resizeTimeout);
+//     resizeTimeout = setTimeout(function () {
+//         $(document).trigger('MU/panels/refresh', [true]);
+//     }, 1000);
+// };
 
 function init() {
     $('body')
@@ -20,6 +20,16 @@ function init() {
     var panels = new MU.Panels('body'),
         num    = 1;
         // sizes  = ['tiny', 'small', 'medium', 'big'];
+
+    // special panel :)
+    var navigation = panels.add({
+        flippable : false,
+        closable  : false,
+        front     : {
+            title : "Marko Gajst",
+            style : "alt"
+        }
+    });
 
     var panint = setInterval(function () {
         if (num > 6) { clearInterval(panint); }
@@ -32,11 +42,10 @@ function init() {
             back      : {
                 title : "Panel Back!"
             }
-        }).front.header_add('menu', {
+        }).front.headerAppend({
             icon     : 'gear',
             type     : 'link',
-            action   : 'click:header/menu',
-            position : 'right'
+            action   : 'click:header/menu'
         });
         num = num + 1;
     }, 300);

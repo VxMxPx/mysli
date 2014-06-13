@@ -5,28 +5,25 @@
     var Button = function (element) {
         this.element = $(element);
 
+        // if there's no label element, add it
         this.label = this.element.find('span');
         if (!this.label.length) {
             this.element.text('<span>' + this.element.text() + '</span>');
             this.label = this.element.find('span');
         }
 
-        // Those are original values of element, before busy state is set...
-        this.originalContent = {
-            'content' : '',
-            'disabled': null
+        // those are original values of element, before busy state is set...
+        this.properties = {
+            originalContent : {
+                content : '',
+                disabled: false
+            }
         };
     };
 
     Button.prototype = {
 
         constructor : Button,
-
-        // get button element
-        // return : object
-        element : function () {
-            return this.element;
-        },
 
         // add event handlers to the element
         on : function (evnt, call) {
@@ -38,7 +35,7 @@
             return this.element.off(evnt);
         },
 
-        // set /get disabled state
+        // set/get the disabled state
         // state  : boolean
         // return : boolean
         disabled : function (state) {
@@ -54,7 +51,7 @@
             }
         },
 
-        // set / get pressed state
+        // set/get pressed state
         // state  : boolean
         // return : boolean
         pressed : function (state) {
@@ -69,7 +66,7 @@
             }
         },
 
-        // set / get button's style
+        // set/get button's style
         // variant: string (alt, primary, attention, default)
         // return : string
         style : function (variant) {
@@ -91,17 +88,7 @@
             }
         },
 
-        // set /get label
-        // text   : string
-        // return : string
-        label : function (text) {
-            if (typeof text === 'undefined') {
-                return this.label.text();
-            }
-            this.label.text(text);
-        },
-
-        // set / get button busy state
+        // set/get button busy state
         // state : boolean
         // return: boolean
         busy : function (state, label) {
@@ -112,16 +99,16 @@
             if (state) {
                 if (this.busy()) { return; }
                 this.element.addClass('busy');
-                this.originalContent.content = this.element.html();
-                this.originalContent.disabled = this.disabled();
-                this.element.html(' ' + (label ? label : this.label()));
+                this.properties.originalContent.content = this.element.html();
+                this.properties.originalContent.disabled = this.disabled();
+                this.element.html(' ' + (label ? label : this.label.text()));
                 this.icon('spinner', 'left', true);
                 this.disabled(true);
             } else {
-                if ( ! this.busy()) { return; }
+                if (!this.busy()) { return; }
                 this.element.removeClass('busy');
-                this.element.html(this.originalContent.content);
-                this.disabled(this.originalContent.disabled);
+                this.element.html(this.properties.originalContent.content);
+                this.disabled(this.properties.originalContent.disabled);
             }
         },
 
@@ -133,12 +120,16 @@
             var icon = this.element.find('i');
 
             if (typeof name === 'undefined') {
-                if (!icon.length) return false;
+                if (!icon.length) {
+                    return false;
+                }
                 return icon.attr('class').match(/fa-([a-z\-]+)/)[1];
             }
 
             icon.remove(); // Remove icons in any case...
-            if (!name) return; // icons were removed, and replacement not needed.
+            if (!name) {
+                return; // icons were removed, and replacement not needed.
+            }
             this
                 .element[(position === 'right' ? 'append' : 'prepend')]('<i></i>')
                 .find('i')

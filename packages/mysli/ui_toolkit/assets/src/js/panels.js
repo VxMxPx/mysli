@@ -2,35 +2,47 @@
 
     'use strict';
 
-    // parent : string  selector of element which will contain all panels
-    var Panels = function (parent) {
-        var _this = this;
-        this.parent = $(parent);
-        this.sumSize = 0;
-        this.fillCount = 0;
-        this.activeId = false;
-        this.offseted = false;
-        this.panelsStack = new MU.Aarray();
-        this.innerWidth = false;
+    // container : string  selector of element which will contain all panels
+    var Panels = function (container) {
 
-        this.parent.on('click', 'div.panel.multi', function () {
+        // panel's properties
+        var _this = this,
+            resizeTimer = null;
+
+        // panels container's properties
+        this.properties = {
+            // sum of all panels (widths, px)
+            sumSize : 0,
+            // number of panels which are expanded
+            fillCount : 0,
+            // currently selected panel (id)
+            activeId : false,
+            // weather panels are offseted (overflown)
+            offseted : 0,
+            // width of container
+            containerWidth : 0
+        };
+
+        // container of all panels (dom)
+        this.container = $(container);
+        // array of all panels (objects)
+        this.panelsStack = new MU.Aarray();
+
+        this.updateContainerWidth();
+
+        // register events
+        this.container.on('click', 'div.panel.multi', function () {
             _this.focus(this.id, true);
         });
-        this.parent.on('self/close', 'div.panel.multi', function () {
+        this.container.on('self/close', 'div.panel.multi', function () {
            _this.remove(this.id);
         });
-        $(document).on('MU/panels/refresh', function (e, resized) {
-            _this.refreshView(resized);
-        });
-        $(document).on('MU/panels/updateSum', function (e, value, id) {
-            _this.updateSum(value, id);
-        });
-        $(document).on('MU/panels/focusNext', function (e, lastId) {
-            _this.focusNext(lastId);
-            _this.refreshView();
-        });
-        $(document).on('MU/panels/focus', function (e, id) {
-            _this.focus(id, true);
+        $(window).on('resize', function () {
+            if (resizeTimer) { clearTimeout(resizeTimer); }
+            resizeTimer = setTimeout(function () {
+                _this.updateContainerWidth();
+                _this.refreshView();
+            }, 300);
         });
     };
 
@@ -38,37 +50,36 @@
 
         constructor : Panels,
 
+        // update container width
+        updateContainerWidth : function () {
+            this.properties.containerWidth = this.container.width();
+        },
+
         // update sum size, when panel is added, remove or away
         // value          : integer  positive or negative
         // modifyBeforeId : string   if provided, panels before this id, will
         //                           update position to fit difference.
         updateSum : function (value, modifyBeforeId) {
-            this.sumSize = this.sumSize + value;
+            this.properties.sumSize = this.properties.sumSize + value;
             if (modifyBeforeId) {
                 this.panelsStack.eachAfter(modifyBeforeId, function (index, panelInside) {
                     panelInside.zIndex(10000 - index);
-                    panelInside.position(panelInside.position() + value);
+                    panelInside.properties.position = panelInside.properties.position + value;
                     panelInside.animate();
                 });
             }
         },
 
-        // refresh view - usually when window is resized or panel is added / removed.
-        // resized : boolean  was it tirggered by window resized
-        refreshView : function (resized) {
-
-            if (resized || this.innerWidth === false) {
-                this.innerWidth = this.parent.width();
-            }
-
+        // refresh view - when panel is added/removed or window is resized
+        refreshView : function () {
             // no active id, nothing to do
-            if (!this.activeId) { return; }
+            if (!this.properties.activeId) { return; }
 
-            var overflow        = this.innerWidth - this.sumSize,
-                overflowPart    = this.fillCount > 0 ? Math.ceil(overflow / this.fillCount) : 0,
-                activePanel     = this.panelsStack.get(this.activeId),
-                screenLeft      = this.innerWidth - activePanel.width(),
-                overflowPercent = 100 - MU.Calc.getPercent(screenLeft, this.sumSize - activePanel.width()),
+            var overflow        = this.properties.containerWidth - this.properties.sumSize,
+                overflowPart    = this.properties.fillCount > 0 ? Math.ceil(overflow / this.properties.fillCount) : 0,
+                activePanel     = this.panelsStack.get(this.properties.activeId),
+                screenLeft      = this.properties.containerWidth - activePanel.properties.width,
+                overflowPercent = 100 - MU.Calc.getPercent(screenLeft, this.properties.sumSize - activePanel.properties.width),
                 offsetSoFar     = 0,
                 panelCalculated = 0;
 
@@ -78,77 +89,69 @@
 
             if (overflow > 0) {
                 overflowPercent = 0;
-                this.offseted = false;
+                this.properties.offseted = false;
             } else {
-                this.offseted = true;
+                this.properties.offseted = true;
             }
 
             this.panelsStack.each(function (index, panel) {
-                if (panel.away() && !panel.focus()) {
-                    panel.expandFor(0);
-                    panel.offset((panel.width() - panel._s.awayWidth + offsetSoFar) * -1);
+                if (panel.properties.away && !panel.hasFocus()) {
+                    panel.properties.expandFor = 0;
+                    panel.properties.offset = -(panel.properties.width - panel.properties.awayWidth + offsetSoFar);
                     panel.animate();
-                    offsetSoFar += panel.width() - panel._s.awayWidth;
+                    offsetSoFar += panel.properties.width - panel.properties.awayWidth;
                     return;
                 }
-                // if (activePanel.size() === 'full') {
-                //     if (panel.size() !== 'full') {
-                //         offsetSoFar += panel.width();
-                //     }
-                //     panel.offset(offsetSoFar * -1);
-                //     return;
-                // }
-                if (panel.expand()) {
+                if (panel.properties.expand) {
                     if (overflow > 0) {
-                        panel.offset(offsetSoFar * -1);
-                        panel.expandFor(overflowPart);
+                        panel.properties.offset = -(offsetSoFar);
+                        panel.properties.expandFor = overflowPart;
                         panel.animate();
-                        offsetSoFar += overflowPart * -1;
+                        offsetSoFar += -(overflowPart);
                         return;
                     } else {
-                        panel.expandFor(0);
+                        panel.properties.expandFor = 0;
                         panel.animate();
                     }
                 }
-                if (panel.focus()) {
-                    panel.expandFor(0);
-                    panel.offset(offsetSoFar * -1);
+                if (panel.hasFocus()) {
+                    panel.properties.expandFor = 0;
+                    panel.properties.offset = -(offsetSoFar);
                     panel.animate();
                     return;
                 }
-                // panelCalculated = Math.ceil(MU.Calc.setPercent(overflowPercent, panel.width()))
-                panelCalculated = MU.Calc.setPercent(overflowPercent, panel.width());
+                // panelCalculated = Math.ceil(MU.Calc.setPercent(overflowPercent, panel.properties.width))
+                panelCalculated = MU.Calc.setPercent(overflowPercent, panel.properties.width);
 
-                // Is shrinkable and still can be shrinked
-                if (panel.shrink() && panel.width() + panel._s.expandFor > panel.shrink()) {
-                    // Can whole offset be shrinked?
-                    if (panel.shrink() > panel.width() - panelCalculated) {
-                        var diff = panelCalculated - (panel.width() - panel.shrink());
-                        panel.expandFor(diff * -1);
-                        panel.offset((panelCalculated - diff + (offsetSoFar)) * -1);
+                // is shrinkable and still can be shrinked
+                if (panel.properties.shrink && panel.properties.width + panel.properties.expandFor > panel.properties.shrink) {
+                    // can whole offset be shrinked?
+                    if (panel.properties.shrink > panel.properties.width - panelCalculated) {
+                        var diff = panelCalculated - (panel.properties.width - panel.properties.shrink);
+                        panel.properties.expandFor = -(diff);
+                        panel.properties.offset = -(panelCalculated - diff + offsetSoFar);
                         panel.animate();
                         offsetSoFar += panelCalculated;
                         return;
                     } else {
-                        panel.expandFor(panelCalculated * -1);
-                        panel.offset(offsetSoFar * -1);
+                        panel.properties.expandFor = -(panelCalculated);
+                        panel.properties.offset = -(offsetSoFar);
                         panel.animate();
                         offsetSoFar += panelCalculated;
                         return;
                     }
                 }
-
-                panel.expandFor(0);
-                panel.offset((panelCalculated + offsetSoFar) * -1);
+                panel.properties.expandFor = 0;
+                panel.properties.offset = -(panelCalculated + offsetSoFar);
                 panel.animate();
                 offsetSoFar += panelCalculated;
             });
         },
 
-        // Add new panel, if you provide afterId the panel will be added
-        // to the right side of that one.
-        // Otherwise, the panel will be added to the end (to the very right).
-        // options  : object  panel's options
+        // add a new panel
+        // if you provide afterId the panel will be added to the right side of it
+        // otherwise, the panel will be added to the end (to the very right)
+        // options : object  panel's options
         // afterId : string  optional, panel will be insrted after _id_
         add : function (options, afterId) {
 
@@ -156,114 +159,94 @@
                 options = {};
             }
 
-            var panel = new MU.Panel(options),
+            var panel = new MU.Panel(this, options),
                 beforeSize = 0,
                 stackIndex = 0;
 
-            if (this.panelsStack.get(panel.id())) {
-                throw new Error('Duplicated ID: ' + panel.id());
+            if (this.panelsStack.get(panel.properties.id)) {
+                throw new Error('Duplicated ID: ' + panel.properties.id);
             }
 
             if (afterId) {
-                beforeSize = this.panelsStack.get(afterId).width();
+                beforeSize = this.panelsStack.get(afterId).properties.width;
                 this.panelsStack.eachBefore(afterId, function (index, panelInside) {
                     panelInside.zIndex(10000 - index);
-                    beforeSize += panelInside.width();
+                    beforeSize += panelInside.properties.width;
                 });
             } else {
-                beforeSize = this.sumSize;
+                beforeSize = this.properties.sumSize;
             }
 
-            panel.position(beforeSize);
-            this.updateSum(panel.width(), afterId);
+            panel.properties.position = beforeSize;
+            this.updateSum(panel.properties.width, afterId);
 
             if (afterId) {
                 this.panelsStack.get(afterId).zIndex(10000 - this.panelsStack.getIndex(afterId));
-                stackIndex = this.panelsStack.pushAfter(afterId, panel.id(), panel);
+                stackIndex = this.panelsStack.pushAfter(afterId, panel.properties.id, panel);
             } else {
-                stackIndex = this.panelsStack.push(panel.id(), panel);
+                stackIndex = this.panelsStack.push(panel.properties.id, panel);
             }
 
             panel.zIndex(10000 - stackIndex);
-            // Check weather current panel is full screen - then don't move focus
-            if (!this.activeId || !this.panelsStack.get(this.activeId).full()) {
-                this.focus(panel.id(), false);
+
+            // check weather current panel is full screen - then don't move focus
+            if (!this.properties.activeId || !this.panelsStack.get(this.properties.activeId).properties.full) {
+                this.focus(panel.properties.id, false);
             }
 
-            if (panel.expand()) {
-                this.fillCount++;
+            if (panel.properties.expand) {
+                this.properties.fillCount++;
             }
-
-            // if (afterId) {
-            //     if (panel.id() !== this.panelsStack.getLast().id()) {
-            //         this.panelsStack.eachAfter(panel.id(), function (index, panelInside) {
-            //             panelInside.zIndex(10000 - index);
-            //             panelInside.position(panelInside.position() + panel.width());
-            //             panelInside.animate();
-            //         });
-            //     }
-            // }
 
             this.refreshView();
 
             panel.element.css({
                 opacity: 0,
-                left   : (panel.position() + panel.offset()) - (panel.width() + panel._s.expandFor)
+                left   : (panel.properties.position + panel.properties.offset) - (panel.properties.width + panel.properties.expandFor)
             });
-            this.parent.append(panel.element);
+            this.container.append(panel.element);
             panel.animate();
 
             return panel;
         },
 
         // Remove particular panel.
-        // id        : string
+        // id : string
         remove : function (id) {
             // inavlid id
             if (!this.panelsStack.get(id)) { return; }
 
             var panel = this.panelsStack.get(id),
-                width = panel.width();
+                width = panel.properties.width;
 
             // panel is loced (perhaps is preforming some taks, cannot close)
-            if (panel.locked()) { return; }
+            if (panel.properties.locked) { return; }
 
-            // Cannot take focus anymore
-            panel.insensitive(true);
-            panel._s.closing = true;
+            // cannot take focus anymore
+            panel.properties.insensitive = true;
+            panel.properties.closing = true;
 
-            if (id === this.activeId) { this.activeId = false; }
+            if (id === this.properties.activeId) { this.properties.activeId = false; }
 
-            // Remove all Dependant children
+            // remove all Dependant children
             if (panel.getChildren().length) {
                 for (var i = panel.getChildren().length - 1; i >= 0; i--) {
-                    this.remove(panel.getChildren()[i].id(), false);
+                    this.remove(panel.getChildren()[i].properties.id, false);
                 }
             }
 
-            if (panel.expand()) {
-                this.fillCount--;
+            if (panel.properties.expand) {
+                this.properties.fillCount--;
             }
 
             this.updateSum(-(width), id);
 
-            // console.log(panel._s.position, panel._s.offset, width, panel._s.expandFor, 10);
-
             panel.element.animate({
-                left    : (panel._s.position + panel._s.offset) - (width + panel._s.expandFor) - 10,
+                left    : (panel.properties.position + panel.properties.offset) - (width + panel.properties.expandFor) - 10,
                 opacity : 0
             }, 'normal', function () {
                 panel.element.remove();
             });
-
-            // this.panelsStack.eachAfter(id, function (index, panelInside) {
-            //     if (that.offseted) {
-            //         panelInside.position((panelInside.position() - width));
-            //     } else {
-            //         panelInside.position(panelInside.position() - width);
-            //         panelInside.animate();
-            //     }
-            // });
 
             this.focusNext(id);
             this.panelsStack.remove(id);
@@ -271,7 +254,7 @@
             this.refreshView();
         },
 
-        // Get panel by id
+        // get panel by id
         // id : string
         get : function (id) {
             if (this.panelsStack.get(id)) {
@@ -279,21 +262,21 @@
             }
         },
 
-        // wehn panel is closed or set to be sensitive, this will find next
-        // target and focus it.
+        // wehn panel is closed or set to be sensitive,
+        // this will find next target and focus it
         // lastId : string
         focusNext : function (lastId) {
-            // Are there any panels left?
+            // are there any panels left?
             var focusTo = this.panelsStack.getFrom(lastId, -1);
-            if (!focusTo || focusTo.insensitive()) {
+            if (!focusTo || focusTo.properties.insensitive) {
                 focusTo = this.panelsStack.each(function (id, panel) {
-                    if (!panel.insensitive()) {
+                    if (!panel.properties.insensitive) {
                         return panel;
                     }
                 });
                 if (!focusTo) { return; } // nothing we can do...
             }
-            this.focus(focusTo.id(), false);
+            this.focus(focusTo.properties.id, false);
         },
 
         // blur current, and focus different panel
@@ -301,22 +284,18 @@
         // refresh : boolean  weather to refresh panels positions
         focus : function (id, refresh) {
             //refresh = typeof refresh === 'undefined' ? false : true;
-            if (id === this.activeId) { return true; }
+            if (id === this.properties.activeId) { return true; }
 
             var panel = this.panelsStack.get(id);
 
-            if (panel.insensitive()) { return; }
+            if (panel.properties.insensitive) { return; }
 
-            if (this.activeId) {
-                this.panelsStack.get(this.activeId).blur();
+            if (this.properties.activeId) {
+                this.panelsStack.get(this.properties.activeId).setFocus(false);
             }
 
-            panel.element.addClass('selected');
-            if (panel.away()) {
-                panel.away(false, false);
-                panel._s.awayOnBlur = true;
-            }
-            this.activeId = id;
+            panel.setFocus(true);
+            this.properties.activeId = id;
 
             if (refresh === true) {
                 this.refreshView();

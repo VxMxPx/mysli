@@ -1,37 +1,105 @@
 ;(function ($, MU) {
 
     'use strict';
-    var count = 0;
 
-    var PanelSide = function (options) {
+    var count = 1;
+
+    // create generic header element
+    // parent   : object
+    // options  : object
+    function createHeaderElement(parent, options) {
+        var element,
+            action = options.action,
+            preventDefault = options.preventDefault;
+
+        // more types will be added
+        switch (options.type) {
+            case 'costume':
+                element = $(options.element);
+                break;
+            default:
+                element = $('<a href="#" />');
+                // throw new Error('Invalid type: ' + options.type);
+        }
+
+        // id
+        if (options.id) {
+            element.prop('id', id);
+        }
+
+        // click
+        if (action) {
+            element.on('click', function (e) {
+                if (preventDefault) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                parent.element.trigger(action);
+            });
+        }
+
+        // icon?
+        if (options.icon) {
+            element.append('<i class="fa fa-' + options.icon + '" />');
+        }
+
+        // label
+        if (options.label) {
+            element.append('<span>' + options.label + '</span>');
+        }
+
+        return element;
+    }
+
+    // container : object  parent
+    // options   : object
+    //      id      : strign   this side's unique id
+    //      header  : boolean  weather header should be added
+    //      title   : string   panel title
+    //      style   : string   alt|default
+    //      content : string   html
+    //      footer  : boolean  weather footer should be added
+    var PanelSide = function (container, options) {
+
         options = $.extend({}, {
             id      : null,
             header  : true,
+            title   : false,
             style   : null,
             content : null,
             footer  : false
         }, options);
 
-        this._s = {};
+        // side's parent
+        this.container = container;
 
-        // Id
-        options.id = (options.id ? options.id : 'panel-side' + count);
-        this._s.id = options.id;
+        this.properties = {
+            id : (options.id ? options.id : 'panel-side' + count),
+            headerItems : {left: 0, right: 0}
+        };
 
-        this.element = $('<div class="side panel" id="' + this._s.id + '" />');
+        // collection of header elements
+        this.headerElements = [];
 
-        // header icons count
-        this._s.headerItems = {left: 0, right: 0};
+        this.element = $('<div class="side panel" id="' + this.properties.id + '" />');
+        this.contentContainer = $('<div class="body" />').appendTo(this.element);
 
         if (options.header) {
             this.header(true);
+        }
+
+        if (options.title) {
+            this.title(options.title);
         }
 
         if (options.style) {
             this.style(options.style);
         }
 
-        // Increase number of panels!
+        if (options.content) {
+            this.content(options.content);
+        }
+
         count++;
     };
 
@@ -43,73 +111,76 @@
         // value  : boolean  true - append header, false - remove header
         // return : object   $('header')
         header : function (value) {
-            if (value === undefined) { return this.element.find('header.main'); }
+            if (typeof value === 'undefined') { return this.element.find('header.main'); }
             if (value) {
                 if (!this.header().length) {
-                    this.element.prepend('<header class="main"></header>');
+                    this.element.prepend('<header class="main"><h2></h2></header>');
                 }
             } else {
                 this.element.remove('header.main');
             }
         },
 
-        // add header's item
-        // id      : string  unique item's id
+        // set/get title
+        // value  : string  if undefined title value will be returned.
+        // return : string
+        title : function (value) {
+            if (typeof value === 'undefined') { return this.header().find('h2').text(); }
+            this.header().find('h2').text(value);
+        },
+
+        // append/prepend header element
         // options : object  item's properties:
-        //      type           : string   link|title
+        //      id             : string   unique item's id
+        //      type           : string   link
         //      action         : string   action to be triggered on click
         //      preventDefault : boolean  weather to prevent default action
         //      icon           : string   icon name
-        header_add : function (id, options) {
-            var element,
-                pos = 0,
-                _this = this,
-                action = options.action,
-                preventDefault = options.preventDefault;
+        headerAppend : function (options) {
+            var pos = null,
+                position = null,
+                element = createHeaderElement(this, options);
 
-            switch (options.type) {
-                case 'link':
-                    element = $('<a href="#" />');
-                    break;
-                case 'title':
-                    element = $('<h2/>');
-                    break;
-                default:
-                    throw new Error('Invalid type: ' + options.type);
-            }
-
-            element.prop('id', this._s.id + '-header-element-' + id);
-
-            if (action) {
-                element.on('click', function (e) {
-                    if (preventDefault) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                    }
-                    _this.element.trigger(action);
-                });
-            }
-            if (options.icon) {
-                element.append('<i class="fa fa-' + options.icon + '" />');
-            }
-            if (options.label) {
-                element.append('<span>' + options.label + '</span>');
-            }
-            if (options.type !== 'title') {
-                // position could be undefined, in that case, default to left
-                options.position = options.position === 'right' ? 'right' : 'left';
-                pos = ++this._s.headerItems[options.position];
+            // if type is costume, no positioning will be done
+            if (options.type !== 'costume') {
+                position = 'right';
+                pos = ++this.properties.headerItems[position];
                 pos = (pos === 1 ? pos * 20 : pos * 25);
-                element.css(options.position, pos + 'px');
+                element.css(position, pos + 'px');
             }
+
             element.appendTo(this.header());
+            this.headerElements.push(element);
+        },
+        headerPrepend : function (options) {
+            var pos = null,
+                position = null,
+                element = createHeaderElement(this, options);
+
+            // if type is costume, no positioning will be done
+            if (options.type !== 'costume') {
+                position = 'left';
+                pos = ++this.properties.headerItems[position];
+                pos = (pos === 1 ? pos * 20 : pos * 25);
+                element.css(position, pos + 'px');
+            }
+
+            element.prependTo(this.header());
+            this.headerElements.unshift(element);
+        },
+
+        // get/set content
+        // content : string  html
+        content : function (content) {
+            if (typeof content === 'undefined') { return this.contentContainer.html(); }
+            this.contentContainer.html(content);
         },
 
         // add/remove/get footer
         // value  : boolean  true - append footer, false - remove footer
         // return : object   $('footer')
         footer : function (value) {
-            if (value === undefined) { return this.element.find('footer.main'); }
+            if (typeof value === 'undefined') { return this.element.find('footer.main'); }
             if (value) {
                 if (!this.footer().length) {
                     this.element.append('<footer class="main"><h2></h2></footer>');
@@ -120,33 +191,12 @@
         },
 
         // Get / set style
-        // variant: string (alt, default)
+        // variant: string (alt, default, ...)
         // return : string
-        style : function (variant) {
-            var classes = 'alt';
-
-            // Get style
-            if (typeof variant === 'undefined') {
-                for (var i = classes.split(' ').length - 1; i >= 0; i--) {
-                    if (this.element.hasClass(classes[i])) return classes[i];
-                }
-                return 'default';
-            }
-
-            // Set style
-            this.element.removeClass(classes);
-
-            if (variant !== 'default') {
-                this.element.addClass(variant);
-            }
-        },
-
-        // Append panel side to the parent
-        // parent : object  MU.Panel
-        appendTo : function (parent) {
-            this.element.appendTo(parent);
+        style : function (style) {
+            if (typeof style === 'undefined') { return this.element.prop('class'); }
+            this.element.addClass(style);
         }
-
     };
 
     MU.PanelSide = PanelSide;

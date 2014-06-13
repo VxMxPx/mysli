@@ -3,7 +3,7 @@
     'use strict';
 
     // Number of initialized overlays, used to generate unique IDs
-    var count = 0;
+    var count = 1;
 
     // Parent's geometry + applied padding
     // return : object {top: <int>, left: <int>, width: <int>, height: <int>}
