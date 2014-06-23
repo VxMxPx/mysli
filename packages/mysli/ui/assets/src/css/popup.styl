@@ -1,0 +1,53 @@
+@import "variables"
+
+.popup
+    position: absolute
+    background-color: color-background-box
+    border-radius: 3px
+    box-shadow: 0 0 2px rgba(0,0,0,.2), inset 0 -3px 0 rgba(0, 0, 0, .2)
+    color: color-font
+    &.point .pointer
+        position: absolute
+        width: 16px
+        height: 16px
+        content: ""
+    &.point.up .pointer
+        top: -16px
+        left: 50%
+        border-right: 8px solid transparent
+        border-left: 8px solid transparent
+        border-bottom: 8px solid color-border
+        margin-left: -8px
+    &.point.down .pointer
+        bottom: -16px
+        left: 50%
+        border-right: 8px solid transparent
+        border-left: 8px solid transparent
+        border-top: 8px solid color-border
+        margin-left: -8px
+    &.point.left .pointer
+        top: 50%
+        left: -16px
+        border-top: 8px solid transparent
+        border-right: 8px solid color-border
+        border-bottom: 8px solid transparent
+        margin-top: -8px
+    &.point.right .pointer
+        top: 50%
+        right: -16px
+        border-top: 8px solid transparent
+        border-left: 8px solid color-border
+        border-bottom: 8px solid transparent
+        margin-top: -8px
+
+.popup.alt
+    background-color: color-background-box-alt
+    color: color-font-alt
+    &.point.up .pointer
+        border-bottom: 8px solid color-border-alt
+    &.point.down .pointer
+        border-top: 8px solid color-border-alt
+    &.point.left .pointer
+        border-right: 8px solid color-border-alt
+    &.point.right .pointer
+        border-left: 8px solid color-border-alt
