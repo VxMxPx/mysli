@@ -4,6 +4,7 @@
 
     <div class="container default spaced {get_alt}" style="min-height:400px;">
         <div class="popup menu point up" style="width: 250px;" >
+            <div class="pointer"></div>
             <div class="field search item">
                 <input type="text" placeholder="Find..." />
                 <button class="action clear" type="button"></button>
@@ -15,6 +16,7 @@
             <a class="item" href="#">Close</a>
         </div>
         <div class="popup menu point down"  style="width: 250px;left:350px;">
+            <div class="pointer"></div>
             <div class="field search item">
                 <input type="text" placeholder="Find..." />
                 <button class="action go" type="button"></button>
@@ -27,16 +29,19 @@
         </div>
 
         <div class="popup menu point left" style="top: 300px; width: 100px;" >
+            <div class="pointer"></div>
             <a class="item" href="#">Close</a>
         </div>
 
         <div class="popup menu point right" style="top: 300px; left: 350px; width: 100px;" >
+            <div class="pointer"></div>
             <a class="item" href="#">Close</a>
         </div>
     </div>
 
-    <div class="container default spaced <?php echo get_alt(true); ?>" style="min-height:400px;">
+    <div class="container default spaced {get_alt_invert}" style="min-height:400px;">
         <div class="popup menu point up alt" style="width: 250px;" >
+            <div class="pointer"></div>
             <div class="field search item alt">
                 <input type="text" placeholder="Find..." />
                 <button class="action clear" type="button"></button>
@@ -48,6 +53,7 @@
             <a class="item" href="#">Close</a>
         </div>
         <div class="popup menu point down alt"  style="width: 250px;left:350px;">
+            <div class="pointer"></div>
             <div class="field search item alt">
                 <input type="text" placeholder="Find..." />
                 <button class="action go" type="button"></button>
@@ -60,10 +66,12 @@
         </div>
 
         <div class="popup menu point left alt" style="top: 300px; width: 100px;" >
+            <div class="pointer"></div>
             <a class="item" href="#">Close</a>
         </div>
 
         <div class="popup menu point right alt" style="top: 300px; left: 350px; width: 100px;" >
+            <div class="pointer"></div>
             <a class="item" href="#">Close</a>
         </div>
     </div>

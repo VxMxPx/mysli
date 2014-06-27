@@ -19,7 +19,7 @@ class Ui
         $response->status_200_ok();
 
         $route = explode('/', $route);
-        $route = $route[1] ?: 'alerts';
+        $route = isset($route[1]) ? $route[1] : 'alerts';
 
         $this->tplp->set_variable('get_alt', $this->get_alt());
         $this->tplp->set_variable('get_alt_invert', $this->get_alt(true));
