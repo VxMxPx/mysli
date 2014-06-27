@@ -29,10 +29,10 @@ class Assets
             'Mysli Assets Builder',
             'assets <OPTION> [ARGUMENTS...]',
             [
-                'observe <PACKAGE> [assets.json FILE] [assets DIR] [public DIR]' =>
-                    'Will observe files according to instructions in assets.json file.',
-                'build   <PACKAGE> [assets.json FILE] [assets DIR] [public DIR]' =>
-                    'Build files according to instructions in assets.json file.'
+                'observe <PACKAGE> [map.json FILE] [assets DIR] [public DIR]' =>
+                    'Will observe files according to instructions in assets/map.json file.',
+                'build   <PACKAGE> [map.json FILE] [assets DIR] [public DIR]' =>
+                    'Build files according to instructions in assets/map.json file.'
             ]
         );
 
@@ -52,7 +52,7 @@ class Assets
      */
     public function action_observe(
         $package = null,
-        $assets_file = 'assets.json',
+        $assets_file = 'assets/map.json',
         $assets_dir = 'assets',
         $web_dir = null
     ) {
@@ -71,7 +71,7 @@ class Assets
      */
     public function action_build(
         $package = null,
-        $assets_file = 'assets.json',
+        $assets_file = 'assets/map.json',
         $assets_dir = 'assets',
         $web_dir = null
     ) {

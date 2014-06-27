@@ -110,6 +110,21 @@ class Web
     }
 
     /**
+     * Get base URL, modify GET
+     * --
+     * @param  string $key
+     * @param  string $val
+     * @param  string $uri
+     * --
+     * @return string
+     */
+    public function url_query($key, $val, $uri = null) {
+        $query = $_GET;
+        $query[$key] = $val;
+        return $this->url($uri) . '?' . http_build_query($query);
+    }
+
+    /**
      * Will get current domain
      * --
      * @return string

@@ -1,0 +1,17 @@
+{
+    "name": "mysli/dot",
+    "type": "mysli-package",
+    "description": "Command Line Interface.",
+    "license": "GPL-3.0",
+    "authors": [
+        {
+            "name": "Marko",
+            "email": "m@gaj.st"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "mysli/core" : "~1.0",
+        "mysli/pkgm" : "~1.0"
+    }
+}

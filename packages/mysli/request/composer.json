@@ -1,0 +1,16 @@
+{
+    "name": "mysli/request",
+    "type": "mysli-package",
+    "description": "Request Library.",
+    "license": "GPL-3.0",
+    "authors": [
+        {
+            "name": "Marko",
+            "email": "m@gaj.st"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "mysli/core"   : "~1.0"
+    }
+}

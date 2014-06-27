@@ -1,0 +1,19 @@
+{
+    "package" : "mysli/csi",
+    "version" : 1,
+
+    "depends_on" : {
+        "@core" : ">= 1"
+    },
+
+    "factory" : {
+        "csi" : "name()"
+    },
+
+    "about" : {
+        "license"     : "GPL-3.0",
+        "upstream"    : "http://github.com/mysli/csi",
+        "maintainer"  : "Marko Gajšt <marko@gaj.st>",
+        "description" : "Common Setup Interface. Can be used to enable and configure libraries through CLI or web interface."
+    }
+}

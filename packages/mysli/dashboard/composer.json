@@ -1,0 +1,27 @@
+{
+    "name": "mysli/dashboard",
+    "type": "mysli-package",
+    "description": "Default Dashboard Interface.",
+    "license": "GPL-3.0",
+    "authors": [
+        {
+            "name": "Marko",
+            "email": "m@gaj.st"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "mysli/core"    : "~1.0",
+        "mysli/event"   : "~1.0",
+        "mysli/web"     : "~1.0",
+        "mysli/session" : "~1.0",
+        "mysli/users"   : "~1.0",
+        "mysli/csi"     : "~1.0",
+        "mysli/output"  : "~1.0",
+        "mysli/i18n"    : "~1.0",
+        "mysli/tplp"    : "~1.0",
+        "mysli/assets"  : "~1.0",
+        "mysli/zepto"   : "~1.0",
+        "mysli/ui"      : "~1.0"
+    }
+}

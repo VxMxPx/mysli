@@ -88,7 +88,7 @@ class Registry
     public function exists($package)
     {
         $package = $this->get_role($package);
-        return file_exists(pkgpath($package, 'meta.json'));
+        return file_exists(pkgpath($package, 'mysli.pkg.json'));
     }
 
     /**
@@ -165,8 +165,8 @@ class Registry
      * --
      * @param  string $package
      * --
-     * @throws NotFoundException If "meta.json" couldn't be found.
-     * @throws DataException If "meta.json" is not properly formatted.
+     * @throws NotFoundException If "mysli.pkg.json" couldn't be found.
+     * @throws DataException If "mysli.pkg.json" is not properly formatted.
      * --
      * @return array
      */
@@ -180,10 +180,10 @@ class Registry
 
         // Disabled!
 
-        $meta_file = pkgpath(ds($package, 'meta.json'));
+        $meta_file = pkgpath(ds($package, 'mysli.pkg.json'));
         if (!file_exists($meta_file)) {
             throw new \Core\NotFoundException(
-                "Cannot find 'meta.json' file for '{$package}'"
+                "Cannot find 'mysli.pkg.json' file for '{$package}'"
             );
         }
 

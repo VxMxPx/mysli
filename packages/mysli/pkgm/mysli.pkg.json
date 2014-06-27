@@ -1,0 +1,21 @@
+{
+    "package" : "mysli/pkgm",
+    "role"    : "@pkgm",
+    "version" : 1,
+
+    "depends_on" : {
+        "@core" : ">= 1"
+    },
+
+    "factory" : {
+        "pkgm"        : "singleton()",
+        "script/pkgm" : "singleton(self:pkgm)"
+    },
+
+    "about" : {
+        "license"     : "GPL-3.0",
+        "upstream"    : "http://github.com/mysli/pkgm",
+        "maintainer"  : "Marko Gajšt <marko@gaj.st>",
+        "description" : "Packages Manager Library (pkgm)."
+    }
+}

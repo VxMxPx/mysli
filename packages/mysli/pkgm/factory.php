@@ -89,7 +89,7 @@ class Factory
     /**
      * Construct package's class - this will auto-manage all dependencies.
      *
-     * This is not a regular factory, it will respect the meta.json's
+     * This is not a regular factory, it will respect the mysli.pkg.json's
      * _factory_ instructions:
      * --
      * singleton: Only one instance of class will be constructed (and then cached)
@@ -100,7 +100,7 @@ class Factory
      * @param string $package
      * --
      * @throws \Core\ValueException If package is not enabled. (1)
-     * @throws \Core\ValueException If factory/file entry missing in meta.json. (2)
+     * @throws \Core\ValueException If factory/file entry missing in mysli.pkg.json. (2)
      * --
      * @return mixed
      */
@@ -138,7 +138,7 @@ class Factory
         // Key exists for this class?
         if (!isset($info['factory']) || !isset($info['factory'][$file])) {
             throw new \Core\ValueException(
-                "Missing entry: `factory { '{$file}' : 'instantiation_type()' }` in `meta.json` for: `{$pkgf}`.",  2
+                "Missing entry: `factory { '{$file}' : 'instantiation_type()' }` in `mysli.pkg.json` for: `{$pkgf}`.",  2
             );
         }
 

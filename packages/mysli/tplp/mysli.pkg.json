@@ -1,0 +1,22 @@
+{
+    "package" : "mysli/tplp",
+    "version" : 1,
+
+    "depends_on" : {
+        "@core" : ">= 1",
+        "@event": ">= 1"
+    },
+
+    "factory" : {
+        "tplp"        : "construct(#pkgm_trace, @event)",
+        "setup"       : "construct()",
+        "script/tplp" : "construct(@event)"
+    },
+
+    "about" : {
+        "license"     : "GPL-3.0",
+        "upstream"    : "http://github.com/mysli/tplp",
+        "maintainer"  : "Marko Gajšt <marko@gaj.st>",
+        "description" : "Template parser."
+    }
+}

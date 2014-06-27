@@ -1,0 +1,22 @@
+{
+    "name": "mysli/web",
+    "type": "mysli-package",
+    "description": "Frontend Library for Mysli.",
+    "license": "GPL-3.0",
+    "authors": [
+        {
+            "name": "Marko",
+            "email": "m@gaj.st"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "mysli/core"     : "~1",
+        "mysli/config"   : "~1",
+        "mysli/event"    : "~1",
+        "mysli/request"  : "~1",
+        "mysli/response" : "~1",
+        "mysli/output"   : "~1",
+        "mysli/csi"      : "~1"
+    }
+}

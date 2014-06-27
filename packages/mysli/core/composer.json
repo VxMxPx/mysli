@@ -1,0 +1,14 @@
+{
+    "name": "mysli/core",
+    "type": "mysli-package",
+    "description": "Mysli Core.",
+    "license": "GPL-3.0",
+    "authors": [
+        {
+            "name": "Marko",
+            "email": "m@gaj.st"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {}
+}

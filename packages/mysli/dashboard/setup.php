@@ -11,8 +11,7 @@ class Setup
 
     private $ecsi;
 
-    public function __construct($csi, $web, $users, $event, $tplp, $i18n)
-    {
+    public function __construct($csi, $web, $users, $event, $tplp, $i18n) {
         $this->web   = $web;
         $this->event = $event;
         $this->tplp  = $tplp;

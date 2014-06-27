@@ -1,0 +1,25 @@
+{
+    "package"       : "mysli/ui",
+    "version"       : 1,
+
+    "depends_on" : {
+        "@core"        : ">= 1",
+        "mysli/event"  : ">= 1",
+        "mysli/tplp"   : ">= 1",
+        "mysli/output" : ">= 1",
+        "mysli/web"    : ">= 1"
+    },
+
+    "factory" : {
+        "ui"        : "construct(mysli/tplp, mysli/output, mysli/web)",
+        "setup"     : "construct(mysli/web, mysli/event)",
+        "script/ui" : "construct(mysli/event)"
+    },
+
+    "about" : {
+        "license"     : "GPL-3.0",
+        "upstream"    : "http://github.com/mysli/ui",
+        "maintainer"  : "Marko Gajšt <marko@gaj.st>",
+        "description" : "Front-end framework for Mysli Dashboard."
+    }
+}

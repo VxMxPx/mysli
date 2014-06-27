@@ -58,7 +58,7 @@ trait ExtData
     {
         if (is_array($name)) {
             foreach ($name as $var => $val) {
-                $this->variable_add($var, $val);
+                $this->set_variable($var, $val);
             }
             return;
         }

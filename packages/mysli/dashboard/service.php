@@ -20,11 +20,8 @@ class Service
      * @param object $output     mysli/output
      * @param object $tplp       mysli/tplp
      * @param object $i18n       mysli/i18n
-     * @param object $zepto      mysli/zepto
-     * @param object $ui_toolkit mysli/ui_toolkit
      */
-    public function __construct($web, $session, $users, $output, $tplp, $i18n)
-    {
+    public function __construct($web, $session, $users, $output, $tplp, $i18n) {
         $this->web     = $web;
         $this->output  = $output;
         $this->tplp    = $tplp;

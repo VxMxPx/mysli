@@ -6,7 +6,7 @@ class Setup
 {
     protected $config;
 
-    public function __construct($config)
+    public function __construct(\Mysli\Config $config)
     {
         $this->config = $config;
     }

@@ -59,7 +59,7 @@ class Assets
                 $allowed = array_slice($allowed, 1);
             } else $allowed = false;
 
-            $filename = pkgpath($pkg, 'assets.json');
+            $filename = pkgpath($pkg, 'assets/map.json');
 
             if (!file_exists($filename))
                 throw new \Core\NotFoundException("File not found: `{$filename}`.", 1);
@@ -96,10 +96,10 @@ class Assets
      */
     public function register($tplp)
     {
-        $tplp->register_function('css_assets', function ($list) {
+        $tplp->register_function('css', function ($list) {
             return $this->get_tags('css', $list);
         });
-        $tplp->register_function('javascript_assets', function ($list) {
+        $tplp->register_function('javascript', function ($list) {
             return $this->get_tags('js', $list);
         });
     }

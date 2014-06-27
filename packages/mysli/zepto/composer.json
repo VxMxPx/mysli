@@ -1,0 +1,17 @@
+{
+    "name": "mysli/zepto",
+    "type": "mysli-package",
+    "description": "Mysli Assets: Zepto.js – a minimalist JavaScript library.",
+    "license": "GPL-3.0",
+    "authors": [
+        {
+            "name": "Marko",
+            "email": "m@gaj.st"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "mysli/core" : "~1",
+        "mysli/web"  : "~1"
+    }
+}

@@ -5,10 +5,12 @@ namespace Mysli\Ui;
 class Setup
 {
     private $web;
+    private $event;
 
-    public function __construct($web)
+    public function __construct($web, $event)
     {
         $this->web = $web;
+        $this->event = $event;
     }
 
     public function before_enable()
@@ -21,6 +23,7 @@ class Setup
 
     public function after_disable()
     {
+        $this->event->unregister('mysli/web/route:*<mysli-ui-examples*>', 'mysli/ui->examples');
         \Core\FS::dir_remove($this->web->path('mysli/ui'));
         return true;
     }

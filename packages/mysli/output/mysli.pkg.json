@@ -1,0 +1,19 @@
+{
+    "package" : "mysli/output",
+    "version" : 1,
+
+    "depends_on" : {
+        "@core" : ">= 1"
+    },
+
+    "factory" : {
+        "output" : "singleton()"
+    },
+
+    "about" : {
+        "license"     : "GPL-3.0",
+        "upstream"    : "http://github.com/mysli/output",
+        "maintainer"  : "Marko Gajšt <marko@gaj.st>",
+        "description" : "Output Library."
+    }
+}
