@@ -7,7 +7,7 @@ class Ui
     private $tplp;
     private $web;
 
-    public function __construct($tplp, $output, $web)
+    public function __construct(\Mysli\Tplp\Tplp $tplp, \Mysli\Output\Output $output, \Mysli\Web\Web $web)
     {
         $this->tplp = $tplp;
         $this->output = $output;

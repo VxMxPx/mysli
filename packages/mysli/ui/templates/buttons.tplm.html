@@ -62,7 +62,7 @@
         var busy = new MU.Button('button.bbusy');
         var relax = new MU.Button('button.relax');
         busy.on('click', function () {
-            busy.busy(true);
+            busy.busy(true, 'I\'m busy...');
         });
         relax.on('click', function () {
             busy.busy(false);

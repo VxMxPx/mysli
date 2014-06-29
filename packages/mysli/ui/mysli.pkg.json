@@ -7,6 +7,7 @@
         "mysli/event"  : ">= 1",
         "mysli/tplp"   : ">= 1",
         "mysli/output" : ">= 1",
+        "mysli/zepto"  : ">= 1",
         "mysli/web"    : ">= 1"
     },
 

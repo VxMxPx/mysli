@@ -15,6 +15,7 @@
         "mysli/event" : "~1.0",
         "mysli/web"   : "~1.0",
         "mysli/tplp"  : "~1.0",
+        "mysli/zepto" : "~1.0",
         "mysli/output": "~1.0"
     }
 }

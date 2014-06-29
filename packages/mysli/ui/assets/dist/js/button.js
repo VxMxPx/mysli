@@ -8,7 +8,7 @@
         // if there's no label element, add it
         this.label = this.element.find('span');
         if (!this.label.length) {
-            this.element.text('<span>' + this.element.text() + '</span>');
+            this.element.html('<span>' + this.element.text() + '</span>');
             this.label = this.element.find('span');
         }
 
