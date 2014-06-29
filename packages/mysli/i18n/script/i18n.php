@@ -6,7 +6,7 @@ class I18n
 {
     private $config;
 
-    public function __construct($config)
+    public function __construct(\Mysli\Config\Config $config)
     {
         $this->config = $config;
     }

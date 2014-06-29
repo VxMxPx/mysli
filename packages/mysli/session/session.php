@@ -4,6 +4,8 @@ namespace Mysli\Session;
 
 class Session
 {
+    use \Mysli\Core\Pkg\Singleton;
+
     protected $config;
     protected $cookie;
     protected $users;
@@ -13,7 +15,7 @@ class Session
     protected $user; // Currently discovered session // User Object!
     protected $info; // Current session information, like ID, etc...
 
-    public function __construct($config, $cookie, $users)
+    public function __construct(\Mysli\Config\Config $config, \Mysli\Cookie\Cookie $cookie, \Mysli\Users\Users $users)
     {
         $this->config = $config;
         $this->cookie = $cookie;

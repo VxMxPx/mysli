@@ -4,6 +4,8 @@ namespace Mysli\Dashboard;
 
 class Service
 {
+    use \Mysli\Core\Pkg\Singleton;
+
     private $output;
     private $tplp;
     private $web;
@@ -21,7 +23,14 @@ class Service
      * @param object $tplp       mysli/tplp
      * @param object $i18n       mysli/i18n
      */
-    public function __construct($web, $session, $users, $output, $tplp, $i18n) {
+    public function __construct(
+        \Mysli\Web\Web $web,
+        \Mysli\Session\Session $session,
+        \Mysli\Users\Users $users,
+        \Mysli\Output\Output $output,
+        \Mysli\Tplp\Tplp $tplp,
+        \Mysli\I18n\I18n $i18n
+    ) {
         $this->web     = $web;
         $this->output  = $output;
         $this->tplp    = $tplp;

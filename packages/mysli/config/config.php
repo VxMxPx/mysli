@@ -10,12 +10,11 @@ class Config
 
     /**
      * Construct CONFIG
-     * --
-     * @param array  $pkgm_trace List of requed packages from the pkgm
      */
-    public function __construct(array $pkgm_trace)
+    public function __construct(\Mysli\Pkgm\Trace $trace)
     {
-        $package = array_pop($pkgm_trace)[0]; // Get actual package which required config.
+        $package = $trace->get_last();
+        // $package = array_pop(self::$pkgm_trace)[0]; // Get actual package which required config.
         $package = str_replace('/', '.', $package);
 
         $this->filename = datpath('mysli.config', $package . '.json');

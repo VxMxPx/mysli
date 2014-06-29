@@ -6,7 +6,7 @@ class Setup
 {
     private $web;
 
-    public function __construct($web)
+    public function __construct(\Mysli\Web\Web $web)
     {
         $this->web = $web;
     }

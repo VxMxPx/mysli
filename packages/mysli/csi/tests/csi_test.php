@@ -2,12 +2,12 @@
 
 namespace Mysli\CSI;
 
-include(__DIR__.'/../csi.php');    // Include self
-include(__DIR__.'/../../core/core.php'); // CORE is needed!
+include(__DIR__.'/../../core/core.php');
 new \Mysli\Core\Core(
     realpath(__DIR__.'/dummy'),
     realpath(__DIR__.'/dummy')
 );
+include(__DIR__.'/../csi.php');
 
 class CSITest extends \PHPUnit_Framework_TestCase
 {

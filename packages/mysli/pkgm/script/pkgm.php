@@ -4,6 +4,7 @@ namespace Mysli\Pkgm\Script;
 
 class Pkgm
 {
+    use \Mysli\Core\Pkg\Singleton;
     protected $pkgm;
 
     public function __construct(\Mysli\Pkgm\Pkgm $pkgm)
@@ -441,6 +442,7 @@ class Pkgm
 
         // Get package dependees!
         $dependees = $this->pkgm->registry()->list_dependees($pkg, true);
+        array_pop($dependees); // remove self
 
         // If we have dependees, then disable them all first!
         if (!empty($dependees)) {
@@ -461,6 +463,7 @@ class Pkgm
             }
         }
 
+        // return true;
         // Finally, disable the actual package
         return $this->disable_helper($pkg);
     }

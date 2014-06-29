@@ -6,7 +6,7 @@ class Tplp
 {
     private $event;
 
-    public function __construct($event)
+    public function __construct(\Mysli\Event\Event $event)
     {
         $this->event = $event;
     }

@@ -62,7 +62,7 @@ class Tplp
      * @param array  $pkgm_trace
      * @param object $event       mysli/event
      */
-    public function __construct(array $pkgm_trace, $event)
+    public function __construct(\Mysli\Pkgm\Trace $trace, \Mysli\Event\Event $event)
     {
         if (!self::$f_instantiated) {
             self::$f_instantiated = true;
@@ -71,7 +71,8 @@ class Tplp
             ini_set('pcre.recursion_limit', '23001337');
         }
 
-        $this->package = array_pop($pkgm_trace)[0];
+        $this->package = $trace->get_last();
+        // $this->package = array_pop(self::$pkgm_trace)[0];
         $this->cache_dir = datpath('mysli.tplp', str_replace('/', '.', $this->package));
 
         $this->functions = array_merge($this->functions, self::$registry['functions']);

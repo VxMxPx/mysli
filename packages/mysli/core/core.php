@@ -4,6 +4,7 @@ namespace Mysli\Core;
 
 class Core
 {
+    private static $pkg_auto_construct_type = 'prevent';
     protected $pkgm;
 
     /**
@@ -67,6 +68,10 @@ class Core
                 throw new NotFoundException("Cannot find: `common.php`.", 1);
             else include $path . DIRECTORY_SEPARATOR . 'common.php';
         }
+
+        // Traits
+        include ds($path, 'pkg/prevent.php');
+        include ds($path, 'pkg/singleton.php');
 
         $libraries = [
             'Mysli\\Core\\Lib\\Arr'  => 'Core\\Arr',

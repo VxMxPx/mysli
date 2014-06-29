@@ -4,6 +4,8 @@ namespace Mysli\Output;
 
 class Output
 {
+    use \Mysli\Core\Pkg\Singleton;
+
     // Whole output
     protected $output_cache = [];
 

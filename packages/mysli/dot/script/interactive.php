@@ -6,7 +6,7 @@ class Interactive
 {
     protected $pkgm;
 
-    public function __construct($pkgm)
+    public function __construct(\Mysli\Pkgm\Pkgm $pkgm)
     {
         $this->pkgm = $pkgm;
     }

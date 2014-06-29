@@ -4,6 +4,8 @@ namespace Mysli\Web;
 
 class Web
 {
+    use \Mysli\Core\Pkg\Singleton;
+
     protected $pubpath;
 
     protected $event;
@@ -21,8 +23,13 @@ class Web
      * @param object $response ~response
      * @param object $output   ~output
      */
-    public function __construct($config, $event, $request, $response, $output)
-    {
+    public function __construct(
+        \Mysli\Config\Config $config,
+        \Mysli\Event\Event $event,
+        \Mysli\Request\Request $request,
+        \Mysli\Response\Response $response,
+        \Mysli\Output\Output $output
+    ) {
         // This is defined in index.php
         // $this->pubpath = MYSLI_PUBPATH;
         $this->pubpath = realpath(datpath($config->get('relative_path')));

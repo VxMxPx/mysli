@@ -15,16 +15,12 @@ class Setup
      * @param object $event
      * @param object $csi
      */
-    public function __construct($config, $event, $csi)
+    public function __construct(\Mysli\Config\Config $config, \Mysli\Event\Event $event)
     {
         $this->config = $config;
         $this->event = $event;
 
-        $this->dcsi = new $csi('mysli/web/disable');
-        $this->dcsi->hidden('remove_data');
-        $this->dcsi->hidden('remove_config');
-
-        $this->ecsi = new $csi('mysli/web/enable');
+        $this->ecsi = new \Mysli\CSI\CSI('mysli/web/enable');
         $this->ecsi->input(
             'relative_path',
             'Public path (relative to: ' . datpath() . ')',

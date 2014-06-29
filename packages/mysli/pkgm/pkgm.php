@@ -4,6 +4,8 @@ namespace Mysli\Pkgm;
 
 class Pkgm
 {
+    use \Mysli\Core\Pkg\Singleton;
+
     /**
      * Objects cache.
      * --

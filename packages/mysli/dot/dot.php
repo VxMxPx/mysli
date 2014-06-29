@@ -4,6 +4,8 @@ namespace Mysli\Dot;
 
 class Dot
 {
+    use \Mysli\Core\Pkg\Singleton;
+
     protected $scripts_registry;
     protected $constructed = [];
     protected $pkgm;
@@ -13,7 +15,7 @@ class Dot
      * --
      * @param object $pkgm
      */
-    public function __construct($pkgm)
+    public function __construct(\Mysli\Pkgm\Pkgm $pkgm)
     {
         $this->pkgm = $pkgm;
         $this->scripts_registry = $this->discover_scripts();
@@ -45,7 +47,7 @@ class Dot
                 $scripts[$id] = [
                     'package'     => $package,
                     'script'      => ds('script', $id),
-                    'description' => $details['about']['description']
+                    'description' => $details['description']
                 ];
             }
         }

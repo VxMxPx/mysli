@@ -14,8 +14,8 @@ class RegistryTest extends \PHPUnit_Framework_TestCase
     public function __construct()
     {
         \Core\FS::dir_create(datpath('pkgm'));
-        file_put_contents(datpath('pkgm/registry.json'), json_encode(['enabled' => [], 'roles' => []]));
-        $this->registry = new Registry(datpath('registry.json'));
+        file_put_contents(datpath('pkgm/registry.json'), json_encode(['enabled' => []]));
+        $this->registry = new Registry(datpath('pkgm/registry.json'));
     }
 
     private function get_control($package)
@@ -36,11 +36,11 @@ class RegistryTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue($this->registry->is_enabled('mysliio/core'));
     }
 
-    public function test_is_enabled_role()
-    {
-        $this->get_control('mysliio/core')->enable();
-        $this->assertTrue($this->registry->is_enabled('@core'));
-    }
+    // public function test_is_enabled_role()
+    // {
+    //     $this->get_control('mysliio/core')->enable();
+    //     $this->assertTrue($this->registry->is_enabled('@core'));
+    // }
 
     // exists ------------------------------------------------------------------
 
@@ -59,10 +59,10 @@ class RegistryTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue($this->registry->exists('mysliio/core'));
     }
 
-    public function test_exists_role()
-    {
-        $this->assertTrue($this->registry->exists('@core'));
-    }
+    // public function test_exists_role()
+    // {
+    //     $this->assertTrue($this->registry->exists('@core'));
+    // }
 
     // list_enabled ------------------------------------------------------------
 
@@ -91,7 +91,7 @@ class RegistryTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals(
             'mysliio/core',
-            $this->registry->list_enabled(true)['mysliio/core']['package']
+            $this->registry->list_enabled(true)['mysliio/core']['name']
         );
     }
 
@@ -106,7 +106,7 @@ class RegistryTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals(
             'mysliio/core',
-            $this->registry->list_disabled(true)['mysliio/core']['package']
+            $this->registry->list_disabled(true)['mysliio/core']['name']
         );
     }
 
@@ -117,7 +117,7 @@ class RegistryTest extends \PHPUnit_Framework_TestCase
         $this->get_control('mysliio/core')->enable();
         $this->assertEquals(
             'mysliio/core',
-            $this->registry->get_details('mysliio/core')['package']
+            $this->registry->get_details('mysliio/core')['name']
         );
     }
 
@@ -125,7 +125,7 @@ class RegistryTest extends \PHPUnit_Framework_TestCase
     {
         $this->assertEquals(
             'mysliio/core',
-            $this->registry->get_details('mysliio/core')['package']
+            $this->registry->get_details('mysliio/core')['name']
         );
     }
 
@@ -147,7 +147,7 @@ class RegistryTest extends \PHPUnit_Framework_TestCase
         // Create cross dependencies
         $json = json_decode( file_get_contents(pkgpath('mysliio/core/mysli.pkg.json')), true );
         $json = array_merge_recursive($json, [
-            'depends_on' => ['@pkgm' => '>= 1']
+            'require' => ['mysliio/pkgm' => '>= 1']
         ]);
         file_put_contents( pkgpath('mysliio/core/mysli.pkg.json') , json_encode($json) );
 
@@ -166,10 +166,10 @@ class RegistryTest extends \PHPUnit_Framework_TestCase
             [
                 'enabled'  => [],
                 'disabled' => [
-                    '@core'           => '>= 1',
+                    'mysliio/core'    => '>= 1',
                     'mysliio/config'  => '>= 1',
                     'avrelia/users'   => '>= 1',
-                    '@event'          => '>= 1',
+                    'mysliio/event'   => '>= 1',
                     'avrelia/web'     => '>= 1',
                     'avrelia/session' => '>= 1',
                 ],
@@ -185,7 +185,7 @@ class RegistryTest extends \PHPUnit_Framework_TestCase
             [
                 'enabled'  => [],
                 'disabled' => [
-                    '@core' => '>= 1'
+                    'mysliio/core' => '>= 1'
                 ],
                 'missing'  => [
                     'avrelia/non_existant' => '>= 1'
@@ -202,12 +202,12 @@ class RegistryTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(
             [
                 'enabled'  => [
-                    '@core'           => '>= 1',
+                    'mysliio/core' => '>= 1',
                 ],
                 'disabled' => [
                     'mysliio/config'  => '>= 1',
                     'avrelia/users'   => '>= 1',
-                    '@event'          => '>= 1',
+                    'mysliio/event'   => '>= 1',
                     'avrelia/web'     => '>= 1',
                     'avrelia/session' => '>= 1',
                 ],
@@ -233,8 +233,10 @@ class RegistryTest extends \PHPUnit_Framework_TestCase
                 'avrelia/dash',
                 'avrelia/session',
                 'avrelia/web',
+                'avrelia/users',
                 'mysliio/config',
                 'mysliio/event',
+                'mysliio/core'
             ],
             $this->registry->list_dependees('mysliio/core', true)
         );
@@ -356,26 +358,26 @@ class RegistryTest extends \PHPUnit_Framework_TestCase
 
     // set_role + get_role -----------------------------------------------------
 
-    public function test_set_role()
-    {
-        $this->registry->set_role('@test', 'mysliio/test');
-        $this->assertEquals(
-            'mysliio/test',
-            $this->registry->get_role('@test')
-        );
-    }
+    // public function test_set_role()
+    // {
+    //     $this->registry->set_role('@test', 'mysliio/test');
+    //     $this->assertEquals(
+    //         'mysliio/test',
+    //         $this->registry->get_role('@test')
+    //     );
+    // }
 
     // unset role --------------------------------------------------------------
 
-    public function test_unset_role()
-    {
-        $this->registry->set_role('@test', 'mysliio/test');
-        $this->assertEquals(
-            'mysliio/test',
-            $this->registry->get_role('@test')
-        );
-        $this->registry->unset_role('@test');
-        $this->assertNull($this->registry->get_role('@test'));
-    }
+    // public function test_unset_role()
+    // {
+    //     $this->registry->set_role('@test', 'mysliio/test');
+    //     $this->assertEquals(
+    //         'mysliio/test',
+    //         $this->registry->get_role('@test')
+    //     );
+    //     $this->registry->unset_role('@test');
+    //     $this->assertNull($this->registry->get_role('@test'));
+    // }
 
 }

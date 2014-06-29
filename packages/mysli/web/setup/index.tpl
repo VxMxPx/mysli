@@ -56,7 +56,7 @@ include($pkgpath . $ds . str_replace('/', $ds, $core_id['file']));
 $core = new $core_id['class']($datpath, $pkgpath);
 
 // Get event package and trigger some events...
-$event = $core->pkgm()->factory('@event')->produce();
+$event = $core->pkgm()->factory('mysli/event')->produce();
 
 $event->trigger('mysli/web/index:start');
 

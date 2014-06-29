@@ -4,6 +4,8 @@ namespace Mysli\Request;
 
 class Request
 {
+    use \Mysli\Core\Pkg\Singleton;
+
     // Request methods types
     const METHOD_GET    = 'GET';
     const METHOD_POST   = 'POST';

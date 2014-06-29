@@ -4,16 +4,14 @@ namespace Mysli\Assets;
 
 class Assets
 {
+    use \Mysli\Core\Pkg\Singleton;
     use Util;
 
     private $web;
     private $config;
 
-    /**
-     * @param object $web    mysli/web
-     * @param object $config mysli/config
-     */
-    public function __construct($web, $config)
+
+    public function __construct(\Mysli\Web\Web $web, \Mysli\Config\Config $config)
     {
         $this->web = $web;
         $this->config = $config;

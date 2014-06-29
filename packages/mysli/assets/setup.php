@@ -7,7 +7,7 @@ class Setup
     private $event;
     private $config;
 
-    public function __construct($event, $config)
+    public function __construct(\Mysli\Event\Event $event, \Mysli\Config\Config $config)
     {
         $this->event = $event;
         $this->config = $config;

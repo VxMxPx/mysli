@@ -26,13 +26,6 @@ class Registry
     private $enabled;
 
     /**
-     * List of roles.
-     * --
-     * @var array
-     */
-    private $roles;
-
-    /**
      * List of disabled packages.
      * --
      * @var array
@@ -56,7 +49,6 @@ class Registry
             }
 
             $this->enabled = &$this->registry['enabled'];
-            $this->roles   = &$this->registry['roles'];
 
         } else {
             throw new \Core\NotFoundException(
@@ -74,7 +66,6 @@ class Registry
      */
     public function is_enabled($package)
     {
-        $package = $this->get_role($package);
         return isset($this->enabled[$package]);
     }
 
@@ -87,8 +78,7 @@ class Registry
      */
     public function exists($package)
     {
-        $package = $this->get_role($package);
-        return file_exists(pkgpath($package, 'mysli.pkg.json'));
+        return file_exists(pkgpath($package, 'mysli.pkg.json')) || file_exists(pkgpath($package, 'composer.json'));
     }
 
     /**
@@ -159,38 +149,48 @@ class Registry
         return !$details ? array_keys($this->disabled) : $this->disabled;
     }
 
-
     /**
      * Get details for particular (either enabled or disabled) package.
      * --
      * @param  string $package
      * --
-     * @throws NotFoundException If "mysli.pkg.json" couldn't be found.
-     * @throws DataException If "mysli.pkg.json" is not properly formatted.
+     * @throws NotFoundException If "mysli.pkg.json" and "composer.json" couldn't be found.
+     * @throws DataException If meta array is not properly formatted.
      * --
      * @return array
      */
     public function get_details($package)
     {
-        $package = $this->get_role($package);
-
         if ($this->is_enabled($package)) {
             return $this->enabled[$package];
         }
 
-        // Disabled!
+        $composer_file = pkgpath(ds($package, 'mysli.pkg.json'));
+        $mysli_file    = pkgpath(ds($package, 'composer.json'));
 
-        $meta_file = pkgpath(ds($package, 'mysli.pkg.json'));
-        if (!file_exists($meta_file)) {
+        if (!file_exists($composer_file) && !file_exists($mysli_file)) {
             throw new \Core\NotFoundException(
-                "Cannot find 'mysli.pkg.json' file for '{$package}'"
+                "Required either: 'mysli.pkg.json' or 'composer.json' file for '{$package}'"
             );
         }
 
-        $meta = json_decode(file_get_contents($meta_file), true);
+        if (file_exists($composer_file)) {
+            $composer_meta = json_decode(file_get_contents($composer_file), true);
+        } else {
+            $composer_meta = [];
+        }
+
+        if (file_exists($mysli_file)) {
+            $mysli_meta =  json_decode(file_get_contents($mysli_file), true);
+        } else {
+            $mysli_meta = [];
+        }
+
+        $meta = array_merge_recursive($composer_meta, $mysli_meta);
+
         if (!is_array($meta)
-            || !isset($meta['package'])
-            || $meta['package'] !== $package
+            || !isset($meta['name'])
+            || $meta['name'] !== $package
         ) {
             throw new \Core\DataException(
                 "Meta file for '{$package}' seems to be invalid: " .
@@ -233,7 +233,7 @@ class Registry
             'missing'  => []
         ];
 
-        foreach ($details['depends_on'] as $dependency => $version) {
+        foreach ($details['require'] as $dependency => $version) {
             if (!$this->exists($dependency)) {
                 $list['missing'][$dependency] = $version;
             } else {
@@ -248,7 +248,7 @@ class Registry
         if (!$deep) return $list;
 
         // Check if we don't have infinite loop!
-        $hash = $package . ': ' . implode(', ', array_keys($details['depends_on']));
+        $hash = $package . ': ' . implode(', ', array_keys($details['require']));
         if (in_array($hash, $process)) {
             $process[count($process) - 1] = ' >> ' . $process[count($process) - 1];
             $process[] = ' >> ' . $hash;
@@ -286,9 +286,6 @@ class Registry
      */
     public function list_dependees($package, $deep = false, array &$listed = [])
     {
-        if (in_array($package, $listed)) { return []; }
-        $listed[] = $package;
-
         $details = $this->get_details($package);
 
         if (!is_array($details) || empty($details)) {
@@ -299,17 +296,22 @@ class Registry
 
         if (!$deep) return $details['required_by'];
 
-        $dependees = [];
+        $dependees = [$package];
 
-        foreach ($details['required_by'] as $dependee) {
-            $dependees[] = $dependee;
-            array_merge(
-                $this->list_dependees($dependee, true, $listed),
-                $dependees
-            );
+        // optimization
+        if (!in_array($package, $listed)) {
+            $listed[] = $package;
+
+            foreach ($details['required_by'] as $dependee) {
+                $dependees[] = $dependee;
+                $dependees = array_merge(
+                    $this->list_dependees($dependee, true, $listed),
+                    $dependees
+                );
+            }
         }
 
-        return array_unique( array_reverse($dependees) );
+        return array_values(array_unique($dependees));
     }
 
     /**
@@ -388,9 +390,6 @@ class Registry
      */
     public function add_dependee($package, $dependee)
     {
-        // Resolve dependee before adding it!
-        $package = $this->get_role($package);
-
         if (!$this->is_enabled($package)) { return; }
         $this->enabled[$package]['required_by'][] = $dependee;
     }
@@ -416,58 +415,6 @@ class Registry
                     )
                 ]
             );
-        }
-    }
-
-    /**
-     * Set core role.
-     * --
-     * @param string $role
-     * @param string $package
-     * --
-     * @return null
-     */
-    public function set_role($role, $package)
-    {
-        if (substr($role, 0, 1) !== '@') { return; }
-        $this->roles[$role] = $package;
-    }
-
-    /**
-     * Unset core role.
-     * --
-     * @param string $role
-     * --
-     * @return null
-     */
-    public function unset_role($role)
-    {
-        if (substr($role, 0, 1) !== '@') { return; }
-        if (isset($this->roles[$role])) {
-            unset($this->roles[$role]);
-        }
-    }
-
-    /**
-     * Get package's role.
-     * --
-     * @param string $role
-     * --
-     * @return null
-     */
-    public function get_role($role)
-    {
-        if (substr($role, 0, 1) !== '@') { return $role; }
-
-        if (isset($this->roles[$role])) {
-            return $this->roles[$role];
-        }
-
-        // Try to find it in disabled stack...
-        foreach ($this->list_disabled(true) as $package => $meta) {
-            if (isset($meta['role']) && $meta['role'] === $role) {
-                return $package;
-            }
         }
     }
 

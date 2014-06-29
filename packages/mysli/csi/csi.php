@@ -4,6 +4,8 @@ namespace Mysli\CSI;
 
 class CSI
 {
+    use \Mysli\Core\Pkg\Prevent;
+
     protected $id;
 
     protected $status = 'none';

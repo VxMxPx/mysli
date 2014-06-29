@@ -2,21 +2,22 @@
 
 namespace Mysli\Event;
 
-include(__DIR__.'/../event.php');        // Include self
-include(__DIR__.'/../../core/core.php'); // Mysli CORE is needed!
+include(__DIR__.'/../../core/core.php');
 new \Mysli\Core\Core(
     realpath(__DIR__.'/dummy'),
     realpath(__DIR__.'/dummy')
 );
+include(__DIR__.'/../event.php');
 
 class EventTest extends \PHPUnit_Framework_TestCase
 {
     protected function get_instance($empty = true)
     {
-        if ($empty)
+        if ($empty) {
             file_put_contents(pkgpath('event/registry.json'), '[]');
+        }
 
-        return new Event(null);
+        return new Event($this->getMock('Mysli\\Pkgm\\Pkgm'));
     }
 
     public function test_register()

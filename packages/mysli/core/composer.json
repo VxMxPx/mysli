@@ -1,14 +1,18 @@
 {
-    "name": "mysli/core",
-    "type": "mysli-package",
-    "description": "Mysli Core.",
-    "license": "GPL-3.0",
-    "authors": [
+    "name"        : "mysli/core",
+    "type"        : "mysli-package",
+    "description" : "Mysli Core.",
+    "license"     : "GPL-3.0",
+
+    "authors" : [
         {
-            "name": "Marko",
-            "email": "m@gaj.st"
+            "name"  : "Marko Gajšt",
+            "email" : "m@gaj.st",
+            "role"  : "Developer"
         }
     ],
-    "minimum-stability": "stable",
-    "require": {}
+
+    "minimum-stability" : "stable",
+
+    "require" : {}
 }

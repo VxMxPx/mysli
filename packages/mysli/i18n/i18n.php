@@ -4,6 +4,8 @@ namespace Mysli\I18n;
 
 class I18n
 {
+    use \Mysli\Core\Pkg\Singleton;
+
     private $package;
     private $filename;
     private $config;
@@ -16,9 +18,10 @@ class I18n
      * @param array  $pkgm_trace
      * @param object $config
      */
-    public function __construct(array $pkgm_trace, $config)
+    public function __construct(\Mysli\Pkgm\Trace $trace, \Mysli\Config\Config $config)
     {
-        $this->package = array_pop($pkgm_trace)[0];
+        $this->package = $trace->get_last();
+        // $this->package = array_pop(self::$pkgm_trace)[0];
 
         // Get filename
         $this->filename = str_replace('/', '.', $this->package);

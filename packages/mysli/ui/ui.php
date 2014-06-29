@@ -42,6 +42,8 @@ class Ui
         $template = $this->tplp->template($route);
         $template->set_variable('title', ucfirst($route));
 
+        // dump($template);
+
         $this->output->add($template->render());
     }
 

@@ -4,6 +4,8 @@ namespace Mysli\Cookie;
 
 class Cookie
 {
+    use \Mysli\Core\Pkg\Singleton;
+
     protected $config;
 
     /**
@@ -11,7 +13,7 @@ class Cookie
      * --
      * @param object $config ~config
      */
-    public function __construct($config)
+    public function __construct(\Mysli\Config\Config $config)
     {
         $this->config = $config;
     }

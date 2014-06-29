@@ -4,6 +4,8 @@ namespace Mysli\Event;
 
 class Event
 {
+    use \Mysli\Core\Pkg\Singleton;
+
     // When `high` is used, the event will be added to the begining of the event list.
     // When `low` is used, the event will be added to the end of the event list.
     const PRIORITY_HIGH   = 'high';
@@ -27,7 +29,7 @@ class Event
      * --
      * @param object $pkgm ~pkgm
      */
-    public function __construct($pkgm)
+    public function __construct(\Mysli\Pkgm\Pkgm $pkgm)
     {
         $this->filename = datpath('event/registry.json');
         $this->waiting = $this->get_list();

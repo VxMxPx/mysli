@@ -5,10 +5,12 @@ namespace Mysli\Ui\Script;
 class Ui
 {
     private $event;
+    private $tplp;
 
-    public function __construct($event)
+    public function __construct(\Mysli\Tplp\Tplp $tplp, \Mysli\Event\Event $event)
     {
         $this->event = $event;
+        $this->tplp = $tplp;
     }
 
     /**
@@ -36,10 +38,12 @@ class Ui
     public function action_examples($state = null)
     {
         if ($state === 'enable') {
+            $this->tplp->create_cache();
             $this->event->register('mysli/web/route:*<mysli-ui-examples*>', 'mysli/ui->examples');
             \Cli\Util::success('Enabled. Use: http://localhost/mysli-ui-examples to access examples.');
         }
         else if ($state === 'disable') {
+            $this->tplp->remove_cache();
             $this->event->unregister('mysli/web/route:*<mysli-ui-examples*>', 'mysli/ui->examples');
             \Cli\Util::success('Disabled.');
         }

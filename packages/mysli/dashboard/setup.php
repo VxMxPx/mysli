@@ -11,7 +11,13 @@ class Setup
 
     private $ecsi;
 
-    public function __construct($csi, $web, $users, $event, $tplp, $i18n) {
+    public function __construct(
+        \Mysli\Web\Web $web,
+        \Mysli\Users\Users $users,
+        \Mysli\Event\Event $event,
+        \Mysli\Tplp\tplp $tplp,
+        \Mysli\I18n\I18n $i18n
+    ) {
         $this->web   = $web;
         $this->event = $event;
         $this->tplp  = $tplp;
@@ -19,7 +25,7 @@ class Setup
 
         $this->users = $users;
 
-        $this->ecsi = new $csi('mysli/dashboard/enable');
+        $this->ecsi = new \Mysli\Csi\Csi('mysli/dashboard/enable');
         $this->ecsi->paragraph('Create your first user!');
         $this->ecsi->input(
             'username',

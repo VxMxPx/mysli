@@ -2,18 +2,19 @@
 
 namespace Mysli\Tplp;
 
-include(__DIR__.'/../exceptions/parser_exception.php');
-include(__DIR__.'/../parser.php');
-include(__DIR__.'/../../core/core.php'); // CORE needed for utility!
+include(__DIR__.'/../../core/core.php');
 new \Mysli\Core\Core(
     realpath(__DIR__.'/dummy'),
     realpath(__DIR__.'/dummy')
 );
+include(__DIR__.'/../exceptions/parser_exception.php');
+include(__DIR__.'/../parser.php');
 
 class ParserTest extends \PHPUnit_Framework_TestCase
 {
     private function instance_parse($template)
     {
+        date_default_timezone_set('UTC');
         $instance = new \Mysli\Tplp\Parser($template);
         return $instance->parse();
     }

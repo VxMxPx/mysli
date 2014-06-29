@@ -43,12 +43,28 @@ class Factory
     public function __construct($package, $registry, $cache)
     {
         // Resolve role
-        if (substr($package, 0, 1) === '@') {
-            $package = $registry->get_role($package);
-        }
+        // if (substr($package, 0, 1) === '@') {
+        //     $package = $registry->get_role($package);
+        // }
         $this->package  = $package;
         $this->registry = $registry;
         $this->cache    = $cache;
+    }
+
+    private function get_instantiation_instructions(\ReflectionClass $rfc)
+    {
+        $traits = $rfc->getTraits();
+
+        if (!is_array($traits)) {
+            return;
+        }
+        if (isset($traits['Mysli\\Core\\Pkg\\Singleton'])) {
+            return 'singleton';
+        }
+        else if (isset($traits['Mysli\\Core\\Pkg\\Prevent'])) {
+            return 'prevent';
+        }
+        return 'construct';
     }
 
     /**
@@ -63,7 +79,12 @@ class Factory
     {
         if (!$file) {
             $file = Util::to_pkg($this->package, Util::FILE);
+            $pkgf = $this->package;
+        } else {
+            $pkgf = $this->package . '/' . $file;
         }
+
+        $class = Util::to_class($pkgf);
 
         if (!file_exists(pkgpath($this->package, $file . '.php'))) {
             return false;
@@ -73,13 +94,15 @@ class Factory
         $info = $this->registry->get_details($this->package);
 
         // Key exists for this class?
-        if (!isset($info['factory']) || !isset($info['factory'][$file])) {
-            return false;
-        }
+        // if (!isset($info['factory']) || !isset($info['factory'][$file])) {
+        //     return false;
+        // }
 
-        $instantiation = Control::process_factory_entry($info['factory'][$file])['instantiation'];
+        // $instantiation = Control::process_factory_entry($info['factory'][$file])['instantiation'];
 
-        if ($instantiation === 'null') {
+        $instantiation = $this->get_instantiation_instructions(new \ReflectionClass($class));
+
+        if ($instantiation === 'prevent') {
             return false;
         }
 
@@ -89,8 +112,6 @@ class Factory
     /**
      * Construct package's class - this will auto-manage all dependencies.
      *
-     * This is not a regular factory, it will respect the mysli.pkg.json's
-     * _factory_ instructions:
      * --
      * singleton: Only one instance of class will be constructed (and then cached)
      * construct: Always construct fresh copy of object.
@@ -100,7 +121,8 @@ class Factory
      * @param string $package
      * --
      * @throws \Core\ValueException If package is not enabled. (1)
-     * @throws \Core\ValueException If factory/file entry missing in mysli.pkg.json. (2)
+     * @throws \Mysli\Pkgm\PackageException If instantiation is `prevent`. (1)
+     * @throws \Mysli\Pkgm\PackageException If constructor argument has not type. (2)
      * --
      * @return mixed
      */
@@ -133,33 +155,56 @@ class Factory
         }
 
         // Get package info
-        $info = $this->registry->get_details($this->package);
+        // $info = $this->registry->get_details($this->package);
 
         // Key exists for this class?
-        if (!isset($info['factory']) || !isset($info['factory'][$file])) {
-            throw new \Core\ValueException(
-                "Missing entry: `factory { '{$file}' : 'instantiation_type()' }` in `mysli.pkg.json` for: `{$pkgf}`.",  2
-            );
-        }
+        // if (!isset($info['factory']) || !isset($info['factory'][$file])) {
+        //     throw new \Core\ValueException(
+        //         "Missing entry: `factory { '{$file}' : 'instantiation_type()' }` in `mysli.pkg.json` for: `{$pkgf}`.",  2
+        //     );
+        // }
 
-        $entry = Control::process_factory_entry($info['factory'][$file]);
-        $instantiation = $entry['instantiation'];
-        $inject = $entry['inject'];
+        // $entry = Control::process_factory_entry($info['factory'][$file]);
+        // $instantiation = $entry['instantiation'];
+        // $inject = $entry['inject'];
 
-        switch ($instantiation) {
-            case 'null':
-                return false;
+        // switch ($instantiation) {
+        //     case 'null':
+        //         return false;
 
-            case 'name':
-                return $class;
-        }
+        //     case 'name':
+        //         return $class;
+        // }
 
         // Instantiate class now...
         self::$producing[] = [$this->package, $pkgf];
 
         $rfc = new \ReflectionClass($class);
 
+        $instantiation = $this->get_instantiation_instructions($rfc);
+
+        if ($instantiation === 'prevent') {
+            throw new \Mysli\Pkgm\PackageException("Auto construction is prevented for: `{$pkgf}`.", 1);
+        }
+
+        // do we require trace...
+        // if ($rfc->hasProperty('pkg_trace')) {
+        //     $pkg_trace = $rfc->getProperty('pkg_trace');
+        //     $pkg_trace->setValue(array_slice(self::$producing, 0, -1));
+        //     $pkg_trace->setAccessible(false);
+        // }
+
         if ($rfc->hasMethod('__construct')) {
+
+            $inject = $rfc->getMethod('__construct')->getParameters();
+            $inject = array_map(function ($arg) use ($class) {
+                $arg_class = $arg->getClass();
+                if (!$arg_class) {
+                    throw new \Mysli\Pkgm\PackageException("Constructor argument have no type: `{$arg->name}` for: `{$class}`.", 2);
+                }
+                return Util::to_pkg($arg_class->name);
+            }, $inject);
+
             if (!empty($inject)) {
                 try {
                     $dependencies = $this->get_dependencies($inject);
@@ -170,7 +215,9 @@ class Factory
             } else {
                 $dependencies = [];
             }
+
             $instance = $rfc->newInstanceArgs($dependencies);
+
         } else {
             $instance = $rfc->newInstanceWithoutConstructor();
         }
@@ -206,31 +253,34 @@ class Factory
         foreach ($dependencies as $dependency) {
 
             // Check if we have #<speacial instruction>
-            if (substr($dependency, 0 ,1) === '#') {
-                if ($dependency === '#pkgm_trace') {
-                    $result[$dependency] = array_slice(self::$producing, 0, -1);
-                } else {
-                    $result[$dependency] = null;
-                }
-                continue;
-            }
+            // if (substr($dependency, 0 ,1) === '#') {
+            //     if ($dependency === '#pkgm_trace') {
+            //         $result[$dependency] = array_slice(self::$producing, 0, -1);
+            //     } else {
+            //         $result[$dependency] = null;
+            //     }
+            //     continue;
+            // }
 
             // Check if we have self: reference...
-            if (substr($dependency, 0, 5) === 'self:') {
-                $result[$dependency] = $this->produce(substr($dependency, 5));
-                continue;
-            }
+            // if (substr($dependency, 0, 5) === 'self:') {
+            //     $result[$dependency] = $this->produce(substr($dependency, 5));
+            //     continue;
+            // }
 
             // Resolve role if exists...
-            $dependency = $this->registry->get_role($dependency);
+            // $dependency = $this->registry->get_role($dependency);
 
             // Resolve the dependency
-            if ($this->registry->is_enabled($dependency)) {
-                $details = $this->registry->get_details($dependency);
-            } else {
+            if (!$this->registry->is_enabled(Util::to_pkg($dependency, Util::BASE))) {
                 throw new DependencyException(
                     "Dependency is not enabled: '{$dependency}' cannot proceed.", 1
                 );
+            }
+
+            if ($dependency === 'mysli/pkgm/trace') {
+                $result[$dependency] = new \Mysli\Pkgm\Trace(self::$producing);
+                continue;
             }
 
             $factory = new Factory(Util::to_pkg($dependency, Util::BASE), $this->registry, $this->cache);

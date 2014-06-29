@@ -4,6 +4,8 @@ namespace Mysli\Users;
 
 class Users
 {
+    use \Mysli\Core\Pkg\Singleton;
+
     protected $path;     // Path where the users are stored!
     protected $cache;    // Collection of all users objects (returned as reference!)
 

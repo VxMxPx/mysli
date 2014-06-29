@@ -2,16 +2,14 @@
 
 namespace Mysli\I18n;
 
-include(__DIR__.'/../i18n.php');
-include(__DIR__.'/../parser.php');
-include(__DIR__.'/../translator.php');
-include(__DIR__.'/../../core/core.php'); // CORE is needed!
+include(__DIR__.'/../../core/core.php');
 new \Mysli\Core\Core(
     realpath(__DIR__.'/dummy'),
     realpath(__DIR__.'/dummy')
 );
-
-class DummyConfig { public function get() { return; } }
+include(__DIR__.'/../i18n.php');
+include(__DIR__.'/../parser.php');
+include(__DIR__.'/../translator.php');
 
 class I18nTest extends \PHPUnit_Framework_TestCase
 {
@@ -20,7 +18,14 @@ class I18nTest extends \PHPUnit_Framework_TestCase
 
     public function __construct()
     {
-        $this->i18n = new I18n([['test/package', null]], new DummyConfig());
+        $dummy_trace = $this->getMock('Mysli\\Pkgm\\Trace', ['get_last']);
+        $dummy_trace
+            ->method('get_last')
+            ->will($this->returnValue('test/package'));
+
+        $dummy_config = $this->getMock('Mysli\\Config\\Config', ['get']);
+
+        $this->i18n = new I18n($dummy_trace, $dummy_config);
 
         // Always create fresh cache
         $this->i18n->create_cache();

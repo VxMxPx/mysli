@@ -6,32 +6,19 @@ class Generator
 {
     private static $meta_template =
 '{
-    "package" : "{{vendor}}/{{package}}",
-    {{role}}
-    "version" : {{version}},
-
-    "depends_on" : {
+    "name" : "{{vendor}}/{{package}}",
+    "require" : {
         {{depends_on}}
     },
-
-    "factory" : {
-        {{factory}}
-    },
-
-    "about" : {
-        "license"     : "GPL-3.0",
-        "upstream"    : "http://github.com/{{vendor}}/{{package}}",
-        "maintainer"  : "Marko Gajšt <marko@gaj.st>",
-        "description" : "This is {{package}} by {{vendor}}"
-    }
+    "description" : "This is {{package}} by {{vendor}}",
+    "license"     : "GPL-3.0"
 }';
 
 
     private static $packages  = [
         'mysliio' => [
             'core' => [
-                'require' => [],
-                'role'    => '@core'
+                'require' => []
             ],
             'pkgm' => [
                 'classes' => [
@@ -39,19 +26,14 @@ class Generator
                     'script/pkgm.php'           => ['\\Script', 'Pkgm'],
                     'factory.php'               => [0, 'Factory']
                 ],
-                'factory' => [
-                    'pkgm'        => 'construct()',
-                    'script/pkgm' => 'construct(@event)'
-                ],
-                'require' => ['@core' => 1, '@event' => 1],
-                'role'    => '@pkgm'
+                'methods' => 'public function __construct(\\Mysliio\\Event\\Event $event) {}',
+                'require' => ['mysliio/core' => 1, 'mysliio/event' => 1]
             ],
             'config' => [
-                'require'  => ['@core' => 1],
+                'require'  => ['mysliio/core' => 1],
             ],
             'event' => [
-                'require' => ['@core' => 1],
-                'role'    => '@event'
+                'require' => ['mysliio/core' => 1]
             ]
         ],
         'avrelia' => [
@@ -60,27 +42,25 @@ class Generator
                     'avrelia/web'     => 1,
                     'avrelia/session' => 1,
                     'avrelia/users'   => 1,
-                    '@event'          => 1,
+                    'mysliio/event'   => 1,
                     'mysliio/config'  => 1,
-                    '@core'           => 1,
+                    'mysliio/core'    => 1,
                 ],
-                'factory' => [
-                    'dash' => 'construct(avrelia/web, avrelia/session, avrelia/users, @event, mysliio/config)'
-                ]
+                'methods' => 'public function __construct(\\Avrelia\\Web\\Web $web, \\Avrelia\\Session\\Session $session, \\Avrelia\\Users\\Users $users, \\Mysliio\\Event\\Event $event, \\Mysliio\\Config\\Config $config) {}',
             ],
             'web' => [
-                'require' => ['@core' => 1, '@event' => 1, 'mysliio/config' => 1]
+                'require' => ['mysliio/core' => 1, 'mysliio/event' => 1, 'mysliio/config' => 1]
             ],
             'users' => [
-                'require' => ['@event' => 1, 'mysliio/config' => 1],
+                'require' => ['mysliio/event' => 1, 'mysliio/config' => 1],
                 'methods' => 'public function say_hi($name) { return "Hi, {$name}"; }
                               public static function say_hello($name, $number) { return "Hello {$name}! Your number is: {$number}."; }'
             ],
             'session' => [
-                'require' => ['@core' => 1, 'mysliio/config' => 1, 'avrelia/users' => 1]
+                'require' => ['mysliio/core' => 1, 'mysliio/config' => 1, 'avrelia/users' => 1]
             ],
             'bad' => [
-                'require' => ['@core' => 1, 'avrelia/non_existant' => 1]
+                'require' => ['mysliio/core' => 1, 'avrelia/non_existant' => 1]
             ]
         ]
     ];
@@ -121,24 +101,24 @@ class Generator
                 }
 
                 // Create factory entries
-                if (isset($meta['factory'])) {
-                    $factory = [];
-                    foreach ($meta['factory'] as $fac_package => $instructions) {
-                        $factory[] = '"' . $fac_package . '" : "' . $instructions . '"';
-                    }
-                    $factory = implode(',', $factory);
-                } else {
-                    $factory = '"'.$package.'" : "construct()"';
-                    if (isset($meta['classes'])) {
-                        foreach ($meta['classes'] as $class => $class_info) {
-                            $factory = '"'.substr($class, 0, -4).'" : "construct()"';
-                        }
-                    }
-                }
+                // if (isset($meta['factory'])) {
+                //     $factory = [];
+                //     foreach ($meta['factory'] as $fac_package => $instructions) {
+                //         $factory[] = '"' . $fac_package . '" : "' . $instructions . '"';
+                //     }
+                //     $factory = implode(',', $factory);
+                // } else {
+                //     $factory = '"'.$package.'" : "construct()"';
+                //     if (isset($meta['classes'])) {
+                //         foreach ($meta['classes'] as $class => $class_info) {
+                //             $factory = '"'.substr($class, 0, -4).'" : "construct()"';
+                //         }
+                //     }
+                // }
 
                 $meta_final = str_replace(
-                    ['{{vendor}}', '{{package}}', '{{role}}', '{{version}}', '{{depends_on}}', '{{factory}}'],
-                    [$vendor, $package, $role, 1, implode(', ', $depends_on), $factory],
+                    ['{{vendor}}', '{{package}}', '{{depends_on}}'],
+                    [$vendor, $package, implode(', ', $depends_on)],
                     self::$meta_template
                 );
 
@@ -158,6 +138,6 @@ class Generator
 
     private static function mk_class($class, $namespace, $methods = '')
     {
-        return "<?php\nnamespace {$namespace};\nclass {$class} { public function __construct() {} {$methods} }";
+        return "<?php\nnamespace {$namespace};\nclass {$class} { {$methods} }";
     }
 }

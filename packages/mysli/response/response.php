@@ -4,6 +4,8 @@ namespace Mysli\Response;
 
 class Response
 {
+    use \Mysli\Core\Pkg\Singleton;
+
     // All headers to be applied at the end.
     protected $headers = [];
     // The ~event package.
@@ -18,7 +20,7 @@ class Response
      * --
      * @param object $event ~event
      */
-    public function __construct($event)
+    public function __construct(\Mysli\Event\Event $event)
     {
         $this->event = $event;
         if (isset($_SERVER['SERVER_PROTOCOL'])) {

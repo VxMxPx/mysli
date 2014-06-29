@@ -14,7 +14,7 @@ class Assets
      * --
      * @param object $web mysli/web
      */
-    public function __construct($web, $config)
+    public function __construct(\Mysli\Web\Web $web, \Mysli\Config\Config $config)
     {
         $this->web = $web;
         $this->config = $config;
