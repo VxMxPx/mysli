@@ -1,5 +1,5 @@
 {
-	"zepto.js" : [
+	"zepto.min.js" : [
 		"zepto.js",
 		"event.js",
 		"ajax.js",
