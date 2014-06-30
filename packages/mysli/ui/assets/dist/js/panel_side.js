@@ -82,7 +82,7 @@
         this.headerElements = [];
 
         this.element = $('<div class="side panel" id="' + this.properties.id + '" />');
-        this.contentContainer = $('<div class="body" />').appendTo(this.element);
+        this.contentContainer = $('<div class="body"><div class="inner" /></div>').appendTo(this.element).find('.inner');
 
         if (options.header) {
             this.header(true);

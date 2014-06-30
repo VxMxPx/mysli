@@ -20,20 +20,23 @@
 function init() {
     $('body')
         .css('overflow', 'hidden');
-        // .html('');
 
     var MU = Mysli.UI,
         panels = new MU.Panels('body'),
-        num    = 1;
+        num    = 1,
+        mainNav = $('body').find('#navigation');
         // sizes  = ['tiny', 'small', 'medium', 'big'];
+
+    mainNav.hide();
 
     // special panel
     var navigation = panels.add({
         flippable : false,
         closable  : false,
         front     : {
-            title : "Marko Gajst",
-            style : "alt"
+            title   : "Marko Gajst",
+            style   : "alt",
+            content : mainNav.html()
         }
     });
 

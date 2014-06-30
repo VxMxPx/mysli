@@ -121,7 +121,7 @@
             });
             this.sides.append(this.back.element);
         } else {
-            this.sides.append('<div class="dummy"/>');
+            this.sides.append('<div class="no-side"/>');
         }
 
         // increase panels count

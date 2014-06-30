@@ -25,7 +25,8 @@ fieldset .field {
 .field input[type=password],
 .field textarea,
 .field select {
-  font-size: 18px;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 16px;
   border: 2px solid #ccc;
   border-top: 3px solid #ccc;
   padding: 7px;
