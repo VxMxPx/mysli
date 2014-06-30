@@ -27,6 +27,18 @@ Your name is Leonardo da Vinci.
 Your pet name is Riki.
 ```
 
+If you do not want to echo the variable's output you can use double parentheses inside curly brackets:
+
+```
+// Template
+{((number = 14))}
+```
+
+```
+// Parsed PHP
+<?php $number = 14; ?>
+```
+
 ## Functions
 
 You can use functions in combination with variables; use pipe (|) symbol to
@@ -601,16 +613,3 @@ For parser to ignore particular region of your template, use three curly bracket
     }
 }}}
 ```
-
-## Events
-
-This package emits no events.
-
-## Role
-
-This package has a standard role `~tplp`.
-
-You can make your own implementation of tplp package. You can extend the file
-format, but make sure to fully support existing syntax.
-
-Please see API section bellow for list of methods to be implemented.
