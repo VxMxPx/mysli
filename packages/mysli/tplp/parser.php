@@ -35,7 +35,9 @@ class Parser
         'contains'      => '( (is_array(%seg) ? in_array(%1, %seg) : strpos(%seg, %1)) !== false )',
         'key_exists'    => 'array_key_exists(%1, %seg)',
         'sum'           => 'array_sum(%seg)',
-        'unique'        => 'array_unique(%seg)'
+        'unique'        => 'array_unique(%seg)',
+        'range'         => 'range(%1, %2, ...)',
+        'random'        => 'rand(%1, %2)'
     ];
 
     /**
@@ -210,7 +212,13 @@ class Parser
         //                            unable to call functions on their own, like
         //                            {'m d Y'|date} => date('m d Y')
         preg_replace_callback('/\{(?=[^@])(.*?)\}/', function ($match) {
-            return '<?php echo ' . $this->parse_variable_with_functions($match[1]) . '; ?>';
+            if (substr($match[1], 0, 2) === '((' && substr($match[1], -2) === '))') {
+                $match[1] = substr($match[1], 2, -2);
+                $echo = '';
+            } else {
+                $echo = 'echo ';
+            }
+            return '<?php ' . $echo . $this->parse_variable_with_functions($match[1]) . '; ?>';
         }, $template);
 
         /* ---------------------------------------------------------------------

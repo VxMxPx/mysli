@@ -359,6 +359,21 @@ Removes duplicate values from an array.
 {list|unique} // => ['one', 'two', 'three']
 ```
 
+### range
+
+Create an array containing a range of elements.
+
+```
+{|range:0,6} // => [0, 1, 2, 3, 4, 5, 6]
+```
+
+### random
+
+Generate a random integer.
+
+```
+{|rand:0,5} // => 0|1|2|3|4|5
+```
 
 ## Control Structures
 
