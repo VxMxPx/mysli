@@ -85,8 +85,17 @@
             font-size: font-size-normal
             text-align: center
             margin: 0
-    .body .inner
-        padding: 20px
+    .body
+        position: absolute
+        top: 0
+        bottom: 0
+        left: 0
+        right: 0
+        overflow-y: auto
+        &.has-header
+            top: 46px
+        .inner
+            padding: 20px
     footer
         background-color: color-background-el
         font-size: font-size-normal

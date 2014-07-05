@@ -3,20 +3,55 @@
 <head>
     <meta charset="utf-8" />
     <title>{@MYSLI_DASHBOARD}</title>
-    {'mysli/ui_toolkit,mysli/dashboard:mysli.css'|css_assets}
+    {'mysli/ui'|css}
+    {'mysli/dashboard'|css}
 </head>
 <body id="mysli-dashboard">
-    <div class="panel alt primary">
-        <header>
-            <h2></h2>
-        </header>
-        <footer>
-            <a class="logout button" href="{'logout'|dashurl}">
-                <i class="fa fa-sign-out"></i>
-                <span>{@LOGOUT}</span>
-            </a>
-        </footer>
+    <div id="login">
+        <h1>
+            {@HI_THERE}
+            <small>{@LOGIN_TO_PROCEED}</small>
+        </h1>
+        <div class="box">
+
+            ::if messages
+                <div class="alert">
+                    ::for message in messages
+                        <div class="message warn">{message}</div>
+                    ::/for
+                </div>
+            ::/if
+
+            <form action="{null|dashurl}" method="post" class="styled mysli">
+                <fieldset>
+                    <div class="field">
+                        <input type="text" name="username" placeholder="{@USERNAME}" value="{username}" />
+                    </div>
+                    <div class="field">
+                        <input type="password" name="password" placeholder="{@PASSWORD}">
+                    </div>
+                </fieldset>
+                <div class="field">
+                    <input type="checkbox" name="remember_me" id="remember_me"
+                    ::if remember_me
+                        checked="checked"
+                    ::/if
+                    >
+                    <label for="remember_me">{@REMEMBER_ME}</label>
+                </div>
+                <div class="controls">
+                    <button type="submit" class="primary">{@LOGIN}</button>
+                </div>
+            </form>
+        </div>
+        <div class="logo">
+            <a href="http://mysli.io"><span>MYSLI.io</span></a>
+        </div>
+        </div>
+    <div id="scripts">
+        {'mysli/zepto'|javascript}
+        {'mysli/ui'|javascript}
+        {'mysli/dashboard'|javascript}
     </div>
-    {'mysli/zepto,mysli/ui_toolkit,mysli/dashboard:mysli.js'|javascript_assets}
 </body>
 </html>

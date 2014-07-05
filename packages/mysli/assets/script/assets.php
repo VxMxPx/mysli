@@ -365,6 +365,17 @@ class Assets
 
         $signature = [];
 
+        // Do we have @ commands
+        if (isset($assets['@before'])) {
+            $before = $assets['@before'];
+            unset($assets['@before']);
+            foreach ($before as $before_command) {
+                $command = $this->parse_command($before_command, ds($assets_path, 'src/null'), ds($assets_path, 'dist/null'));
+                \Cli\Util::plain('Call: ' . $command);
+                system($command);
+            }
+        }
+
         do {
             $rsignature = \Core\FS::dir_signatures(ds($assets_path, 'src'));
             if ($rsignature !== $signature) {

@@ -3,6 +3,7 @@
 		"zepto.js",
 		"event.js",
 		"ajax.js",
+		"data.js",
 		"form.js",
 		"ie.js",
 		"fx.js",

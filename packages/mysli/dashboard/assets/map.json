@@ -1,14 +1,16 @@
 {
-	"css/mysli.css" : [
+	"@before" : [
+		"rm -rf {dest_dir}",
+		"mkdir {dest_dir}",
+		"cp -R {source_dir}/* {dest_dir}"
+	],
+	"css/dashboard.css" : [
+		"css/login.styl",
 		"css/dashboard.styl"
 	],
-	"css/login.css" : [
-		"css/login.styl"
-	],
-	"js/mysli.js" : [
-		"js/mysli/mysli.js"
-	],
-	"js/login.js" : [
-		"js/dash/login.js"
+	"js/dashboard.js" : [
+		"js/init.js",
+		"js/config.js",
+		"js/login.js"
 	]
 }

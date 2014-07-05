@@ -92,6 +92,17 @@
   text-align: center;
   margin: 0;
 }
+.panel .body {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  overflow-y: auto;
+}
+.panel .body.has-header {
+  top: 46px;
+}
 .panel .body .inner {
   padding: 20px;
 }

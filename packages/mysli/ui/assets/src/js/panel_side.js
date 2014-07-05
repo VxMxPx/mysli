@@ -82,7 +82,9 @@
         this.headerElements = [];
 
         this.element = $('<div class="side panel" id="' + this.properties.id + '" />');
-        this.contentContainer = $('<div class="body"><div class="inner" /></div>').appendTo(this.element).find('.inner');
+        this.contentContainer = $('<div class="body"><div class="inner" /></div>').appendTo(this.element);
+
+        // this.element.find('.body').perfectScrollbar();
 
         if (options.header) {
             this.header(true);
@@ -114,9 +116,11 @@
             if (typeof value === 'undefined') { return this.element.find('header.main'); }
             if (value) {
                 if (!this.header().length) {
+                    this.contentContainer.addClass('has-header');
                     this.element.prepend('<header class="main"><h2></h2></header>');
                 }
             } else {
+                this.contentContainer.removeClass('has-header');
                 this.element.remove('header.main');
             }
         },
@@ -172,8 +176,8 @@
         // get/set content
         // content : string  html
         content : function (content) {
-            if (typeof content === 'undefined') { return this.contentContainer.html(); }
-            this.contentContainer.html(content);
+            if (typeof content === 'undefined') { return this.contentContainer.find('.inner').html(); }
+            this.contentContainer.find('.inner').html(content);
         },
 
         // add/remove/get footer
