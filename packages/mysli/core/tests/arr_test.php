@@ -1,6 +1,6 @@
 <?php
 
-namespace Mysli\Core\Lib;
+namespace Mysli\Core\Util;
 
 // Exceptions, etc..
 include(__DIR__.'/../core.php');

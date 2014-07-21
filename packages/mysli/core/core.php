@@ -74,18 +74,18 @@ class Core
         include ds($path, 'pkg/singleton.php');
 
         $libraries = [
-            'Mysli\\Core\\Lib\\Arr'  => 'Core\\Arr',
-            'Mysli\\Core\\Lib\\Str'  => 'Core\\Str',
-            'Mysli\\Core\\Lib\\Int'  => 'Core\\Int',
-            'Mysli\\Core\\Lib\\FS'   => 'Core\\FS',
-            'Mysli\\Core\\Lib\\JSON' => 'Core\\JSON',
+            'Mysli\\Core\\Util\\Arr'  => 'Core\\Arr',
+            'Mysli\\Core\\Util\\Str'  => 'Core\\Str',
+            'Mysli\\Core\\Util\\Int'  => 'Core\\Int',
+            'Mysli\\Core\\Util\\FS'   => 'Core\\FS',
+            'Mysli\\Core\\Util\\JSON' => 'Core\\JSON',
         ];
 
         // Load (and alias) libraries
         foreach ($libraries as $class => $alias) {
             $file = strtolower($class);
             $file = str_replace('\\', DIRECTORY_SEPARATOR, $file);
-            $filename = ds($path, 'lib', strtolower(substr($alias, strpos($alias, '\\'))) . '.php');
+            $filename = ds($path, 'util', strtolower(substr($alias, strpos($alias, '\\'))) . '.php');
 
             if (!file_exists($filename)) {
                 throw new NotFoundException(
