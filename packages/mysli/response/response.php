@@ -277,9 +277,6 @@ class Response
      * the resource again in the future. Clients such as search engines should
      * remove the resource from their indexes.
      * --
-     * @param  string  $message
-     * @param  boolean $die
-     * --
      * @return null
      */
     public function status_410_gone()
@@ -287,6 +284,33 @@ class Response
         $this->clear();
         $this->status = 410;
         $this->header($this->protocol . ' 410 Gone', '-Status');
+    }
+
+    /**
+     * A generic error message, given when an unexpected condition was
+     * encountered and no more specific message is suitable.
+     * --
+     * @return null
+     */
+    public function status_500_internal_server_error()
+    {
+        $this->clear();
+        $this->status = 500;
+        $this->header($this->protocol . ' 500 Internal Server Error', '-Status');
+    }
+
+    /**
+     * The server either does not recognize the request method, or it lacks
+     * the ability to fulfill the request. Usually this implies
+     * future availability (e.g., a new feature of a web-service API).
+     * --
+     * @return null
+     */
+    public function status_501_not_implemented()
+    {
+        $this->clear();
+        $this->status = 500;
+        $this->header($this->protocol . ' 501 Not Implemented', '-Status');
     }
 
     /**
