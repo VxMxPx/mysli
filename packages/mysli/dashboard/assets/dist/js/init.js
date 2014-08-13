@@ -2,6 +2,4 @@
 
     'use strict';
 
-    Mysli.Dashboard = {};
-
 }(Zepto, Mysli));

@@ -7,7 +7,8 @@ class Setup
     private $event;
     private $config;
 
-    public function __construct(\Mysli\Event\Event $event, \Mysli\Config\Config $config)
+    public function __construct(\Mysli\Event\Event $event,
+                                \Mysli\Config\Config $config)
     {
         $this->event = $event;
         $this->config = $config;
@@ -15,12 +16,13 @@ class Setup
 
     public function after_enable()
     {
-        $this->config->merge(\Core\JSON::decode_file(ds(__DIR__, 'config.json'), true));
+        $this->config->merge(
+            \Core\JSON::decode_file(ds(__DIR__, 'config.json'), true));
         $this->config->write();
 
         $this->event->register(
             'mysli/tplp/tplp:instantiated',
-            'mysli/assets->register'
+            'mysli/assets/service->register'
         );
     }
 
@@ -28,7 +30,7 @@ class Setup
     {
         $this->event->unregister(
             'mysli/tplp/tplp:instantiated',
-            'mysli/assets->register'
+            'mysli/assets/service->register'
         );
     }
 }

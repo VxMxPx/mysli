@@ -13,3 +13,4 @@
 @SETTINGS        Settings
 @LOGOUT          Logout
 @HI              Hi
+@JUST_A_MOMENT   Just a moment...

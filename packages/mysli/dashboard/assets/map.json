@@ -5,12 +5,14 @@
 		"cp -R {source_dir}/* {dest_dir}"
 	],
 	"css/dashboard.css" : [
-		"css/login.styl",
-		"css/dashboard.styl"
+		"css/dashboard.styl",
+		"css/login.styl"
 	],
 	"js/dashboard.js" : [
-		"js/init.js",
+		"js/define.js",
+		"js/request.js",
 		"js/config.js",
-		"js/login.js"
+		"js/login.js",
+		"js/init.js"
 	]
 }

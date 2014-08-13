@@ -8,6 +8,7 @@ class Setup
     private $event;
     private $tplp;
     private $i18n;
+    private $config;
 
     private $ecsi;
 
@@ -16,14 +17,15 @@ class Setup
         \Mysli\Users\Users $users,
         \Mysli\Event\Event $event,
         \Mysli\Tplp\tplp $tplp,
-        \Mysli\I18n\I18n $i18n
+        \Mysli\I18n\I18n $i18n,
+        \Mysli\Config\Config $config
     ) {
-        $this->web   = $web;
-        $this->event = $event;
-        $this->tplp  = $tplp;
-        $this->i18n  = $i18n;
-
-        $this->users = $users;
+        $this->web    = $web;
+        $this->event  = $event;
+        $this->tplp   = $tplp;
+        $this->i18n   = $i18n;
+        $this->config = $config;
+        $this->users  = $users;
 
         $this->ecsi = new \Mysli\Csi\Csi('mysli/dashboard/enable');
         $this->ecsi->paragraph('Create your first user!');
@@ -76,6 +78,18 @@ class Setup
         if ($user) {
             $user->save();
         }
+
+        // Create registry
+        \Core\FS::dir_create(datpath('mysli.dashboard'));
+        if (!file_exists(datpath('mysli.dashboard/registry.json'))) {
+            file_put_contents(datpath('mysli.dashboard/registry.json'), json_encode([]));
+        }
+
+        // Add config
+        $this->config->merge([
+            'uri' => 'dashboard'
+        ]);
+        $this->config->write();
 
         return true;
     }

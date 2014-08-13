@@ -56,7 +56,8 @@ class Assets
         $assets_dir = 'assets',
         $web_dir = null
     ) {
-        $this->observe_or_build($package, $assets_file, $assets_dir, $web_dir, true);
+        $this->observe_or_build(
+            $package, $assets_file, $assets_dir, $web_dir, true);
     }
 
     /**
@@ -75,7 +76,8 @@ class Assets
         $assets_dir = 'assets',
         $web_dir = null
     ) {
-        $this->observe_or_build($package, $assets_file, $assets_dir, $web_dir, false);
+        $this->observe_or_build(
+            $package, $assets_file, $assets_dir, $web_dir, false);
     }
 
     /**
@@ -87,7 +89,9 @@ class Assets
      */
     public function not_found($command)
     {
-        \Cli\Util::warn('Command not found: `' . $command . '`. Try to use `observe` or `build`.');
+        \Cli\Util::warn(
+            'Command not found: `' . $command .
+            '`. Try to use `observe` or `build`.');
     }
 
     /**
@@ -124,7 +128,9 @@ class Assets
 
             if ($require !== true) {
                 if (isset($out[0]) && strpos($out[0], $require) === false) {
-                    \Cli\Util::warn('In: `' . $command . '`, expect: `' . $require . '`, got: `' . $out[0] . '` .');
+                    \Cli\Util::warn(
+                        'In: `' . $command . '`, expect: `' . $require .
+                        '`, got: `' . $out[0] . '` .');
                     $valid = false;
                 }
             } else {
@@ -142,20 +148,6 @@ class Assets
         }
 
         return $valid;
-
-        // exec('stylus --version',   $stylus);
-        // exec('uglifyjs --version', $uglify);
-
-        // if (empty($stylus) || !$stylus[0]) {
-        //     \Cli\Util::warn('Missing: stylus, some functions might not work properly.');
-        //     $valid = false;
-        // }
-        // if (empty($uglify) || !$uglify[0]) {
-        //     \Cli\Util::warn('Missing: uglifyjs, some functions might not work properly.');
-        //     $valid = false;
-        // }
-
-        // return $valid;
     }
 
     /**
@@ -224,19 +216,6 @@ class Assets
                 // Excute action for file!
                 system($this->parse_command($process[$ext], $source_file, $dest_file));
                 $main_content .= "\n\n" . file_get_contents($dest_file);
-
-                // if (substr($file, -3) === '.js') {
-                //     // Rewrite itself
-                //     system('uglifyjs -c -o ' . $dist_file . ' ' . $source_file);
-                //     $all_contents .= file_get_contents($dist_file);
-                // } else {
-                //     if (substr($source_file, 0, -4) === '.css') {
-                //         copy($source_file, $dist_file);
-                //         continue;
-                //     }
-                //     system('stylus -c ' . $source_file . ' -o ' . dirname($dist_file));
-                //     $all_contents .= file_get_contents($dist_file);
-                // }
             }
 
             if ($processed) {
@@ -254,36 +233,6 @@ class Assets
                 // \Cli\Util::plain('Compress: no changes.');
             }
         }
-
-
-        // $contents = [];
-        // foreach ($assets as $file => $assets) {
-        //     foreach ($assets as $asset) {
-        //         $filename = ds($dir, 'src', $asset);
-        //         if (!file_exists($filename)) {
-        //             \Cli\Util::warn('File not found: ' . $filename);
-        //             continue;
-        //         }
-        //         $content = file_get_contents($filename);
-        //         $contents[$file] = isset($contents[$file]) ? $contents[$file] . $content : $content;
-        //     }
-        // }
-        // foreach ($contents as $file => $content) {
-        //     $filename = ds($dir, 'dist', $file);
-        //     if (file_put_contents($filename, $content) !== false) {
-        //         if (substr($file, -3) === '.js') {
-        //             // Rewrite itself
-        //             system('uglifyjs -c -o ' . $filename . ' ' . $filename);
-        //         } else {
-        //             $out = [];
-        //             exec('cat ' . $filename . ' | stylus -c', $out);
-        //             file_put_contents($filename, implode('', $out));
-        //         }
-        //         \Cli\Util::success('Merged: ' . $file);
-        //     } else {
-        //         \Cli\Util::error('Failed to create: ' . $file);
-        //     }
-        // }
     }
 
 

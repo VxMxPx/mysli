@@ -7,47 +7,11 @@
     {'mysli/dashboard'|css}
 </head>
 <body id="mysli-dashboard">
-    <div id="login">
-        <h1>
-            {@HI_THERE}
-            <small>{@LOGIN_TO_PROCEED}</small>
-        </h1>
+    <div id="contents">
         <div class="box">
-
-            ::if messages
-                <div class="alert">
-                    ::for message in messages
-                        <div class="message warn">{message}</div>
-                    ::/for
-                </div>
-            ::/if
-
-            <form action="{null|dashurl}" method="post" class="styled mysli">
-                <fieldset>
-                    <div class="field">
-                        <input type="text" name="username" placeholder="{@USERNAME}" value="{username}" />
-                    </div>
-                    <div class="field">
-                        <input type="password" name="password" placeholder="{@PASSWORD}">
-                    </div>
-                </fieldset>
-                <div class="field">
-                    <input type="checkbox" name="remember_me" id="remember_me"
-                    ::if remember_me
-                        checked="checked"
-                    ::/if
-                    >
-                    <label for="remember_me">{@REMEMBER_ME}</label>
-                </div>
-                <div class="controls">
-                    <button type="submit" class="primary">{@LOGIN}</button>
-                </div>
-            </form>
+            {@JUST_A_MOMENT}
         </div>
-        <div class="logo">
-            <a href="http://mysli.io"><span>MYSLI.io</span></a>
-        </div>
-        </div>
+    </div>
     <div id="scripts">
         {'mysli/zepto'|javascript}
         {'mysli/ui'|javascript}
