@@ -1,5 +1,5 @@
 {
-    "css/ui.css" : [
+    "css/mysli_ui_toolkit.css" : [
         "css/fonts.css",
         "css/font-awesome.css",
         "css/variables.styl",
@@ -16,7 +16,7 @@
         "css/tab.styl",
         "css/calendar.styl"
     ],
-    "js/ui.js" : [
+    "js/mysli_ui_toolkit.js" : [
         "js/ext.js",
         "js/mu.js",
         "js/button.js",

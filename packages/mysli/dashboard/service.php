@@ -13,16 +13,6 @@ class Service
     private $pkgm;
 
     private $registry;
-    private $allowed_methods = [
-        'GET', 'POST', 'DELETE', 'PUT'
-    ];
-    private $no_login = [
-        'mysli/dashboard' => [
-            'script',
-            'login',
-            'index'
-        ]
-    ];
 
     /**
      * Construct Dashboard
@@ -60,13 +50,6 @@ class Service
         });
     }
 
-    /**
-     * Get controller on which action will be called.
-     * --
-     * @param  string $controller
-     * --
-     * @return object
-     */
     private function get_controller($controller)
     {
         $segments = explode('/', $controller);
@@ -80,101 +63,34 @@ class Service
         return $factory->produce($class);
     }
 
-    /**
-     * Initialize service - handle requests.
-     * --
-     * @param  \Mysli\Response\Response $response
-     * @param  string                   $method
-     * @param  string                   $route
-     * --
-     * @return null
-     */
     public function init($response, $method, $route)
     {
-        // Resolve route, action, segments and method
         $route_segments = explode('/', $route);
         $route = implode('/', array_slice($route_segments, 1, 2));
         $action = array_slice($route_segments, 3, 1);
-        $action = trim(array_pop($action));
-        if (!$action) {
-            $action = 'index';
-        }
+        $action = array_pop($action);
         $segments = array_splice($route_segments, 4);
-        if (in_array(strtoupper($method), $this->allowed_methods)) {
-            $method = strtolower($method);
-        } else {
-            $response->status_500_internal_server_error();
-            return;
-        }
 
-        if (!$route) {
-            $route = 'mysli/dashboard';
-            $method = 'get';
-            $action = 'index';
-        }
+        // get token
+        $token = isset($_GET['token']) ? $_GET['token'] : null;
 
-        // Resolve access...
-        $access = false;
-        if (isset($this->no_login[$route])) {
-            if (in_array($action, $this->no_login[$route])) {
-                $access = true;
+        // validate token
+        if ($token) {
+            $uid = $this->token->get($token);
+        } else $uid = false;
+
+        // first access to the dashboard
+        if (!$action) {
+            $controller = $this->get_controller('mysli/dashboard/dash');
+            if (!$controller) {
+                $response->status_500_internal_server_error();
+                return;
             }
-        } else {
-            // Deal with the token...
+            $response->status_200_ok();
+            $this->output->add($controller->get_index());
         }
 
-        if (!$access) {
-            $response->status_401_unauthorized();
-            return;
-        }
 
-        // Get controller, find and execute method
-        $controller = $this->get_controller($route . '/dash');
-        if (!$controller) {
-            $response->status_404_not_found();
-            return;
-        }
-
-        if (method_exists($controller, $method.'_'.$action)) {
-            $call = $method.'_'.$action;
-        } elseif (method_exists($controller, 'any_'.$action)) {
-            $call = 'any_'.$action;
-        } elseif (method_exists($controller, 'not_found')) {
-            $call = 'not_found';
-            array_unshift($segments, $action);
-        } else {
-            $response->status_404_not_found();
-            return;
-        }
-
-        $response->status_200_ok();
-        return call_user_func_array([$controller, $call], $segments);
-
-
-
-
-
-
-
-        // // get token
-        // $token = isset($_GET['token']) ? $_GET['token'] : null;
-
-        // // validate token
-        // if ($token) {
-        //     $uid = $this->token->get($token);
-        // } else $uid = false;
-
-        // // first access to the dashboard
-        // if (!$action) {
-            // $controller = $this->get_controller('mysli/dashboard/dash');
-        //     if (!$controller) {
-        //         $response->status_500_internal_server_error();
-        //         return;
-        //     }
-        // }
-
-        // $response->status_200_ok();
-        // $this->output->add($controller->get_index());
 
         // $response->status_200_ok();
         // $route_segments = explode('/', $route);

@@ -1,157 +1,173 @@
-#!/usr/bin/env php
 <?php
 
-define('MYSLI_INSTALLER_VERSION', 1);
+namespace mysli\installer {
 
-function print_intro()
-{
-    $intro = "
-Mysli Installer (v" . MYSLI_INSTALLER_VERSION . ")
+    const version = 1;
 
-Usage: ./installer [OPTIONS]...
-
-  -p, --pkgpath <name>   Path where packages are. The default is: ../packages
-  -d, --datpath <name>   Data / private path (where configuration and databases
-                         will be stored. Should not be URL accessible).
-                         The default is: ../private
-  -r, -rewrite <options> Rewrite core packages, in format: role:vendor\package,...
-                         The default values are:
-                         core:mysli/core,cli:mysli/dot,pkgm:mysli/pkgm
-
-  -y                     Assume `yes` as an answer to all questions.
-  -h, --help             Print this help.
-
-";
-    fwrite(STDOUT, $intro);
-}
-
-function print_line($line)
-{
-    fwrite(STDOUT, $line . PHP_EOL);
-}
-
-function print_line_and_die($line)
-{
-    print_line('!!ERROR: ' . $line);
-    die(0);
-}
-
-function get_opt_val($data, $short, $long, $default)
-{
-    if (!is_array($data))     return $default;
-    if ($short && isset($data[$short])) return $data[$short];
-    if ($long  && isset($data[$long]))  return $data[$long];
-    return $default;
-}
-
-// Return array as a string, in following format
-// key      : value
-// long_key : value
-function nice_array(array $input)
-{
-    $lkey = 0;
-    $out  = '';
-    // Get the longes key...
-    foreach ($input as $key => $val) {
-        if (strlen($key) > $lkey) {
-            $lkey = strlen($key);
+    /**
+     * Print help message.
+     * @return null
+     */
+    function print_intro() {
+        $intro =
+            'Mysli Installer (v" . version . ")'.
+            "\n".
+            'Usage: ./installer [OPTIONS]...'.
+            "\n".
+            '  -p, --pkgpath <name>   Packages\'s path. The default is: ../packages'.
+            '  -d, --datpath <name>   Data / private path (where configuration and databases'.
+            '                         will be stored. Should not be URL accessible).'.
+            '                         The default is: ../private'.
+            '  -r, -rewrite <options> Rewrite core packages, in format: role:vendor\package,...'.
+            '                         The default values are:'.
+            '                         core:mysli/core,cli:mysli/dot,pkgm:mysli/pkgm'.
+            "\n".
+            '  -y                     Assume `yes` as an answer to all questions.'.
+            '  -h, --help             Print this help.';
+        fwrite(STDOUT, $intro);
+    }
+    /**
+     * Print line.
+     * @param  string $line
+     * @return null
+     */
+    function print_line($line) {
+        fwrite(STDOUT, $line . PHP_EOL);
+    }
+    /**
+     * Print line and exit(1)
+     * @param  string $line
+     * @return null
+     */
+    function print_line_and_die($line) {
+        print_line('!!ERROR: ' . $line);
+        exit(1);
+    }
+    /**
+     * Get parameter by short or long name, or default if not found.
+     * @param  array  $data
+     * @param  string $short
+     * @param  string $long
+     * @param  mixed  $default
+     * @return mixed
+     */
+    function get_parameter(array $data, $short, $long, $default) {
+        if (!is_array($data))               return $default;
+        if ($short && isset($data[$short])) return $data[$short];
+        if ($long  && isset($data[$long]))  return $data[$long];
+        return $default;
+    }
+    /**
+     * Formay an array for CLI output.
+     * @param  array  $input
+     * @return string
+     */
+    function nice_array(array $input) {
+        $lkey = 0;
+        $out  = '';
+        // Get the longes key...
+        foreach ($input as $key => $val) {
+            if (strlen($key) > $lkey) {
+                $lkey = strlen($key);
+            }
         }
+        foreach ($input as $key => $value) {
+            $out .= $key . str_repeat(' ', $lkey - strlen($key)) . ' : ' . $value . "\n";
+        }
+        return $out;
     }
 
-    foreach ($input as $key => $value) {
-        $out .= $key . str_repeat(' ', $lkey - strlen($key)) . ' : ' . $value . "\n";
+    // Start installer
+
+    // Check if we can find common.php
+    if (!file_exists(__DIR__ . DIRECTORY_SEPARATOR . 'common.php')) {
+        print_line_and_die('Cannot find common.php in: ' . __DIR__);
+    }
+    include __DIR__ . DIRECTORY_SEPARATOR . 'common.php';
+
+    // Get parameters...
+    $short = 'p:d:r:hy';
+    $long  = ['pkgpath:', 'datpath:', 'rewrite:', 'help'];
+    $options = getopt($short, $long);
+
+    // Do we have help request?
+    if (get_parameter($options, 'h', 'help', 'not') !== 'not') {
+        print_intro();
+        exit(0);
     }
 
-    return $out;
+    $packages = [
+        'core'   => 'mysli/core',
+        'cli'    => 'mysli/dot',
+        'pkgm'   => 'mysli/pkgm',
+    ];
+    $is_yes  = !get_parameter($options, 'y', false, true); // Need to invert it
+    $pkgpath = get_parameter($options, 'p', 'pkgpath', '../packages');
+    $datpath = get_parameter($options, 'd', 'datpath', '../private');
+    $rewrite = get_parameter($options, 'r', 'rewrite', '');
+    $rewrite = explode(',', $rewrite);
+    foreach ($rewrite as $rw_item) {
+        $rw_item = explode(':', $rw_item);
+        if (!isset($rw_item[1])) continue;
+        $role = trim($rw_item[0]);
+        $pac  = trim($rw_item[1]);
+        if (!isset($packages[$role])) continue;
+        $packages[$role] = $pac;
+    }
+
+    // Absolute full path is needed; if relative path was provided,
+    // it needs to be resolved!
+
+    // Resolve paths
+    $pkgpath = resolve_path($pkgpath, __DIR__ . DIRECTORY_SEPARATOR);
+    if ($pkgpath[1])
+        print_line_and_die('Packages path is invalid: ' . implode('', $pkgpath));
+    $pkgpath = rtrim($pkgpath[0], DIRECTORY_SEPARATOR);
+
+    $datpath = resolve_path($datpath, __DIR__ . DIRECTORY_SEPARATOR);
+    $datpath = $datpath[1] ? implode('', $datpath) : $datpath[0];
+
+    // Ask if all seems ok...
+    print_line('Review before setup:');
+    print_line(null);
+    print_line('--- Paths ---');
+    print_line('Private  ' . $datpath);
+    print_line('Packages ' . $pkgpath);
+    print_line(null);
+    print_line('--- List of packages to enable ---');
+    print_line(nice_array($packages));
+
+    if (!$is_yes) {
+        fwrite(STDOUT, 'Proceed? [Y/n] ');
+        $answer = fread(STDIN, 1);
+        if (!in_array(strtolower(trim($answer)), ['y', '']))
+            print_line_and_die('You selected `no`! See you latter....');
+    }
+
+    // Validate data...
+    if (!file_exists($pkgpath))
+        print_line_and_die('Cannot continue, packages path is not valid: ' . $pkgpath);
+
+    $missing = [];
+    foreach ($packages as $role => $pac)
+        if (!file_exists(dst($pkgpath, $pac)))
+            $missing[$pac] = dst($pkgpath, $pac);
+
+    if (!empty($missing))
+        print_line_and_die("Packages not found:\n" . nice_array($missing));
+
+    // Enable the core package...
+    if (!($core = enable_core($packages['core'], $pkgpath, $datpath, 'print_line_and_die'))) {
+        print_line('Core was successfully enabled.');
+    }
+
+    // Enable pkgm...
+    if (!($pkgm = enable_pkgm($packages['pkgm'], $pkgpath, 'print_line_and_die'))) {
+        print_line('Done: `pkgm` (packages manager) was successfully enabled.');
+    }
+
+    // Pkgm add core and itself
+    $pkgm->control($packages['core'])->enable();
+    $pkgm->control($packages['pkgm'])->enable();
+    pkg_enable($pkgm, $packages['cli'], 'print_line_and_die');
 }
-
-// Check if we can find common.php
-if (!file_exists(__DIR__ . DIRECTORY_SEPARATOR . 'common.php')) {
-    print_line_and_die('Cannot find common.php in: ' . __DIR__);
-}
-include __DIR__ . DIRECTORY_SEPARATOR . 'common.php';
-
-// Get cli parameters...
-$short = 'p:d:r:hy';
-$long  = ['pkgpath:', 'datpath:', 'rewrite:', 'help'];
-$options = getopt($short, $long);
-
-// Do we have help request?
-if (get_opt_val($options, 'h', 'help', 'not') !== 'not') {
-    print_intro();
-    exit(0);
-}
-
-$packages = [
-    'core'   => 'mysli/core',
-    'cli'    => 'mysli/dot',
-    'pkgm'   => 'mysli/pkgm',
-];
-$is_yes  = !get_opt_val($options, 'y', false, true); // Need to invert it
-$pkgpath = get_opt_val($options, 'p', 'pkgpath', '../packages');
-$datpath = get_opt_val($options, 'd', 'datpath', '../private');
-$rewrite = get_opt_val($options, 'r', 'rewrite', '');
-$rewrite = explode(',', $rewrite);
-foreach ($rewrite as $rw_item) {
-    $rw_item = explode(':', $rw_item);
-    if (!isset($rw_item[1])) continue;
-    $role = trim($rw_item[0]);
-    $pac  = trim($rw_item[1]);
-    if (!isset($packages[$role])) continue;
-    $packages[$role] = $pac;
-}
-
-// Absolute full path is needed; if relative path was provided,
-// it needs to be resolved!
-
-// Resolve paths
-$pkgpath = resolve_path($pkgpath, __DIR__ . DIRECTORY_SEPARATOR);
-if ($pkgpath[1]) print_line_and_die('Packages path is invalid: ' . implode('', $pkgpath));
-$pkgpath = rtrim($pkgpath[0], DIRECTORY_SEPARATOR);
-
-$datpath = resolve_path($datpath, __DIR__ . DIRECTORY_SEPARATOR);
-$datpath = $datpath[1] ? implode('', $datpath) : $datpath[0];
-
-// Ask if all seems ok...
-print_line('Review before setup:');
-print_line(null);
-print_line('--- Paths ---');
-print_line('Private  ' . $datpath);
-print_line('Packages ' . $pkgpath);
-print_line(null);
-print_line('--- List of packages to enable ---');
-print_line(nice_array($packages));
-
-if (!$is_yes) {
-    fwrite(STDOUT, 'Proceed? [Y/n] ');
-    $answer = fread(STDIN, 1);
-    if (!in_array(strtolower(trim($answer)), ['y', '']))
-        print_line_and_die('You selected `no`! See you latter....');
-}
-
-// Validate data...
-if (!file_exists($pkgpath))
-    print_line_and_die('Cannot continue, packages path is not valid: ' . $pkgpath);
-
-$missing = [];
-foreach ($packages as $role => $pac)
-    if (!file_exists(dst($pkgpath, $pac)))
-        $missing[$pac] = dst($pkgpath, $pac);
-
-if (!empty($missing))
-    print_line_and_die("Packages not found:\n" . nice_array($missing));
-
-// Enable the core package...
-if ( ! ($core = enable_core($packages['core'], $pkgpath, $datpath, 'print_line_and_die')) ) {
-    print_line('Core was successfully enabled.');
-}
-
-// Enable pkgm...
-if ( ! ($pkgm = enable_pkgm($packages['pkgm'], $pkgpath, 'print_line_and_die')) ) {
-    print_line('Done: `pkgm` (packages manager) was successfully enabled.');
-}
-
-// Pkgm add core and itself
-$pkgm->control($packages['core'])->enable();
-$pkgm->control($packages['pkgm'])->enable();
-pkg_enable($pkgm, $packages['cli'], 'print_line_and_die');

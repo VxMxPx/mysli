@@ -1,19 +1,14 @@
 <?php
 
-namespace Mysli\CSI;
+namespace mysli\csi;
 
-include(__DIR__.'/../../core/core.php');
-new \Mysli\Core\Core(
-    realpath(__DIR__.'/dummy'),
-    realpath(__DIR__.'/dummy')
-);
-include(__DIR__.'/../csi.php');
+include __DIR__ . '/../src/csi.php';
 
-class CSITest extends \PHPUnit_Framework_TestCase
+class csi_test extends \PHPUnit_Framework_TestCase
 {
     protected function new_instance($id)
     {
-        return new CSI($id);
+        return new csi($id);
     }
 
     public function test_get_id()

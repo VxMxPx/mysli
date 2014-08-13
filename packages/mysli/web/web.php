@@ -49,11 +49,12 @@ class Web
     public function route()
     {
         // Get route and remove any * < > character.
-        $route = trim($this->request->get_path_info(), '/');
+        $route = implode('/', $this->request->segments());
         $route = str_replace(['*', '<', '>'], '', $route);
         // Get method (post,delete,put,get)
         $method = strtolower($this->request->get_method());
 
+        // Events...
         $this->event->trigger(
             "mysli/web/route:{$method}<{$route}>",
             [$this->response, $method, $route]

@@ -25,13 +25,13 @@
         });
     });
 
-    // Mysli.Dashboard.Login = {
-    //     show : function () {
-    //         element.fadeIn();
-    //     },
-    //     hide : function () {
-    //         element.fadeOut();
-    //     }
-    // };
+    Mysli.Dashboard.Login = {
+        show : function () {
+            element.fadeIn();
+        },
+        hide : function () {
+            element.fadeOut();
+        }
+    };
 
 }(Zepto, Mysli));

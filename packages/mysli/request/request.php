@@ -45,13 +45,7 @@ class Request
      */
     public function get_path_info()
     {
-        if (isset($_SERVER['PATH_INFO'])) {
-            return $_SERVER['PATH_INFO'];
-        }
-        if (isset($_SERVER['REQUEST_URI'])) {
-            return explode('?', $_SERVER['REQUEST_URI'])[0];
-        }
-        return null;
+        return isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : null;
     }
 
     /**

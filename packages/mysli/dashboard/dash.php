@@ -12,13 +12,11 @@ class Dash
 
     public function __construct(
         Dashboard $dash,
-        \Mysli\Output\Output $output,
         \Mysli\I18n\I18n $i18n,
         \Mysli\Tplp\Tplp $tplp,
         \Mysli\Token\Token $token,
         \Mysli\Users\Users $users
     ) {
-        $this->output = $output;
         $this->dash = $dash;
         $this->i18n = $i18n;
         $this->tplp = $tplp;
@@ -43,15 +41,7 @@ class Dash
 
     public function get_index()
     {
-        $this->output->add($this->tplp->template('dashboard')->render());
-    }
-
-    public function get_script()
-    {
-        $require = isset($_GET['require']) ? $_GET['require'] : false;
-        if (!$require || !preg_match('/[a-z0-9\/\-_]+/', $require)) {
-            return;
-        }
+        return $this->tplp->template('dashboard')->render();
     }
 
     public function get_login()

@@ -1,7 +1,8 @@
 <?php
-function enable_helper($pkgm, $package, callable $errout)
-{
 
+namespace mysli\installer;
+
+function enable_helper($pkgm, $package, callable $errout) {
     $factory = $pkgm->factory($package);
 
     if ($factory->can_produce('setup')) {
@@ -26,8 +27,7 @@ function enable_helper($pkgm, $package, callable $errout)
 
     return true;
 }
-function pkg_enable($pkgm, $package, callable $errout)
-{
+function pkg_enable($pkgm, $package, callable $errout) {
     if ($pkgm->registry()->is_enabled($package)) {
         $errout("Package is already enabled: `{$package}`.");
         return false;
@@ -50,8 +50,7 @@ function pkg_enable($pkgm, $package, callable $errout)
 
     return enable_helper($pkgm, $package, $errout);
 }
-function enable_pkgm($pkgm, $pkgpath, callable $errout)
-{
+function enable_pkgm($pkgm, $pkgpath, callable $errout) {
     $setup_file = dst($pkgpath, $pkgm, 'setup.php');
     $setup_class = pkg_to_ns($pkgm . '/setup');
     if (!file_exists($setup_file)) {
@@ -84,8 +83,7 @@ function enable_pkgm($pkgm, $pkgpath, callable $errout)
     $pkgm = new $pkg_class();
     return $pkgm;
 }
-function enable_core($core_pkg, $pkgpath, $datpath, callable $errout)
-{
+function enable_core($core_pkg, $pkgpath, $datpath, callable $errout) {
     $setup_file = dst($pkgpath, $core_pkg, 'setup.php');
     $setup_class = pkg_to_ns($core_pkg . '/setup');
     if (!file_exists($setup_file)) {
@@ -120,15 +118,13 @@ function enable_core($core_pkg, $pkgpath, $datpath, callable $errout)
     return $core;
 }
 // Get package's index, for example from: vendor/pkg => vendor/pkg/pkg.php
-function get_pkg_index($package)
-{
+function get_pkg_index($package) {
     $package_segments = explode('/', $package);
     $package_last = array_pop($package_segments);
     return dst($package, $package_last . '.php');
 }
 // Convert package: `vendor/pkg` to class, namespace: Vendor\\Pkg
-function pkg_to_ns($package)
-{
+function pkg_to_ns($package) {
     if (strpos($package, '/') === false) {
         return $package;
     }
@@ -142,8 +138,7 @@ function pkg_to_ns($package)
     return implode('\\', $class);
 }
 // Convert strign to camel case
-function to_camelcase($string, $uc_first=true)
-{
+function to_camelcase($string, $uc_first=true) {
     // Convert _
     if (strpos($string, '_') !== false) {
         $string = str_replace('_', ' ', $string);
@@ -180,8 +175,7 @@ function to_camelcase($string, $uc_first=true)
 // non existing path.
 // For example, if we have such path: /home/user/non-existing-dir/sub - result
 // will be: ['/home/user/', 'non-existing-dir/sub']
-function resolve_path($path, $relative_to)
-{
+function resolve_path($path, $relative_to) {
     // We're dealing with absolute path
     if (substr($path, 1, 1) !== ':' && substr($path, 0, 1) !== '/') {
         $path = rtrim($relative_to, '\\/') . DIRECTORY_SEPARATOR . ltrim($path, '\\/');
@@ -200,8 +194,7 @@ function resolve_path($path, $relative_to)
 }
 
 // Correct path
-function dst()
-{
+function dst() {
     $path = func_get_args();
     $path = implode(DIRECTORY_SEPARATOR, $path);
 

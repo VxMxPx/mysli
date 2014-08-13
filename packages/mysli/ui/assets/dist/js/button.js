@@ -3,7 +3,7 @@
     'use strict';
 
     var Button = function (element) {
-        this.element = typeof element === 'object' ? element : $(element);
+        this.element = $(element);
 
         // if there's no label element, add it
         this.label = this.element.find('span');

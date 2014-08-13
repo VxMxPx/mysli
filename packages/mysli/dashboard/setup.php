@@ -28,7 +28,7 @@ class Setup
         $this->users  = $users;
 
         $this->ecsi = new \Mysli\Csi\Csi('mysli/dashboard/enable');
-        $this->ecsi->paragraph('Create your first user!');
+        $this->ecsi->text('Create your first user!');
         $this->ecsi->input(
             'username',
             'Username',

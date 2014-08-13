@@ -10,7 +10,6 @@
 	],
 	"js/dashboard.js" : [
 		"js/define.js",
-		"js/request.js",
 		"js/config.js",
 		"js/login.js",
 		"js/init.js"
