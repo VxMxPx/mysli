@@ -2,7 +2,6 @@
 
 namespace mysli\cli {
 
-    use \mysli\type\str as str;
     use \mysli\cli\output as cout;
 
     class util {
@@ -13,7 +12,7 @@ namespace mysli\cli {
          * @return string
          */
         static function execute($command, array $params = []) {
-            return exec(str::sprint($command, $params));
+            return exec(sprintf($command, $params));
         }
         /**
          * Fork execute command, and stop execution in child.

@@ -2,7 +2,7 @@
 
 namespace mysli\cli {
 
-    use \mysli\type\str as str;
+    use \mysli\base\str as str;
     use \mysli\cli\util as cutil;
 
     class output {
@@ -45,7 +45,7 @@ namespace mysli\cli {
          * @param integer $num Nnumber of new lines
          */
         static function nl($num=1) {
-            fwrite(STDOUT, str::repeat(PHP_EOL, (int) $num));
+            fwrite(STDOUT, str_repeat(PHP_EOL, (int) $num));
         }
         /**
          * Print warning
@@ -87,7 +87,7 @@ namespace mysli\cli {
             $width = (int) cutil::execute('tput cols');
             if ($width === 0) { return; }
             $width = floor($width / strlen($character));
-            self::info(str::repeat($character, $width));
+            self::info(str_repeat($character, $width));
         }
     }
 }

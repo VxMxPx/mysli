@@ -2,7 +2,6 @@
 
 namespace mysli\cli {
 
-    use \mysli\core as core;
     use \mysli\base\str as str;
     use \mysli\base\arr as arr;
 
@@ -69,7 +68,7 @@ namespace mysli\cli {
          * @return string
          */
         function messages() {
-            return arr::join("\n", $this->messages);
+            return implode("\n", $this->messages);
         }
         /**
          * Return status (weater execution was valid, all required parameters
@@ -127,7 +126,7 @@ namespace mysli\cli {
                 throw new core\exception\value(
                     "Long parameter is required: `{$name}`.", 1);
             }
-            if (arr::key($this->params, $options['long'])) {
+            if (arr::key_in($this->params, $options['long'])) {
                 throw new core\exception\value(
                     "Long parameter exists: ".
                     "`{$options['long']}` for `{$name}`.", 2);
@@ -138,16 +137,16 @@ namespace mysli\cli {
                         "Positional parameters " .
                         "cannot have short version: `{$name}`.", 3);
                 }
-                if (arr::value($this->params_s, $options['short'])) {
+                if (in_array($options['short'], $this->params_s)) {
                     throw new core\exeption\value(
                         "Short parameter exists: ".
                         "`{$options['short']}` for `{$name}`.", 4);
                 }
             }
-            if (!arr::value($typesok, $options['type'])) {
+            if (!in_array($options['type'], $typesok)) {
                 throw new core\exception\value(
                     "Invalid type: `{$options['type']}`. ".
-                    "Acceptable types: " . arr::join($typesok), 5);
+                    "Acceptable types: " . implode(', ', $typesok), 5);
             }
             if ($options['default'] !== null) {
                 if ($options['type'] === 'bool' &&
@@ -184,11 +183,11 @@ namespace mysli\cli {
         protected function parse_name_params($name) {
             $short = null;
             $long = null;
-            $seg = str::split($name, '/', 2);
+            $seg = explode('/', $name, 2);
             if (str::length($seg[0]) === 1) {
                 arr::prepend($seg, null);
             }
-            if (arr::length($seg) < 2) {
+            if (count($seg) < 2) {
                 $seg[] = null;
             }
             return [$seg[0], $seg[1]];
