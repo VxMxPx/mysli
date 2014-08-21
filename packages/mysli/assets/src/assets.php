@@ -3,12 +3,10 @@
 namespace mysli\assets {
 
     use mysli\fs as fs;
-    use mysli\str as str;
-    use mysli\arr as arr;
+    use mysli\base as base;
+    use mysli\base\str as str;
     use mysli\web as web;
-    use mysli\core as core;
     use mysli\json as json;
-    use mysli\fs\file as file;
     use mysli\config as config;
 
     class assets {
@@ -52,8 +50,8 @@ namespace mysli\assets {
 
                 $filename = fs::pkgpath($pkg, 'assets/map.json');
 
-                if (!file::exists($filename)) {
-                    throw new core\exception\not_found(
+                if (!fs\file::exists($filename)) {
+                    throw new base\exception\not_found(
                         "File not found: `{$filename}`.", 1);
                 }
 
@@ -61,7 +59,7 @@ namespace mysli\assets {
 
                 foreach ($assets as $asset_main => $asset_files) {
                     if ($allowed &&
-                        !arr::key_in($allowed, file::name($asset_main))) {
+                        !base\arr::key_in($allowed, fs\file::name($asset_main))) {
                         continue;
                     }
                     if (str::slice($asset_main, -(str::length($type))) !== $type) {
