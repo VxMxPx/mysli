@@ -46,7 +46,7 @@ namespace mysli\config {
                 return $values;
             }
 
-            if (arr::key($key, $this->cache)) {
+            if (arr::get($this->cache, $key)) {
                 return $this->cache[$key];
             }
 
@@ -109,7 +109,7 @@ namespace mysli\config {
          * @return mixed
          */
         static function select($package, $key=false, $default=null) {
-            if (!arr::key($package, $registry)) {
+            if (!arr::get($registry, $package)) {
                 self::$registry[$package] = new self($package);
             }
             $config = self::$registry[$package];

@@ -3,8 +3,8 @@
 namespace mysli\cli {
 
     use \mysli\core as core;
-    use \mysli\type\str as str;
-    use \mysli\type\arr as arr;
+    use \mysli\base\str as str;
+    use \mysli\base\arr as arr;
 
     class param {
         protected $title = null;

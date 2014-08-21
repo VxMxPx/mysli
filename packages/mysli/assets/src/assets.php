@@ -38,14 +38,14 @@ namespace mysli\assets {
          */
         public static function get_tags($type, $list) {
             $debug = config::select('mysli/assets', 'debug');
-            $list = str::split($list, ',');
+            $list = explode(',', $list);
             $collection = [];
 
             foreach ($list as $pkg) {
-                if (str::pos($pkg, ':') > -1) {
-                    $allowed = str::split($pkg, ':');
+                if (str::find($pkg, ':') !== false) {
+                    $allowed = explode(':', $pkg);
                     $pkg = $allowed[0];
-                    $allowed = arr::slice($allowed, 1);
+                    $allowed = array_slice($allowed, 1);
                 } else {
                     $allowed = false;
                 }
@@ -61,10 +61,10 @@ namespace mysli\assets {
 
                 foreach ($assets as $asset_main => $asset_files) {
                     if ($allowed &&
-                        !arr::key(file::name($asset_main), $allowed)) {
+                        !arr::key_in($allowed, file::name($asset_main))) {
                         continue;
                     }
-                    if (str::slice($asset_main, -(strlen($type))) !== $type) {
+                    if (str::slice($asset_main, -(str::length($type))) !== $type) {
                         continue;
                     }
 
@@ -81,7 +81,7 @@ namespace mysli\assets {
                         }
                 }
             }
-            return str::join($collection, "\n");
+            return implode("\n", $collection);
         }
     }
 }
