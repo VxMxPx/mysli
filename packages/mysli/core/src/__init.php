@@ -35,5 +35,7 @@ namespace mysli\core {
 
         spl_autoload_register($autoloader);
         class_alias($injector, 'inject');
+
+        type\str::encoding('UTF-8');
     }
 }

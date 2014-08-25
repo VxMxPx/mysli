@@ -9,6 +9,8 @@ namespace mysli\core\type {
         const pad_left = 0;
         const pad_right = 1;
         const pad_both = 2;
+        const merge_associative = 'arr::merge_associative';
+        const merge_all = 'arr::merge_all';
 
         /**
          * Returns an array using the values of array as keys
@@ -56,6 +58,10 @@ namespace mysli\core\type {
         /**
          * Merge one or more arrays.
          * @param  array  $... at least two arrays to be merged
+         * @param  string $... optional, used to set merge type:
+         * arr::merge_all - merge non-associative arrays too
+         * arr::merge_associative - merge only associative arrays,
+         * otherwise append
          * @return array
          */
         static function merge() {
@@ -66,10 +72,20 @@ namespace mysli\core\type {
                     "At least 2 parameters are required.", 1);
             }
 
+            if (is_string(self::last($arguments))) {
+                $type = array_pop($arguments);
+                if (!in_array(
+                    $type, [arr::merge_associative, arr::merge_all])) {
+                    throw new exception\argument("Invalid merge type.", 2);
+                }
+            } else {
+                $type = arr::merge_associative;
+            }
+
             foreach ($arguments as $arg) {
                 if (!is_array($arg)) {
                     throw new exception\argument(
-                        "All parameters except last, needs to be an array.", 2);
+                        "All parameters except last, needs to be an array.", 3);
                 }
             }
 
@@ -79,7 +95,9 @@ namespace mysli\core\type {
                 if (empty($array)) {
                     continue;
                 }
-                $is_associative = self::is_associative($array);
+                // if merge all, then this will always be true
+                $is_associative = $type === arr::merge_all
+                    || self::is_associative($array);
 
                 foreach ($array as $key => $item) {
                     if (!$is_associative) {
@@ -99,7 +117,8 @@ namespace mysli\core\type {
                             if (!is_array($item)) {
                                 $item = [$item];
                             }
-                            $result[$key] = self::merge($result[$key], $item);
+                            $result[$key] = self::merge(
+                                $result[$key], $item, $type);
                         }
                     }
                 }

@@ -295,9 +295,9 @@ namespace mysli\core\type {
          */
         static function slice($string, $start, $length=null) {
             tc::need_str($string);
-            tc::need_int($start, 0, null, 1);
+            tc::need_int($start, null, null, 1);
             if ($length !== null) {
-                tc::need_int($length, 1, null, 2);
+                tc::need_int($length, null, null, 2);
                 return mb_substr($string, $start, $length);
             } else {
                 return mb_substr($string, $start);
@@ -308,12 +308,16 @@ namespace mysli\core\type {
          * @param  string  $string
          * @param  string  $mask aA1s = small a-z, up A-Z, numeric, spaces
          * @param  string  $custom any custom characters (like ,-+*!?#)
-         * @param  integer $limit
          * @return string
          */
-        static function clean($string, $mask='aA1s', $custom=null,
-                                     $limit=null) {
-            $string = (string) $string;
+        static function clean($string, $mask='aA1s', $custom=null) {
+
+            tc::need_str($string, 1);
+            tc::need_str($mask, 2);
+
+            if ($custom) {
+                tc::need_str_or_int($custom);
+            }
 
             if (empty($string)) {
                 return '';
@@ -324,39 +328,34 @@ namespace mysli\core\type {
             $A = 'A-Z';
             $n = '0-9';
             $s = preg_quote(' ');
-            $c = ($custom !== false)
-                    ? preg_quote($custom)
-                    : false;
 
-            if (!empty($mask)) {
+            if ($mask) {
                 if (strpos($mask, 'a') !== false) { $filter .= $a; }
                 if (strpos($mask, 'A') !== false) { $filter .= $A; }
                 if (strpos($mask, '1') !== false) { $filter .= $n; }
                 if (strpos($mask, 's') !== false) { $filter .= $s; }
-                if ($c                 !== false) { $filter .= $c; }
+                if ($custom !== null)  { $filter .= preg_quote($custom); }
             }
 
-            if (empty($filter)) {
+            if (!$filter) {
                 throw new exception\argument("Invalid \$mask parameter.", 2);
             }
 
             $filter = '/([^' . $filter . '])/sm';
             $string = preg_replace($filter, '', $string);
 
-            if ((int) $limit) {
-                return self::slice($string, 0, (int) $limit);
-            } else {
-                return $string;
-            }
+            return $string;
         }
         /**
          * Clean string data with the help of regular expression.
-         * Removes matches.
+         * Remove matches, use ^ to invert, for example: /[^a-z]/i
          * @param  string  $string
          * @param  string  $regex
          * @return string
          */
         static function clean_regex($string, $regex) {
+            tc::need_str($string, 1);
+            tc::need_str($regex, 2);
             return preg_replace($regex, '', $string);
         }
         /**
@@ -449,15 +448,16 @@ namespace mysli\core\type {
          * Explode, trim and get particular index.
          * @param  string  $string
          * @param  mixed   $separator array | string
-         * @param  integer $index
-         * @param  string  $trim_mask
-         * @param  integer $limit
+         * @param  integer $index index to get
+         * @param  mixed   $default default value if index not found
+         * @param  string  $mask (trim mask)
+         * @param  integer $limit (split limit)
          * @return string  null if not found
          */
-        static function explode_get($string, $separator, $index, $mask=null,
-                                    $limit=false) {
-            $return = self::explode_trim($separator, $string, $mask, $limit);
-            return arr::key_in($return, $index) ? $return[$index] : null;
+        static function split_get($string, $separator, $index, $default=null,
+                                  $mask=null, $limit=null) {
+            $return = self::split_trim($string, $separator, $limit, $mask);
+            return arr::key_in($return, $index) ? $return[$index] : $default;
         }
         /**
          * Explode string by separator, but ignore protected regions.
@@ -575,73 +575,6 @@ namespace mysli\core\type {
                 $encoding = self::encoding();
             }
             return mb_strpos($string, $find, $offset, $encoding);
-        }
-        /**
-         * Censor particular words. If you wish you can replace word completely
-         * by setting associative array in $disallowed.
-         * Otherwise words will be partly or completely masked:
-         * input: apple, disallowed: apple, mask: *, keep: 0 => *****
-         * input: peach, disallowed: peach, mask: *, keep: 2 => pe***
-         * input: peach, disallowed: peach, mask: *, keep: array(2, 2) => pe*ch
-         * @param string $input
-         * @param mixed  $disallowed string, array or associative array
-         * @param string $mask
-         * @param string $keep integer, or string consisting of two numbers:
-         * 1-2:
-         * 1: characters to keep on left,
-         * 2: characters to keep on right
-         * @return string
-         */
-        static function censor($input, $disallowed, $mask='*', $keep=2) {
-            tc::need_str($input);
-            if (!is_array($disallowed)) {
-                $disallowed = [$disallowed => null];
-            } elseif (!arr::is_associative($disallowed)) {
-                $tmp = [];
-                foreach ($disallowed as $kw) {
-                    $tmp[$kw] = null;
-                }
-                $disallowed = $tmp;
-            }
-            // set keep ranges
-            if (is_string($keep) && self::find($keep, '-') !== false) {
-                $keep = explode('-', $keep);
-                $keep_left  = arr::get_all(0, $keep, 0);
-                $keep_right = arr::get_all(1, $keep, false);
-                $keep_right = $keep_right ? -($keep_right) : false;
-            } else {
-                $keep_left  = $keep;
-                $keep_right = false;
-            }
-
-            $keep = array();
-            $keep[0] = $keep_left;
-            $keep[1] = $keep_right;
-
-            foreach ($disallowed as $word => $censor) {
-                $regex = '/\b('.preg_quote($word).')\b/i';
-                $input = preg_replace_callback($regex,
-                    function($match) use ($censor, $mask, $keep) {
-                        if (!is_null($censor)) {
-                            return $censor;
-                        } else {
-                            $end = $keep[1] ? $keep[1] : self::length($match[0]);
-                            $mask_length = self::length($match[0]);
-                            $mask_length = $mask_length - $keep[0];
-                            $mask_length = $mask_length + $keep[1];
-                            if ($mask_length >= 0) {
-                                $mask_full = str_repeat($mask, $mask_length);
-                            } else {
-                                return str_repeat(
-                                    $mask, self::length($match[0]));
-                            }
-                            return substr_replace(
-                                $match[0], $mask_full, $keep[0], $end);
-                        }
-                    }, $input);
-            }
-
-            return $input;
         }
         /**
          * Convert to camel case

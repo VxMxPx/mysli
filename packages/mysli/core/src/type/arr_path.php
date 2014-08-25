@@ -20,7 +20,7 @@ namespace mysli\core\type {
             $get  = $array;
 
             foreach ($path as $w) {
-                if (arr::key_in($get, $w) && !is_null($get[$w])) {
+                if (is_array($get) && arr::key_in($get, $w)) {
                     $get = $get[$w];
                 } else {
                     return $default;
@@ -42,22 +42,23 @@ namespace mysli\core\type {
          */
         static function set(array &$array, $path, $value) {
             tc::need_str($path);
-            $what = trim($path, '/');
-            $what = str::split($what, '/');
+
+            $path = trim($path, '/');
+            $path = str::split($path, '/');
             $previous = $value;
             $new = [];
 
-            for ($i=count($what); $i--; $i==0) {
-                $w = $what[$i];
-                $new[$w]  = $previous;
+            for ($i=count($path); $i--; /*pass*/) {
+                $segment = $path[$i];
+                $new[$segment] = $previous;
                 $previous = $new;
                 $new = [];
             }
 
-            $array = arr::merge($array, $previous);
+            $array = arr::merge($array, $previous, arr::merge_all);
         }
         /**
-         * Delete array value by path
+         * Remove array value by path
          * array  => ['user' => ['address' => 'My Address']]
          * path   => user/address
          * result => ['user' => []]
@@ -65,27 +66,27 @@ namespace mysli\core\type {
          * @param  string $path
          * @return null
          */
-        static function delete(array &$array, $path) {
+        static function remove(array &$array, $path) {
             tc::need_str($path);
-            $array = self::delete_helper($array, $path, null);
+            $array = self::remove_helper($array, $path, null);
         }
         /**
-         * Delete by path helper
+         * Remove by path helper
          * @param  array  $array
          * @param  string $path
          * @param  string $cp
          * @return array
          */
-        protected static function delete_helper(array $array, $path, $cp) {
+        protected static function remove_helper(array $array, $path, $cp) {
             $result = [];
 
             foreach ($array as $k => $i) {
                 $cup = $cp . '/' . $k;
-                if (str::trim($cup, '/') === str::trim($path,'/')) {
+                if (trim($cup, '/') === trim($path,'/')) {
                     continue;
                 }
                 if (is_array($i)) {
-                    $result[$k] = self::delete_helper($i, $path, $cup);
+                    $result[$k] = self::remove_helper($i, $path, $cup);
                 } else {
                     $result[$k] = $i;
                 }

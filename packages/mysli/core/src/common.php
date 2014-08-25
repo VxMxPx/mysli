@@ -2,27 +2,33 @@
 
 /**
  * Determine if this is command line interface.
- * --
  * @return boolean
  */
-function is_cli() { return php_sapi_name() === 'cli' || defined('STDIN'); }
+function is_cli() {
+    return php_sapi_name() === 'cli' || defined('STDIN');
+}
 
 /**
  * Output variable as: <pre>print_r($variable)</pre> (this is only for debuging)
  * This will die after dumpign variables on screen.
  */
-function dump()
-{
-    die(call_user_func_array('dump_r', func_get_args()));
+function dump() {
+    die(call_user_func_array('dump_rr', func_get_args()));
+}
+
+/**
+ * Dump, but don't die - echo results instead.
+ * @return null
+ */
+function dump_r() {
+    echo call_user_func_array('dump_rr', func_get_args());
 }
 
 /**
  * Dump, but don't die - return results instead.
- * --
  * @return string
  */
-function dump_r()
-{
+function dump_rr() {
     $arguments = func_get_args();
     $result = '';
 

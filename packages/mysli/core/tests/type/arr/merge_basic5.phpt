@@ -26,6 +26,7 @@ $ar2 = [
     'd' => 4
 ];
 print_r(arr::merge($ar1, $ar2));
+print_r(arr::merge($ar1, $ar2, arr::merge_all));
 ?>
 --EXPECT--
 Array
@@ -46,6 +47,30 @@ Array
                             [3] => 4
                             [4] => 5
                             [5] => 6
+                        )
+
+                )
+
+        )
+
+    [c] => 3
+    [d] => 4
+)
+Array
+(
+    [a] => 1
+    [b] => Array
+        (
+            [b1] => 24
+            [b2] => 22
+            [b3] => Array
+                (
+                    [b31] => 231
+                    [b32] => Array
+                        (
+                            [0] => 4
+                            [1] => 5
+                            [2] => 6
                         )
 
                 )
