@@ -240,7 +240,7 @@ namespace mysli\core\type {
             $result = '';
 
             while ($i <= $length) {
-                $result .= $chars{mt_rand(0,strlen($chars)-1)};
+                $result .= $chars{int::random(0, strlen($chars)-1)};
                 $i++;
             }
 
