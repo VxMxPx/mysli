@@ -1,17 +1,16 @@
 <?php
 
-namespace mysli\cookie {
+namespace mysli\cookie\setup {
 
-    use mysli\config as config;
+    inject::to(__NAMESPACE__)->from('mysli/config');
 
-    class setup {
-        function enable() {
-            return config::select('mysli/cookie')
-                    ->merge([
-                        'timeout' => 60 * 60 * 24 * 7, // 7 Days
-                        'domain'  => '', // Dynamic
-                        'prefix'  => 'mysli_'])
-                    ->save();
-        }
+    function enable() {
+        return config::select('mysli/cookie')
+            ->merge([
+                'timeout' => 60 * 60 * 24 * 7, // 7 Days
+                'domain'  => null, // dynamic
+                'key'     => null, // if provided, cookies will be encrypted
+                'prefix'  => ''])
+            ->save();
     }
 }
