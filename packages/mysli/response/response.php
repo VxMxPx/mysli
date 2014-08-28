@@ -333,6 +333,11 @@ class Response
      */
     public function content_type_json()
     {
-        $this->header('application/json', 'Content-type');
+        $this->header('application/json; charset=utf-8', 'Content-type');
+    }
+
+    public function content_type_html()
+    {
+        $this->header('text/html; charset=utf-8', 'Content-type');
     }
 }
