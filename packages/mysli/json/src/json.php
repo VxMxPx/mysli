@@ -2,9 +2,9 @@
 
 namespace mysli\json {
 
-    use mysli\arr as arr;
-    use mysli\fs as fs;
-    use mysli\fs\file as file;
+    inject::to(__namespace__)
+        ->from('mysli/fs')
+        ->from('mysli/core/type/arr');
 
     class json {
 
@@ -34,8 +34,8 @@ namespace mysli\json {
          */
         static function decode_file($filename, $assoc=false, $depth=512) {
             $filename = fs::ds($filename);
-            if (file::exists($filename)) {
-                $content = file::read($filename);
+            if (fs\file::exists($filename)) {
+                $content = fs\file::read($filename);
                 return self::decode($content, $assoc, $depth);
             } else {
                 throw new exception\not_found(
@@ -69,7 +69,7 @@ namespace mysli\json {
          */
         static function encode_file($filename, $values, $options=0,
                                     $depth=512) {
-            return !!file::overwrite(
+            return !!fs\file::write(
                 $filename, self::encode($values, $options, $depth));
         }
         /**
