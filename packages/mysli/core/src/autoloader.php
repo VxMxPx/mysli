@@ -30,12 +30,6 @@ namespace mysli\core {
                 ['src'],
                 array_slice($segments, 2));
 
-            // Check if exception or script
-            if (in_array(
-                $segments[count($segments) - 2], ['exception', 'script'])) {
-                $segments[count($segments) - 2] .= 's';
-            }
-
             $path = MYSLI_PKGPATH . '/' . implode('/', $segments) . '.php';
 
             if (!file_exists($path)) {
