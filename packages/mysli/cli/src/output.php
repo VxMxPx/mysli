@@ -2,22 +2,24 @@
 
 namespace mysli\cli {
 
-    use \mysli\base\str as str;
-    use \mysli\cli\util as cutil;
+    \inject::to(__namespace__)
+    ->from('mysli/core/type/str')
+    ->from('mysli/cli/util', 'cutil');
 
     class output {
         /**
          * Print line.
-         * @param   string  $type
-         *   info    -- Regular white message
-         *   error   -- Red message
-         *   warn    -- Yellow message
-         *   success -- Green message
+         * @param   string  $type available:
+         * info    Regular white message
+         * error   Red message
+         * warn    Yellow message
+         * success Green message
          * @param   string  $message
+         * @param   array   $args if message contains %s, %d
          * @param   boolean $new_line should message be in new line
          * @return  null
          */
-        static function line($type, $message, $new_line=true) {
+        static function line($type, $message, array $args=[], $new_line=true) {
             switch (str::to_lower($type)) {
                 case 'error':
                     $color = "\x1b[31;01m";
@@ -33,8 +35,10 @@ namespace mysli\cli {
             }
             fwrite(
                 STDOUT,
-                (!is_null($color) ? $color : '') . $message . "\x1b[39;49;00m"
-            );
+                (!is_null($color) ? $color : '') .
+                sprintf($message, $args) .
+                "\x1b[39;49;00m");
+
             if ($new_line) {
                 fwrite(STDOUT, PHP_EOL);
             }
@@ -50,34 +54,38 @@ namespace mysli\cli {
         /**
          * Print warning
          * @param  string  $message
+         * @param  array   $args
          * @param  boolean $new_line
          */
-        static function warn($message, $new_line=true) {
-            return self::out('warn', $message, $new_line);
+        static function warn($message, array $args=[], $new_line=true) {
+            return self::line('warn', $message, $args, $new_line);
         }
         /**
          * Print error
          * @param  string  $message
+         * @param  array   $args
          * @param  boolean $new_line
          */
-        static function error($message, $new_line=true) {
-            return self::out('error', $message, $new_line);
+        static function error($message, array $args=[], $new_line=true) {
+            return self::line('error', $message, $args, $new_line);
         }
         /**
          * Print information
          * @param  string  $message
+         * @param  array   $args
          * @param  boolean $new_line
          */
-        static function info($message, $new_line=true) {
-            return self::out('info', $message, $new_line);
+        static function info($message, array $args=[], $new_line=true) {
+            return self::line('info', $message, $args, $new_line);
         }
         /**
          * Print success
          * @param  string  $message
+         * @param  array   $args
          * @param  boolean $new_line
          */
-        static function success($message, $new_line=true) {
-            return self::out('success', $message, $new_line);
+        static function success($message, array $args=[], $new_line=true) {
+            return self::line('success', $message, $args, $new_line);
         }
         /**
          * Fill full width of the line with particular character(s).

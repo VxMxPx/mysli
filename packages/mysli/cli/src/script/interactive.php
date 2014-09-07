@@ -2,8 +2,8 @@
 
 namespace mysli\cli\script {
 
-    use \mysli\cli\output as cout;
-    use \mysli\cli\input as cin;
+    \inject::to(__namespace__)
+    ->from('mysli/cli/{output,input}', 'cout,cin');
 
     class interative {
         static function run() {

@@ -2,7 +2,7 @@
 
 namespace mysli\cli {
 
-    use \mysli\base\str as str;
+    use \mysli\core\type\str as str;
 
     class input {
         /**
