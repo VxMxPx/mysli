@@ -18,14 +18,12 @@ namespace mysli\core\setup {
             }
         }
 
-        file_put_contents(
+        return (bool) file_put_contents(
             $datpath . '/core/id.json',
             json_encode([
                 'package' => 'mysli/core',
                 'enabled' => gmdate('YmdHis')
             ])
         );
-
-        return true;
     }
 }
