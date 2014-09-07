@@ -2,7 +2,7 @@
 
 namespace mysli\pkgm {
 
-    inject::to(__namespace__)
+    \inject::to(__namespace__)
     ->from('mysli/fs')
     ->from('mysli/json');
 
@@ -264,8 +264,17 @@ namespace mysli\pkgm {
             return self::write();
         }
         /**
+         * Open packages file.
+         * @return boolean
+         */
+        static function read() {
+            self::$packages = json::decode_file(
+                fs::datpath('pkgm/r.json'));
+            return is_array(self::$package);
+        }
+        /**
          * Write packages to the file.
-         * @return array
+         * @return boolean
          */
         private static function write() {
             return json::enacode_file(
