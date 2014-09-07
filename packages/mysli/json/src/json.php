@@ -2,9 +2,9 @@
 
 namespace mysli\json {
 
-    inject::to(__namespace__)
-        ->from('mysli/fs')
-        ->from('mysli/core/type/arr');
+    \inject::to(__namespace__)
+    ->from('mysli/fs')
+    ->from('mysli/core/type/arr');
 
     class json {
 
