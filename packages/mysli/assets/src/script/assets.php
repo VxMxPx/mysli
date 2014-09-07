@@ -22,41 +22,40 @@ namespace mysli\assets\script {
         static function run(array $arguments) {
             $params = new cparam('Mysli Assets Builder', $arguments);
             $params->add(
-                'watch/w',
+                '--watch/-w',
                 ['type'    => 'bool',
                  'default' => false,
-                 'help'    => 'Observe assets.']);
+                 'help'    => 'Observe assets']);
             $params->add(
-                'build/b',
+                '--build/-b',
                 ['type'    => 'bool',
                  'default' => true,
-                 'help'    => 'Build assets.']);
+                 'help'    => 'Build assets']);
             $params->add(
-                'map/m',
+                '--map/-m',
                 ['type'    => 'str',
                  'default' => 'assets/map.json',
-                 'help'    => 'Specify costume map file location.']);
+                 'help'    => 'Specify costume map file location']);
             $params->add(
-                'source/s',
+                '--source/-s',
                 ['type'    => 'str',
                  'default' => 'src',
-                 'help'    => 'Directory where assets are located.']);
+                 'help'    => 'Directory where assets are located']);
             $params->add(
-                'destination/d',
+                '--destination/-d',
                 ['type'    => 'str',
                  'default' => 'dist',
-                 'help'    => 'Build destination.']);
+                 'help'    => 'Build destination']);
             $params->add(
-                'public/p',
+                '--public/-p',
                 ['type'    => 'str',
                  'default' => null,
-                 'help'    => 'Public directry, where assets will be placed.']);
+                 'help'    => 'Public directry, where assets will be placed']);
             $params->add(
-                'package',
+                'PACKAGE',
                 ['type'       => 'str',
                  'help'       => 'Package name, e.g.: mysli/ui',
-                 'required'   => true,
-                 'positional' => true]);
+                 'required'   => true]);
 
             $params->parse();
             cout::info($params->messages());
