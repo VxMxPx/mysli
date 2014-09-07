@@ -2,7 +2,8 @@
 
 namespace mysli\datetime {
 
-    use mysli\core;
+    \inject::to(__namespace__)
+    ->from('mysli/core/exception/*', 3);
 
     class datetime {
 
