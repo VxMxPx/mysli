@@ -2,16 +2,15 @@
 
 namespace mysli\assets {
 
-    use mysli\tplp\tplp as tplp;
-    use mysli\assets\assets as assets;
+    \inject::to(__namespace__)
+    ->from('mysli/tplp');
 
     class service {
         /**
          * Register template's global functions.
          * @return null
          */
-        static function register()
-        {
+        static function register() {
             tplp::register_function('css', function ($list) {
                 return assets::tags('css', $list);
             });

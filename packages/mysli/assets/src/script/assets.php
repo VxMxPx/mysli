@@ -2,32 +2,25 @@
 
 namespace mysli\assets\script {
 
-    use mysli\assets\assets as core_assets;
-    use mysli\cli\output as cout;
-    use mysli\cli\cinput as cinput;
-    use mysli\cli\param as cparam;
-    use mysli\core as core;
-    use mysli\config as config;
-    use mysli\fs as fs;
-    use mysli\fs\file as file;
-    use mysli\fs\dir as dir;
-    use mysli\func as func;
-    use mysli\arr as arr;
-    use mysli\str as str;
-    use mysli\web as web;
+    \inject::to(__namespace__)
+    ->from('mysli/cli/{output,cinput,param}', 'cout,cinput,cparam')
+    ->from('mysli/config')
+    ->from('mysli/fs')
+    ->from('mysli/core/type/{arr,str}')
+    ->from('mysli/web')
+    ->from('mysli/core/exception/*');
 
     class assets {
 
         use mysli\assets\util;
 
-        // actions
-
         /**
          * CLI frontend.
+         * @param array $arguments
          * @return null
          */
-        static function run() {
-            $params = new cparam('Mysli Assets Builder');
+        static function run(array $arguments) {
+            $params = new cparam('Mysli Assets Builder', $arguments);
             $params->add(
                 'watch/w',
                 ['type'    => 'bool',
@@ -52,7 +45,7 @@ namespace mysli\assets\script {
                 'destination/d',
                 ['type'    => 'str',
                  'default' => 'dist',
-                 'help'    => 'Build directory.']);
+                 'help'    => 'Build destination.']);
             $params->add(
                 'public/p',
                 ['type'    => 'str',
@@ -85,8 +78,8 @@ namespace mysli\assets\script {
          */
         private static function read_assets($package, $assets) {
             $filename = fs::pkgpath($package, $assets);
-            if (!file::exists($filename)) {
-                throw new core\exception\not_found(
+            if (!fs\file::exists($filename)) {
+                throw new exception\not_found(
                     "File not found: {$filename}.", 1);
             }
             return json::decode_file($filename);
@@ -140,7 +133,8 @@ namespace mysli\assets\script {
                                               $dest_file) {
             return str::replace(
                 ['{source}', '{dest}', '{source_dir}', '{dest_dir}'],
-                [$source_file, $dest_file, dirname($source_file), dirname($dest_file)],
+                [$source_file, $dest_file,
+                fs\file::name($source_file), fs\file::name($dest_file)],
                 $command
             );
         }
@@ -161,7 +155,7 @@ namespace mysli\assets\script {
                 $processed = $changes ? 0 : 1;
 
                 foreach ($assets_c as $asset) {
-                    $ext = file::extension($asset);
+                    $ext = fs\file::extension($asset);
                     $source_file = fs::ds($dir, 'src', $asset);
                     $dest_file = fs::ds(
                         $dir, 'dist', self::parse_extention($asset));
@@ -176,7 +170,7 @@ namespace mysli\assets\script {
                         }
                     }
 
-                    if (!file::exists($source_file)) {
+                    if (!fs\file::exists($source_file)) {
                         cout::warn('File not found: %s.', $source_file);
                         continue;
                     }
@@ -190,15 +184,15 @@ namespace mysli\assets\script {
                     // Excute action for file
                     system(self::parse_command(
                         $process[$ext], $source_file, $dest_file));
-                    $main_content .= "\n\n" . file::read($dest_file);
+                    $main_content .= "\n\n" . fs\file::read($dest_file);
                 }
             }
 
             if ($processed) {
                 // Finally create asset file
                 $asset_file = fs::ds($dir, 'dist', $file);
-                $asset_ext  = file::extension($asset_file);
-                file::write($asset_file, $main_content, file::overwrite);
+                $asset_ext  = fs\file::extension($asset_file);
+                fs\file::write($asset_file, $main_content);
 
                 // Compress(?)
                 if (arr::key($asset_ext, $compress)) {
@@ -263,7 +257,7 @@ namespace mysli\assets\script {
 
             try {
                 $assets = self::read_assets($package, $assets_file);
-            } catch (core\exception\not_found $e) {
+            } catch (exception\not_found $e) {
                 cout::warn('File not found: %s.', $assets_file);
                 return;
             }
@@ -274,7 +268,7 @@ namespace mysli\assets\script {
             }
 
             $assets_path = fs::pkgpath($package, $assets_dir);
-            if (!dir::exists($assets_path)) {
+            if (!fs\dir::exists($assets_path)) {
                 cout::warn(
                     'Assets path seems to be invalid. Cannot continue.');
                 return;
@@ -284,7 +278,7 @@ namespace mysli\assets\script {
                 $web_dir = $package;
             }
             $web_dir = web::path($web_dir);
-            if (!dir::exists($web_dir)) {
+            if (!fs\dir::exists($web_dir)) {
                 cout::warn(
                     'Public web path seems to be invalid. Cannot continue.');
                 return;
@@ -307,7 +301,7 @@ namespace mysli\assets\script {
             }
 
             do {
-                $rsignature = dir::signatures(fs::ds($assets_path, 'src'));
+                $rsignature = fs\dir::signature(fs::ds($assets_path, 'src'));
                 if ($rsignature !== $signature) {
                     $changes = self::what_changed(
                         $rsignature, $signature, str::len($assets_path));
@@ -315,11 +309,7 @@ namespace mysli\assets\script {
                     cout::info('Rebuilding assets...');
                     $signature = $rsignature;
                     self::assets_merge($assets, $assets_path, $changes);
-                    dir::copy(
-                        $assets_path,
-                        $web_dir,
-                        dir::exists_replace
-                    );
+                    fs\dir::copy($assets_path, $web_dir);
                 } else {
                     $loop and sleep(3);
                 }

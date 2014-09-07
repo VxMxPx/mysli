@@ -2,12 +2,12 @@
 
 namespace mysli\assets {
 
-    use mysli\fs as fs;
-    use mysli\base as base;
-    use mysli\base\str as str;
-    use mysli\web as web;
-    use mysli\json as json;
-    use mysli\config as config;
+    \inject::to(__namespace__)
+    ->from('mysli/web')
+    ->from('mysli/json')
+    ->from('mysli/config')
+    ->from('mysli/core/type/str')
+    ->from('mysli/fs');
 
     class assets {
 
@@ -20,7 +20,7 @@ namespace mysli\assets {
          * @param  string $file
          * @return string
          */
-        private static function make_tag($type, $pkg, $file) {
+        static function make_tag($type, $pkg, $file) {
             $url = web::url($pkg . '/' . 'dist' . '/' . $file);
             if ($type === 'css') {
                 return '<link rel="stylesheet" type="text/css" href="' . $url . '" />';
@@ -34,7 +34,7 @@ namespace mysli\assets {
          * @param  string $list vendor/package,vendor/package
          * @return string
          */
-        public static function get_tags($type, $list) {
+        static function get_tags($type, $list) {
             $debug = config::select('mysli/assets', 'debug');
             $list = explode(',', $list);
             $collection = [];

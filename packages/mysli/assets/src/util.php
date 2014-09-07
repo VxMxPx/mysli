@@ -2,10 +2,10 @@
 
 namespace mysli\assets {
 
-    use mysli\fs\file as file;
-    use mysli\config as config;
-    use mysli\arr as arr;
-    use mysli\str as str;
+    \inject::to(__namespace__)
+    ->from('mysli/fs/file')
+    ->from('mysli/config')
+    ->from('mysli/core/type/{str,arr}');
 
     trait util {
         /**
@@ -16,7 +16,7 @@ namespace mysli\assets {
         private static function parse_extention($file) {
             $ext  = file::extension($file);
             $list = config::select('mysli/assets', 'ext', []);
-            if (arr::has($ext, $list)) {
+            if (arr::key_in($list, $ext)) {
                 return str::sub($file, 0, -(strlen($ext))) . $list[$ext];
             } else {
                 return $file;
