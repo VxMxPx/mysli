@@ -16,4 +16,4 @@ print_r($params->messages());
 
 ?>
 --EXPECT--
-Missing required parameter: `long`.
+Missing parameter: `long`.

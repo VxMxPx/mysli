@@ -31,8 +31,10 @@ namespace mysli\cli {
             'help'       => null,  // help text
             'required'   => null,  // weather field is required
             'positional' => false, // weather this is positional parameter
-            'action'     => false, // func to be executed when field is parsed
-            'invert'     => false  // invert bool value
+            'action'     => false, // func to be executed when field is parsed:
+                                   // value, is_valid, messages, break=false
+            'invert'     => false, // invert bool value
+            'ignore'     => false  // weather value should be ignored
         ];
 
         /**
@@ -44,6 +46,17 @@ namespace mysli\cli {
                 ? $arguments
                 : array_slice($_SERVER['argv'], 1);
             $this->title = $title;
+            $this->add('--help/-h', [
+                'type'   => 'bool',
+                'help'   => 'Display this help',
+                'ignore' => true,
+                'action' => function ($val, &$is_valid, &$messages) {
+                    $is_valid = false;
+                    $messages = [];
+                    $messages[] = $this->help();
+                    return false;
+                }
+            ]);
         }
         /**
          * Add parameter
@@ -93,8 +106,13 @@ namespace mysli\cli {
          * Return list of currently set parameters.
          * @return array
          */
-        function params() {
-            return $this->params;
+        function dump() {
+            return [
+                $this->params,
+                $this->values,
+                $this->messages,
+                $this->is_valid
+            ];
         }
         /**
          * Parse all parameters
@@ -104,64 +122,40 @@ namespace mysli\cli {
             $this->values = [];
             $this->messages = [];
             $this->is_valid = true;
+            $b = false; // break the loop and return immediately
             $current = null;
             foreach ($this->arguments as $arg) {
-                if ($current) {
-                    $value = $this->set_type(
-                        $arg, $current['type'], $current['invert']);
-                    if (is_callable($current['action'])) {
-                        $current['action'](
-                            $value, $this->is_valid, $this->messages);
+                if (is_array($current)) {
+                    if ($this->set_value($arg, $current) === false) {
+                        return $this->is_valid;
+                    } else {
+                        $current = null;
                     }
-                    $this->values[$current['id']] = $value;
-                    $current = null;
                 } elseif (substr($arg, 0, 2) === '--') {
                     $arg = substr($arg, 2);
-                    if ($opt = $this->find($arg, 'long')) {
-                        if ($opt['type'] === 'bool') {
-                            $this->values[$opt['id']] = !$opt['invert'];
-                        } else {
-                            $current = $opt;
-                        }
-                    } else {
-                        $this->invalidate("Invalid argument: `{$arg}`.");
+                    if (!($current = $this->resolve_value($arg, 'long'))) {
+                        return $this->is_valid;
                     }
                 } elseif (substr($arg, 0, 1) === '-') {
                     $arg = substr($arg, 1);
                     if (strlen($arg) > 1) {
                         foreach (str_split($arg) as $sarg) {
-                            if ($opt = $this->find($sarg, 'short')) {
-                                if ($opt['type'] === 'bool') {
-                                    $this->values[$opt['id']] = !$opt['invert'];
-                                } else {
-                                    $this->invalidate(
-                                        "Expected boolean for: `{$sarg}`.");
-                                }
-                            } else {
-                                $this->invalidate(
-                                    "Invalid argument: `{$sarg}`.");
+                            if (!$this->resolve_value($sarg, 'short', false)) {
+                                return $this->is_valid;
                             }
                         }
                     } else {
-                        if ($opt = $this->find($arg, 'short')) {
-                            if ($opt['type'] === 'bool') {
-                                $this->values[$opt['id']] = !$opt['invert'];
-                            } else {
-                                $current = $opt;
-                            }
-                        } else {
-                            $this->invalidate("Invalid argument: `{$arg}`.");
+                        if (!($current = $this->resolve_value($arg, 'short'))) {
+                            return $this->is_valid;
                         }
                     }
                 } else {
                     if ($opt = $this->find($arg, 'positional')) {
-                        $value = $this->set_type(
-                            $arg, $opt['type'], $opt['invert']);
-                        if (is_callable($opt['action'])) {
-                            $current['action'](
-                                $value, $this->is_valid, $this->messages);
+                        if ($this->set_value($arg, $opt) === false) {
+                            return $this->is_valid;
+                        } else {
+                            $current = null;
                         }
-                        $this->values[$opt['id']] = $value;
                     } else {
                         $this->invalidate("Argument ignored.");
                     }
@@ -170,10 +164,10 @@ namespace mysli\cli {
             // check weather all required items are set...
             if ($this->is_valid) {
                 foreach ($this->params as $pid => $opt) {
-                    if (!isset($this->values[$pid])) {
+                    if (!isset($this->values[$pid]) && !$opt['ignore']) {
                         if ($opt['required']) {
                             $this->invalidate(
-                                "Missing required parameter: `{$pid}`.");
+                                "Missing parameter: `{$pid}`.");
                         } else {
                             $this->values[$pid] = $opt['default'];
                         }
@@ -211,6 +205,46 @@ namespace mysli\cli {
 
         // protected
 
+        /**
+         * Find parameter, see if bool is expected, set value (if bool)
+         * @param  string  $arg
+         * @param  string  $type
+         * @param  boolean $get_current
+         * @return mixed
+         */
+        protected function resolve_value($arg, $type, $get_current=true) {
+            if ($opt = $this->find($arg, $type)) {
+                if ($opt['type'] === 'bool') {
+                    return $this->set_value($arg, $opt);
+                } else {
+                    if (!$get_current) {
+                        $this->invalidate("Expected boolean for: `{$arg}`.");
+                    } else {
+                        return $opt;
+                    }
+                }
+            } else {
+                $this->invalidate("Invalid argument: `{$arg}`.");
+            }
+            return true;
+        }
+        /**
+         * Will set particular value to the current values list: helper of parse
+         * @param   string  $arg
+         * @param   array   $opt
+         * @return  boolean
+         */
+        protected function set_value($arg, array $opt) {
+            $value = $this->set_type($arg, $opt['type'], $opt['invert']);
+            $rt = true;
+            if (is_callable($opt['action'])) {
+                $rt = $opt['action']($value, $this->is_valid, $this->messages);
+            }
+            if (!$opt['ignore']) {
+                $this->values[$opt['id']] = $value;
+            }
+            return $rt;
+        }
         /**
          * Format arguments and print them as string.
          * @return string

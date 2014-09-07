@@ -37,216 +37,145 @@ $params->add(
     ['type'    => 'str',
      'help'    => 'Positional parameter.']);
 
-var_dump($params->params());
+print_r(array_slice($params->dump()[0], 1));
 
 ?>
---EXPECT--
-array(9) {
-  ["long"]=>
-  array(10) {
-    ["id"]=>
-    string(4) "long"
-    ["short"]=>
-    string(1) "l"
-    ["long"]=>
-    string(4) "long"
-    ["type"]=>
-    string(3) "str"
-    ["default"]=>
-    NULL
-    ["help"]=>
-    string(25) "Long and short parameter."
-    ["required"]=>
-    bool(false)
-    ["positional"]=>
-    bool(false)
-    ["action"]=>
-    bool(false)
-    ["invert"]=>
-    bool(false)
-  }
-  ["s"]=>
-  array(10) {
-    ["id"]=>
-    string(1) "s"
-    ["short"]=>
-    string(1) "s"
-    ["long"]=>
-    NULL
-    ["type"]=>
-    string(3) "str"
-    ["default"]=>
-    NULL
-    ["help"]=>
-    string(21) "Only short parameter."
-    ["required"]=>
-    bool(false)
-    ["positional"]=>
-    bool(false)
-    ["action"]=>
-    bool(false)
-    ["invert"]=>
-    bool(false)
-  }
-  ["noshort"]=>
-  array(10) {
-    ["id"]=>
-    string(7) "noshort"
-    ["short"]=>
-    NULL
-    ["long"]=>
-    string(7) "noshort"
-    ["type"]=>
-    string(3) "str"
-    ["default"]=>
-    NULL
-    ["help"]=>
-    string(20) "Only long parameter."
-    ["required"]=>
-    bool(false)
-    ["positional"]=>
-    bool(false)
-    ["action"]=>
-    bool(false)
-    ["invert"]=>
-    bool(false)
-  }
-  ["type_bool"]=>
-  array(10) {
-    ["id"]=>
-    string(9) "type_bool"
-    ["short"]=>
-    NULL
-    ["long"]=>
-    string(9) "type_bool"
-    ["type"]=>
-    string(4) "bool"
-    ["default"]=>
-    NULL
-    ["help"]=>
-    NULL
-    ["required"]=>
-    bool(false)
-    ["positional"]=>
-    bool(false)
-    ["action"]=>
-    bool(false)
-    ["invert"]=>
-    bool(false)
-  }
-  ["type_int"]=>
-  array(10) {
-    ["id"]=>
-    string(8) "type_int"
-    ["short"]=>
-    NULL
-    ["long"]=>
-    string(8) "type_int"
-    ["type"]=>
-    string(3) "int"
-    ["default"]=>
-    NULL
-    ["help"]=>
-    NULL
-    ["required"]=>
-    bool(false)
-    ["positional"]=>
-    bool(false)
-    ["action"]=>
-    bool(false)
-    ["invert"]=>
-    bool(false)
-  }
-  ["type_float"]=>
-  array(10) {
-    ["id"]=>
-    string(10) "type_float"
-    ["short"]=>
-    NULL
-    ["long"]=>
-    string(10) "type_float"
-    ["type"]=>
-    string(5) "float"
-    ["default"]=>
-    NULL
-    ["help"]=>
-    NULL
-    ["required"]=>
-    bool(false)
-    ["positional"]=>
-    bool(false)
-    ["action"]=>
-    bool(false)
-    ["invert"]=>
-    bool(false)
-  }
-  ["required"]=>
-  array(10) {
-    ["id"]=>
-    string(8) "required"
-    ["short"]=>
-    NULL
-    ["long"]=>
-    string(8) "required"
-    ["type"]=>
-    string(3) "str"
-    ["default"]=>
-    NULL
-    ["help"]=>
-    NULL
-    ["required"]=>
-    bool(true)
-    ["positional"]=>
-    bool(false)
-    ["action"]=>
-    bool(false)
-    ["invert"]=>
-    bool(false)
-  }
-  ["specialid"]=>
-  array(10) {
-    ["id"]=>
-    string(9) "specialid"
-    ["short"]=>
-    string(1) "d"
-    ["long"]=>
-    NULL
-    ["type"]=>
-    string(3) "str"
-    ["default"]=>
-    NULL
-    ["help"]=>
-    NULL
-    ["required"]=>
-    bool(false)
-    ["positional"]=>
-    bool(false)
-    ["action"]=>
-    bool(false)
-    ["invert"]=>
-    bool(false)
-  }
-  ["positional"]=>
-  array(10) {
-    ["id"]=>
-    string(10) "positional"
-    ["short"]=>
-    NULL
-    ["long"]=>
-    NULL
-    ["type"]=>
-    string(3) "str"
-    ["default"]=>
-    NULL
-    ["help"]=>
-    string(21) "Positional parameter."
-    ["required"]=>
-    bool(true)
-    ["positional"]=>
-    bool(true)
-    ["action"]=>
-    bool(false)
-    ["invert"]=>
-    bool(false)
-  }
-}
+--EXPECTF--
+Array
+(
+    [long] => Array
+        (
+            [id] => long
+            [short] => l
+            [long] => long
+            [type] => str
+            [default] =>%s
+            [help] => Long and short parameter.
+            [required] =>%s
+            [positional] =>%s
+            [action] =>%s
+            [invert] =>%s
+            [ignore] =>%s
+        )
+
+    [s] => Array
+        (
+            [id] => s
+            [short] => s
+            [long] =>%s
+            [type] => str
+            [default] =>%s
+            [help] => Only short parameter.
+            [required] =>%s
+            [positional] =>%s
+            [action] =>%s
+            [invert] =>%s
+            [ignore] =>%s
+        )
+
+    [noshort] => Array
+        (
+            [id] => noshort
+            [short] =>%s
+            [long] => noshort
+            [type] => str
+            [default] =>%s
+            [help] => Only long parameter.
+            [required] =>%s
+            [positional] =>%s
+            [action] =>%s
+            [invert] =>%s
+            [ignore] =>%s
+        )
+
+    [type_bool] => Array
+        (
+            [id] => type_bool
+            [short] =>%s
+            [long] => type_bool
+            [type] => bool
+            [default] =>%s
+            [help] =>%s
+            [required] =>%s
+            [positional] =>%s
+            [action] =>%s
+            [invert] =>%s
+            [ignore] =>%s
+        )
+
+    [type_int] => Array
+        (
+            [id] => type_int
+            [short] =>%s
+            [long] => type_int
+            [type] => int
+            [default] =>%s
+            [help] =>%s
+            [required] =>%s
+            [positional] =>%s
+            [action] =>%s
+            [invert] =>%s
+            [ignore] =>%s
+        )
+
+    [type_float] => Array
+        (
+            [id] => type_float
+            [short] =>%s
+            [long] => type_float
+            [type] => float
+            [default] =>%s
+            [help] =>%s
+            [required] =>%s
+            [positional] =>%s
+            [action] =>%s
+            [invert] =>%s
+            [ignore] =>%s
+        )
+
+    [required] => Array
+        (
+            [id] => required
+            [short] =>%s
+            [long] => required
+            [type] => str
+            [default] =>%s
+            [help] =>%s
+            [required] => 1
+            [positional] =>%s
+            [action] =>%s
+            [invert] =>%s
+            [ignore] =>%s
+        )
+
+    [specialid] => Array
+        (
+            [id] => specialid
+            [short] => d
+            [long] =>%s
+            [type] => str
+            [default] =>%s
+            [help] =>%s
+            [required] =>%s
+            [positional] =>%s
+            [action] =>%s
+            [invert] =>%s
+            [ignore] =>%s
+        )
+
+    [positional] => Array
+        (
+            [id] => positional
+            [short] =>%s
+            [long] =>%s
+            [type] => str
+            [default] =>%s
+            [help] => Positional parameter.
+            [required] => 1
+            [positional] => 1
+            [action] =>%s
+            [invert] =>%s
+            [ignore] =>%s
+        )
+
+)

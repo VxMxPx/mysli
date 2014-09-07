@@ -19,7 +19,7 @@ print_r($params->values());
 
 ?>
 --EXPECT--
-Missing required parameter: `long`.
+Missing parameter: `long`.
 Array
 (
     [positional] => World

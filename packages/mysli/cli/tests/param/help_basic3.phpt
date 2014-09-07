@@ -37,6 +37,7 @@ Usage: ./dot test [OPTIONS]... POSITIONAL
   POSITIONAL  Positional parameter
 
 Options:
+  -h, --help           Display this help
   -l, --long           Long and short parameter
   -s            [def]  Only short parameter, with a very, very long
                        description.

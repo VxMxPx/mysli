@@ -21,101 +21,70 @@ $params->add(
     '--type_string',
     ['default' => 'hello world']);
 
-var_dump($params->params());
+print_r(array_slice($params->dump()[0], 1));
 
 ?>
---EXPECT--
-array(4) {
-  ["type_bool"]=>
-  array(10) {
-    ["id"]=>
-    string(9) "type_bool"
-    ["short"]=>
-    NULL
-    ["long"]=>
-    string(9) "type_bool"
-    ["type"]=>
-    string(4) "bool"
-    ["default"]=>
-    bool(true)
-    ["help"]=>
-    NULL
-    ["required"]=>
-    bool(false)
-    ["positional"]=>
-    bool(false)
-    ["action"]=>
-    bool(false)
-    ["invert"]=>
-    bool(false)
-  }
-  ["type_int"]=>
-  array(10) {
-    ["id"]=>
-    string(8) "type_int"
-    ["short"]=>
-    NULL
-    ["long"]=>
-    string(8) "type_int"
-    ["type"]=>
-    string(3) "int"
-    ["default"]=>
-    int(42)
-    ["help"]=>
-    NULL
-    ["required"]=>
-    bool(false)
-    ["positional"]=>
-    bool(false)
-    ["action"]=>
-    bool(false)
-    ["invert"]=>
-    bool(false)
-  }
-  ["type_float"]=>
-  array(10) {
-    ["id"]=>
-    string(10) "type_float"
-    ["short"]=>
-    NULL
-    ["long"]=>
-    string(10) "type_float"
-    ["type"]=>
-    string(5) "float"
-    ["default"]=>
-    float(12.2)
-    ["help"]=>
-    NULL
-    ["required"]=>
-    bool(false)
-    ["positional"]=>
-    bool(false)
-    ["action"]=>
-    bool(false)
-    ["invert"]=>
-    bool(false)
-  }
-  ["type_string"]=>
-  array(10) {
-    ["id"]=>
-    string(11) "type_string"
-    ["short"]=>
-    NULL
-    ["long"]=>
-    string(11) "type_string"
-    ["type"]=>
-    string(3) "str"
-    ["default"]=>
-    string(11) "hello world"
-    ["help"]=>
-    NULL
-    ["required"]=>
-    bool(false)
-    ["positional"]=>
-    bool(false)
-    ["action"]=>
-    bool(false)
-    ["invert"]=>
-    bool(false)
-  }
-}
+--EXPECTF--
+Array
+(
+    [type_bool] => Array
+        (
+            [id] => type_bool
+            [short] =>%s
+            [long] => type_bool
+            [type] => bool
+            [default] => 1
+            [help] =>%s
+            [required] =>%s
+            [positional] =>%s
+            [action] =>%s
+            [invert] =>%s
+            [ignore] =>%s
+        )
+
+    [type_int] => Array
+        (
+            [id] => type_int
+            [short] =>%s
+            [long] => type_int
+            [type] => int
+            [default] => 42
+            [help] =>%s
+            [required] =>%s
+            [positional] =>%s
+            [action] =>%s
+            [invert] =>%s
+            [ignore] =>%s
+        )
+
+    [type_float] => Array
+        (
+            [id] => type_float
+            [short] =>%s
+            [long] => type_float
+            [type] => float
+            [default] => 12.2
+            [help] =>%s
+            [required] =>%s
+            [positional] =>%s
+            [action] =>%s
+            [invert] =>%s
+            [ignore] =>%s
+        )
+
+    [type_string] => Array
+        (
+            [id] => type_string
+            [short] =>%s
+            [long] => type_string
+            [type] => str
+            [default] => hello world
+            [help] =>%s
+            [required] =>%s
+            [positional] =>%s
+            [action] =>%s
+            [invert] =>%s
+            [ignore] =>%s
+        )
+
+)
