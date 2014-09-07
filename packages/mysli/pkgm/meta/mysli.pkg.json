@@ -1,7 +1,7 @@
 {
     "name"        : "mysli/pkgm",
-    "type"        : "mysli-package",
-    "description" : "Packages Manager Library (pkgm).",
+    "version"     : 1,
+    "description" : "Mysli package manager.",
     "license"     : "GPL-3.0",
 
     "authors" : [
@@ -12,9 +12,9 @@
         }
     ],
 
-    "minimum-stability" : "stable",
-
     "require" : {
-        "mysli/core" : "~1.0"
+        "mysli/core" : "~1.0",
+        "mysli/fs"   : "~1.0",
+        "mysli/json" : "~1.0"
     }
 }
