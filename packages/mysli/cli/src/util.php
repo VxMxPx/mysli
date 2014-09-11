@@ -2,9 +2,31 @@
 
 namespace mysli\cli {
 
-    use \mysli\cli\output as cout;
+    \inject::to(__namespace__)
+    ->from('mysli/cli/output', 'cout');
 
     class util {
+        /**
+         * Detect terminal width.
+         * @return integer
+         */
+        static function terminal_width() {
+            // standard method
+            $r = (int) self::execute('tput cols')
+                ?: (int) self::execute('echo $COLUMNS');
+            // try to get it from stty
+            if (!$r) {
+                $r = self::execute('stty size');
+                $r = explode(' ', $r, 2);
+                $r = (int) (isset($r[1]) ? $r[1] : 0);
+            }
+            // windows environment
+            if (!$r) {
+                $r = self::execute('mode');
+                $r = (int) preg_match('/^ *Columns\: *([0-9]+)$/', $r);
+            }
+            return $r;
+        }
         /**
          * Execute command.
          * @param  string $command
