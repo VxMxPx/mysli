@@ -1,0 +1,10 @@
+package     : mysli/framework/config
+description : Mysli Framework Configuration Library.
+version     : 1.0.0
+license     : GPL-3.0
+authors:
+    - Marko Gajšt (Developer) <m@gaj.st>
+require:
+    ../core : ~1
+    ../fs   : ~1
+    ../json : ~1
