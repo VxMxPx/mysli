@@ -1,16 +1,14 @@
 <?php
 
-namespace mysli\config {
+namespace mysli\config\setup {
 
-    use mysli\fs as fs;
-    use mysli\fs\dir as dir;
+    \inject::to(__namespace__)
+    ->from('mysli/fs/{fs,dir}');
 
-    class setup {
-        static function enable() {
-            return dir::create(fs::datpath('mysli.config'), dir::exists_merge);
-        }
-        static function cleanup() {
-            return dir::remove(fs::datpath('mysli.config'));
-        }
+    function enable() {
+        return dir::create(fs::datpath('mysli.config'));
+    }
+    function disable() {
+        return dir::remove(fs::datpath('mysli.config'));
     }
 }

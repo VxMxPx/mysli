@@ -1,6 +1,7 @@
 {
-    "name"        : "mysli/csi",
-    "description" : "Common Setup Interface. Can be used to enable and configure libraries through CLI or web interface.",
+    "name"        : "mysli/core",
+    "version"     : 1,
+    "description" : "Mysli Core (Framework).",
     "license"     : "GPL-3.0",
 
     "authors" : [

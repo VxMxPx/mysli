@@ -2,11 +2,10 @@
 
 namespace mysli\config {
 
-    use mysli\fs as fs;
-    use mysli\fs\file as file;
-    use mysli\fs\json as json;
-    use mysli\arr as arr;
-    use mysli\arr\path as arr_path;
+    \inject::to(__namespace__)
+    ->from('mysli/fs/{fs,file}')
+    ->from('mysli/json')
+    ->from('mysli/core/type/{arr,arr_path}');
 
     class config {
 

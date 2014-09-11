@@ -1,5 +1,5 @@
 <?php
 
 namespace mysli\fs\exception {
-    class error extends \mysli\base\exception\base {}
+    class error extends \mysli\core\exception\base {}
 }

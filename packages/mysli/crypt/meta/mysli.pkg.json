@@ -1,6 +1,7 @@
 {
-    "name"        : "mysli/csi",
-    "description" : "Common Setup Interface. Can be used to enable and configure libraries through CLI or web interface.",
+    "name"        : "mysli/crypt",
+    "version"     : 1,
+    "description" : "Cryptography library.",
     "license"     : "GPL-3.0",
 
     "authors" : [

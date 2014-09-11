@@ -1,6 +1,7 @@
 {
-    "name"        : "mysli/csi",
-    "description" : "Common Setup Interface. Can be used to enable and configure libraries through CLI or web interface.",
+    "name"        : "mysli/html",
+    "version"     : 1,
+    "description" : "Html library.",
     "license"     : "GPL-3.0",
 
     "authors" : [

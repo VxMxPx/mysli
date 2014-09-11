@@ -1,6 +1,7 @@
 {
-    "name"        : "mysli/csi",
-    "description" : "Common Setup Interface. Can be used to enable and configure libraries through CLI or web interface.",
+    "name"        : "mysli/json",
+    "version"     : 1,
+    "description" : "Json library.",
     "license"     : "GPL-3.0",
 
     "authors" : [
@@ -11,5 +12,8 @@
         }
     ],
 
-    "require" : []
+    "require" : {
+        "mysli/core" : "~1.0",
+        "mysli/fs"   : "~1.0"
+    }
 }

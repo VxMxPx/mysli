@@ -4,8 +4,10 @@
 
 Cookies support for Mysli packages:
 
-    public funcition __construct(\Mysli\Cookie $cookie) {
-        $hi = $cookie->read('hi');
+    \inject::to(__namespace__)
+    ->from('mysli/cookie');
+    funcition __construct() {
+        $hi = cookie::read('hi');
     }
 
 ## License

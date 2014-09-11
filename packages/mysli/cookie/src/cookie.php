@@ -2,10 +2,9 @@
 
 namespace mysli\cookie {
 
-    inject::to(__NAMESPACE__)
-        ->from('mysli/core/type/arr')
-        // ->from('mysli/server')
-        ->from('mysli/config');
+    \inject::to(__namespace__)
+    ->from('mysli/core/type/arr')
+    ->from('mysli/config');
 
     class cookie {
         /**

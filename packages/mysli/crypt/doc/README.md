@@ -1,20 +1,16 @@
-# Mysli Config
+# Crypt
 
 ## Introduction
 
-Conig support for Mysli packages:
+Cryptography library.
 
-    \inject::to(__namespace__)
-    ->from('mysli/config')
-
-    funcition do_something() {
-        $config = config::select('mysli/package')
-        $title = $config->get('title');
-    }
+Based on:
+http://www.zimuel.it/
+http://github.com/zendframework/zf2
 
 ## License
 
-The Mysli Config is licensed under the GPL-3.0 or later.
+The Mysli Crypt is licensed under the GPL-3.0 or later.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by

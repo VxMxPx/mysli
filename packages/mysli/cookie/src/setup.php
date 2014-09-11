@@ -2,7 +2,7 @@
 
 namespace mysli\cookie\setup {
 
-    inject::to(__NAMESPACE__)->from('mysli/config');
+    inject::to(__namespace__)->from('mysli/config');
 
     function enable() {
         return config::select('mysli/cookie')

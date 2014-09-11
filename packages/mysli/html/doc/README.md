@@ -1,20 +1,12 @@
-# Mysli Config
+# Html
 
 ## Introduction
 
-Conig support for Mysli packages:
-
-    \inject::to(__namespace__)
-    ->from('mysli/config')
-
-    funcition do_something() {
-        $config = config::select('mysli/package')
-        $title = $config->get('title');
-    }
+Html library.
 
 ## License
 
-The Mysli Config is licensed under the GPL-3.0 or later.
+The Mysli Html is licensed under the GPL-3.0 or later.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
