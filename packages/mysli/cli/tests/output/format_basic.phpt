@@ -9,5 +9,5 @@ echo cout::format('Hello +bold+red%s-all', ['World']) . "\n";
 
 ?>
 --EXPECTF--
-Hello \e[21m\e[39mWorld\e[21m\e[39m
-Hello \e[21m\e[39mWorld\e[0m
+Hello \e[1m\e[31mWorld\e[21m\e[39m
+Hello \e[1m\e[31mWorld\e[0m
