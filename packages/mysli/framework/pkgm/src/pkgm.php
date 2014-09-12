@@ -5,6 +5,7 @@ namespace mysli\framework\pkgm {
     __use(__namespace__,
         '../fs',
         '../json',
+        '../ym',
         ['../exception/*' => 'framework/exception/%s']
     );
 
@@ -18,7 +19,7 @@ namespace mysli\framework\pkgm {
          * @return boolean
          */
         static function exists($package) {
-            return file_exists(fs::pkgpath($package, 'mysli.pkg.json'));
+            return file_exists(fs::pkgpath($package, 'mysli.pkg.ym'));
         }
         /**
          * Check weather package is enabled.
@@ -49,13 +50,25 @@ namespace mysli\framework\pkgm {
         static function list_disabled() {
             $disabled = [];
 
-            foreach (scandir(fs::pkgpath()) as $vendor) {
-                if (substr($vendor, 0, 1) === '.') { continue; }
-                foreach (scandir(fs::pkgpath($vendor)) as $package_name) {
-                    if (substr($package, 0, 1) === '.') { continue; }
-                    $package = $vendor . '/' . $package_name;
-                    if (self::is_enabled($package)) { continue; }
-                    $disabled[] = $package;
+            foreach (fs::ls(fs::pkgpath()) as $vendor) {
+                foreach (fs::ls(fs::pkgpath($vendor)) as $meta) {
+                    $root = "{$vendor}/{$meta}";
+
+                    if (fs\file::exists(fs::pkgpath($root, 'mysli.pkg.ym'))) {
+                        if (!self::is_enabled($root)) {
+                            $disabled[] = $root;
+                        }
+                        continue;
+                    }
+
+                    foreach (fs::ls(fs::pkgpath($root)) as $package) {
+                        if (fs\file::exists(
+                            fs::pkgpath($root, $package, 'mysli.pkg.ym'))) {
+                            if (!self::is_enabled("{$root}/{$package}")) {
+                                $disabled[] = "{$root}/{$package}";
+                            }
+                        }
+                    }
                 }
             }
 
@@ -92,7 +105,7 @@ namespace mysli\framework\pkgm {
             return $obsolete;
         }
         /**
-         * List dependees (the packages which require procided package,
+         * List dependees (the packages which require provided package,
          * i.e. are dependant on it)
          * @param  string  $package
          * @param  boolean $deep
@@ -138,7 +151,12 @@ namespace mysli\framework\pkgm {
                 'missing'  => []
             ];
 
+            $root = substr($package, 0, strrpos($package, '/'));
+
             foreach ($meta['require'] as $dependency => $version) {
+                if (substr($dependency, 0, 3) === '../') {
+                    $dependency = $root . substr($dependency, 2);
+                }
                 if (!self::exists($dependency)) {
                     $list['missing'][$dependency] = $version;
                 } else {
@@ -189,12 +207,12 @@ namespace mysli\framework\pkgm {
             if (self::is_enabled($package)) {
                 return self::$packages[$package];
             } elseif (self::exists($package)) {
-                $file = fs::pkgpath($package, 'meta/mysli.pkg.json');
+                $file = fs::pkgpath($package, 'meta/mysli.pkg.ym');
                 if (fs\file::exists($file)) {
-                    return json::decode_file($file);
+                    return ym::decode_file($file);
                 } else {
                     throw new framework\exception\not_found(
-                        "Fild `meta/mysli.pkg.json` not found for: ".
+                        "Fild `meta/mysli.pkg.ym` not found for: ".
                         "`{$package}`.", 1);
                 }
             } else {

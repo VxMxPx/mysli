@@ -58,5 +58,31 @@ function dump_rr() {
  * @return null
  */
 function __use($namespace) {
-    // DO SOMETHING :)
+    $inject = \inject::to($namespace);
+    foreach (array_slice(func_get_args(), 1) as $pkg) {
+        // ['vendor/pkg' => 'alias']
+        if (is_array($pkg)) {
+            foreach ($pkg as $spkg => $salias) {
+                if (is_numeric($spkg)) {
+                    $spkg = $salias;
+                    $salias = null;
+                }
+                // ['vendor/meta' => ['pkg', 'pkg' => 'alias']]
+                if (is_array($salias)) {
+                    foreach ($salias as $sspkg => $ssalias) {
+                        if (is_numeric($sspkg)) {
+                            $sspkg = $ssalias;
+                            $ssalias = null;
+                        }
+                        $inject->from($spkg.'/'.$sspkg, $ssalias);
+                    }
+                } else {
+                    $inject->from($spkg, $salias);
+                }
+            }
+            continue;
+        }
+        $inject->from($pkg, null);
+    }
+    return $inject;
 }

@@ -3,7 +3,10 @@
 namespace mysli\framework\core {
     class inject {
 
+        private $vendor;
+        private $package;
         private $namespace;
+        private $prefix = '';
 
         /**
          * Instance of injector
@@ -11,29 +14,65 @@ namespace mysli\framework\core {
          */
         function __construct($namespace) {
             $this->namespace = $namespace;
+            $segments = explode('\\', $namespace);
+            if (file_exists(
+                MYSLI_PKGPATH . '/' .
+                implode('/', array_slice($segments, 0, 2)) . '/' .
+                'mysli.pkg.ym')) {
+                $this->package = implode('/', array_slice($segments, 0, 2));
+                $this->vendor  = implode('/', array_slice($segments, 0, 1));
+            } else {
+                $this->package = implode('/', array_slice($segments, 0, 3));
+                $this->vendor  = implode('/', array_slice($segments, 0, 2));
+            }
+        }
+        /**
+         * Set prefix to load packages from
+         * @param  string $string
+         * @return $this
+         */
+        function prefix($string) {
+            $this->prefix = trim($string, '/') . '/';
+            return $this;
         }
         /**
          * From hich package and as what we're importing class
          * @param  string $package
          * @param  string $as
-         * @return null
+         * @return $this
          */
         function from($package, $as=null) {
+            if (substr($package, 0, 3) === '../') {
+                $package = $this->vendor . '/' . substr($package, 3);
+            } elseif (substr($package, 0, 2) === './') {
+                $package = $this->package . '/' . substr($package, 2);
+            }
+            // Set prefix
+            $package = $this->prefix . $package;
             // Prepeare meaningful segments
             $segments = explode('/', $package);
+            // Check weather is meta
+            $is_meta = !file_exists(
+                MYSLI_PKGPATH . '/' .
+                implode('/', array_slice($segments, 0, 2)) . '/' .
+                'mysli.pkg.ym'
+            );
+            $cut = $is_meta ? 3 : 2;
             // If only 2 segments, then we're in index class e.g.:
             // vendor/pkg => vendor/pkg/pkg
-            if (count($segments) === 2) { $segments[] = $segments[1]; }
-            $pkg = implode('/', array_slice($segments, 0, 2));
-            $ns = implode('/', array_slice($segments, 2, -1));
+            if (count($segments) === $cut) {
+                $segments[] = $segments[$cut-1];
+            }
+            $pkg = implode('/', array_slice($segments, 0, $cut));
+            $ns = implode('/', array_slice($segments, $cut, -1));
             $last = array_slice($segments, -1)[0];
 
             // folder insertion
             if ($last === '*') {
+                $ns = $ns ? "{$ns}/" : '';
                 foreach (scandir(MYSLI_PKGPATH."/{$pkg}/src/{$ns}") as $file) {
                     if (substr($file, -4) === '.php') {
-                        $this->from(
-                            "{$pkg}/{$ns}/" . substr($file, 0, -4), $as);
+                        $this->from("{$pkg}/{$ns}".substr($file, 0, -4), $as);
                     }
                 }
                 return $this;
@@ -47,9 +86,10 @@ namespace mysli\framework\core {
                     throw new exception\argument(
                         "Wrong number of segments in `\$as`.!", 1);
                 }
+                $ns = $ns ? "{$ns}/" : '';
                 foreach ($last as $lpos => $last_segment) {
                     $last_segment = trim($last_segment);
-                    $this->from("{$pkg}/{$ns}/{$last_segment}",
+                    $this->from("{$pkg}/{$ns}{$last_segment}",
                         (is_array($as[$lpos]) ? $as[$lpos] : $as));
                 }
                 return $this;
@@ -59,15 +99,15 @@ namespace mysli\framework\core {
             if (!$as) {
                 $as = $last;
             }
-
-            if (is_integer($as)) {
-                $as = implode('\\', array_slice($segments, -($as)));
-            } else {
-                $as = str_replace('/', '\\', $as);
+            if (strpos($as, '%s')) {
+                $as = sprintf($as, $last);
             }
-            $class = str_replace('/', '\\', $package);
+            $as = str_replace('/', '\\', $as);
             $as = $this->namespace . '\\' . $as;
-            class_alias($class, $as);
+            $class = str_replace('/', '\\', $package);
+            if (!class_exists($as, false)) {
+                class_alias($class, $as);
+            }
             return $this;
         }
         /**

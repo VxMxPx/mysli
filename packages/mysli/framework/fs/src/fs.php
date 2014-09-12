@@ -137,5 +137,14 @@ namespace mysli\framework\fs {
 
             return self::ds($directory, $new_filename);
         }
+        /**
+         * Return list of file(s) and folders in a particular directory.
+         * This will exclude . and ..
+         * @param  string $directory
+         * @return array
+         */
+        static function ls($directory) {
+            return array_diff(scandir($directory), ['.', '..']);
+        }
     }
 }

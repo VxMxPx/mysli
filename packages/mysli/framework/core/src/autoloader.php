@@ -3,7 +3,7 @@
 namespace mysli\framework\core {
     class autoloader {
 
-        private static $initialized = ['mysli/framework/core'];
+        private static $initialized = ['mysli/framework/core/'];
 
         /**
          * Autoloader
@@ -11,70 +11,75 @@ namespace mysli\framework\core {
          * @return boolean
          */
         static function load($class) {
-            // Cannot handle non-namespaced requests!
-            if (strpos($class, '\\') === false) { return false; }
+            $segments = explode("\\", $class);
 
-            $class = ltrim($class, '\\');
-            $segments = explode('\\', $class);
+            $root = '';
+            $path = '';
+            $file = '';
 
-            // Convert mysli\core => mysli\core\core
-            if (count($segments) === 2) {
-                $segments[] = $segments[1];
-                $alias = $class;
-                $class = implode('\\', $segments);
-            } else {
-                $alias = false;
+            $has_meta = (count($segments) > 2) &&
+                file_exists(MYSLI_PKGPATH.'/'.
+                implode('/', array_slice($segments, 0, 3)). '/mysli.pkg.ym');
+            $rootc = $has_meta ? 3 : 2;
+
+            // get root (vendor+meta+package)
+            $root = implode('/', array_slice($segments, 0, $rootc)) . '/';
+
+            // get sub-path
+            if (count($segments) > $rootc+1) {
+                $path = implode('/', array_slice($segments, $rootc, -1)) . '/';
             }
 
-            // Add src segment
-            $segments = array_merge(
-                array_slice($segments, 0, 2),
-                ['src'],
-                array_slice($segments, 2));
+            // get file
+            if (count($segments) === $rootc) {
+                $alias = implode('\\', $segments);
+            } else $alias = false;
+            $file = array_slice($segments, -1)[0];
 
-            $path = MYSLI_PKGPATH . '/' . implode('/', $segments) . '.php';
+            // full path & class
+            $full_path = MYSLI_PKGPATH . "/{$root}src/{$path}{$file}.php";
+            $class = str_replace('/', '\\', $root.$path.$file);
 
-            if (!file_exists($path)) {
+            if (!file_exists($full_path)) {
                 return false;
             }
 
-            include($path);
+            include($full_path);
+
+            if (!class_exists($class)) {
+                throw new \Exception(
+                    "Class: `{$class}` not found in: `{$full_path}`.", 1);
+            }
 
             if ($alias) {
                 class_alias($class, $alias);
             }
 
-            if (class_exists($class, false)) {
-                self::execute_init($class);
-                return true;
-            } else {
-                return false;
+            if (!in_array($root, self::$initialized)) {
+                self::initialize($root);
             }
+
+            return true;
         }
         /**
          * Run init if this package is loader first time.
-         * @param  string $class
+         * @param  string  $package
          * @return null
          */
-        private static function execute_init($class) {
-            $namespace = explode('\\', $class);
-            $package = $namespace[0] . '/' . $namespace[1];
-            $namespace = $namespace[0] . '\\' . $namespace[1];
-            if (in_array($package, self::$initialized)) {
-                return;
-            }
-            if (function_exists($namespace . '\\__init')) {
-                call_user_func($namespace . '\\__init');
-            } else {
-                $path = MYSLI_PKGPATH . '/' . $package . '/__init.php';
-                if (file_exists($path)) {
-                    include $path;
-                }
-                if (function_exists($namespace . '\\__init')) {
-                    call_user_func($namespace . '\\__init');
-                }
-            }
+        private static function initialize($package) {
+            // under no circumstance load __init twice
             self::$initialized[] = $package;
+
+            $function = str_replace('/', '\\', $package.'__init');
+            $path = MYSLI_PKGPATH . "/{$package}src/__init.php";
+            if (!function_exists($function)) {
+                if (file_exists($path)) {
+                    include($path);
+                }
+            }
+            if (function_exists($function)) {
+                call_user_func($function);
+            }
         }
     }
 }

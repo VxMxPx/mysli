@@ -29,4 +29,4 @@ echo $params->help();
 
 ?>
 --EXPECTF--
-Fatal error: Uncaught exception 'mysli\core\exception\argument' with message 'Long argument cannot be longer than 40 characters: `a-very-very-very-very-very-very-very-very-very-very-long-parameter` for `a-very-very-very-very-very-very-very-very-very-very-long-parameter`.' in %a
+Fatal error: Uncaught exception 'mysli\framework\exception\argument' with message 'Long argument cannot be longer than 40 characters: `a-very-very-very-very-very-very-very-very-very-very-long-parameter` for `a-very-very-very-very-very-very-very-very-very-very-long-parameter`.' in %a
