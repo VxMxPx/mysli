@@ -43,7 +43,7 @@ namespace mysli\framework\cli {
          * until function ($call) is returning null
          * @return mixed
          */
-        static function multiline($title, $call) {
+        static function multiline($title, $call=null) {
             $result = null;
             $stdin  = '';
             $enter_key = 0;
@@ -60,7 +60,7 @@ namespace mysli\framework\cli {
                         }
                     }
                 } while ($enter_key < 1);
-                $result = $call(trim($stdin));
+                $result = $call ? $call(trim($stdin)) : null;
             } while($result === null);
 
             return $result;
