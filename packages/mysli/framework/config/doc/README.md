@@ -2,12 +2,31 @@
 
 ## Introduction
 
-Conig support for Mysli packages:
+Conig for Mysli packages:
 
-    funcition do_something() {
-        $config = config::select('mysli/package')
-        $title = $config->get('title');
-    }
+## Usage
+
+To include it use: `__use(__namespace__, 'mysli/framework/config');`.
+
+To select your package's config use `select`, which will return config object:
+
+```php
+$config = config::select('vendor/package')
+```
+
+Then use `get` method:
+
+```php
+$title = $config->get('title');
+```
+
+To set a new value, use `set` method:
+
+```php
+$config->set('title', 'New Title');
+// don't forget to write changes to file...
+$config->save();
+```
 
 ## License
 
