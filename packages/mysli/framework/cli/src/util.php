@@ -41,8 +41,8 @@ namespace mysli\framework\cli {
          * Fork execute command, and stop execution in child.
          * Use 'pcntl_wait($status);' in parent, to prevent zombie processes!
          * @param  mixed   $commands string|array
-         * @param  boolean $print result of script execution use system
-         * rather than exec.
+         * @param  boolean $print result of script execution (use system
+         * rather than exec).
          * @return integer pid
          */
         static function fork_command($commands, $print=true) {
