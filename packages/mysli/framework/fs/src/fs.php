@@ -139,12 +139,26 @@ namespace mysli\framework\fs {
         }
         /**
          * Return list of file(s) and folders in a particular directory.
-         * This will exclude . and ..
+         * If no filter provided, `.` and `..` will be excluded.
          * @param  string $directory
+         * @param  string $filter    Normal regular expression filter,
+         *                           matching files will be returned.
          * @return array
          */
-        static function ls($directory) {
-            return array_diff(scandir($directory), ['.', '..']);
+        static function ls($directory, $filter=null) {
+            if (!$filter) {
+                return array_diff(scandir($directory), ['.', '..']);
+            } else {
+                $collection = [];
+                $filter = substr($filter, 0, 1) === '/'
+                    ? $filter : "/{$filter}/";
+                foreach (scandir($directory) as $file) {
+                    if (preg_match($filter, $file)) {
+                        $collection[] = $file;
+                    }
+                }
+                return $collection;
+            }
         }
     }
 }
