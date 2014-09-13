@@ -45,20 +45,17 @@ namespace mysli\framework\cli {
             $scripts = [];
 
             foreach (pkgm::list_enabled() as $package) {
-                $path = pkgpath($package . '/script');
+                $path = fs::pkgpath($package, 'src/script');
                 if (!fs\dir::exists($path)) {
                     continue;
                 }
-                $files = scandir($path);
-                foreach ($files as $file) {
-                    if (substr($file, -4) !== '.php') {
-                        continue;
-                    }
+                //$files = scandir($path);
+                foreach (fs::ls($path, '\\.php$') as $file) {
                     $id = substr($file, 0, -4);
                     $meta = pkgm::meta($package);
                     $scripts[$id] = [
                         'package'     => $package,
-                        'script'      => fs\ds('script', $id),
+                        'script'      => fs::ds('script', $id),
                         'description' => $meta['description']
                     ];
                 }
@@ -74,7 +71,7 @@ namespace mysli\framework\cli {
         private static function execute($script, array $arguments=[]) {
             $scripts = self::discover_scripts();
             if (!isset($scripts[$script])) {
-                output::warn('Command not found: `%s`.', $script);
+                output::warn("Command not found: `{$script}`.");
                 return false;
             }
             $script = $scripts[$script]['name'] . "/script/{$script}";
@@ -82,7 +79,7 @@ namespace mysli\framework\cli {
             if (method_exists($script, 'run')) {
                 call_user_func_array([$script, 'run'], [$arguments]);
             } else {
-                output::warn('Method `run` not found for: `%s`.', $script);
+                output::warn("Method `run` not found for: `{$script}`.");
             }
         }
     }
