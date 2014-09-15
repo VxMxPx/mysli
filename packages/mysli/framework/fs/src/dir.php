@@ -137,7 +137,7 @@ namespace mysli\framework\fs {
 
             if (!self::is_empty($directory)) {
                 if (!$force) {
-                    throw new framework\exception\fs(3
+                    throw new framework\exception\fs(
                         'Directory is not empty, use $force flag.', 1);
                 }
                 $files = array_diff(scandir($directory), ['.','..']);
