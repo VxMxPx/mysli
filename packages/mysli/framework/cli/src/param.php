@@ -32,6 +32,8 @@ namespace mysli\framework\cli {
             'help'       => null,  // help text
             'required'   => null,  // weather field is required
             'positional' => false, // weather this is positional parameter
+            'invoke'     => false, // if parameter is present a provided method
+                                   // will be executed
             'action'     => false, // func to be executed when field is parsed:
                                    // value, is_valid, messages, break=false
             'invert'     => false, // invert bool value
@@ -162,6 +164,12 @@ namespace mysli\framework\cli {
                     }
                 }
             }
+
+            if (empty($this->values)) {
+                $this->is_valid = false;
+                $this->messages[] = $this->help();
+            }
+
             // check weather all required items are set...
             if ($this->is_valid) {
                 foreach ($this->params as $pid => $opt) {
@@ -172,6 +180,17 @@ namespace mysli\framework\cli {
                         } else {
                             $this->values[$pid] = $opt['default'];
                         }
+                    }
+                }
+            }
+
+            // check if any parameters to be invoked is present
+            if ($this->is_valid) {
+                foreach ($this->params as $pid => $opt) {
+                    if ($opt['invoke'] && isset($this->values[$pid])) {
+                        call_user_func_array(
+                            $opt['invoke'],
+                            [$this->values[$pid], $this->values]);
                     }
                 }
             }

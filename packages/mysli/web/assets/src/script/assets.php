@@ -58,7 +58,7 @@ namespace mysli\assets\script {
                  'required'   => true]);
 
             $params->parse();
-            cout::info($params->messages());
+            cout::line($params->messages());
             if ($params->is_valid()) {
                 $values = $params->values();
                 return self::observe_or_build(
@@ -91,32 +91,32 @@ namespace mysli\assets\script {
             $valid = true;
             $require = config::select('mysli/assets', 'require', []);
 
-            cout::info('Starting self test!');
+            cout::line('Starting self test!');
 
             foreach ($require as $command => $require) {
                 $res = [];
-                cout::info('Test: `%s`.', $command);
+                cout::line('Test: `%s`.', $command);
                 exec($command, $out, $res);
                 if ($require !== true) {
                     if (arr::index(0, $out) &&
                         str::pos($out[0], $require) > -1) {
-                        cout::warn(
-                            'In: `%s`, expect: `%s`, got: `%s` .',
+                        cout::format(
+                            '+yellow In: `%s`, expect: `%s`, got: `%s` .',
                             [$command, $require, $out[0]]);
                         $valid = false;
                     }
                 } else {
                     if ($res !== 0) {
-                        cout::warn('Missing: `%s`.', $command);
+                        cout::format('+yellow Missing: `%s`.', $command);
                         $valid = false;
                     }
                 }
             }
 
             if (!$valid) {
-                cout::warn('Some functions might not work properly.');
+                cout::format('+yellow Some functions might not work properly.');
             } else {
-                cout::success('All ok!');
+                cout::format('+green All ok!');
             }
 
             return $valid;
@@ -163,20 +163,22 @@ namespace mysli\assets\script {
                         if (!arr::key(fs::ds('/src', $asset), $changes)) {
                             continue;
                         } else {
-                            cout::info(
+                            cout::line(
                                 'Processing: %s', fs::ds('/src', $asset));
                             $processed++;
                         }
                     }
 
                     if (!fs\file::exists($source_file)) {
-                        cout::warn('File not found: %s.', $source_file);
+                        cout::format(
+                            '+yellow File not found: %s.', $source_file);
                         continue;
                     }
 
                     if (!arr::key($ext, $process)) {
-                        cout::warn(
-                            'Unknown extention, cannot process: %s.', $ext);
+                        cout::format(
+                            '+yellow Unknown extention, cannot process: %s.',
+                            $ext);
                         continue;
                     }
 
@@ -195,7 +197,7 @@ namespace mysli\assets\script {
 
                 // Compress(?)
                 if (arr::key($asset_ext, $compress)) {
-                    cout::info('Compress: %s.', basename($asset_file));
+                    cout::line('Compress: %s.', basename($asset_file));
                     system(
                         self::parse_command(
                             $compress[$asset_ext], $asset_file,
@@ -244,32 +246,33 @@ namespace mysli\assets\script {
             if (!self::diagnostic()) {
                 if (!cinput::confirm(
                     'Some components are missing. Continue anyway?')) {
-                    cout::info('Canceled by user.');
+                    cout::line('Canceled by user.');
                     return;
                 }
             }
 
             if (!$package) {
-                cout::warn('Please enter a valid package name.');
+                cout::format('+yellow Please enter a valid package name.');
                 return;
             }
 
             try {
                 $assets = self::read_assets($package, $assets_file);
             } catch (exception\not_found $e) {
-                cout::warn('File not found: %s.', $assets_file);
+                cout::format('+yellow File not found: %s.', $assets_file);
                 return;
             }
             if (arr::valid($assets)) {
-                cout::warn(
-                    'Invalid file format: %s.', $assets_file);
+                cout::format(
+                    '+yellow Invalid file format: %s.', $assets_file);
                 return;
             }
 
             $assets_path = fs::pkgpath($package, $assets_dir);
             if (!fs\dir::exists($assets_path)) {
-                cout::warn(
-                    'Assets path seems to be invalid. Cannot continue.');
+                cout::format(
+                    '+yellow Assets path seems to be invalid. '.
+                    'Cannot continue.');
                 return;
             }
 
@@ -278,8 +281,9 @@ namespace mysli\assets\script {
             }
             $web_dir = web::path($web_dir);
             if (!fs\dir::exists($web_dir)) {
-                cout::warn(
-                    'Public web path seems to be invalid. Cannot continue.');
+                cout::format(
+                    '+yellow Public web path seems to be invalid. '.
+                    'Cannot continue.');
                 return;
             }
 
@@ -294,7 +298,7 @@ namespace mysli\assets\script {
                         $before_command,
                         fs::ds($assets_path, 'src/null'),
                         fs::ds($assets_path, 'dist/null'));
-                    cout::info('Call: %s.', $command);
+                    cout::line('Call: %s.', $command);
                     system($command);
                 }
             }
@@ -304,8 +308,8 @@ namespace mysli\assets\script {
                 if ($rsignature !== $signature) {
                     $changes = self::what_changed(
                         $rsignature, $signature, str::len($assets_path));
-                    cout::info('What changed: %s', arr::readable($changes));
-                    cout::info('Rebuilding assets...');
+                    cout::line('What changed: %s', arr::readable($changes));
+                    cout::line('Rebuilding assets...');
                     $signature = $rsignature;
                     self::assets_merge($assets, $assets_path, $changes);
                     fs\dir::copy($assets_path, $web_dir);

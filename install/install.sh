@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 
-define('MYSLI_INSTALLER_VERSION', '1.1.2');
+define('MYSLI_INSTALLER_VERSION', '1.1.4');
 
 /**
 * Print help message.
@@ -169,22 +169,23 @@ $core($datpath, $pkgpath);
 if (exe_setup($packages['pkgm'], $pkgpath, $datpath, 'print_line_and_die')) {
     print_line('Pkgm was successfully enabled.');
 }
-$pkgm = pkg_class($packages['pkgm'], 'pkgm', $pkgpath, 'print_line_and_die');
+// $pkgm = pkg_class($packages['pkgm'], 'pkgm', $pkgpath, 'print_line_and_die');
 
-if (!$pkgm::enable($packages['core'])) {
-    print_line_and_die("Failed to add `core` to enabled packages list.");
-} else {
-    print_line('Core was successfully added to the enabled packages list.');
-}
+// if (!$pkgm::enable($packages['core'])) {
+//     print_line_and_die("Failed to add `core` to enabled packages list.");
+// } else {
+//     print_line('Core was successfully added to the enabled packages list.');
+// }
 
 // Enable cli package...
 if (exe_setup($packages['cli'], $pkgpath, $datpath, 'print_line_and_die')) {
     print_line('Pkgm was successfully enabled.');
 }
-if (!$pkgm::enable($packages['cli'])) {
-    print_line_and_die("Failed to add `cli` to enabled packages list.");
-} else {
-    print_line('Cli was successfully added to the enabled packages list.');
-}
+// if (!$pkgm::enable($packages['cli'])) {
+//     print_line_and_die("Failed to add `cli` to enabled packages list.");
+// } else {
+//     print_line('Cli was successfully added to the enabled packages list.');
+// }
 
-print_line('All done!');
+print_line('All done! Will update dependencies now.');
+exec("cd {$datpath} && ./dot pkgm --repair");

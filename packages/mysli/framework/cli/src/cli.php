@@ -33,9 +33,9 @@ namespace mysli\framework\cli {
             foreach (self::discover_scripts() as $script => $data) {
                 $commands[$script] = $data['description'];
             }
-            output::info('Mysli Cli. List of Available Commands:');
-            output::info('<COMMAND> [OPTIONS...]');
-            output::info(arr::readable($commands));
+            output::line('Mysli Cli. List of Available Commands:');
+            output::line('<COMMAND> [OPTIONS...]');
+            output::line(arr::readable($commands));
         }
         /**
          * Scan packages to find scripts.
@@ -71,7 +71,7 @@ namespace mysli\framework\cli {
         private static function execute($script, array $arguments=[]) {
             $scripts = self::discover_scripts();
             if (!isset($scripts[$script])) {
-                output::warn("Command not found: `{$script}`.");
+                output::line(output::yellow("Command not found: `{$script}`."));
                 return false;
             }
             $script = str_replace(
@@ -80,7 +80,8 @@ namespace mysli\framework\cli {
             if (method_exists($script, 'run')) {
                 call_user_func_array([$script, 'run'], [$arguments]);
             } else {
-                output::warn("Method `run` not found for: `{$script}`.");
+                output::format(
+                    '+yellow Method `run` not found for: `%s`.', $script);
             }
         }
     }

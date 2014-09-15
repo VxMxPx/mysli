@@ -57,6 +57,7 @@ namespace mysli\framework\cli {
             'bg_light_cyan'    => [106, 49],
             'bg_white'         => [107, 49],
         ];
+        private static $last_length = 0;
 
         /**
          * Print line.
@@ -67,37 +68,26 @@ namespace mysli\framework\cli {
         static function line($string, $new_line=true) {
             fwrite(STDOUT, $string);
             if ($new_line) {
+                fwrite(STDOUT, "\e[0m");
+                self::$last_length = 0;
                 fwrite(STDOUT, PHP_EOL);
+            } else {
+                self::$last_length += strlen(
+                    preg_replace('/\\e\[[0-9]+m/', '', $string));
             }
             flush();
         }
         /**
-         * Print warning
+         * Position input to the right part of the screen.
          * @param  string  $message
+         * @param  integer $padding
+         * @return null
          */
-        static function warn($message) {
-            self::line(self::yellow($message), true);
-        }
-        /**
-         * Print error
-         * @param  string  $message
-         */
-        static function error($message) {
-            self::line(self::red($message), true);
-        }
-        /**
-         * Print information
-         * @param  string  $message
-         */
-        static function info($message) {
-            self::line($message, true);
-        }
-        /**
-         * Print success
-         * @param  string  $message
-         */
-        static function success($message) {
-            self::line(self::green($message), true);
+        static function right($message, $padding=2) {
+            $len = strlen(preg_replace('/\\e\[[0-9]+m/', '', $message));
+            $pos = cutil::terminal_width() - $padding - self::$last_length;
+            $pos = $pos - $len;
+            return str_repeat(' ', $pos) . $message;
         }
         /**
          * Format output, to open tag use plus(+), to close use minus(-) e.g.:
@@ -106,17 +96,26 @@ namespace mysli\framework\cli {
          * to close all use: -all, e.g.: +bold+red+bg_blue %s -all
          * @param  string $format
          * @param  array $params
-         * @return string
+         * @return null
          */
         static function format($format, array $params=[]) {
             $format = preg_replace_callback(
-                '/([\+\-])([a-z_]{3,})/i', function ($match) {
+                '/([\+\-])([a-z_]{3,})\ ?/i', function ($match) {
                     if (isset(self::$format[$match[2]])) {
                         $f = self::$format[$match[2]][(int) ($match[1] == '-')];
-                        return "\\e[{$f}m";
+                        return "\e[{$f}m";
+                    } elseif ($match[2] === 'right') {
+                        return '+right';
                     }
                 }, $format);
-            return vsprintf($format, $params);
+            $output = vsprintf($format, $params);
+            if (strpos($format, '+right') !== false) {
+                $output = explode('+right', $output, 2);
+                self::line($output[0], false);
+                self::line(self::right($output[1]), true);
+            } else {
+                self::line($output, true);
+            }
         }
         /**
          * Create a new line(s)
@@ -132,7 +131,7 @@ namespace mysli\framework\cli {
         static function fill($character) {
             $width = cutil::terminal_width() ?: 75;
             $width = floor($width / strlen($character));
-            self::info(str_repeat($character, $width));
+            self::line(str_repeat($character, $width));
         }
 
         // format shortcuts

@@ -99,16 +99,7 @@ bg_light_yellow, bg_light_blue, bg_light_magenta, bg_light_cyan, bg_white
 There are shortcut methods available for each tag:
 
 ```php
-output::red('Hello ' . output::bold('world!'));
-```
-
-... and:
-
-```php
-output::info('This is some information.');
-output::warn('This is a warning.');
-output::error('This is an error');
-output::success('Yay, success!');
+print output::red('Hello ' . output::bold('world!'));
 ```
 
 ### Parameters
@@ -149,6 +140,7 @@ The `$options` parameter is an array with following options:
     help       // help text
     required   // weather field is required
     positional // weather this is positional parameter (auto set from $name)
+    invoke     // if parameter is present a provided method will be executed
     action     // func to be executed when field is parsed:
                // value, is_valid, messages, break=false
     invert     // invert bool value

@@ -8,7 +8,7 @@ namespace mysli\framework\cli\script {
 
     class interactive {
         static function run() {
-            cout::info(
+            cout::line(
                 'Hi! This isan interative console for the Mysli Project.');
             cin::line('>> ', function ($stdin) {
                 if (in_array(strtolower($stdin), ['exit', 'q'])) {
@@ -21,20 +21,20 @@ namespace mysli\framework\cli\script {
                 }
 
                 if (substr($stdin, 0, 1) === '.') {
-                    cout::info(eval(substr($stdin, 1)));
+                    cout::line(eval(substr($stdin, 1)));
                 } else {
-                    cout::info(eval(
+                    cout::line(eval(
                         'namespace mysli\framework\cli\script\interactive { '.
                         'echo dump_r(' . trim($stdin, ';') . '); }'));
                 }
             });
         }
         protected static function help() {
-            cout::info('MYSLI INTERACTIVE :: HELP');
-            cout::info('Normal PHP commands are accepted, example: `$var = \'value\'`.');
-            cout::info('You don\'t need to enter `echo` and you can omit semicolons.');
-            cout::info('If you want command not to be echoed automatically, prefix it with dot `.`.');
-            cout::info('Enter `q` or `exit` to quit.');
+            cout::line('MYSLI INTERACTIVE :: HELP');
+            cout::line('Normal PHP commands are accepted, example: `$var = \'value\'`.');
+            cout::line('You don\'t need to enter `echo` and you can omit semicolons.');
+            cout::line('If you want command not to be echoed automatically, prefix it with dot `.`.');
+            cout::line('Enter `q` or `exit` to quit.');
         }
     }
 }

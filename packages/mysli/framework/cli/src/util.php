@@ -48,7 +48,7 @@ namespace mysli\framework\cli {
         static function fork_command($commands, $print=true) {
             $pid = pcntl_fork();
             if ($pid === -1) {
-                cout::error('Cannot fork the process...');
+                cout::format('+red Cannot fork the process...');
                 exit(1);
             } else if ($pid === 0) {
                 // We are the child, execute command and quit!
