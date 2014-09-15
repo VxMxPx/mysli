@@ -294,7 +294,7 @@ namespace mysli\framework\pkgm {
          */
         static function read() {
             self::$packages = json::decode_file(
-                fs::datpath('pkgm/r.json'));
+                fs::datpath('pkgm/r.json'), true);
             return is_array(self::$packages);
         }
         /**
