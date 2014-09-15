@@ -3,15 +3,15 @@
 namespace mysli\framework\pkgm\setup {
 
     __use(__namespace__,
-        './pkgm',
-        '../fs'
+        '../fs/{fs,file}'
     );
 
     function enable() {
-        return fs\file::create_recursive(fs::datpath('pkgm/r.json'))
-            and pkgm::enable('mysli/pkgm', 'self');
+        return file::create_recursive(fs::datpath('pkgm/r.json'), true)
+            and __use(__namespace__, './pkgm')
+            and pkgm::enable('mysli/framework/pkgm', 'installer');
     }
     function disable() {
-        return fs\dir::remove(fs::datpath('pkgm'));
+        return dir::remove(fs::datpath('pkgm'));
     }
 }
