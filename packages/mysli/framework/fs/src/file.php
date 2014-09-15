@@ -112,7 +112,7 @@ namespace mysli\framework\fs {
             $dir = dirname($filename);
 
             if (!dir::exists($dir)) {
-                dir::create_recursive($dir, 0777);
+                dir::create($dir, 0777, true);
             }
 
             return self::create($filename, $empty);
@@ -167,9 +167,10 @@ namespace mysli\framework\fs {
                 fclose($handle);
                 return $i;
             } else {
-                $flags = 0;
-                if (self::append) {
+                if ($method === self::append) {
                     $flags = FILE_APPEND;
+                } else {
+                    $flags = 0;
                 }
                 if ($lock) {
                     $flags = $flags|LOCK_EX;
