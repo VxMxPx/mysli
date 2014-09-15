@@ -15,6 +15,7 @@ namespace mysli\framework\event {
 
         private static $data_source;
         private static $events;
+        private static $eid;
 
         /**
          * Wait for particular event to happened,
@@ -22,10 +23,10 @@ namespace mysli\framework\event {
          * @param   string  $event    Name of the event you're waiting for
          * @param   mixed   $call     Can be:
          *                            - callable
-         *                            - string: vendor/package::method
+         *                            - string: vendor\package\class::method
          * @param   boolean $priority Which priority should the event be:
          *                            event::priority_high, event::priority_low
-         * @return  integer           Event ID in the stack, it can be used to
+         * @return  string            Event ID in the stack, it can be used to
          *                            call particular event off
          */
         static function on($event, $call, $priority=self::priority_low) {
@@ -35,9 +36,9 @@ namespace mysli\framework\event {
             }
 
             if ($priority === self::priority_low) {
-                self::$events[$event][] = $call;
+                self::$events[$event][++self::$eid] = $call;
             } else {
-                array_unshift(self::$events[$event], $call);
+                self::$events = ['eid_'.++self::$eid => $call] + self::$events;
             }
 
             end(self::$events[$event]);
@@ -47,8 +48,8 @@ namespace mysli\framework\event {
          * Cancel particular event.
          * @param   string  $event Name of the event to be cancelled.
          * @param   mixed   $call  Can only be either:
-         *                         - string:  vendor/package::method
-         *                         - integer: event id (from ::on() call)
+         *                         - vendor\package\class::method
+         *                         - event id (from ::on() call)
          * @return  null
          */
         static function off($event, $call) {
@@ -57,15 +58,8 @@ namespace mysli\framework\event {
                     continue;
                 }
                 foreach ($calls as $call_id => $ccall) {
-                    if (is_integer($call) && $call === $call_id) {
+                    if ($call === $ccall) {
                         unset($calls[$call_id]);
-                    }
-                    elseif (is_string($call) && $call === $ccall) {
-                        unset($calls[$call_id]);
-                    } else {
-                        throw new framework\exception\argument(
-                            "Invalid call type, expected ".
-                            "`string` or `integer`.", 1);
                     }
                 }
                 // In case all events were unset, the main element
@@ -78,7 +72,7 @@ namespace mysli\framework\event {
         /**
          * Permanently add particular event to the list.
          * @param  string $event
-         * @param  string $call     in format: vendor/package::method
+         * @param  string $call     in format: vendor\package\class::method
          * @param  string $priority event::priority_high || event::priority_low
          * @return boolean
          */
@@ -106,7 +100,7 @@ namespace mysli\framework\event {
         /**
          * Permanently remove particular event from the list.
          * @param  string $event
-         * @param  string $call  in format: vendor/package::method
+         * @param  string $call  in format: vendor\package\class::method
          * @return boolean
          */
         static function unregister($event, $call) {
@@ -173,10 +167,12 @@ namespace mysli\framework\event {
         }
         /**
          * Reload list of events.
+         * This will erase all temporary events set with `on`!
          * @return null
          */
         static function reload() {
             self::$events = json::decode_file(self::$data_source, true);
+            self::$eid = count(self::$events);
         }
         /**
          * Write list of events.
