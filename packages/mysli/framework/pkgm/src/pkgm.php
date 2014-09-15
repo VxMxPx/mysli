@@ -3,7 +3,7 @@
 namespace mysli\framework\pkgm {
 
     __use(__namespace__,
-        '../fs',
+        '../fs/{fs,file}',
         '../json',
         '../ym',
         ['../exception/*' => 'framework/exception/%s']
@@ -54,7 +54,7 @@ namespace mysli\framework\pkgm {
                 foreach (fs::ls(fs::pkgpath($vendor)) as $meta) {
                     $root = "{$vendor}/{$meta}";
 
-                    if (fs\file::exists(fs::pkgpath($root, 'mysli.pkg.ym'))) {
+                    if (file::exists(fs::pkgpath($root, 'mysli.pkg.ym'))) {
                         if (!self::is_enabled($root)) {
                             $disabled[] = $root;
                         }
@@ -62,7 +62,7 @@ namespace mysli\framework\pkgm {
                     }
 
                     foreach (fs::ls(fs::pkgpath($root)) as $package) {
-                        if (fs\file::exists(
+                        if (file::exists(
                             fs::pkgpath($root, $package, 'mysli.pkg.ym'))) {
                             if (!self::is_enabled("{$root}/{$package}")) {
                                 $disabled[] = "{$root}/{$package}";
@@ -207,12 +207,12 @@ namespace mysli\framework\pkgm {
             if (self::is_enabled($package)) {
                 return self::$packages[$package];
             } elseif (self::exists($package)) {
-                $file = fs::pkgpath($package, 'meta/mysli.pkg.ym');
-                if (fs\file::exists($file)) {
+                $file = fs::pkgpath($package, 'mysli.pkg.ym');
+                if (file::exists($file)) {
                     return ym::decode_file($file);
                 } else {
                     throw new framework\exception\not_found(
-                        "Fild `meta/mysli.pkg.ym` not found for: ".
+                        "Fild `mysli.pkg.ym` not found for: ".
                         "`{$package}`.", 1);
                 }
             } else {
@@ -238,9 +238,12 @@ namespace mysli\framework\pkgm {
                     "The package doesn't exists: `{$package}`.", 2);
             }
             $meta = self::meta($package);
+            $meta['require'] = $meta['require'] ?: [];
 
             foreach ($meta['require'] as $dependency => $version) {
-                self::$packages[$dependency]['required_by'][] = $package;
+                if (self::is_enabled($dependency)) {
+                    self::$packages[$dependency]['required_by'][] = $package;
+                }
             }
 
             $meta['enabled_by']  = $enabled_by;
@@ -249,10 +252,12 @@ namespace mysli\framework\pkgm {
 
             // Does any of the enabled packages require this package?
             // This happened sometimes, especially when replacing packages.
-            foreach (self::$packages as $lpkg => $lmeta) {
-                foreach ($lmeta['require'] as $depends_on => $version) {
-                    if ($depends_on === $package) {
-                        $meta['required_by'][] = $lpkg;
+            if (!empty(self::$packages)) {
+                foreach (self::$packages as $lpkg => $lmeta) {
+                    foreach ($lmeta['require'] as $depends_on => $version) {
+                        if ($depends_on === $package) {
+                            $meta['required_by'][] = $lpkg;
+                        }
                     }
                 }
             }
@@ -290,14 +295,14 @@ namespace mysli\framework\pkgm {
         static function read() {
             self::$packages = json::decode_file(
                 fs::datpath('pkgm/r.json'));
-            return is_array(self::$package);
+            return is_array(self::$packages);
         }
         /**
          * Write packages to the file.
          * @return boolean
          */
         private static function write() {
-            return json::enacode_file(
+            return json::encode_file(
                 fs::datpath('pkgm/r.json'), self::$packages);
         }
     }
