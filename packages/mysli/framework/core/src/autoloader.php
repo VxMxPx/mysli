@@ -44,7 +44,9 @@ namespace mysli\framework\core {
                 return false;
             }
 
-            include($full_path);
+            if (!class_exists($class)) {
+                include($full_path);
+            }
 
             if (!class_exists($class)) {
                 throw new \Exception(

@@ -13,6 +13,9 @@ namespace mysli\framework\core {
          * @param string $namespace
          */
         function __construct($namespace) {
+            if (!$namespace) {
+                throw new \Exception("Invalid namespace.", 1);
+            }
             $this->namespace = $namespace;
             $segments = explode('\\', $namespace);
             if (file_exists(
@@ -79,18 +82,20 @@ namespace mysli\framework\core {
             }
 
             // multiple insersion
-            if (strpos($last, ',') !== false) {
-                if (strpos($as, ',')) { $as = explode(',', $as); }
+            if (strpos($last, ',')) {
+                if (strpos($as, ',')) {
+                    $as = explode(',', $as);
+                }
                 $last = explode(',', trim($last, '{}'));
                 if (is_array($as) && (count($as) !== count($last))) {
-                    throw new exception\argument(
+                    throw new \Exception(
                         "Wrong number of segments in `\$as`.!", 1);
                 }
                 $ns = $ns ? "{$ns}/" : '';
                 foreach ($last as $lpos => $last_segment) {
                     $last_segment = trim($last_segment);
                     $this->from("{$pkg}/{$ns}{$last_segment}",
-                        (is_array($as[$lpos]) ? $as[$lpos] : $as));
+                        (is_array($as) ? $as[$lpos] : $as));
                 }
                 return $this;
             }
