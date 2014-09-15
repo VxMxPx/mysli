@@ -1,23 +1,16 @@
 <?php
 
 /**
- * Enable core package.
+ * Execute setup for particular package.
  * @param  string   $pkg      e.g.: mysli/framework/core
- * @param  string   $main     main file to be included
  * @param  string   $pkgpath  full absolute packages path
  * @param  string   $datpath  full absolute data path
  * @param  callable $errout   function to handle errors
  * @return string             core init function name
  */
-function enable_pkg($pkg, $main, $pkgpath, $datpath, callable $errout) {
+function exe_setup($pkg, $pkgpath, $datpath, callable $errout) {
     $ns = str_replace('/', '\\', $pkg);
     $setupfile = dst($pkgpath, $pkg, 'src/setup.php');
-    $mainfile = dst($pkgpath, $pkg, "src/{$main}.php");
-
-    if (!file_exists($mainfile)) {
-        $errout("Missing mail file `{$mainfile}`.");
-        return false;
-    }
 
     if (file_exists($setupfile) && !function_exists($ns.'\\setup\\enable')) {
         include($setupfile);
@@ -29,18 +22,37 @@ function enable_pkg($pkg, $main, $pkgpath, $datpath, callable $errout) {
             return false;
         }
     }
+    return true;
+}
+/**
+ * Get particular class
+ * @param  string   $pkg
+ * @param  string   $class
+ * @param  string   $pkgpath
+ * @param  callable $errout
+ * @return string
+ */
+function pkg_class($pkg, $class, $pkgpath, callable $errout) {
+    $ns = str_replace('/', '\\', $pkg);
+    $classfile = dst($pkgpath, $pkg, "src/{$class}.php");
 
-    if (!function_exists("{$ns}\\{$main}") && !class_exists("{$ns}\\{$main}")) {
-        include $mainfile;
+    if (!file_exists($classfile)) {
+        $errout("Cannot find file `{$classfile}`.");
+        return false;
     }
 
-    if (!function_exists("{$ns}\\{$main}") && !class_exists("{$ns}\\{$main}")) {
+    if (!function_exists("{$ns}\\{$class}") && !class_exists("{$ns}\\{$class}")) {
+        include $classfile;
+    }
+
+    if (!function_exists("{$ns}\\{$class}")
+        && !class_exists("{$ns}\\{$class}")) {
         $errout(
             "Main file was loaded, ".
-            "but function not found: `{$ns}\\{$main}`");
+            "but function not found: `{$ns}\\{$class}`");
         return false;
     } else {
-        return "{$ns}\\{$main}";
+        return "{$ns}\\{$class}";
     }
 }
 /**

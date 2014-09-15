@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 
-define('MYSLI_INSTALLER_VERSION', '1.1.0');
+define('MYSLI_INSTALLER_VERSION', '1.1.2');
 
 /**
 * Print help message.
@@ -159,19 +159,17 @@ if (!empty($missing))
     print_line_and_die("Packages not found:\n" . nice_array($missing));
 
 // Enable core package...
-$core = enable_pkg(
-    $packages['core'], '__init', $pkgpath, $datpath, 'print_line_and_die');
-if ($core) {
+if (exe_setup($packages['core'], $pkgpath, $datpath, 'print_line_and_die')) {
     print_line('Core was successfully enabled.');
 }
+$core = pkg_class($packages['core'], '__init', $pkgpath, 'print_line_and_die');
 $core($datpath, $pkgpath);
 
 // Enable pkgm package...
-$pkgm = enable_pkg(
-    $packages['pkgm'], 'pkgm', $pkgpath, $datpath, 'print_line_and_die');
-if ($pkgm) {
+if (exe_setup($packages['pkgm'], $pkgpath, $datpath, 'print_line_and_die')) {
     print_line('Pkgm was successfully enabled.');
 }
+$pkgm = pkg_class($packages['pkgm'], 'pkgm', $pkgpath, 'print_line_and_die');
 
 if (!$pkgm::enable($packages['core'])) {
     print_line_and_die("Failed to add `core` to enabled packages list.");
@@ -179,8 +177,14 @@ if (!$pkgm::enable($packages['core'])) {
     print_line('Core was successfully added to the enabled packages list.');
 }
 
+// Enable cli package...
+if (exe_setup($packages['cli'], $pkgpath, $datpath, 'print_line_and_die')) {
+    print_line('Pkgm was successfully enabled.');
+}
 if (!$pkgm::enable($packages['cli'])) {
     print_line_and_die("Failed to add `cli` to enabled packages list.");
 } else {
     print_line('Cli was successfully added to the enabled packages list.');
 }
+
+print_line('All done!');
