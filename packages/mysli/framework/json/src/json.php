@@ -3,7 +3,7 @@
 namespace mysli\framework\json {
 
     __use(__namespace__,
-        '../fs',
+        '../fs/{fs,file}',
         '../type/arr',
         ['../exception/*' => 'framework/exception/%s']
     );
@@ -36,8 +36,8 @@ namespace mysli\framework\json {
          */
         static function decode_file($filename, $assoc=false, $depth=512) {
             $filename = fs::ds($filename);
-            if (fs\file::exists($filename)) {
-                $content = fs\file::read($filename);
+            if (file::exists($filename)) {
+                $content = file::read($filename);
                 return self::decode($content, $assoc, $depth);
             } else {
                 throw new framework\exception\not_found(
@@ -71,7 +71,7 @@ namespace mysli\framework\json {
          */
         static function encode_file($filename, $values, $options=0,
                                     $depth=512) {
-            return !!fs\file::write(
+            return !!file::write(
                 $filename, self::encode($values, $options, $depth));
         }
         /**
