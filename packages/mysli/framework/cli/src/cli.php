@@ -5,7 +5,7 @@ namespace mysli\framework\cli {
     __use(__namespace__,
         '../type/arr',
         '../pkgm',
-        '../fs'
+        '../fs/{fs,dir}'
     );
 
     class cli {
@@ -46,7 +46,7 @@ namespace mysli\framework\cli {
 
             foreach (pkgm::list_enabled() as $package) {
                 $path = fs::pkgpath($package, 'src/script');
-                if (!fs\dir::exists($path)) {
+                if (!dir::exists($path)) {
                     continue;
                 }
                 //$files = scandir($path);
@@ -74,7 +74,8 @@ namespace mysli\framework\cli {
                 output::warn("Command not found: `{$script}`.");
                 return false;
             }
-            $script = $scripts[$script]['name'] . "/script/{$script}";
+            $script = str_replace(
+                '/', '\\', $scripts[$script]['package'] . "/script/{$script}");
 
             if (method_exists($script, 'run')) {
                 call_user_func_array([$script, 'run'], [$arguments]);

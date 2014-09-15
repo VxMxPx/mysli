@@ -3,10 +3,10 @@
 namespace mysli\framework\cli\script {
 
     __use(__namespace__,
-        ['./{output,input}', 'cout,cin']
+        ['./{output,input}' => 'cout,cin']
     );
 
-    class interative {
+    class interactive {
         static function run() {
             cout::info(
                 'Hi! This isan interative console for the Mysli Project.');
@@ -23,7 +23,9 @@ namespace mysli\framework\cli\script {
                 if (substr($stdin, 0, 1) === '.') {
                     cout::info(eval(substr($stdin, 1)));
                 } else {
-                    cout::info(eval('echo dump_r(' . trim($stdin, ';') . ');'));
+                    cout::info(eval(
+                        'namespace mysli\framework\cli\script\interactive { '.
+                        'echo dump_r(' . trim($stdin, ';') . '); }'));
                 }
             });
         }

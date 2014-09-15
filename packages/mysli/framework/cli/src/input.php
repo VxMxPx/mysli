@@ -20,7 +20,7 @@ namespace mysli\framework\cli {
                 $result = null;
                 do {
                     $stdin = self::line($title);
-                    $result = $func($stdin);
+                    $result = $call($stdin);
                 } while($result === null);
                 return $result;
             }

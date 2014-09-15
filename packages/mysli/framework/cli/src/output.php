@@ -65,7 +65,7 @@ namespace mysli\framework\cli {
          * @return  null
          */
         static function line($string, $new_line=true) {
-            fwrite(STDOUT, $message);
+            fwrite(STDOUT, $string);
             if ($new_line) {
                 fwrite(STDOUT, PHP_EOL);
             }

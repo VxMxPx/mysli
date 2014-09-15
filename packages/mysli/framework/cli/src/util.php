@@ -35,7 +35,7 @@ namespace mysli\framework\cli {
          * @return string
          */
         static function execute($command, array $params = []) {
-            return exec(sprintf($command, $params));
+            return exec(vsprintf($command, $params));
         }
         /**
          * Fork execute command, and stop execution in child.
