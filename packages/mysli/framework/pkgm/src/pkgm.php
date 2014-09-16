@@ -209,7 +209,9 @@ namespace mysli\framework\pkgm {
             } elseif (self::exists($package)) {
                 $file = fs::pkgpath($package, 'mysli.pkg.ym');
                 if (file::exists($file)) {
-                    return ym::decode_file($file);
+                    $meta = ym::decode_file($file);
+                    $meta['require'] = $meta['require'] ?: [];
+                    return $meta;
                 } else {
                     throw new framework\exception\not_found(
                         "Fild `mysli.pkg.ym` not found for: ".
@@ -238,7 +240,6 @@ namespace mysli\framework\pkgm {
                     "The package doesn't exists: `{$package}`.", 2);
             }
             $meta = self::meta($package);
-            $meta['require'] = $meta['require'] ?: [];
 
             foreach ($meta['require'] as $dependency => $version) {
                 if (self::is_enabled($dependency)) {
