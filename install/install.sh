@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 
-define('MYSLI_INSTALLER_VERSION', '1.1.6');
+define('MYSLI_INSTALLER_VERSION', '1.1.15');
 
 /**
 * Print help message.
@@ -58,10 +58,11 @@ function get_parameter(array $data, $short, $long, $default) {
 }
 /**
  * Formay an array for CLI output.
- * @param  array  $input
+ * @param  array   $input
+ * @param  integer $indent
  * @return string
  */
-function nice_array(array $input) {
+function nice_array(array $input, $indent=0) {
     $lkey = 0;
     $out  = '';
     // Get the longes key...
@@ -71,7 +72,10 @@ function nice_array(array $input) {
         }
     }
     foreach ($input as $key => $value) {
-        $out .= $key . str_repeat(' ', $lkey - strlen($key)) . ' : ' . $value . "\n";
+        $out .=
+            str_repeat(' ', $indent) .
+            $key . str_repeat(' ', $lkey - strlen($key)) .
+            ' : ' . $value . "\n";
     }
     return $out;
 }
@@ -128,14 +132,14 @@ $datpath = resolve_path($datpath, __DIR__ . DIRECTORY_SEPARATOR);
 $datpath = $datpath[1] ? implode('', $datpath) : $datpath[0];
 
 // Ask if all seems ok...
-print_line('Review before setup:');
+print_line('Review before setup...');
 print_line(null);
-print_line('--- Paths ---');
-print_line('Private  ' . $datpath);
-print_line('Packages ' . $pkgpath);
+print_line('Paths:');
+print_line('  Private  ' . $datpath);
+print_line('  Packages ' . $pkgpath);
 print_line(null);
-print_line('--- List of packages to enable ---');
-print_line(nice_array($packages));
+print_line('List of packages to enable:');
+print_line(nice_array($packages, 2));
 
 if (!$is_yes) {
     fwrite(STDOUT, 'Proceed? [Y/n] ');
@@ -160,31 +164,32 @@ if (!empty($missing))
 
 // Enable core package...
 if (exe_setup($packages['core'], $pkgpath, $datpath, 'print_line_and_die')) {
-    print_line('Core was successfully enabled.');
+    print_line("Setup done: {$packages['core']}");
 }
 $core = pkg_class($packages['core'], '__init', $pkgpath, 'print_line_and_die');
 $core($datpath, $pkgpath);
 
 // Enable pkgm package...
 if (exe_setup($packages['pkgm'], $pkgpath, $datpath, 'print_line_and_die')) {
-    print_line('Pkgm was successfully enabled.');
+    print_line("Setup done: {$packages['pkgm']}");
 }
 $pkgm = pkg_class($packages['pkgm'], 'pkgm', $pkgpath, 'print_line_and_die');
 
-if (!$pkgm::enable($packages['core'])) {
-    print_line_and_die("Failed to add `core` to enabled packages list.");
+if (!$pkgm::enable($packages['core'], 'installer')) {
+    print_line_and_die("Failed to enable: {$packages['core']}");
 } else {
-    print_line('Core was successfully added to the enabled packages list.');
+    print_line("Done: {$packages['core']}");
 }
 
 // Enable cli package...
 if (exe_setup($packages['cli'], $pkgpath, $datpath, 'print_line_and_die')) {
-    print_line('Pkgm was successfully enabled.');
+    print_line("Setup done: {$packages['cli']}");
 }
-if (!$pkgm::enable($packages['cli'])) {
-    print_line_and_die("Failed to add `cli` to enabled packages list.");
+if (!$pkgm::enable($packages['cli'], 'installer')) {
+    print_line_and_die("Failed to enable: {$packages['cli']}");
 } else {
-    print_line('Cli was successfully added to the enabled packages list.');
+    print_line("Done: {$packages['cli']}");
 }
 
-print_line("All done! Now please run: `cd {$datpath} && ./dot pkgm --repair`");
+print_line("\nWill refresh packages database now...\n");
+call_user_func(substr($pkgm, 0, strrpos($pkgm, '\\')).'\\script\\pkgm::repair');
