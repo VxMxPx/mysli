@@ -25,6 +25,7 @@ Array
             [help] =>%s
             [required] =>%s
             [positional] =>%s
+            [invoke] =>%s
             [action] => Closure Object
                 (
                 )

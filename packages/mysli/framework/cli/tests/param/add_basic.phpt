@@ -53,6 +53,7 @@ Array
             [help] => Long and short parameter.
             [required] =>%s
             [positional] =>%s
+            [invoke] =>%s
             [action] =>%s
             [invert] =>%s
             [ignore] =>%s
@@ -68,6 +69,7 @@ Array
             [help] => Only short parameter.
             [required] =>%s
             [positional] =>%s
+            [invoke] =>%s
             [action] =>%s
             [invert] =>%s
             [ignore] =>%s
@@ -83,6 +85,7 @@ Array
             [help] => Only long parameter.
             [required] =>%s
             [positional] =>%s
+            [invoke] =>%s
             [action] =>%s
             [invert] =>%s
             [ignore] =>%s
@@ -98,6 +101,7 @@ Array
             [help] =>%s
             [required] =>%s
             [positional] =>%s
+            [invoke] =>%s
             [action] =>%s
             [invert] =>%s
             [ignore] =>%s
@@ -113,6 +117,7 @@ Array
             [help] =>%s
             [required] =>%s
             [positional] =>%s
+            [invoke] =>%s
             [action] =>%s
             [invert] =>%s
             [ignore] =>%s
@@ -128,6 +133,7 @@ Array
             [help] =>%s
             [required] =>%s
             [positional] =>%s
+            [invoke] =>%s
             [action] =>%s
             [invert] =>%s
             [ignore] =>%s
@@ -143,6 +149,7 @@ Array
             [help] =>%s
             [required] => 1
             [positional] =>%s
+            [invoke] =>%s
             [action] =>%s
             [invert] =>%s
             [ignore] =>%s
@@ -158,6 +165,7 @@ Array
             [help] =>%s
             [required] =>%s
             [positional] =>%s
+            [invoke] =>%s
             [action] =>%s
             [invert] =>%s
             [ignore] =>%s
@@ -173,6 +181,7 @@ Array
             [help] => Positional parameter.
             [required] => 1
             [positional] => 1
+            [invoke] =>%s
             [action] =>%s
             [invert] =>%s
             [ignore] =>%s

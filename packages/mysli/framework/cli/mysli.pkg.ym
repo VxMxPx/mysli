@@ -1,6 +1,6 @@
 package     : mysli/framework/cli
 description : Command line utility and interface.
-version     : 1.0.17
+version     : 1.0.19
 license     : GPL-3.0
 authors:
     - Marko Gajšt (Developer) <m@gaj.st>
@@ -8,3 +8,4 @@ require:
     ../core : ~1
     ../fs   : ~1
     ../pkgm : ~1
+    ../type : ~1

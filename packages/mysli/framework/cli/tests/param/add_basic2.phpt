@@ -37,6 +37,7 @@ Array
             [help] =>%s
             [required] =>%s
             [positional] =>%s
+            [invoke] =>%s
             [action] =>%s
             [invert] =>%s
             [ignore] =>%s
@@ -52,6 +53,7 @@ Array
             [help] =>%s
             [required] =>%s
             [positional] =>%s
+            [invoke] =>%s
             [action] =>%s
             [invert] =>%s
             [ignore] =>%s
@@ -67,6 +69,7 @@ Array
             [help] =>%s
             [required] =>%s
             [positional] =>%s
+            [invoke] =>%s
             [action] =>%s
             [invert] =>%s
             [ignore] =>%s
@@ -82,6 +85,7 @@ Array
             [help] =>%s
             [required] =>%s
             [positional] =>%s
+            [invoke] =>%s
             [action] =>%s
             [invert] =>%s
             [ignore] =>%s

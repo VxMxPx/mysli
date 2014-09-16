@@ -16,4 +16,11 @@ print_r($params->messages());
 
 ?>
 --EXPECT--
-Missing parameter: `long`.
+Params Test
+
+Usage: ./dot COMMAND OPTIONS...
+
+
+Options:
+  -h, --help  Display this help
+  -l, --long

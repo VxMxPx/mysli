@@ -28,5 +28,14 @@ print_r($params->messages());
 
 ?>
 --EXPECT--
-Missing parameter: `long`.
-Missing parameter: `positional`.
+Params Test
+Testing package!
+
+Usage: ./dot test OPTIONS... POSITIONAL [POSITIONAL_OPTIONAL]
+
+  POSITIONAL           Positional parameter
+  POSITIONAL_OPTIONAL  Positional optional parameter
+
+Options:
+  -h, --help  Display this help
+  -l, --long  Long and short parameter
