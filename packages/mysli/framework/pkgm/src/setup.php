@@ -3,7 +3,7 @@
 namespace mysli\framework\pkgm\setup {
 
     __use(__namespace__,
-        '../fs/{fs,file}'
+        '../fs/{fs,file,dir}'
     );
 
     function enable() {

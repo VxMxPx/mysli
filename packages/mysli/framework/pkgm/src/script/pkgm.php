@@ -27,19 +27,31 @@ namespace mysli\framework\pkgm\script {
                 'help' => 'Disable a package',
                 'invoke' => __namespace__.'\\pkgm::disable'
             ]);
+            $param->add('--dump', [
+                'help'   => 'Display (raw list of) currently enabled packages.',
+                'type'   => 'bool',
+                'invoke' => __namespace__.'\\pkgm::dump'
+            ]);
             $param->parse();
             if (!$param->is_valid()) {
                 cout::line($param->messages());
             }
         }
         /**
+         * Display (raw list of) currently enabled packages.
+         * @return null
+         */
+        static function dump() {
+            cout::line(arr::readable(mpkgm::dump(), 0, 4));
+        }
+        /**
          * Check for disabled/missing packages which are needed, and enable
          * them.
          */
         static function repair() {
-            cout::line('Repair...');
+            cout::line('Will scan database for missing dependencies....');
             foreach (mpkgm::list_enabled() as $package) {
-                cout::line("Checking: `{$package}`", false);
+                cout::line("Found: `{$package}`", false);
                 $dependencies = mpkgm::list_dependencies($package);
                 if (empty($dependencies['disabled'])
                     && empty($dependencies['missing'])) {
@@ -56,8 +68,8 @@ namespace mysli\framework\pkgm\script {
                 if (!empty($dependencies['missing'])) {
                     cout::nl();
                     cout::format(
-                        "+redMissing: \n%s\n+redCannot proceed...",
-                        arr::readable($dependencies['missing'], 4));
+                        "+redMissing packages:\n%s\n",
+                        arr::readable($dependencies['missing'], 2));
                 }
             }
         }
@@ -66,34 +78,31 @@ namespace mysli\framework\pkgm\script {
          * @param string $pkg
          */
         static function enable($pkg) {
-
-            cout::line("Will enable: `{$pkg}`");
-
             if (mpkgm::is_enabled($pkg)) {
-                cout::warn("Package is already enabled: `{$pkg}`.");
+                cout::warn("Package is already enabled: {$pkg}");
                 return false;
             }
             if (!mpkgm::exists($pkg)) {
-                cout::warn("Package not found: `{$pkg}`.");
+                cout::warn("Package not found: {$pkg}");
                 return false;
             }
 
             $dependencies = mpkgm::list_dependencies($pkg, true);
 
             if (!empty($dependencies['missing'])) {
-                cout::warn(
-                    "Cannot enable, following packages are missing: \n" .
+                cout::format(
+                    "+redCannot enable, following packages are missing:\n%s\n",
                     arr::readable($dependencies['missing'], 2));
                 return false;
             }
 
             if (count($dependencies['disabled'])) {
                 cout::line(
-                    "The following packages needs to be enabled: \n" .
+                    "\n{$pkg} require:\n" .
                     arr::readable($dependencies['disabled'], 2) . "\n");
 
-                if (!cin::confirm('Continue and enable required packages?')) {
-                    cout::line('Process terminated.');
+                if (!cin::confirm("Continue and enable required packages?")) {
+                    cout::line('Terminated.');
                     return false;
                 }
 
@@ -101,10 +110,10 @@ namespace mysli\framework\pkgm\script {
                     if (!self::action_helper($dependency, 'enable')) {
                         if (mpkgm::enable($dependency, $pkg)) {
                             cout::format(
-                                "{$dependency}...+right+green Success");
+                                "+green Enabled:-green  {$dependency}");
                         } else {
                             cout::format(
-                                "{$dependency}...+right+red Failed");
+                                "+red Failed:-red   {$dependency}");
                         }
                     }
                 }
@@ -112,9 +121,9 @@ namespace mysli\framework\pkgm\script {
 
             if (self::action_helper($pkg, 'enable')) {
                 if (mpkgm::enable($pkg, 'installer')) {
-                    cout::format("{$pkg}...+right+green Success");
+                    cout::format("+green Enabled:-green  {$pkg}");
                 } else {
-                    cout::format("{$pkg}...+right+red Failed");
+                    cout::format("+red Failed:-red   {$pkg}");
                 }
             } else {
                 return false;
@@ -131,11 +140,6 @@ namespace mysli\framework\pkgm\script {
                 return false;
             }
 
-            // If there's no dependees,
-            // just inform the user which package will be disabled.
-            cout::line(
-                "The following package will be disabled: `{$pkg}`.");
-
             // Get package dependees!
             $dependees = mpkgm::list_dependees($pkg, true);
             array_pop($dependees); // remove self
@@ -143,30 +147,37 @@ namespace mysli\framework\pkgm\script {
             // If we have dependees, then disable them all first!
             if (!empty($dependees)) {
                 cout::line(
-                    "The following packages depends on the `{$pkg}` ".
-                    "and need to be disabled also:\n\n" .
+                    "{$pkg} is required by:\n" .
                     arr::readable($dependees, 2) . "\n");
 
-                if (!cout::confirm('Disable listed packages?')) {
+                if (!cin::confirm('Disable listed packages?')) {
                     cout::plain('Terminated.');
                     return false;
                 }
 
                 foreach ($dependees as $dependee) {
-                    if (!self::action_helper($dependee, 'disable')) {
-                        return false;
+                    if (self::action_helper($dependee, 'disable')) {
+                        if (mpkgm::disable($dependee)) {
+                            cout::format("+green Disabled:-green  {$dependee}");
+                        } else {
+                            cout::format("+red Failed:-red   {$dependee}");
+                        }
                     } else {
-                        mpkgm::disable($dependee);
+                        return false;
                     }
                 }
             }
 
             // Finally, disable the actual package
             if (self::action_helper($pkg, 'disable')) {
-                return mpkgm::disable($pkg);
-            } else {
-                return false;
+                if (mpkgm::disable($pkg)) {
+                    cout::format("+green Disabled:-green  {$pkg}");
+                    return true;
+                } else {
+                    cout::format("+red Failed:-red   {$pkg}");
+                }
             }
+            return false;
         }
 
         // private

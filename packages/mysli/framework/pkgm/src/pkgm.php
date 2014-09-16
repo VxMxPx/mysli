@@ -14,6 +14,13 @@ namespace mysli\framework\pkgm {
         private static $packages = [];
 
         /**
+         * List of curently enabled packages.
+         * @return array
+         */
+        static function dump() {
+            return self::$packages;
+        }
+        /**
          * Check weather package exists (is available) in fs.
          * @param  string  $package
          * @return boolean
@@ -112,22 +119,16 @@ namespace mysli\framework\pkgm {
          * @param  array   $listed internal helper
          * @return array
          */
-        static function list_dependees($package, $deep=false,
-                                       array &$listed=[]) {
+        static function list_dependees($package, $deep=false) {
             $meta = self::meta($package);
             if (!$deep) {
                 return isset($meta['required_by']) ? $meta['required_by'] : [];
             }
             $dependees = [$package];
-            // optimization
-            if (!in_array($package, $listed)) {
-                $listed[] = $package;
-                foreach ($meta['required_by'] as $dependee) {
-                    $dependees[] = $dependee;
-                    $dependees = array_merge(
-                        self::list_dependees($dependee, true, $listed),
-                        $dependees);
-                }
+            foreach ($meta['required_by'] as $dependee) {
+                $dependees[] = $dependee;
+                $dependees = array_merge(
+                    self::list_dependees($dependee, true), $dependees);
             }
             return array_values(array_unique($dependees));
         }
@@ -151,12 +152,8 @@ namespace mysli\framework\pkgm {
                 'missing'  => []
             ];
 
-            $root = substr($package, 0, strrpos($package, '/'));
-
             foreach ($meta['require'] as $dependency => $version) {
-                if (substr($dependency, 0, 3) === '../') {
-                    $dependency = $root . substr($dependency, 2);
-                }
+                $dependency = self::resolve_relative($dependency, $package);
                 if (!self::exists($dependency)) {
                     $list['missing'][$dependency] = $version;
                 } else {
@@ -242,6 +239,7 @@ namespace mysli\framework\pkgm {
             $meta = self::meta($package);
 
             foreach ($meta['require'] as $dependency => $version) {
+                $dependency = self::resolve_relative($dependency, $package);
                 if (self::is_enabled($dependency)) {
                     self::$packages[$dependency]['required_by'][] = $package;
                 }
@@ -256,6 +254,8 @@ namespace mysli\framework\pkgm {
             if (!empty(self::$packages)) {
                 foreach (self::$packages as $lpkg => $lmeta) {
                     foreach ($lmeta['require'] as $depends_on => $version) {
+                        $depends_on =
+                            self::resolve_relative($depends_on, $lpkg);
                         if ($depends_on === $package) {
                             $meta['required_by'][] = $lpkg;
                         }
@@ -280,7 +280,7 @@ namespace mysli\framework\pkgm {
 
             foreach ($meta['require'] as $dependency => $version) {
                 $required_by =& self::$packages[$dependency]['required_by'];
-                if (in_array($package, $required_by)) {
+                if ($required_by && in_array($package, $required_by)) {
                     $rkey = array_search($package, $required_by);
                     unset($required_by, $rkey);
                 }
@@ -297,6 +297,18 @@ namespace mysli\framework\pkgm {
             self::$packages = json::decode_file(
                 fs::datpath('pkgm/r.json'), true);
             return is_array(self::$packages);
+        }
+        /**
+         * Resolve relative package relationship (../ => n/s/pkg)
+         * @param  string $pkg
+         * @param  string $parent
+         * @return string
+         */
+        private static function resolve_relative($pkg, $parent) {
+            if (substr($pkg, 0, 3) === '../') {
+                $root = substr($parent, 0, strrpos($parent, '/'));
+                return $root . substr($pkg, 2);
+            } else return $pkg;
         }
         /**
          * Write packages to the file.
