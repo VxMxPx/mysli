@@ -167,7 +167,6 @@ namespace mysli\framework\type {
          * @return integer
          */
         static function length($string, $encoding=null) {
-            tc::need_str($string);
             $r = mb_strlen($string, mb_internal_encoding());
             if ($r === false) {
                 throw new framework\exception\argument(
