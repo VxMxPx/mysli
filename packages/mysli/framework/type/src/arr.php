@@ -173,7 +173,7 @@ namespace mysli\framework\type {
         /**
          * Check if the required key is exists.
          * This is using array_key_exists so key => null will return true.
-         * @param  mixed $array
+         * @param  array $array
          * @param  mixed $key integer (check index), string (check key),
          * array (check multiple keys)
          * @return boolean
