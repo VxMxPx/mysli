@@ -1,7 +1,7 @@
 --TEST--
 --FILE--
 <?php
-include __DIR__.'/../_common.php';
+use mysli\util\datetime as dtime;
 use mysli\framework\cli\param as cparam;
 
 $params = new cparam('Params Test', []);
@@ -53,6 +53,8 @@ Array
             [help] => Long and short parameter.
             [required] =>%s
             [positional] =>%s
+            [allow_empty] =>%s
+            [exclude] =>%s
             [invoke] =>%s
             [action] =>%s
             [invert] =>%s
@@ -69,6 +71,8 @@ Array
             [help] => Only short parameter.
             [required] =>%s
             [positional] =>%s
+            [allow_empty] =>%s
+            [exclude] =>%s
             [invoke] =>%s
             [action] =>%s
             [invert] =>%s
@@ -85,6 +89,8 @@ Array
             [help] => Only long parameter.
             [required] =>%s
             [positional] =>%s
+            [allow_empty] =>%s
+            [exclude] =>%s
             [invoke] =>%s
             [action] =>%s
             [invert] =>%s
@@ -101,6 +107,8 @@ Array
             [help] =>%s
             [required] =>%s
             [positional] =>%s
+            [allow_empty] =>%s
+            [exclude] =>%s
             [invoke] =>%s
             [action] =>%s
             [invert] =>%s
@@ -117,6 +125,8 @@ Array
             [help] =>%s
             [required] =>%s
             [positional] =>%s
+            [allow_empty] =>%s
+            [exclude] =>%s
             [invoke] =>%s
             [action] =>%s
             [invert] =>%s
@@ -133,6 +143,8 @@ Array
             [help] =>%s
             [required] =>%s
             [positional] =>%s
+            [allow_empty] =>%s
+            [exclude] =>%s
             [invoke] =>%s
             [action] =>%s
             [invert] =>%s
@@ -149,6 +161,8 @@ Array
             [help] =>%s
             [required] => 1
             [positional] =>%s
+            [allow_empty] =>%s
+            [exclude] =>%s
             [invoke] =>%s
             [action] =>%s
             [invert] =>%s
@@ -165,6 +179,8 @@ Array
             [help] =>%s
             [required] =>%s
             [positional] =>%s
+            [allow_empty] =>%s
+            [exclude] =>%s
             [invoke] =>%s
             [action] =>%s
             [invert] =>%s
@@ -181,6 +197,8 @@ Array
             [help] => Positional parameter.
             [required] => 1
             [positional] => 1
+            [allow_empty] =>%s
+            [exclude] =>%s
             [invoke] =>%s
             [action] =>%s
             [invert] =>%s

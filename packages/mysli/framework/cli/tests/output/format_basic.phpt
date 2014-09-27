@@ -1,7 +1,6 @@
 --TEST--
 --FILE--
 <?php
-include __DIR__.'/../_common.php';
 use mysli\framework\cli\output as cout;
 
 cout::format('Hello +bold+red%s-bold-red', ['World']) . "\n";

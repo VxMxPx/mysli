@@ -1,7 +1,7 @@
 --TEST--
 --FILE--
 <?php
-include __DIR__.'/../_common.php';
+use mysli\util\datetime as dtime;
 use mysli\framework\cli\param as cparam;
 
 $params = new cparam('Params Test', []);
@@ -25,6 +25,8 @@ Array
             [help] =>%s
             [required] =>%s
             [positional] =>%s
+            [allow_empty] =>%s
+            [exclude] =>%s
             [invoke] =>%s
             [action] => Closure Object
                 (

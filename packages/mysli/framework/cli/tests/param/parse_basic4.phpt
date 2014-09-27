@@ -1,7 +1,7 @@
 --TEST--
 --FILE--
 <?php
-include __DIR__.'/../_common.php';
+use mysli\util\datetime as dtime;
 use mysli\framework\cli\param as cparam;
 
 $params = new cparam('Params Test', ['World']);
