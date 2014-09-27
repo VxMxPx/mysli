@@ -27,6 +27,7 @@ namespace mysli\framework\core {
             throw new \Exception("Invalid pkgpath: `{$pkgpath}`.", 2);
         }
 
+        define('MYSLI_CORE',    'mysli/framework/core');
         define('MYSLI_DATPATH', $datpath);
         define('MYSLI_PKGPATH', $pkgpath);
 
