@@ -28,10 +28,19 @@ namespace mysli\framework\cli {
             'short'      => null,  // short (-s)
             'long'       => null,  // long (--long)
             'type'       => 'str', // type (str,bool,int,float)
-            'default'    => null,  // default value
+            'default'    => null,  // default value, if no argument provided.
+                                   // default will also be used, if argument
+                                   // if present, has no value assigned, e.g.:
+                                   // --param --param2
             'help'       => null,  // help text
             'required'   => null,  // weather field is required
             'positional' => false, // weather this is positional parameter
+            'allow_empty'=> false, // weather empty values are accepted.
+                                   // if no default, then this would mean:
+                                   // string: '', bool: false, int: 0,
+                                   // float: 0.0
+            'exclude'    => false, // which arguments cannot be set in
+                                   // combination with this one (array)
             'invoke'     => false, // if parameter is present a provided method
                                    // will be executed
             'action'     => false, // func to be executed when field is parsed:
@@ -128,74 +137,127 @@ namespace mysli\framework\cli {
             $b = false; // break the loop and return immediately
             $current = null;
             foreach ($this->arguments as $arg) {
+                if (is_array($current) && substr($arg, 0, 1) === '-') {
+                    if ($current['allow_empty']) {
+                        if ($current['default'] !== null) {
+                            $this->set_value($current['default'], $current);
+                        } else {
+                            $this->set_value(
+                                $this->get_null_value($current['type']),
+                                $current);
+                        }
+                        if ($this->is_valid) {
+                            $current = null;
+                        } else return false;
+                    } else {
+                        $this->invalidate(
+                            "Expected value for: {$current['id']}");
+                        return false;
+                    }
+                }
                 if (is_array($current)) {
                     if ($this->set_value($arg, $current) === false) {
-                        return $this->is_valid;
+                        return false;
                     } else {
                         $current = null;
                     }
                 } elseif (substr($arg, 0, 2) === '--') {
                     $arg = substr($arg, 2);
                     if (!($current = $this->resolve_value($arg, 'long'))) {
-                        return $this->is_valid;
+                        return false;
                     }
                 } elseif (substr($arg, 0, 1) === '-') {
                     $arg = substr($arg, 1);
                     if (strlen($arg) > 1) {
                         foreach (str_split($arg) as $sarg) {
                             if (!$this->resolve_value($sarg, 'short', false)) {
-                                return $this->is_valid;
+                                return false;
                             }
                         }
                     } else {
                         if (!($current = $this->resolve_value($arg, 'short'))) {
-                            return $this->is_valid;
+                            return false;
                         }
                     }
                 } else {
                     if ($opt = $this->find($arg, 'positional')) {
                         if ($this->set_value($arg, $opt) === false) {
-                            return $this->is_valid;
+                            return false;
                         } else {
                             $current = null;
                         }
                     } else {
-                        $this->invalidate("Argument ignored.");
+                        $this->invalidate("Unexpected argument: `{$arg}`");
+                        return false;
                     }
+                }
+            }
+
+            if (is_array($current)) {
+                if ($current['allow_empty']) {
+                    if ($current['default'] !== null) {
+                        $this->set_value($current['default'], $current);
+                    } else {
+                        $this->set_value(
+                            $this->get_null_value($current['type']),
+                            $current);
+                    }
+                    if ($this->is_valid) {
+                        $current = null;
+                    } else return false;
+                } else {
+                    $this->invalidate(
+                        "Expected value for: {$current['id']}");
+                    return false;
                 }
             }
 
             if (empty($this->values)) {
                 $this->is_valid = false;
                 $this->messages[] = $this->help();
+                return false;
             }
 
-            // check weather all required items are set...
-            if ($this->is_valid) {
-                foreach ($this->params as $pid => $opt) {
-                    if (!isset($this->values[$pid]) && !$opt['ignore']) {
-                        if ($opt['required']) {
+            // check for exclude errors and set list of items to be invoked
+            $invoke = [];
+            foreach ($this->params as $pid => $opt) {
+                if (array_key_exists($pid, $this->values) && $opt['exclude']) {
+                    $exclude = is_array($opt['exclude'])
+                        ? $opt['exclude']
+                        : [$opt['exclude']];
+                    foreach ($exclude as $exc) {
+                        if (isset($this->values[$exc])) {
                             $this->invalidate(
-                                "Missing parameter: `{$pid}`.");
-                        } else {
-                            $this->values[$pid] = $opt['default'];
+                                "You cannot use both ".
+                                "`{$pid}` and `{$exc}`");
+                            return false;
                         }
                     }
                 }
+                if ($opt['invoke'] && isset($this->values[$pid])) {
+                    $invoke[$pid] = $opt['invoke'];
+                }
             }
-
-            // check if any parameters to be invoked is present
-            if ($this->is_valid) {
-                foreach ($this->params as $pid => $opt) {
-                    if ($opt['invoke'] && isset($this->values[$pid])) {
-                        call_user_func_array(
-                            $opt['invoke'],
-                            [$this->values[$pid], $this->values]);
+            // check weather all required items are set
+            foreach ($this->params as $pid => $opt) {
+                if (!isset($this->values[$pid]) && !$opt['ignore']) {
+                    if ($opt['required']) {
+                        $this->invalidate(
+                            "Missing parameter: `{$pid}`");
+                        return false;
+                    } else {
+                        $this->values[$pid] = $opt['default'];
                     }
                 }
             }
+            // check if any parameters to be invoked is present
+            // we need seperate loop for this, as all values needs to be set
+            foreach ($invoke as $pid => $call) {
+                call_user_func_array(
+                    $call, [$this->values[$pid], $this->values]);
+            }
 
-            return $this->is_valid;
+            return true;
         }
         /**
          * Return full (auto-generated) help.
@@ -216,7 +278,7 @@ namespace mysli\framework\cli {
                 ($this->title ? "{$this->title}\n" : '').
                 ($this->description ? "{$description}\n" : '').
                 "\nUsage: ./dot {$command} {$sargs}\n".
-                ($pargs ? "\n{$pargs}\n" : "\n").
+                ($pargs ? "\n{$pargs}\n" : '').
                 ($dargs ? "\nOptions:\n{$dargs}\n" : '').
                 ($this->description_long
                     ? "\n" . wordwrap($this->description_long) . "\n"
@@ -225,6 +287,24 @@ namespace mysli\framework\cli {
 
         // protected
 
+        /**
+         * Set null value for particular type:
+         *   string  : ''
+         *   integer : 0
+         *   float   : 0.0
+         *   boolean : false
+         * @param   string $type
+         * @return  mixed
+         */
+        protected function get_null_value($type) {
+            switch ($type) {
+                case 'str':   return '';
+                case 'int':   return 0;
+                case 'float': return 0.0;
+                case 'bool':  return false;
+                default:      return null;
+            }
+        }
         /**
          * Find parameter, see if bool is expected, set value (if bool)
          * @param  string  $arg
@@ -238,13 +318,13 @@ namespace mysli\framework\cli {
                     return $this->set_value($arg, $opt);
                 } else {
                     if (!$get_current) {
-                        $this->invalidate("Expected boolean for: `{$arg}`.");
+                        $this->invalidate("Expected boolean for: `{$arg}`");
                     } else {
                         return $opt;
                     }
                 }
             } else {
-                $this->invalidate("Invalid argument: `{$arg}`.");
+                $this->invalidate("Invalid argument: `{$arg}`");
             }
             return true;
         }
@@ -312,7 +392,8 @@ namespace mysli\framework\cli {
                     $params[$pid]['key'] = strtoupper($pid);
                 } else {
                     if ($opt['long'] && $opt['short']) {
-                        $params[$pid]['key'] = "-{$opt['short']}, --{$opt['long']}";
+                        $params[$pid]['key'] =
+                            "-{$opt['short']}, --{$opt['long']}";
                     } elseif ($opt['long']) {
                         $params[$pid]['key'] = "    --{$opt['long']}";
                     } else {
@@ -327,12 +408,13 @@ namespace mysli\framework\cli {
                         } else {
                             $params[$pid]['default'] = '[true]';
                         }
+                    } else {
+                        $default = (string) $opt['default'];
+                        if (strlen($default) > 15) {
+                            $default = substr($default, 0, 13) . '...';
+                        }
+                        $params[$pid]['default'] = "[{$default}]";
                     }
-                    $default = (string) $opt['default'];
-                    if (strlen($default) > 15) {
-                        $default = substr($default, 0, 13) . '...';
-                    }
-                    $params[$pid]['default'] = "[{$default}]";
                 } else {
                     $params[$pid]['default'] = '';
                 }
@@ -359,7 +441,8 @@ namespace mysli\framework\cli {
                 $opt['key'] .= str_repeat(' ', $lkey - strlen($opt['key']));
                 $opt['default'] .= str_repeat(
                     ' ', $ldefault - strlen($opt['default']));
-                $opt['help'] = wordwrap($opt['help'], $this->line_width - $lfull);
+                $opt['help'] = wordwrap(
+                    $opt['help'], $this->line_width - $lfull);
                 if ($lfull === 4) {
                     $opt['help'] = "\n{$opt['help']}\n";
                 }
