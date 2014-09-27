@@ -1,0 +1,8 @@
+package     : mysli/util/phpt
+version     : 1.0.0
+description : Wrapper for PHPT
+license     : GPL-3.0
+authors:
+    - Marko Gajšt (Developer) <m@gaj.st>
+require:
+    mysli/framework/pkgm : ~1
