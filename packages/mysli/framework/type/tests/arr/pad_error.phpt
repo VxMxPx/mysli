@@ -1,7 +1,7 @@
 --TEST--
 --FILE--
 <?php
-include __DIR__.'/../_common.php';
+
 use mysli\framework\type\arr as arr;
 print_r(arr::pad([], '+', 0, arr::pad_right));
 ?>

@@ -1,7 +1,7 @@
 --TEST--
 --FILE--
 <?php
-include __DIR__.'/../_common.php';
+
 use mysli\framework\type\arr as arr;
 $ar1 = [255 => 0, 256 => 1, 257 => 2, 258 => 3];
 $ar2 = [255 => 0, 256 => 1, 257 => 2, 258 => 3];

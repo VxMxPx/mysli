@@ -1,7 +1,7 @@
 --TEST--
 --FILE--
 <?php
-include __DIR__.'/../_common.php';
+
 use mysli\framework\type\str as str;
 
 print_r(str::split_trim('   one,two,  three    , four   ', ','));

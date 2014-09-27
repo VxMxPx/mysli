@@ -1,7 +1,7 @@
 --TEST--
 --FILE--
 <?php
-include __DIR__.'/../_common.php';
+
 use mysli\framework\type\arr as arr;
 $ar1 = [
     'a' => 1,

@@ -1,7 +1,7 @@
 --TEST--
 --FILE--
 <?php
-include __DIR__.'/../_common.php';
+
 use mysli\framework\type\arr as arr;
 $values = ['Domžale', 30, 'Škofja Loka', 30, 'Šoštanj', 'Domžale', 'škofja Loka', 30];
 print_r(arr::count_values($values, false));

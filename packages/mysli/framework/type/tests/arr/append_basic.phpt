@@ -1,7 +1,6 @@
 --TEST--
 --FILE--
 <?php
-include __DIR__.'/../_common.php';
 use mysli\framework\type\arr as arr;
 $array = [4];
 arr::append($array, 5);
