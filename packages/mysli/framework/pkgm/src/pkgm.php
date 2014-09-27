@@ -21,6 +21,34 @@ namespace mysli\framework\pkgm {
             return self::$packages;
         }
         /**
+         * Get package name from path - this must be full absolute path.
+         * @param  string $path
+         * @return mixed  string (package name) or false if not found
+         */
+        static function name_from_path($path) {
+            $path = str_replace('\\', '/', $path);
+            if (substr($path, 0, strlen(fs::pkgpath())) !== fs::pkgpath()) {
+                return false;
+            }
+            $package = substr($path, strlen(fs::pkgpath()));
+            $package = explode('/', $package);
+            if (count($package) >= 3) {
+                if (self::exists(implode('/', array_slice($package, 0, 3)))) {
+                    return implode('/', array_slice($package, 0, 3));
+                } elseif (
+                    self::exists(implode('/', array_slice($package, 0, 2)))) {
+                    return implode('/', array_slice($package, 0, 2));
+                }
+            } elseif (count($package) === 2) {
+                $package = implode('/', $package);
+                if (self::exists($package)) {
+                    return $package;
+                }
+            }
+
+            return false;
+        }
+        /**
          * Check weather package exists (is available) in fs.
          * @param  string  $package
          * @return boolean
