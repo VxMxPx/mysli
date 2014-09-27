@@ -78,11 +78,12 @@ To format (change text color, background color,...) a string,
 you can use `format`:
 
 ```php
-output::format("Doday is a +bold%s-bold day!", ['nice']);
+output::format("Today is a +bold%s-bold day!", ['nice']);
 ```
 
-To open a tag, plus (+) is used, and to close you must use minus (-), e.g:
-`+bold` text `-bold`, alternatively you can use `-all` to close all opened tags.
+To open a tag, plus (+) is used, and for closing it minus (-), e.g:
+`+bold` text `-bold`, alternatively `-all` can be used,
+to close all opened tags.
 
 Available tags are:
 
@@ -99,7 +100,17 @@ bg_light_yellow, bg_light_blue, bg_light_magenta, bg_light_cyan, bg_white
 There are shortcut methods available for each tag:
 
 ```php
-print output::red('Hello ' . output::bold('world!'));
+output::red('Red text!');
+output::green('Green text!');
+```
+
+... plus some additional options:
+
+```php
+output::plain('Text!');   // => plain (::line)
+output::error('Text!');   // => red
+output::warn('Text!');    // => yellow
+output::success('Text!'); // => green
 ```
 
 ### Parameters
@@ -119,7 +130,16 @@ $param = new param('My Script!', $arguments);
 a script. The second parameter is optional, if not provided, `$_SERVER['argv']`
 will be used.
 
-After you've constructed it, you can add expected parameters:
+Additional to that, you can also use (all used for help text):
+
+```php
+$param->title   = 'Title'; // same as title on consruct
+$param->command = 'command'; // name of this script as called with ./dot script
+$param->description = 'Short description'; // display right after title
+$param->description_long = 'Long description'; // displayed on the bottom
+```
+
+To add expected parameters use `add` method:
 
     $param->add($name, $options);
 
@@ -140,6 +160,8 @@ The `$options` parameter is an array with following options:
     help       // help text
     required   // weather field is required
     positional // weather this is positional parameter (auto set from $name)
+    exclude    // which arguments cannot be set in combination with this one
+               // array e.g. ['param_id_1', 'param_id_2']
     invoke     // if parameter is present a provided method will be executed
     action     // func to be executed when field is parsed:
                // value, is_valid, messages, break=false
@@ -161,15 +183,60 @@ To process arguments, use `parse`:
 $param->parse();
 ```
 
-... then check if process succeeded, if not, print _error_ messages, otherwise,
-get values:
+... then check if process succeeded and get values, otherwise print error
+messages:
 
 ```php
 if ($param->is_valid()) {
-    echo $param->messages();
-} else {
     $values = $param->values();
+} else {
+    echo $param->messages();
 }
+```
+
+Each parameter has an unique ID, which if not set, will be automatically
+generated, in following way:
+
+    -s/--long  => long
+    -s         => s
+    POSITIONAL => positional
+
+#### Advanced options
+
+To allow one or another parameter, but not both, you can use `exclude` option:
+
+```php
+$param->add('-p/--param1', ['exclude' => ['param2']]);
+$param->add('--param2');
+```
+
+... in the above example `param1` and `param2` will exclude each other,
+meaning that if both will be present, warning will be displayed and validation
+will not pass.
+
+To invoke a particular method, you can use `invoke`. The method will be invoked
+after all arguments are parsed. It will be invoked **only** if validation
+passes.
+
+```php
+$param->add('-m', ['invoke' => 'my_function']);
+function my_function($value, $arguments) {
+    // $value is value of -m
+    // $arguments are all processed arguments (same as $param->values())
+}
+```
+
+To execute a function when an argument is being parsed you can use `action`.
+
+```php
+$param->add('-m', ['action' => function (&$value, &$is_valid, &$messages) {
+    if (file_exists($value)) {
+        $value = file_get_contents($value);
+    } else {
+        $is_valid = false;
+        $messages[] = "File not found: {$file}";
+    }
+}]);
 ```
 
 ### Util
