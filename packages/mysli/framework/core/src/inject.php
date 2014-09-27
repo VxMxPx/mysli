@@ -110,7 +110,7 @@ namespace mysli\framework\core {
             $as = str_replace('/', '\\', $as);
             $as = $this->namespace . '\\' . $as;
             $class = str_replace('/', '\\', $package);
-            if (!class_exists($as, false)) {
+            if (!class_exists($as, false) && $class !== $as) {
                 class_alias($class, $as);
             }
             return $this;
