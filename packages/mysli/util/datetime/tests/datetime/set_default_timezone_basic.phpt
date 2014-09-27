@@ -2,7 +2,7 @@
 --FILE--
 <?php
 include __DIR__.'/../_common.php';
-use mysli\datetime as dtime;
+use mysli\util\datetime as dtime;
 
 date_default_timezone_set('UTC');
 var_dump(date_default_timezone_get());

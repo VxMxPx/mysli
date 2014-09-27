@@ -2,7 +2,7 @@
 --FILE--
 <?php
 include __DIR__.'/../_common.php';
-use mysli\datetime as dtime;
+use mysli\util\datetime as dtime;
 
 $dt = new dtime();
 var_dump($dt instanceof dtime);

@@ -1,9 +1,10 @@
 <?php
 
-namespace mysli\datetime {
+namespace mysli\util\datetime {
 
-    \inject::to(__namespace__)
-    ->from('mysli/core/exception/*', 3);
+    __use(__namespace__,
+        ['mysli/framework/exception/*' => 'framework/exception/%s']
+    );
 
     class datetime {
 
@@ -58,11 +59,11 @@ namespace mysli\datetime {
                         $datetime->format('Y-m-d H:i:s'),
                         new \DateTimeZone($datetime->format(self::timezone)));
                 } else {
-                    throw new core\exception\argument(
+                    throw new framework\exception\argument(
                         "Invalid \$datetime object type.", 1);
                 }
             } else {
-                throw new core\exception\argument(
+                throw new framework\exception\argument(
                     "Invalid \$datetime object type.", 2);
             }
         }
@@ -78,7 +79,7 @@ namespace mysli\datetime {
                 } elseif ($datetime instanceof self) {
                     $datetime = $datetime->format(self::timestamp);
                 } else {
-                    throw new core\exception\argument(
+                    throw new framework\exception\argument(
                         "Invalid \$datetime object type.", 1);
                 }
             }
