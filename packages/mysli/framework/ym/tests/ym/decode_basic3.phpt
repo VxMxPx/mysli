@@ -2,7 +2,6 @@
 Various types.
 --FILE--
 <?php
-include __DIR__.'/../_common.php';
 use mysli\framework\ym as ym;
 
 var_dump(ym::decode(<<<EOT
