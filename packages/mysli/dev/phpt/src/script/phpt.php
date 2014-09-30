@@ -3,11 +3,11 @@
 namespace mysli\dev\phpt\script {
 
     __use(__namespace__,
-        './collection',
+        './{collection,generator}',
         ['mysli/framework' => [
                 'fs/{fs,file,dir}',
                 'pkgm',
-                'cli/{param,output}' => 'param,cout'
+                'cli/{param,output,input}' => 'param,cout,cin'
             ]
         ]
     );
@@ -84,19 +84,167 @@ namespace mysli\dev\phpt\script {
                 return;
             }
 
+            if ($args['add']) {
+                self::add_test($pkg, $file, true);
+            }
             if ($args['test']) {
-                self::run_tests($pkg, $file, $method);
+                self::run_test($pkg, $file, $method);
             }
         }
 
+        /**
+         * Add test(s) for particular file/path.
+         * @param string  $pkg
+         * @param string  $file
+         * @param boolean $ask
+         */
+        private static function add_test($pkg, $file, $ask=true) {
+            if ($file === '/' || !$file) {
+                $root = fs::pkgpath($pkg,'/src');
+                foreach (file::find($root, '/\\.php$/', true) as $file) {
+                    $file = substr($file, strlen($root), -4);
+                    if ($file === 'setup') {
+                        continue;
+                    }
+                    self::add_test($pkg, $file, $ask);
+                }
+                return;
+            }
+            $spath = fs::ds($pkg, 'tests', $file);
+            $path = fs::pkgpath($pkg, 'tests', $file);
+            $abs_file = fs::pkgpath($pkg, 'src', $file.'.php');
+            if (!file_exists($abs_file)) {
+                cout::warn("File not found: `{$abs_file}`");
+                return;
+            }
+
+            // Get methods
+            try {
+                $tests = generator::get_methods($abs_file);
+            } catch (\Exception $e) {
+                cout::warn("[Failed] " . $e->getMessage());
+                return;
+            }
+
+            if (!isset($tests['methods']) || empty($tests['methods'])) {
+                cout::info("No methods found: `{$abs_file}`");
+                return;
+            }
+
+            // Get existing files
+            if (!dir::exists($path)) {
+                cout::warn("Directory not found: `{$spath}`");
+                $create_dir = $ask
+                    ? cin::confirm("Create it now?")
+                    : true;
+                if (!$create_dir) {
+                    if (cin::confirm("Ignore it in future?")) {
+                        dir::create($path);
+                        file::write(fs::ds($path, 'ignore'), '');
+                    } else {
+                        cout::info('Terminated');
+                    }
+                    return;
+                } else {
+                    if (!dir::create($path)) {
+                        cout::error("Failed to create: `{$spath}`");
+                        return;
+                    }
+                }
+            }
+
+            if (file::exists(fs::ds($path, 'ignore'))) {
+                return;
+            }
+
+            $files = file::find($path, '/\\.(phpt|ignore|delete)$/', true);
+
+            // Delete
+            $do_delete = []; // list of files for which deletion was confirmed
+            $found     = [];
+            foreach ($files as $tf) {
+                $ts     = str_replace('\\', '/', $tf);
+                $ext    = file::extension($tf);
+                $method = substr($tf, 0, -(strlen($ext)+1));
+                $method = substr($method, strrpos($method, '/')+1);
+                $method_type = substr($method, strrpos($method, '_')+1);
+                $method = substr($method, 0, -(strlen($method_type)+1));
+                $prefix = substr($tf,
+                            strrpos($tf, 'tests/')+6,
+                            -(strlen("{$method}_{$method_type}.{$ext}")+1));
+                if ($ext === 'ignore' || $ext === 'delete') {
+                    cout::info("Method: `{$method}` is set to: `{$ext}`");
+                    continue;
+                }
+                if (!isset($tests['methods'][$method])) {
+                    cout::info("Method `{$method}` doesn't exists anymore.");
+                    $set_deleted = ($ask || in_array($method, $do_delete))
+                        ? cin::confirm("Set tests to delete?")
+                        : true;
+                    if ($set_deleted) {
+                        $do_delete[] = $method;
+                        if (!file::rename($tf,
+                                          "{$method}_{$method_type}.delete")) {
+                            cout::warn("Couldn't rename: `{$method}_".
+                                       "{$method_type}.{$ext}` to `{$method}_".
+                                       "{$method_type}.delete`");
+                        }
+                    }
+                } else {
+                    $found[] = $method;
+                }
+            }
+
+            // Create
+            if (!empty($tests)) {
+                foreach ($tests['methods'] as $method => $opt) {
+                    if ($opt['visibility'] !== 'public') {
+                        continue;
+                    }
+                    if (in_array($method, $found)) {
+                        continue;
+                    }
+                    cout::info("Test for `{$method}` doesn't exists.");
+                    if (isset($opt['description']))
+                        $o = ['description' => $opt['description']];
+                    $o['file'] = "<?php\n".
+                                 "use {$tests['namespace']}\\".
+                                 "{$tests['class']};\n?>";
+                    $o['skipif'] = '<?php die("Write test..."); ?>';
+                    $t = generator::make($o);
+                    $tc = $ask
+                        ? cin::checkbox(
+                            'Which tests should be added?',
+                            ['All', 'Basic', 'Error', 'Variation', 'None', 'Ignore'],
+                            [0], true)
+                        : [0];
+                    if (!in_array(4, $tc) &&
+                        (in_array(0, $tc) || in_array(1, $tc)))
+                        file::write(
+                            fs::ds($path, $method.'_basic.phpt'), $t);
+                    if (!in_array(4, $tc) &&
+                        (in_array(0, $tc) || in_array(2, $tc)))
+                        file::write(
+                            fs::ds($path, $method.'_error.phpt'), $t);
+                    if (!in_array(4, $tc) &&
+                        (in_array(0, $tc) || in_array(3, $tc)))
+                        file::write(
+                            fs::ds($path, $method.'_variation.phpt'), $t);
+                    if (in_array(4, $tc))
+                        cout::info("No tests will be created.");
+                    if (in_array(5, $tc)) {
+                        file::write(fs::ds($path, $method.'.ignore'), '');
+                    }
+                }
+            }
+        }
         /**
          * Run test(s) for particular path/file.
          * @param  string $pkg
          * @param  string $file
          * @param  string $method
-         * @return null
          */
-        private static function run_tests($pkg, $file, $method) {
+        private static function run_test($pkg, $file, $method) {
             $spath = fs::ds($pkg, 'tests', $file);
             $path = fs::pkgpath($pkg, 'tests', $file);
 

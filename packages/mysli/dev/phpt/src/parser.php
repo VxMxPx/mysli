@@ -405,7 +405,7 @@ namespace mysli\dev\phpt {
          * @param  string $file
          * @return string
          */
-        private function get_external_content($path, $file) {
+        private static function get_external_content($path, $file) {
             $filename = fs::ds($path, $file);
             if (!file::exists($filename)) {
                 throw new framework\exception\not_found(
