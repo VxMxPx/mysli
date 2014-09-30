@@ -1,5 +1,17 @@
 <?php
 
+/**
+ *  This class is partly based on (/inspied by) run-tests.php by The PHP Group.
+ *  -------------------------------------
+ *  Copyright (c) 1997-2010 The PHP Group
+ *  This function is subject to version 3.01 of the PHP license,
+ *  that is bundled with this package in the file LICENSE, and is
+ *  available through the world-wide-web at the following url:
+ *  http://www.php.net/license/3_01.txt
+ *  If you did not receive a copy of the PHP license and are unable to
+ *  obtain it through the world-wide-web, please send a note to
+ *  license@php.net so we can mail you a copy immediately.
+ */
 namespace mysli\dev\phpt {
     class diff {
         /**
@@ -160,13 +172,15 @@ namespace mysli\dev\phpt {
             while ($idx1 < $cnt1) {
                 $before = isset($output[$idx2-1]) ? $output[$idx2-1] : null;
                 $after  = isset($output[$idx2+1]) ? $output[$idx2+1] : null;
-                $diff[] = array($idx1, '-',  $before, $expect_raw[$idx1++], $after);
+                $diff[] = array(
+                    $idx1, '-',  $before, $expect_raw[$idx1++], $after);
             }
 
             while ($idx2 < $cnt2) {
                 $before = isset($output[$idx2-1]) ? $output[$idx2-1] : null;
                 $after  = isset($output[$idx2+1]) ? $output[$idx2+1] : null;
-                $diff[] = array($idx2, '+',  $before, $output[$idx2++], $after);
+                $diff[] = array(
+                    $idx2, '+',  $before, $output[$idx2++], $after);
             }
 
             return $diff;

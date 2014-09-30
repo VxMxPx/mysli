@@ -21,91 +21,82 @@ namespace mysli\dev\phpt\script {
         static function run($args) {
             $param = new param('Mysli PHPT Wrapper', $args);
             $param->command = 'phpt';
-            $param->add('-p/--package', [
-                'help'   => 'Package(+:method) to be observed (vendor/package '.
-                            'or vendor/package:method or '.
-                            'vendor/package/class:method)',
-                'exclude'=> 'current',
-                'invoke' => __namespace__.'\\phpt::package'
-            ]);
-            $param->add('-m/--method', [
-                'help'    => 'Method to be observed',
-                'default' => null
+            $param->add('-t/--test', [
+                'help'    => 'Run test(s). Package(+:method) to be run '.
+                             '(vendor/package or vendor/package:method or '.
+                             'vendor/package/class:method)',
+                'type'    => 'bool',
+                'default' => false
             ]);
             $param->add('-w/--watch', [
-                'help'    => 'Watch package for changes',
+                'help'    => 'Watch changes and re-run the test/add command.',
                 'type'    => 'bool',
                 'default' => false
             ]);
             $param->add('-a/--add', [
-                'help'    => 'Scan package for methods and create '.
-                             'test(s) if needed',
+                'help'    => 'Scan package/file for methods and create '.
+                             'test(s) if needed.',
                 'type'    => 'bool',
                 'default' => false
             ]);
-            $param->add('-c/--current', [
-                'help'    => 'Use current directory as a package (replace -p)',
-                'allow_empty' => true,
-                'invoke'  => __namespace__.'\\phpt::package',
-                'action'  => function (&$value, &$is_valid, &$messages) {
-                    $package = pkgm::name_from_path(getcwd());
-                    if (!$package) {
-                        $messages[] = "Not in a valid package directory!";
-                        $is_valid = false;
-                    }
-                    if (substr($value, 0, 4) === 'src/') {
-                        $value = substr($value, 4);
-                    }
-                    if (substr($value, -4) === '.php') {
-                        $value = substr($value, 0, -4);
-                    }
-                    $value = fs::ds($package, $value);
-                }
+            $param->add('PACKAGE', [
+                'help'     => 'Package name. If not provided, current '.
+                              'directory will be used.',
+                'required' => false,
+                'default'  => null
             ]);
 
             $param->parse();
-            if (!$param->is_valid()) { cout::line($param->messages()); }
+            if (!$param->is_valid()) {
+                cout::line($param->messages());
+            } else {
+                self::execute($param->values());
+            }
         }
         /**
-         * Run test(s) for particular package.
-         * @param  string $package
+         * Handle action.
          * @param  array  $args
          * @return null
          */
-        static function package($package, $args) {
-            if ($args['add']) {
-                // -------------------------------------------------------------
-                // /home/m/www/packages/mysli/dev/phpt/src/file.php
-                // /home/m/www/packages/mysli/dev/phpt/tests/file/
-                //      method_basic.ignore
-                //      method_error.ignore
-                // -------------------------------------------------------------
-                // $creator = creator::produce($path);
-                // $creator->scan();
-                // -------------------------------------------------------------
-                cout::yellow('ADD was called!');
-                return;
-            }
-            if (strpos($package, ':')) {
-                list($package, $method) = explode(':', $package, 2);
-            }
-            if ($args['method']) {
-                $method = $args['method'];
-            }
-            if (!isset($method)) {
+        private static function execute($args) {
+            if (!$args['package']) {
+                $package = pkgm::name_from_path(getcwd());
+                $pkg = $package;
                 $method = null;
+            } else {
+                $package = $args['package'];
+                if (substr($package, 0, 2) === './') {
+                    $package = pkgm::name_from_path(getcwd()) .
+                               substr($package, 1);
+                }
+                if (strpos($package, ':')) {
+                    list($package, $method) = explode(':', $package, 2);
+                }
+                if (!isset($method)) {
+                    $method = null;
+                }
+                $pkg = pkgm::name_from_path(fs::pkgpath($package));
             }
-            $pkg = pkgm::name_from_path(fs::pkgpath($package));
             $file = substr($package, strlen($pkg));
-            // if (!$file) {
-            //     $file = rtrim( substr($pkg, strrpos($pkg, '/')), '/') . '.php';
-            // }
 
             if (!$pkg) {
                 cout::warn("Not a valid package: `{$package}`");
                 return;
             }
 
+            if ($args['test']) {
+                self::run_tests($pkg, $file, $method);
+            }
+        }
+
+        /**
+         * Run test(s) for particular path/file.
+         * @param  string $pkg
+         * @param  string $file
+         * @param  string $method
+         * @return null
+         */
+        private static function run_tests($pkg, $file, $method) {
             $spath = fs::ds($pkg, 'tests', $file);
             $path = fs::pkgpath($pkg, 'tests', $file);
 
@@ -122,7 +113,8 @@ namespace mysli\dev\phpt\script {
             $tests = new collection(fs::ds($path, $method));
 
             if (!count($tests)) {
-                cout::warn("No tests found for: `{$pkg}` in `{$spath}:{$method}`");
+                cout::warn(
+                    "No tests found for: `{$pkg}` in `{$spath}:{$method}`");
                 return;
             }
 
@@ -156,7 +148,11 @@ namespace mysli\dev\phpt\script {
                 "TOTAL TIME: %s",
                 [$total, $failed, $success, $skipped, $run_time]);
         }
-
+        /**
+         * Output diff.
+         * @param  array  $diff
+         * @return null
+         */
         private static function diff_out(array $diff) {
             $last = -1;
             foreach ($diff as $k => $diff_line) {
@@ -176,7 +172,9 @@ namespace mysli\dev\phpt\script {
                         continue;
                     }
                 }
-                cout::info('~' . str_pad($line+2, 3, '0', STR_PAD_LEFT) . ' ' . $lafter);
+                cout::info(
+                    '~' .
+                    str_pad($line+2, 3, '0', STR_PAD_LEFT) . ' ' . $lafter);
             }
         }
     }

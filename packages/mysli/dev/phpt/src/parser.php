@@ -80,7 +80,7 @@ namespace mysli\dev\phpt {
                     Field `--TEST--` is missing in file", 10);
             }
             if (!($file = self::get_first_key($phpt,
-                ['file', 'fileeof', 'file_external', 'redirecttest']))) {
+                ['file', 'fileeof', 'file_external']))) {
                 throw new framework\exception\data(
                     "One of following fields is required: ".
                     "`--FILE--`, `--FILEEOF--`, `--FILE_EXTERNAL--`", 11);
@@ -127,24 +127,36 @@ namespace mysli\dev\phpt {
                 $phpt['expect'] = self::process_expectf($phpt['expect']);
             }
 
+            $phpt['cgi'] = false;
+
             $env['REQUEST_METHOD']  = 'GET';
             $env['CONTENT_TYPE']    = '';
             $env['CONTENT_LENGTH']  = '';
             $env['REDIRECT_STATUS'] = '1';
             $env['PATH_TRANSLATED'] = dirname($phpt_file);
             $env['SCRIPT_FILENAME'] = basename($phpt_file);
-            $env['QUERY_STRING']    = isset($phpt['get'])
-                ? trim($phpt['get']) : '';
-            $env['HTTP_COOKIE']     = isset($phpt['cookie'])
-                ? trim($phpt['cookie']) : '';
+            if (isset($phpt['get'])) {
+                $phpt['cgi'] = true;
+                $env['QUERY_STRING'] = trim($phpt['get']);
+            } else {
+                $env['QUERY_STRING'] = '';
+            }
+            if (isset($phpt['cookie'])) {
+                $phpt['cgi'] = true;
+                $env['HTTP_COOKIE'] = trim($phpt['cookie']);
+            } else {
+                $env['HTTP_COOKIE'] = '';
+            }
             // Inputs
             if (isset($phpt['post'])) {
+                $phpt['cgi']    = true;
                 $phpt['post']   = trim($phpt['post']);
                 $phpt['inputf'] = 'post';
                 $env['REQUEST_METHOD'] = 'POST';
                 $env['CONTENT_TYPE']   = 'application/x-www-form-urlencoded';
                 $env['CONTENT_LENGTH'] = strlen($phpt['post']);
             } elseif (isset($phpt['deflate_post'])) {
+                $phpt['cgi']          = true;
                 $phpt['deflate_post'] = trim($phpt['deflate_post']);
                 $phpt['deflate_post'] = gzcompress($phpt['deflate_post'], 9);
                 $phpt['inputf']       = 'deflate_post';
@@ -153,6 +165,7 @@ namespace mysli\dev\phpt {
                 $env['CONTENT_TYPE']      = 'application/x-www-form-urlencoded';
                 $env['CONTENT_LENGTH']    = strlen($phpt['deflate_post']);
             } elseif (isset($phpt['gzip_post'])) {
+                $phpt['cgi']       = true;
                 $phpt['gzip_post'] = trim($phpt['gzip_post']);
                 $phpt['gzip_post'] = gzencode($phpt['gzip_post'], 9,FORCE_GZIP);
                 $phpt['inputf']    = 'gzip_post';
@@ -161,6 +174,7 @@ namespace mysli\dev\phpt {
                 $env['CONTENT_TYPE']   = 'application/x-www-form-urlencoded';
                 $env['CONTENT_LENGTH'] = strlen($phpt['gzip_post']);
             } elseif (isset($phpt['put']) || isset($phpt['post_raw'])) {
+                $phpt['cgi'] = true;
                 $post = trim($phpt[(isset($phpt['put']) ? 'put' : 'post_raw')]);
                 $phpt['request'] = '';
                 $phpt['inputf']  = 'request';

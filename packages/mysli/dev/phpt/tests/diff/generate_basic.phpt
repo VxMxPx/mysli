@@ -1,4 +1,5 @@
 --TEST--
+Basic DIFF test.
 --FILE--
 <?php
 print_r([

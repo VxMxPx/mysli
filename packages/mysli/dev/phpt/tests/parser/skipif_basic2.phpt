@@ -1,6 +1,6 @@
 --TEST--
 Do NOT skipt this test.
---SKIPF--
+--SKIPIF--
 <?php if (false) { die('Skipped!'); } ?>
 --FILE--
 <?php

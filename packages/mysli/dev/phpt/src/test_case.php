@@ -14,7 +14,7 @@ namespace mysli\dev\phpt {
         // false = not executed, -1 = skipped, 0 = failed, 1 = success
         private $status   = false;
         private $run_time = 0.0;
-        private $skipf_message = '';
+        private $skipif_message = '';
         private $parsed;
         private $filename;
         private $rel_filename;
@@ -48,14 +48,18 @@ namespace mysli\dev\phpt {
             $this->cleanup();
             $this->output = '';
             $this->diff = [];
-            $this->skipf_message = '';
-
-            // get PHP location
-            $php = exec('which php') ?: 'php';
-            $dir = dirname($this->filename);
+            $this->skipif_message = '';
 
             // parse phpt file
             $this->parsed = parser::process($this->filename);
+
+            // get PHP location
+            if (!$this->parsed['cgi']) {
+                $php = exec('which php')     ?: '/usr/bin/env php';
+            } else {
+                $php = exec('which php-cgi') ?: '/usr/bin/env php-cgi';
+            }
+            $dir = dirname($this->filename);
 
             // see if we have input file
             if (isset($this->parsed['inputf'])) {
@@ -66,18 +70,18 @@ namespace mysli\dev\phpt {
                 $in = "< \"{$inputf}\"";
             } else $in = '';
 
-            // check if skipf is set
-            if (isset($this->parsed['skipf'])) {
-                $skipf = fs::ds(
-                    "{$this->dir_temp}/{$this->filename_temp}.skipf.php");
-                file::write($skipf, $this->parsed['skipf']);
-                $this->files[] = $skipf;
+            // check if skipif is set
+            if (isset($this->parsed['skipif'])) {
+                $skipif = fs::ds(
+                    "{$this->dir_temp}/{$this->filename_temp}.skipif.php");
+                file::write($skipif, $this->parsed['skipif']);
+                $this->files[] = $skipif;
                 $command = implode(' ', [
-                    $php, $this->parsed['inip'], '-f "' . $skipf . '"',
+                    $php, $this->parsed['inip'], '-f "' . $skipif . '"',
                     $this->parsed['args'], '2>&1', $in]);
                 $r = engine::run($command, $this->parsed['env'], $dir);
                 if(trim($r)) {
-                    $this->skipf_message = $r;
+                    $this->skipif_message = $r;
                     $this->status = -1;
                     return -1;
                 }
@@ -157,7 +161,7 @@ namespace mysli\dev\phpt {
          * @return string
          */
         function skipped_message() {
-            return $this->skipf_message;
+            return $this->skipif_message;
         }
         /**
          * Was this test successful.
