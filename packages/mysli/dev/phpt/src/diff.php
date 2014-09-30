@@ -115,15 +115,21 @@ namespace mysli\dev\phpt {
                                             $idx2, $cnt1, $cnt2, 10);
                     $c2 = self::count_array($expect, $output, $regex, $idx1,
                                             $idx2+1, $cnt1,  $cnt2, 10);
+                    $before = isset($output[$idx2-1]) ? $output[$idx2-1] : null;
+                    $after  = isset($output[$idx2+1]) ? $output[$idx2+1] : null;
                     if ($c1 > $c2) {
-                        $old1[$idx1] = array($idx1, '-', $output[$idx2-1], $expect_raw[$idx1++], $output[$idx2+1]);
+                        $old1[$idx1] = array(
+                            $idx1, '-', $before, $expect_raw[$idx1++], $after);
                         $last = 1;
                     } elseif ($c2 > 0) {
-                        $old2[$idx2] = array($idx2, '+', $output[$idx2-1], $output[$idx2++], $output[$idx2+1]);
+                        $old2[$idx2] = array(
+                            $idx2, '+', $before, $output[$idx2++], $after);
                         $last = 2;
                     } else {
-                        $old1[$idx1] = array($idx1, '-', $output[$idx2-1], $expect_raw[$idx1++], $output[$idx2+1]);
-                        $old2[$idx2] = array($idx2, '+', $output[$idx2-1], $output[$idx2++], $output[$idx2+1]);
+                        $old1[$idx1] = array(
+                            $idx1, '-', $before, $expect_raw[$idx1++], $after);
+                        $old2[$idx2] = array(
+                            $idx2, '+', $before, $output[$idx2++], $after);
                     }
                 }
             }
@@ -152,11 +158,15 @@ namespace mysli\dev\phpt {
             }
 
             while ($idx1 < $cnt1) {
-                $diff[] = array($idx1, '-',  $output[$idx2-1], $expect_raw[$idx1++], $output[$idx2-1]);
+                $before = isset($output[$idx2-1]) ? $output[$idx2-1] : null;
+                $after  = isset($output[$idx2+1]) ? $output[$idx2+1] : null;
+                $diff[] = array($idx1, '-',  $before, $expect_raw[$idx1++], $after);
             }
 
             while ($idx2 < $cnt2) {
-                $diff[] = array($idx2, '+',  $output[$idx2-1], $output[$idx2++], $output[$idx2-1]);
+                $before = isset($output[$idx2-1]) ? $output[$idx2-1] : null;
+                $after  = isset($output[$idx2+1]) ? $output[$idx2+1] : null;
+                $diff[] = array($idx2, '+',  $before, $output[$idx2++], $after);
             }
 
             return $diff;

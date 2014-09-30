@@ -55,7 +55,7 @@ namespace mysli\dev\phpt {
         function failed() {
             $r = [];
             foreach ($this->tests as $t)
-                $t->executed() && !$t->succeed() && ($r[] = $t);
+                $t->executed() && $t->failed() && ($r[] = $t);
             return $r;
         }
         /**

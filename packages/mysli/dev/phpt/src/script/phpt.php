@@ -74,6 +74,15 @@ namespace mysli\dev\phpt\script {
          */
         static function package($package, $args) {
             if ($args['add']) {
+                // -------------------------------------------------------------
+                // /home/m/www/packages/mysli/dev/phpt/src/file.php
+                // /home/m/www/packages/mysli/dev/phpt/tests/file/
+                //      method_basic.ignore
+                //      method_error.ignore
+                // -------------------------------------------------------------
+                // $creator = creator::produce($path);
+                // $creator->scan();
+                // -------------------------------------------------------------
                 cout::yellow('ADD was called!');
                 return;
             }
@@ -123,6 +132,9 @@ namespace mysli\dev\phpt\script {
                 cout::line("TEST [{$test->filename()}]", false);
                 if ($test->succeed()) {
                     cout::format('+right+green%s', ['OK']);
+                } elseif ($test->skipped()) {
+                    cout::format('+right+yellow%s', ['SKIPPED']);
+                    cout::info($test->skipped_message());
                 } else {
                     cout::format('+right+red%s', ['FAILED']);
                     self::diff_out($test->diff());
@@ -138,9 +150,9 @@ namespace mysli\dev\phpt\script {
 
             cout::format(
                 'RUN: %s | '.
-                ($failed  ? '+red FAILED: %s-red  | '        : 'FAILED: %s | ').
-                (!$failed ? '+green SUCCEED: %s-green  | '   : 'SUCCEED: %s | ').
-                ($skipped ? '+yellow SKIPPED: %s-yellow  | ' : 'SKIPPED: %s | ').
+                ($failed  ? '+red FAILED: %s-red  | '       : 'FAILED: %s | ').
+                (!$failed ? '+green SUCCEED: %s-green  | '  : 'SUCCEED: %s | ').
+                ($skipped ? '+yellow SKIPPED: %s-yellow  | ': 'SKIPPED: %s | ').
                 "TOTAL TIME: %s",
                 [$total, $failed, $success, $skipped, $run_time]);
         }

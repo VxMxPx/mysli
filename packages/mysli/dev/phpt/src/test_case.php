@@ -14,6 +14,7 @@ namespace mysli\dev\phpt {
         // false = not executed, -1 = skipped, 0 = failed, 1 = success
         private $status   = false;
         private $run_time = 0.0;
+        private $skipf_message = '';
         private $parsed;
         private $filename;
         private $rel_filename;
@@ -47,6 +48,7 @@ namespace mysli\dev\phpt {
             $this->cleanup();
             $this->output = '';
             $this->diff = [];
+            $this->skipf_message = '';
 
             // get PHP location
             $php = exec('which php') ?: 'php';
@@ -70,7 +72,12 @@ namespace mysli\dev\phpt {
                     "{$this->dir_temp}/{$this->filename_temp}.skipf.php");
                 file::write($skipf, $this->parsed['skipf']);
                 $this->files[] = $skipf;
-                if(!trim(engine::run($command, $this->parsed['env'], $dir))) {
+                $command = implode(' ', [
+                    $php, $this->parsed['inip'], '-f "' . $skipf . '"',
+                    $this->parsed['args'], '2>&1', $in]);
+                $r = engine::run($command, $this->parsed['env'], $dir);
+                if(trim($r)) {
+                    $this->skipf_message = $r;
                     $this->status = -1;
                     return -1;
                 }
@@ -146,11 +153,25 @@ namespace mysli\dev\phpt {
             return $this->status === -1;
         }
         /**
+         * Message (why was it skipped)
+         * @return string
+         */
+        function skipped_message() {
+            return $this->skipf_message;
+        }
+        /**
          * Was this test successful.
          * @return boolean
          */
         function succeed() {
             return $this->status === 1;
+        }
+        /**
+         * Weather this test failed.
+         * @return boolean
+         */
+        function failed() {
+            return $this->status === 0;
         }
         /**
          * Return test run time
