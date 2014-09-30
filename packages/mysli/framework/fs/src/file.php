@@ -3,6 +3,7 @@
 namespace mysli\framework\fs {
 
     __use(__namespace__,
+        './fs',
         ['../exception/*' => 'framework/exception/%s']
     );
 
@@ -237,7 +238,7 @@ namespace mysli\framework\fs {
             if (dir::exists($destination)) {
                 $destination = fs::ds($destination, '/', self::name($source));
             } else {
-                if (!dir::exists(dir::name($destination))) {
+                if (!dir::exists(dirname($destination))) {
                     throw new framework\exception\not_found(
                         "Destination directory not found: `{$destination}`.");
                 }
@@ -251,13 +252,34 @@ namespace mysli\framework\fs {
             return move($source, $destination);
         }
         /**
+         * Rename a file.
+         * @param  mixed   $source absolute path
+         * @param  string  $destination absolute path,
+         * @return boolean
+         */
+        static function rename($source, $destination) {
+            if (!strpos($destination, '/') && !strpos($destination, '\\')) {
+                $destination = fs::ds(dirname($source), $destination);
+            }
+            if (dirname($source) !== dirname($destination)) {
+                throw new framework\exception\argument(
+                    "Destination and source must directories be the same.", 1);
+            }
+            if (basename($source) === basename($destination)) {
+                throw new framework\exception\argument(
+                    "Destination and source filenames must be different.", 2);
+            }
+
+            return move($source, $destination);
+        }
+        /**
          * Find files in particular directory.
          * @param  string  $directory
-         * @param  string  $filter regular expression filter, e.g. /*.\.jpg/i
+         * @param  string  $filter regular expression filter, e.g. /.*\.jpg/i
          * @param  boolean $deep include sub-directories
          * @return array
          */
-        static function find($directory, $filter, $deep=true) {
+        static function find($directory, $filter=null, $deep=true) {
             if (!dir::exists($directory)) {
                 throw new framework\exception\argument(
                     "Not a valid directory: `{$directory}`.", 1);
@@ -266,20 +288,29 @@ namespace mysli\framework\fs {
             $collection = array_diff(scandir($directory), ['.','..']);
             $matched    = [];
 
+            if ($filter && substr($filter, 0, 1) !== '/') {
+                throw new framework\exception\argument(
+                    "Invalid filter formar: `{$filter}` ".
+                    "expected regular expression.", 1);
+            }
+
             if (empty($collection)) {
                 return [];
             }
 
             foreach ($collection as $file) {
                 if (dir::exists(fs::ds($directory, $file))) {
-                    if (!$deep) continue;
+                    if (!$deep) { continue; }
                     $matched_sub = self::find(
                         fs::ds($directory, $file), $filter, $deep);
-                    return array_merge($matched_sub, $matched);
+                    $matched = array_merge($matched_sub, $matched);
+                    continue;
                 }
-                if (preg_match($filter, $file)) {
-                    $matched[] = ds($directory, $file);
+                if ($filter && !preg_match($filter, $file)) {
+                    continue;
                 }
+
+                $matched[] = fs::ds($directory, $file);
             }
 
             return $matched;
