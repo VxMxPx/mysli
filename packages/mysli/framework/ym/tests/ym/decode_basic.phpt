@@ -16,7 +16,6 @@ require:
     ../fs   : ~1
 EOT
 ));
-
 ?>
 --EXPECT--
 Array
