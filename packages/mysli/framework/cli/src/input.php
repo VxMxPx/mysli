@@ -3,6 +3,7 @@
 namespace mysli\framework\cli {
 
     __use(__namespace__,
+        './output',
         '../type/str'
     );
 
@@ -82,13 +83,12 @@ namespace mysli\framework\cli {
         }
         /**
          * Ask user a question to which Y/n is the only possible answer.
-         * @param  string  $text
+         * @param  string  $title
          * @param  boolean $default
          * @return boolean
          */
-        public static function confirm($text, $default=true)
-        {
-            $question = $text . ' [' . ($default ? 'Y/n' : 'y/N') . '] ';
+        public static function confirm($title, $default=true) {
+            $question = $title . ' [' . ($default ? 'Y/n' : 'y/N') . '] ';
             return self::line(
                 $question,
                 function ($input) use ($default) {
@@ -103,6 +103,42 @@ namespace mysli\framework\cli {
                         return false;
                     }
                 });
+        }
+        /**
+         * Produce checkbox (allow to select multiple options)
+         * @param  string  $title
+         * @param  array   $options
+         * @param  array   $checked
+         * @param  boolean $compact (display options inline)
+         * Which tests to create?
+         * [1] All, 2 Basic, 3 Variation, 4 Error
+         * Enter one or more number:
+         * @return array
+         */
+        public static function checkbox($title, array $options,
+                                        array $checked=[], $compact=true) {
+            $map = array_keys($options);
+            foreach ($map as $k => $v) {
+                $k = $k + 1;
+                $question[] = (in_array($v, $checked) ? "[{$k}]" : $k).
+                              " {$options[$v]}";
+            }
+            $question = implode(($compact ? ', ' : "\n"), $question);
+            $question = "{$title}\n{$question}\nEnter one or more numbers: ";
+            return self::line($question, function($input) use ($checked, $map) {
+                if (empty(trim($input))) {
+                    return $checked;
+                }
+                $answers = [];
+                foreach (explode(' ', $input) as $answer) {
+                    $answer = (int) trim($answer, ", ")-1;
+                    if (!array_key_exists($answer, $map)) {
+                        output::line("Invalid option: `{$answer}`");
+                        return;
+                    } else $answers[] = $map[$answer];
+                }
+                return $answers;
+            });
         }
     }
 }
