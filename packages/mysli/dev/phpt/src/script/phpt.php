@@ -84,6 +84,10 @@ namespace mysli\dev\phpt\script {
                 return;
             }
 
+            if ($args['watch']) {
+                self::watch($pkg, $file, $method, $args['add'], $args['test']);
+                return;
+            }
             if ($args['add']) {
                 self::add_test($pkg, $file, true);
             }
@@ -92,6 +96,64 @@ namespace mysli\dev\phpt\script {
             }
         }
 
+        /**
+         * Watch files for changes and re-run/re-add tests when changes occurs.
+         * @param  string  $pkg
+         * @param  string  $file
+         * @param  string  $method
+         * @param  boolean $do_add
+         * @param  boolean $do_test
+         * @param  integer $sleep
+         */
+        private static function watch($pkg, $file, $method,
+                                      $do_add, $do_test, $sleep=2) {
+            // Add files path
+            $sfp = [fs::pkgpath(fs::ds("{$pkg}/src")),
+                    ($file
+                        ? "/".preg_quote(trim($file,'/\\'))."\\.php/"
+                        : '/.*?\\.php/')];
+            // Test files path
+            $tfp = [fs::pkgpath(fs::ds($pkg, $file)),
+                    ($method
+                        ? "/".preg_quote(trim($method,'/\\'))."_[a-z]+\\.phpt/"
+                        : '/.*?\\.phpt/')];
+
+            $diff          = false;
+            $last_src_hash = null;
+            $last_tst_hash = null;
+
+            while (true) {
+                if ($do_add) {
+                    $src_files = file::find($sfp[0], $sfp[1]);
+                    $src_files_hash = file::signature($src_files);
+                    $src_hash  = md5(implode('', $src_files_hash));
+                    if ($src_hash !== $last_src_hash) {
+                        foreach ($src_files_hash as $id => $sig) {
+                            $src_file = substr(
+                                $src_files[$id], strlen($sfp[0])+1, -4);
+                            self::add_test($pkg, $file);
+                        }
+                        $diff = true;
+                        $last_src_hash = $src_hash;
+                    }
+                }
+                if ($do_test) {
+                    if (!$diff || !$last_tst_hash) {
+                        $tst_files = file::find($tfp[0], $tfp[1]);
+                        $tst_files_hash = file::signature($tst_files);
+                        $tst_hash = md5(implode('', $tst_files_hash));
+                        if ($tst_hash !== $last_tst_hash) {
+                            $last_tst_hash = $tst_hash;
+                            self::run_test($pkg, $file, $method);
+                        }
+                    } else {
+                        self::run_test($pkg, $file, $method);
+                    }
+                }
+                $diff = false;
+                sleep($sleep);
+            }
+        }
         /**
          * Add test(s) for particular file/path.
          * @param string  $pkg
@@ -174,6 +236,7 @@ namespace mysli\dev\phpt\script {
                             -(strlen("{$method}_{$method_type}.{$ext}")+1));
                 if ($ext === 'ignore' || $ext === 'delete') {
                     cout::info("Method: `{$method}` is set to: `{$ext}`");
+                    $found[] = $method;
                     continue;
                 }
                 if (!isset($tests['methods'][$method])) {
@@ -233,7 +296,9 @@ namespace mysli\dev\phpt\script {
                     if (in_array(4, $tc))
                         cout::info("No tests will be created.");
                     if (in_array(5, $tc)) {
-                        file::write(fs::ds($path, $method.'.ignore'), '');
+                        file::write(
+                            fs::ds($path, $method.'_all.ignore'),
+                            "Auto Generated on: " . time());
                     }
                 }
             }
