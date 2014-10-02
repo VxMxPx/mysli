@@ -1,18 +1,18 @@
 <?php
 
-namespace Mysli\I18n;
+namespace mysli\util\i18n;
 
-class Parser
-{
+__use(__namespace__,
+    'mysli/framework/type/{str,arr}'
+);
+
+class parser {
     /**
      * Convert Mysli Translation (mt) to array.
-     * --
      * @param string $translation
-     * --
      * @return array
      */
-    public static function parse($translation)
-    {
+    public static function parse($translation) {
         $mt = $translation;
 
         $matches;
@@ -27,7 +27,7 @@ class Parser
         $mt .= "\n# EOF";
 
         // Standardize line endings
-        $mt = \Core\Str::to_unix_line_endings($mt);
+        $mt = str::to_unix_line_endings($mt);
 
         // Match
         preg_match_all(
@@ -44,10 +44,10 @@ class Parser
 
             $options = trim($match[2], '[]');
             if ($options === '') $options = [];
-            else $options = \Core\Str::explode_trim(',', $options);
+            else $options = str::split_trim($options, ',');
 
             if (in_array('nl', $options)) {
-                $options = \Core\Arr::delete_by_value_all('nl', $options);
+                $options = arr::delete_by_value($options, 'nl', false);
             } else {
                 // Eliminate new-lines
                 $value = str_replace("\n", ' ', $value);
