@@ -231,6 +231,35 @@ namespace mysli\dev\phpt {
             $phpt['args'] = isset($phpt['args']) ? ' -- ' . $phpt['args'] : '';
             $phpt['load'] = self::mk_loader();
 
+            // Process imports
+            if (isset($phpt['import'])) {
+                $imports = $phpt['import'];
+                $imports = explode("\n", $imports);
+                $phpt['import'] = "<?php\n\$import = [];\n";
+                foreach ($imports as $import) {
+                    if (strpos($import, ' as ') !== false) {
+                        list($file, $var) = explode(' as ', $import, 2);
+                        $file_content = self::get_external_content(
+                                            dirname($phpt_file), $file);
+                        $file_content = trim($file_content);
+                        $phpt['import'] .= "\$import['{$var}'] = <<<IMPORT".
+                                           "\n{$file_content}\nIMPORT;\n";
+                    } else {
+                        $file_content = self::get_external_content(
+                                            dirname($phpt_file), $import);
+                        $file_content = trim($file_content);
+                        if (substr($file_content, 0, 5) === '<?php') {
+                            $file_content = substr($file_content, 5);
+                        }
+                        if (substr($file_content, -2) === '?>') {
+                            $file_content = substr($file_content, 0, -2);
+                        }
+                        $phpt['import'] .= "{$file_content}\n";
+                    }
+                }
+                $phpt['import'] .= "?>";
+            } else $phpt['import'] = '';
+
             return $phpt;
         }
 

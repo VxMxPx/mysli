@@ -108,12 +108,12 @@ namespace mysli\dev\phpt\script {
         private static function watch($pkg, $file, $method,
                                       $do_add, $do_test, $sleep=2) {
             // Add files path
-            $sfp = [fs::pkgpath(fs::ds("{$pkg}/src")),
+            $sfp = [fs::pkgpath("{$pkg}/src"),
                     ($file
                         ? "/".preg_quote(trim($file,'/\\'))."\\.php/"
                         : '/.*?\\.php/')];
             // Test files path
-            $tfp = [fs::pkgpath(fs::ds($pkg, $file)),
+            $tfp = [fs::pkgpath(fs::ds($pkg, 'tests', $file)),
                     ($method
                         ? "/".preg_quote(trim($method,'/\\'))."_[a-z]+\\.phpt/"
                         : '/.*?\\.phpt/')];
@@ -124,27 +124,35 @@ namespace mysli\dev\phpt\script {
 
             while (true) {
                 if ($do_add) {
-                    $src_files = file::find($sfp[0], $sfp[1]);
-                    $src_files_hash = file::signature($src_files);
-                    $src_hash  = md5(implode('', $src_files_hash));
-                    if ($src_hash !== $last_src_hash) {
-                        foreach ($src_files_hash as $id => $sig) {
-                            $src_file = substr(
-                                $src_files[$id], strlen($sfp[0])+1, -4);
-                            self::add_test($pkg, $file);
+                    if (!dir::exists($sfp[0])) {
+                        cout::warn("Not a valid directory: `{$sfp[0]}`");
+                    } else {
+                        $src_files = file::find($sfp[0], $sfp[1]);
+                        $src_files_hash = file::signature($src_files);
+                        $src_hash  = md5(implode('', $src_files_hash));
+                        if ($src_hash !== $last_src_hash) {
+                            foreach ($src_files_hash as $id => $sig) {
+                                $src_file = substr(
+                                    $src_files[$id], strlen($sfp[0])+1, -4);
+                                self::add_test($pkg, $file);
+                            }
+                            $diff = true;
+                            $last_src_hash = $src_hash;
                         }
-                        $diff = true;
-                        $last_src_hash = $src_hash;
                     }
                 }
                 if ($do_test) {
                     if (!$diff || !$last_tst_hash) {
-                        $tst_files = file::find($tfp[0], $tfp[1]);
-                        $tst_files_hash = file::signature($tst_files);
-                        $tst_hash = md5(implode('', $tst_files_hash));
-                        if ($tst_hash !== $last_tst_hash) {
-                            $last_tst_hash = $tst_hash;
-                            self::run_test($pkg, $file, $method);
+                        if (!dir::exists($tfp[0])) {
+                            cout::warn("Not a valid directory: `{$tfp[0]}`");
+                        } else {
+                            $tst_files = file::find($tfp[0], $tfp[1]);
+                            $tst_files_hash = file::signature($tst_files);
+                            $tst_hash = md5(implode('', $tst_files_hash));
+                            if ($tst_hash !== $last_tst_hash) {
+                                $last_tst_hash = $tst_hash;
+                                self::run_test($pkg, $file, $method);
+                            }
                         }
                     } else {
                         self::run_test($pkg, $file, $method);

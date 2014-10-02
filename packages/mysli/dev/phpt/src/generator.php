@@ -22,7 +22,7 @@ namespace mysli\dev\phpt {
                     "File not found: {$file}", 1);
             $contents = file::read($file);
             // get namespace
-            preg_match('/^[ \\t]*?namespace ([a-z0-9_\\\\]+) ?\\{?$/im',
+            preg_match('/^[ \\t]*?namespace ([a-z0-9_\\\\]+) ?(\\{?|;?)$/im',
                        $contents, $namespace);
 
             $namespace = isset($namespace[1]) ? $namespace[1] : false;

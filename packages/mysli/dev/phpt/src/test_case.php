@@ -90,7 +90,9 @@ namespace mysli\dev\phpt {
             // test file
             $testf = fs::ds(
                 "{$this->dir_temp}/{$this->filename_temp}.php");
-            file::write($testf, $this->parsed['load'].$this->parsed['test']);
+            file::write($testf,
+                        $this->parsed['load'].$this->parsed['import'].
+                        $this->parsed['test']);
             $this->files[] = $testf;
 
             // assemble command
