@@ -1,4 +1,4 @@
-# Mysli Framework Config
+# Mysli Util Config
 
 ## Introduction
 
@@ -6,7 +6,7 @@ Conig for Mysli packages:
 
 ## Usage
 
-To include it use: `__use(__namespace__, 'mysli/framework/config');`.
+To include it use: `__use(__namespace__, 'mysli/util/config');`.
 
 To select your package's config use `select`, which will return config object:
 
@@ -30,7 +30,7 @@ $config->save();
 
 ## License
 
-The Mysli Framework Config is licensed under the GPL-3.0 or later.
+The Mysli Util Config is licensed under the GPL-3.0 or later.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by

@@ -1,11 +1,11 @@
 <?php
 
-namespace mysli\framework\config {
+namespace mysli\util\config {
 
     __use(__namespace__,
-        '../fs/{fs,file}',
-        '../json',
-        '../type/{arr,arr_path}'
+        'mysli/framework/fs/{fs,file}',
+        'mysli/framework/json',
+        'mysli/framework/type/{arr,arr_path}'
     );
 
     class config {
