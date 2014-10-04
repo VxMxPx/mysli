@@ -212,11 +212,11 @@ namespace mysli\framework\cli {
                 }
             }
 
-            if (empty($this->values)) {
-                $this->is_valid = false;
-                $this->messages[] = $this->help();
-                return false;
-            }
+            // if (empty($this->values)) {
+            //     $this->is_valid = false;
+            //     $this->messages[] = $this->help();
+            //     return false;
+            // }
 
             // check for exclude errors and set list of items to be invoked
             $invoke = [];
