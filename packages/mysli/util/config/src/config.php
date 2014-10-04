@@ -10,11 +10,11 @@ namespace mysli\util\config {
 
     class config {
 
-        static private $registry;
+        static private $registry = [];
 
         private $package;
         private $filename;
-        private $data;
+        private $data = [];
         private $cache;
 
         /**
@@ -23,11 +23,12 @@ namespace mysli\util\config {
          */
         function __construct($package) {
             $this->package = $package;
-            $this->filename = fs::datpath('mysli.config', $package . '.json');
+            $this->filename = fs::datpath(
+                'mysli/util/config', str_replace('/', '.', $package) . '.json');
 
             // If we have file, then load contents...
             if (file::exists($this->filename)) {
-                $this->data = json::decode_file($this->filename);
+                $this->data = json::decode_file($this->filename, true);
             }
         }
         /**
@@ -50,7 +51,7 @@ namespace mysli\util\config {
                 return $this->cache[$key];
             }
 
-            $value = arr_path::get($key, $this->config, $default);
+            $value = arr_path::get($key, $this->data, $default);
 
             // We cache only when we assume it's not default value...
             if ($value !== $default) {
@@ -69,7 +70,7 @@ namespace mysli\util\config {
         function set($path, $value) {
             // Clear cache to avoid corrupted data
             $this->cache = [];
-            return arr_path::set($path, $value, $this->config);
+            return arr_path::set($path, $value, $this->data);
         }
         /**
          * Append config to the file.
@@ -78,7 +79,7 @@ namespace mysli\util\config {
          */
         function merge(array $config) {
             $this->cache = [];
-            $this->config = arr::merge($this->config, $config);
+            $this->data = arr::merge($this->data, $config);
         }
         /**
          * Save config file.
@@ -92,7 +93,7 @@ namespace mysli\util\config {
          * @return boolean
          */
         function destroy() {
-            $this->cache = $this->config = [];
+            $this->cache = $this->data = [];
             unset(self::$registry[$this->package]);
             if (file::exists($this->filename)) {
                 return file::remove($this->filename);
@@ -109,7 +110,7 @@ namespace mysli\util\config {
          * @return mixed
          */
         static function select($package, $key=false, $default=null) {
-            if (!arr::get($registry, $package)) {
+            if (!arr::get(self::$registry, $package)) {
                 self::$registry[$package] = new self($package);
             }
             $config = self::$registry[$package];
