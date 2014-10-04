@@ -15,6 +15,9 @@ namespace mysli\framework\fs {
          * @return boolean
          */
         static function create($directory, $mode=0777, $recursive=true) {
+            if (file::exists($directory)) {
+                return true;
+            }
             return mkdir($directory, $mode, $recursive);
         }
         /**
