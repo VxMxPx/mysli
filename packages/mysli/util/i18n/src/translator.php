@@ -35,7 +35,7 @@ class translator {
      * @param string $language if not set then current value is returned
      * @return string
      */
-    function primary($language = null) {
+    function primary($language=null) {
         if ($language) {
             $this->primary = $language;
         }
@@ -47,7 +47,7 @@ class translator {
      * @param string $language if not set then current value is returned
      * @return string
      */
-    function secondary($language = null) {
+    function secondary($language=null) {
         if ($language) {
             $this->secondary = $language;
         }
@@ -69,7 +69,7 @@ class translator {
      * @param  mixed  $variable Variables to be replaced in string.
      * @return string, null if key not found!
      */
-    function translate_as($key, $language, $variable = []) {
+    function translate_as($key, $language, $variable=[]) {
         if (!is_array($variable)) {
             $variable = [$variable];
         }
@@ -175,7 +175,7 @@ class translator {
      * @param  mixed $variable Variables to be replaced in string.
      * @return string, null if key not found!
      */
-    function translate($key, $variable = []) {
+    function translate($key, $variable=[]) {
         if (!is_array($variable)) $variable = [$variable];
 
         return

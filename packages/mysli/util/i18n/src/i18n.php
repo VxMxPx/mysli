@@ -1,97 +1,96 @@
 <?php
 
-namespace Mysli\I18n;
+namespace mysli\util\i18n;
 
-class I18n
-{
-    use \Mysli\Core\Pkg\Singleton;
+__use(__namespace__,
+    './{parser,translator}',
+    'mysli/framework/fs/{file,fs}',
+    ['mysli/framework/exception/*' => 'framework/exception/%s']
+);
 
-    private $package;
-    private $filename;
-    private $config;
-
-    private $translator;
-
-    /**
-     * Create i18n instance.
-     * --
-     * @param array  $pkgm_trace
-     * @param object $config
-     */
-    public function __construct(\Mysli\Pkgm\Trace $trace, \Mysli\Config\Config $config)
-    {
-        $this->package = $trace->get_last();
-        // $this->package = array_pop(self::$pkgm_trace)[0];
-
-        // Get filename
-        $this->filename = str_replace('/', '.', $this->package);
-        $this->filename = datpath('mysli.i18n', $this->filename . '.json');
-
-        $this->config = $config;
-    }
+class i18n {
+    // created instances of translator
+    private static $cache = [];
+    // default languages
+    private static $default_languages = [];
 
     /**
-     * Return translator object.
-     * --
-     * @return object \Mysli\I18n\Translator
+     * Set default languages to be used when translator is constructed.
+     * @param string $primary
+     * @param string $secondary
      */
-    public function translator()
-    {
-        if (!$this->translator) {
-            // If we have file, then load contents...
-            $dictionary = [];
-            if (file_exists($this->filename)) {
-                $dictionary = \Core\JSON::decode_file($this->filename, true);
-            }
-            $this->translator = new \Mysli\I18n\Translator(
-                $dictionary,
-                $this->config->get('primary_language'),
-                $this->config->get('secondary_language')
-            );
-        }
-
-        return $this->translator;
+    static function set_default_language($primary, $secondary) {
+        self::$default_languages = [$primary, $secondary];
     }
-
     /**
      * Create cache for current package.
-     * --
      * @return boolean
      */
-    public function create_cache($folder = 'i18n')
-    {
-        // pkgpath is packages path, function defined by ~core!
-        $dir = pkgpath($this->package, $folder);
-        if (!file_exists($dir)) {
-            throw new \Core\NotFoundException(
-                "Cannot create cache. Directory doesn't exists: `{$dir}`.", 1
-            );
+    static function create_cache($package, $folder='i18n') {
+        $dir = fs::pkgpath($package, $folder);
+        if (!file::exists($dir)) {
+            throw new framework\exception\not_found(
+                "Cannot create cache. Directory doesn't exists: `{$dir}`.", 1);
         }
 
         $collection = [];
 
         $files = scandir($dir);
         foreach ($files as $file) {
-            if (substr($file, -3) !== '.mt') { continue; }
-            $collection[substr($file, 0, -3)] = \Mysli\I18n\Parser::parse(
+            if (substr($file, -3) !== '.mt') {
+                continue;
+            }
+            $collection[substr($file, 0, -3)] = parser::parse(
                 file_get_contents(ds($dir, $file))
             );
         }
 
-        // $this->dictionary = $collection;
-        return \Core\JSON::encode_file($this->filename, $collection);
+        // file to which parsed languages will be saved
+        $file = self::filename_from_package($package);
+        return json::encode_file($file, $collection);
+    }
+    /**
+     * Remove cache for current package.
+     * @return boolean
+     */
+    static function remove_cache($package) {
+        $file = self::filename_from_package($package);
+        if (file_exists($file)) {
+            return unlink($file);
+        } else return true;
+    }
+    /**
+     * Return translator object.
+     * @param  string $package
+     * @param  mixed  $translate
+     * @param  mixed  $param
+     * @return mysli\util\i18n\translator
+     */
+    static function select($package, $translate, $variable=[]) {
+        if (isset(self::$cache[$package])) {
+            $translator = self::$cache[$package];
+        } else {
+            $filename = self::filename_from_package($package);
+            if (file_exists($filename)) {
+                $dictionary = json::decode_file($filename, true);
+            } else $dictionary = [];
+            $translator = new translator($dictionary,
+                                         self::$default_languages[0],
+                                         self::$default_languages[1]);
+            self::$cache[$package] = $translator;
+        }
+        if ($translate) {
+            return $translator->translate($translate, $variable);
+        } else return $translator;
     }
 
     /**
-     * Remove cache for current package.
-     * --
-     * @return boolean
+     * Convert package name, to full name for package's dictionary.
+     * @param  string $package
+     * @return string
      */
-    public function remove_cache()
-    {
-        if (file_exists($this->filename)) {
-            return unlink($this->filename);
-        } else return true;
+    private static function filename_from_package($package) {
+        return fs::datpath('mysli/util/i18n/',
+                           str_replace('/', '.', $package).'.json');
     }
-
 }

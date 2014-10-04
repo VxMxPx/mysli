@@ -15,9 +15,10 @@ function enable() {
     ]);
     return
         dir::create(fs::datpath('mysli/util/i18n')) and
-        $c->write();
+        $c->save();
 }
 
 function disable() {
-    return dir::remove(fs::datpath('mysli/util/i18n'));
+    return dir::remove(fs::datpath('mysli/util/i18n')) and
+           config::select('mysli/util/i18n')->destroy();
 }
