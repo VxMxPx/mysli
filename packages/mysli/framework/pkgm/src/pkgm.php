@@ -281,10 +281,14 @@ namespace mysli\framework\pkgm {
             // This happened sometimes, especially when replacing packages.
             if (!empty(self::$packages)) {
                 foreach (self::$packages as $lpkg => $lmeta) {
+                    if (!isset($lmeta['require'])) {
+                        continue;
+                    }
                     foreach ($lmeta['require'] as $depends_on => $version) {
                         $depends_on =
                             self::resolve_relative($depends_on, $lpkg);
-                        if ($depends_on === $package) {
+                        if ($depends_on === $package &&
+                            !in_array($lpkg, $meta['required_by'])) {
                             $meta['required_by'][] = $lpkg;
                         }
                     }
@@ -305,12 +309,11 @@ namespace mysli\framework\pkgm {
                     "The package is not enabled: `{$package}`.", 1);
             }
             $meta = self::$packages[$package];
-
             foreach ($meta['require'] as $dependency => $version) {
                 $required_by =& self::$packages[$dependency]['required_by'];
-                if ($required_by && in_array($package, $required_by)) {
+                while ($required_by && in_array($package, $required_by)) {
                     $rkey = array_search($package, $required_by);
-                    unset($required_by, $rkey);
+                    unset($required_by[$rkey]);
                 }
             }
 

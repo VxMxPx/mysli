@@ -114,6 +114,7 @@ namespace mysli\framework\pkgm\script {
                         } else {
                             cout::format(
                                 "+red Failed:-red   {$dependency}");
+                            return false;
                         }
                     }
                 }
