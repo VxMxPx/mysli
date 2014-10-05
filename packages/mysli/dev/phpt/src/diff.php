@@ -23,8 +23,8 @@ namespace mysli\dev\phpt {
          * @return array
          */
         static function generate($expect, $expect_raw, $output, $regex) {
-            $expect     = explode("\n", $expect);
-            $expect_raw = explode("\n", $expect_raw);
+            $expect     = $expect     ? explode("\n", $expect)     : [];
+            $expect_raw = $expect_raw ? explode("\n", $expect_raw) : [];
             $output     = explode("\n", $output);
             $diff = self::generate_array($expect, $expect_raw, $output, $regex);
             return $diff;
