@@ -115,8 +115,8 @@ namespace mysli\dev\phpt\script {
             // Test files path
             $tfp = [fs::pkgpath(fs::ds($pkg, 'tests', $file)),
                     ($method
-                        ? "/".preg_quote(trim($method,'/\\'))."_[a-z]+\\.phpt/"
-                        : '/.*?\\.phpt/')];
+                        ? "/".preg_quote(trim($method,'/\\'))."_[a-z]+\\.[a-z]+/"
+                        : '/.*?\\.[a-z]+/')];
 
             $diff          = false;
             $last_src_hash = null;
