@@ -61,19 +61,26 @@ namespace mysli\dev\phpt {
             $tphpt = [];
             $phpt  = file::read($phpt_file);
             $phpt  = str::to_unix_line_endings($phpt);
-            $phpt  = preg_split(
-                '/^--([A-Z\\_]+)--$\\s/ms',
-                $phpt, null, PREG_SPLIT_DELIM_CAPTURE);
-            // Eliminate empty 0 index
-            if (!$phpt[0]) {
-                array_shift($phpt);
+            // $phpt  = preg_split(
+            //     '/^--([A-Z\\_]+)--$\\s/ms',
+            //     $phpt, null);
+            $phpt .= "\n--EOF--";
+            preg_match_all(
+                '/^--([A-Z]+)(?: \\((.*?)\\))?--(.*?)(?=^--[A-Z]+)/sm',
+                $phpt, $phptr, PREG_SET_ORDER);
+            $phpt = [];
+
+            foreach ($phptr as $matches) {
+                if (!isset($matches[1])) { continue; }
+                if ($matches[1] === 'VIRTUAL') {
+                    $phpt['virtual'][] = [
+                        'file'     => $matches[2],
+                        'contents' => trim($matches[3])
+                    ];
+                } else {
+                    $phpt[strtolower($matches[1])] = trim($matches[3]);
+                }
             }
-            for ($i = 0; $i < count($phpt); $i++) {
-                $key = strtolower($phpt[$i]);
-                $tphpt[$key] = trim($phpt[++$i]);
-            }
-            $phpt = $tphpt;
-            unset($tphpt);
 
             if (!arr::key_in($phpt, 'test')) {
                 throw new framework\exception\data("

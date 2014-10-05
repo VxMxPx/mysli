@@ -86,7 +86,14 @@ namespace mysli\dev\phpt {
                     return -1;
                 }
             }
-
+            // virtuals?
+            if (isset($this->parsed['virtual'])) {
+                foreach ($this->parsed['virtual'] as $virtual) {
+                    $filename = fs::ds($this->dir_temp,$virtual['file']);
+                    file::write($filename, $virtual['contents']);
+                    $this->files[] = $filename;
+                }
+            }
             // test file
             $testf = fs::ds(
                 "{$this->dir_temp}/{$this->filename_temp}.php");
