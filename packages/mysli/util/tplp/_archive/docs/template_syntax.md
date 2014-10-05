@@ -219,7 +219,7 @@ Rounds a float.
 {3.6|round}         // => 4
 {3.6|round:0}       // => 4
 {1.95583|round:2}   // => 1.96
-{1241757,|round:-3} // => 1242000
+{1241757|round:-3} // => 1242000
 {5.045|round:2}     // => 5.05
 {5.055|round:2}     // => 5.06
 ```
@@ -384,7 +384,7 @@ Create an array containing a range of elements.
 Generate a random integer.
 
 ```
-{|rand:0,5} // => 0|1|2|3|4|5
+{|random:0,5} // => 0|1|2|3|4|5
 ```
 
 ## Control Structures
