@@ -33,13 +33,16 @@ class parser {
         "strip_tags"    => "strip_tags(%seg, ...)",
         "show_tags"     => "htmlspecialchars(%seg)",
         "trim"          => "trim(%seg, ...)",
-        "slice"         => "( is_array(%seg) ? array_slice(%seg, ...) : substr(%seg, ...) )",
+        "slice"         => "( is_array(%seg) ? array_slice(%seg, ...) ".
+                                            ": substr(%seg, ...) )",
         "word_wrap"     => "wordwrap(%seg, %1, '<br/>')",
         "max"           => "max(%seg, ...)",
         "min"           => "min(%seg, ...)",
         "column"        => "array_column(%seg, %1, ...)",
-        "reverse"       => "( is_array(%seg) ? array_reverse(%seg) : strrev(%seg) )",
-        "contains"      => "( (is_array(%seg) ? in_array(%1, %seg) : strpos(%seg, %1)) !== false )",
+        "reverse"       => "( is_array(%seg) ? array_reverse(%seg) ".
+                                            ": strrev(%seg) )",
+        "contains"      => "( (is_array(%seg) ? in_array(%1, %seg) ".
+                                            ": strpos(%seg, %1)) !== false )",
         "key_exists"    => "array_key_exists(%1, %seg)",
         "sum"           => "array_sum(%seg)",
         "unique"        => "array_unique(%seg)",
@@ -78,14 +81,14 @@ class parser {
     static function process($template) {
         $template = str::to_unix_line_endings($template);
         $lines    = explode("\n", $template);
-        // Parsed template lines and headers (those are actual php commands)
+        // Parsed template lines and headers (those are actual PHP commands)
         $output  = [];
         $headers = [];
-        // Buffer (multi-line commands)
-        $buffer['start']    = 0;
-        $buffer['contents'] = '';
-        $buffer['close']    = '';
-        $buffer['write']    = false;
+        // Block (multi-line commands)
+        $block['start']    = 0;
+        $block['contents'] = '';
+        $block['close']    = '';
+        $block['write']    = false;
         // Open tags to throw accurate exceptions, on where an error happened
         $open_tags = [
             'for' => [0, 0],
@@ -95,18 +98,18 @@ class parser {
         foreach ($lines as $lineno => $line) {
 
             // Escape \{ and \}
-            $line = self::escaped_cbrackets($line, true);
+            $line = self::escape_curly_brackets($line, true);
 
-            // Check buffer for close *} and }}}
-            // If buffer was closed, it will be added to the output
-            if (($endbuffer = self::process_end_buffer($line, $buffer))) {
-                $output[] = $endbuffer;
+            // Check block region for close *} and }}}
+            // If block was closed, it will be added to the output
+            if (($endblock = self::find_end_block($line, $block))) {
+                $output[] = $endblock;
             }
 
-            // This is buffer, and it's not closed
-            if ($buffer['close']) {
-                if ($buffer['write']) {
-                    $buffer['contents'] .= "\n{$line}";
+            // This is block region, and it's not closed
+            if ($block['close']) {
+                if ($block['write']) {
+                    $block['contents'] .= "\n{$line}";
                 }
                 continue;
             }
@@ -115,47 +118,47 @@ class parser {
             $line = self::escape_single_quotes($line, true);
 
             // Find block regions {{{ and {*
-            self::process_bregions($line, $lineno, $buffer);
+            self::find_block_regions($line, $lineno, $block);
 
             try {
                 // Find variables and functions
-                $line = self::process_var_and_func($line);
+                $line = self::find_var_and_func($line);
 
                 // Find ::if and ::elif
-                list($line, $opened) = self::process_if($line);
+                list($line, $opened) = self::find_if($line);
                 if ($opened) {
                     $open_tags['if'][0]++;
                     $open_tags['if'][1] = $lineno;
 
                 }
                 // Find: ::else ::/if ::/for ::break ::continue
-                list($line, $closed) = self::process_special_tags($line);
+                list($line, $closed) = self::find_special_tags($line);
                 if (array_key_exists($closed, $open_tags)) {
                     $open_tags[$closed][0]--;
                 }
 
                 // Find: ::for <id>, <var> in <collection>
-                list($line, $opened) = self::process_for($line);
+                list($line, $opened) = self::find_for($line);
                 if ($opened) {
                     $open_tags['for'][0]++;
                     $open_tags['for'][1] = $lineno;
                 }
 
                 // Translation key: {@TRASNLATE}, {@TR(n)}, {@TR var}
-                $line = self::process_translation($line);
+                $line = self::find_translation($line);
             } catch (\Exception $e) {
                 throw new exception\parser(self::f_error(
                     $lines, $lineno, $e->getMessage()));
             }
 
             // Restore escaped curly brackets and single quotes
-            $line = self::escaped_cbrackets($line, false);
+            $line = self::escape_curly_brackets($line, false);
             $line = self::escape_single_quotes($line, false);
 
-            // Add the buffer
-            if ($buffer['contents']) {
-                $output[] = rtrim($buffer['contents']);
-                $buffer['contents'] = '';
+            // Add the block
+            if ($block['contents']) {
+                $output[] = rtrim($block['contents']);
+                $block['contents'] = '';
             }
 
             // Add the line
@@ -172,9 +175,9 @@ class parser {
             throw new exception\parser(self::f_error(
                 $lines, $open_tags['for'][1], "Unclosed `for` statement."));
         }
-        if ($buffer['close']) {
+        if ($block['close']) {
             throw new exception\parser(self::f_error(
-                $lines, $buffer['start'], "Unclosed region."));
+                $lines, $block['start'], "Unclosed region."));
         }
 
         return implode("\n", $output);
@@ -187,7 +190,7 @@ class parser {
      * @param  string  $line
      * @return string
      */
-    private static function process_translation($line) {
+    private static function find_translation($line) {
         return preg_replace_callback('/{@([A-Z0-9_]+)(?:\((.*?)\))?(.*?)}/',
         function ($match) {
             $key = trim($match[1]);
@@ -221,7 +224,7 @@ class parser {
      * @param  string $line
      * @return array  [string, boolean]
      */
-    private static function process_for($line) {
+    private static function find_for($line) {
         $opened = false;
         $line = preg_replace_callback(
         '/::for ([a-zA-Z0-9\_]+\,\ ?)?([a-zA-Z0-9\_]+) in (.*)/',
@@ -244,7 +247,7 @@ class parser {
      * @param  string $line
      * @return array  [string, string]
      */
-    private static function process_special_tags($line) {
+    private static function find_special_tags($line) {
         $type = '';
         $line = preg_replace_callback('#::(else|break|continue|/if|/for)#',
         function ($match) use (&$type) {
@@ -274,7 +277,7 @@ class parser {
      * @param  string  $line
      * @return array   [string, boolean]
      */
-    private static function process_if($line) {
+    private static function find_if($line) {
         $opened = false;
         $line = preg_replace_callback('/::(if|elif) (.*)/',
         function ($match) use (&$opened) {
@@ -312,7 +315,7 @@ class parser {
      * @param  string  $line
      * @return string
      */
-    private static function process_var_and_func($line) {
+    private static function find_var_and_func($line) {
         $line = preg_replace_callback('/\{(?=[^@])(.*?)\}/',
         function ($match) {
             // no echo {((variable))}
@@ -337,56 +340,57 @@ class parser {
      * Process block regions like: {{{ and {*
      * @param  string  $line
      * @param  integer $lineno
-     * @param  array   $buffer
+     * @param  array   $block
      * @return null
      */
-    private static function process_bregions(&$line, $lineno, array &$buffer) {
+    private static function find_block_regions(&$line, $lineno,
+                                               array &$block) {
         // {{{
         while (strpos($line, '{{{') !== false) {
-            list($line, $buffer['contents']) = explode('{{{', $line, 2);
-            $buffer['start'] = $lineno;
-            $buffer['write'] = true;
-            $buffer['close'] = '}}}';
-            if (strpos($buffer['contents'], '}}}') !== false) {
-                list($bufferoff, $lineoff) = explode('}}}',
-                                                     $buffer['contents'], 2);
+            list($line, $block['contents']) = explode('{{{', $line, 2);
+            $block['start'] = $lineno;
+            $block['write'] = true;
+            $block['close'] = '}}}';
+            if (strpos($block['contents'], '}}}') !== false) {
+                list($blockoff, $lineoff) = explode('}}}',
+                                                     $block['contents'], 2);
                 $line = $line . $lineoff;
-                $buffer['contents'] = $buffer['contents'] . $bufferoff;
-                $buffer['close'] = '';
-                $buffer['start'] = 0;
+                $block['contents'] = $block['contents'] . $blockoff;
+                $block['close'] = '';
+                $block['start'] = 0;
             }
         }
         // {*
         while (strpos($line, '{*') !== false) {
             list($line, $commenton) = explode('{*', $line, 2);
-            $buffer['start'] = $lineno;
-            $buffer['write'] = false;
-            $buffer['close'] = '*}';
+            $block['start'] = $lineno;
+            $block['write'] = false;
+            $block['close'] = '*}';
             if (strpos($commenton, '*}') !== false) {
                 list($_, $lineoff) = explode('*}', $commenton, 2);
                 $line = $line . $lineoff;
-                $buffer['close'] = '';
-                $buffer['start'] = 0;
+                $block['close'] = '';
+                $block['start'] = 0;
             }
         }
     }
     /**
-     * Process end buffer (like *} and }}})
+     * Process end block (like *} and }}})
      * @param  string $line
-     * @param  array  $buffer
+     * @param  array  $block
      * @return string
      */
-    private static function process_end_buffer(&$line, array &$buffer) {
+    private static function find_end_block(&$line, array &$block) {
         $output = false;
-        if ($buffer['close'] && strpos($line, $buffer['close']) !== false) {
-            list($bufferoff, $line) = explode($buffer['close'], $line, 2);
-            if ($buffer['write']) {
-                $output = rtrim($buffer['contents'] . $bufferoff);
+        if ($block['close'] && strpos($line, $block['close']) !== false) {
+            list($blockoff, $line) = explode($block['close'], $line, 2);
+            if ($block['write']) {
+                $output = rtrim($block['contents'] . $blockoff);
             }
-            $buffer['contents'] = '';
-            $buffer['start']    = 0;
-            $buffer['close']    = '';
-            $buffer['write']    = false;
+            $block['contents'] = '';
+            $block['start']    = 0;
+            $block['close']    = '';
+            $block['write']    = false;
         }
         return $output;
     }
@@ -396,7 +400,7 @@ class parser {
      * @param  boolean $protect
      * @return string
      */
-    private static function escaped_cbrackets($line, $protect) {
+    private static function escape_curly_brackets($line, $protect) {
         if ($protect) {
             $line = str_replace('\\{', '--MYSLI-CB-OPEN', $line);
             $line = str_replace('\\}', '--MYSLI-CB-CLOSE', $line);
