@@ -35,7 +35,6 @@ Examples:
 
 In your setup.php:
 
-
 ```php
 __use(__namespace__, 'mysli/util/i18n');
 function enable() {
