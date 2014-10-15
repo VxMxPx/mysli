@@ -123,22 +123,22 @@ namespace mysli\dev\phpt\script {
             $last_tst_hash = null;
 
             while (true) {
-                if ($do_add) {
-                    if (!dir::exists($sfp[0])) {
-                        cout::warn("Not a valid directory: `{$sfp[0]}`");
-                    } else {
-                        $src_files = file::find($sfp[0], $sfp[1]);
-                        $src_files_hash = file::signature($src_files);
-                        $src_hash  = md5(implode('', $src_files_hash));
-                        if ($src_hash !== $last_src_hash) {
+                if (!dir::exists($sfp[0])) {
+                    cout::warn("Not a valid directory: `{$sfp[0]}`");
+                } else {
+                    $src_files = file::find($sfp[0], $sfp[1]);
+                    $src_files_hash = file::signature($src_files);
+                    $src_hash  = md5(implode('', $src_files_hash));
+                    if ($src_hash !== $last_src_hash) {
+                        if ($do_add) {
                             foreach ($src_files_hash as $id => $sig) {
                                 $src_file = substr(
                                     $src_files[$id], strlen($sfp[0])+1, -4);
                                 self::add_test($pkg, $file);
                             }
-                            $diff = true;
-                            $last_src_hash = $src_hash;
                         }
+                        $diff = true;
+                        $last_src_hash = $src_hash;
                     }
                 }
                 if ($do_test) {
