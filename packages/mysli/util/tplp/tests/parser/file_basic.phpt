@@ -8,4 +8,6 @@ use mysli\util\tplp\parser;
 print_r(parser::file('test.tplp', __DIR__));
 ?>
 --EXPECT--
-<?php echo $variable; ?>
+<?php
+
+?><?php echo $variable; ?>

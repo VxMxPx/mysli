@@ -2,12 +2,15 @@
 
 namespace mysli\util\tplp;
 
-__use(__namespace__,
+__use(__namespace__, [
     './exception/parser',
-    'mysli/framework/json',
-    'mysli/framework/type/str',
-    'mysli/framework/fs/{fs,file}',
-    ['mysli/framework/exception/*' => 'framework/exception/%s']
+    'mysli/framework' => [
+        'pkgm',
+        'json',
+        'type/str',
+        'fs/{fs,file}',
+        'exception/*' => 'framework/exception/%s']
+    ]
 );
 
 class parser {
@@ -52,26 +55,19 @@ class parser {
 
     /**
      * Parse particular file (this will handle includes)
-     * @param  string $filename
+     * @param  string $file
      * @param  string $root
      * @return string
      */
-    static function file($filename, $root) {
-        // Prepare input
-        $fullpath = fs::ds($root, $filename);
-        if (!file::exists($fullpath)) {
-            throw new framework\exception\not_found(
-                        "Template file not found: `{$fullpath}`", 1);
-        }
-        $template = file::read($fullpath);
-
-        try {
-            return self::process($template);
-        } catch (\Exception $e) {
-            throw new exception\parser(
-                "Parse of file: `{$filename}` failed with message: ".
-                $e->getMessage(), 1);
-        }
+    static function file($file, $root) {
+        list($parseed, $headers) = self::parse_file($file, $root);
+        $namespace = pkgm::namespace_from_path(fs::ds($root, $file)) ?:
+                     "tplp\\generic\\" . substr($file, 0, strrpos($file, '.'));
+        $use = self::process_use($headers['use']);
+        return "<?php\n".
+            "namespace {$namespace};\n".
+            $use . "\n?>".
+            $parseed;
     }
     /**
      * Process template
@@ -121,6 +117,9 @@ class parser {
             self::find_block_regions($line, $lineno, $block);
 
             try {
+                // Find inline if {var if var else 'No-var'}
+                $line = self::find_inline_if($line);
+
                 // Find variables and functions
                 $line = self::find_var_and_func($line);
 
@@ -183,40 +182,38 @@ class parser {
         return implode("\n", $output);
     }
 
-    // Private methods
+    // Private methods ---------------------------------------------------------
 
+    /**
+     * Process use statements array
+     * @param  array  $uses
+     * @return string
+     */
+    private static function process_use(array $uses) {
+
+    }
+    /**
+     * Find all include statements ::use, ::extend and ::import
+     * @return array
+     */
+    private static function find_inclusions($template, $file, $root) {
+        return [
+            $template,
+            [
+                'use' => []
+            ],
+        ];
+    }
     /**
      * Process translation tags {@KEY}
      * @param  string  $line
      * @return string
      */
     private static function find_translation($line) {
-        return preg_replace_callback('/{@([A-Z0-9_]+)(?:\((.*?)\))?(.*?)}/',
+        return preg_replace_callback('/{(@.*?)}/',
         function ($match) {
-            $key = trim($match[1]);
-            $plural = trim($match[2]);
-            if (!is_numeric($plural)) {
-                $plural = self::parse_variable_with_functions($plural);
-            }
-            // Process variables
-            $variables = explode(',', trim($match[3]));
-            foreach ($variables as &$var) {
-                try {
-                    $var = self::parse_variable(trim($var));
-                } catch (\Exception $e) {
-                    if ($e->getCode() !== 1) {
-                        throw $e;
-                    } else {
-                        $var = "''";
-                    }
-                }
-            }
-            $variables = implode(', ', $variables);
-            $variables = trim($variables, "'") ? ', [' . $variables . ']' : '';
-            // Do we have plural?
-            $key = $plural ? "['$key', $plural]" : "'{$key}'";
-            return '<?php echo $tplp_translator_service(' .
-                   $key . $variables . '); ?>';
+            $parsed = self::parse_translation($match[1]);
+            return "<?php echo {$parsed}; ?>";
         }, $line);
     }
     /**
@@ -227,7 +224,8 @@ class parser {
     private static function find_for($line) {
         $opened = false;
         $line = preg_replace_callback(
-        '/::for ([a-zA-Z0-9\_]+\,\ ?)?([a-zA-Z0-9\_]+) in (.*)/',
+        '/::for ([a-zA-Z0-9\_]+\,\ ?)?([a-zA-Z0-9\_]+) in (.*?)'.
+        '(?: set ([a-zA-Z0-9\_]+))?$/',
         function ($match) use (&$opened) {
             $key = '';
             try {
@@ -237,7 +235,26 @@ class parser {
             $var = self::parse_variable_with_functions($match[3]);
             $exp = $key ? "{$key} => {$val}" : $val;
             $opened = true;
-            return '<?php foreach (' . $var . ' as ' . $exp . '): ?>';
+            if (!isset($match[4])) {
+                return "<?php foreach (" . $var . ' as ' . $exp . '): ?>';
+            }
+            // If we have extended variable, e.g.:
+            // pos[count], pos[current], pos[last], pos[first],
+            // pos[odd], pos[even]
+            $varname = $match[4];
+            return "<?php".
+                "\n\${$varname} = [];".
+                "\n\$tplp_var_for_{$varname} = {$var};".
+                "\n\${$varname}['count'] = count(\$tplp_var_for_{$varname});".
+                "\n\${$varname}['current'] = 0;".
+                "\nforeach (\$tplp_var_for_{$varname} as {$exp}):".
+                "\n  \${$varname}['current']++;".
+                "\n  \${$varname}['first'] = (\${$varname}['current'] === 1);".
+                "\n  \${$varname}['last'] = ".
+                    "(\${$varname}['current'] === \${$varname}['count']);".
+                "\n  \${$varname}['odd'] = !!(\${$varname}['current'] % 2);".
+                "\n  \${$varname}['even'] = !(\${$varname}['current'] % 2);".
+                "\n?>";
         }, $line);
 
         return [$line, $opened];
@@ -273,36 +290,84 @@ class parser {
         return [$line, $type];
     }
     /**
+     * Process logical expression: var or var1 ...
+     * @param  string $expression
+     * @return string
+     */
+    private static function parse_logical_expression($expression) {
+        return preg_replace_callback(
+        '/(\\|\\| |&& |OR |AND )?'. // ) and ...
+        '(\\(?\\ ?not \\(?|[\ !(]*)'. //  not var ... !(var ... !var
+        '(.*?)'. // variable
+        // and ... or ... )*
+        '( != | !== | === | == | &lt; | < | &gt; | > | <= | &lt;= '.
+        '| >= | &gt;= | \\|\\| | && | OR | AND |[\\)\\ ]{1,}|$)/i',
+        function ($match) {
+            if (implode('', $match) === '') { return; }
+            // logical before and, or...
+            $logical_before = $match[1];
+            // Special characters: (, !
+            $mod = str_replace([' ', 'not'], ['', '!'], $match[2]);
+            // Variable / function / boolean, numeric, null
+            $variable = $match[3];
+            // AND, OR, !=, ==, <, >, <=, >=
+            $logical = str_replace(['==', '!=', '&lt;', '&gt;'],
+                                   ['===', '!==', '<', '>'],
+                                   $match[4]);
+            $logical = str_replace(' ', '', $logical);
+            if (substr($logical, 0, 1) !== ')') {
+                $logical = ' ' . $logical;
+            }
+            if ($variable) {
+                $variable = self::parse_variable_with_functions($variable);
+            }
+            return trim($logical_before . $mod . $variable . $logical) . ' ';
+        }, $expression);
+    }
+    /**
+     * Find inline if {var if var else 'No-var'}
+     * @param  string $line
+     * @return string
+     */
+    private static function find_inline_if($line) {
+        return preg_replace_callback(
+        '/{(.*?) if (.*?)(?: else (.*?))?}/',
+        function ($match) {
+            $var[0] = trim($match[1]);
+            if (substr($var[0], 0, 1) === '@') {
+                $var[0] = self::parse_translation($var[0]);
+            } else {
+                $var[0] = self::parse_variable_with_functions($var[0]);
+            }
+            $var[1] = isset($match[3]) ? trim($match[3]) : '';
+            if ($var[1]) {
+                if (substr($var[1], 0, 1) === '@') {
+                    $var[1] = self::parse_translation($var[1]);
+                } else {
+                    $var[1] = self::parse_variable_with_functions($var[1]);
+                }
+            }
+            $expression = trim(self::parse_logical_expression($match[2]));
+            return "<?php echo ({$expression}) ? {$var[0]} : " .
+                    ($var[1] ? $var[1] : "''") . "; ?>";
+        }, $line);
+    }
+    /**
      * Process ::if and ::elif
      * @param  string  $line
      * @return array   [string, boolean]
      */
     private static function find_if($line) {
         $opened = false;
-        $line = preg_replace_callback('/::(if|elif) (.*)/',
+        $logical =
+        $line = preg_replace_callback(
+        '/::(if|elif) (.*)/',
         function ($match) use (&$opened) {
-            $statement = $match[2];
-
-            $statement = preg_replace_callback('/([\ !(]*)(.*?)( != | !== | '.
-                '=== | == | &lt; | < | &gt; | > | <= | &lt;= | >= | &gt;= | '.
-                '\\|\\| | && | OR | AND |$)/',
-            function ($match) {
-                // Special characters: (, !
-                $mod = $match[1];
-                // Variable / function / boolean, numeric, null
-                $variable = $match[2];
-                // AND, OR, !=, ==, <, >, <=, >=
-                $logical = str_replace(['==', '!=', '&lt;', '&gt;'],
-                                       ['===', '!==', '<', '>'],
-                                       $match[3]);
-                $variable = self::parse_variable_with_functions($variable);
-                return trim($mod . $variable . ' ' . trim($logical)) . ' ';
-            }, $statement);
-
+            $expression = self::parse_logical_expression($match[2]);
             $type = ($match[1] === 'elif' ? 'elseif' : 'if');
             // Line and opened status
             $opened = ($type === 'if');
-            return '<?php ' . $type.' ('.trim($statement) . '): ?>';
+            return '<?php ' . $type . ' (' . trim($expression) . '): ?>';
         }, $line);
 
         return [$line, $opened];
@@ -343,8 +408,7 @@ class parser {
      * @param  array   $block
      * @return null
      */
-    private static function find_block_regions(&$line, $lineno,
-                                               array &$block) {
+    private static function find_block_regions(&$line, $lineno, array &$block) {
         // {{{
         while (strpos($line, '{{{') !== false) {
             list($line, $block['contents']) = explode('{{{', $line, 2);
@@ -438,6 +502,66 @@ class parser {
         }
 
         return $line;
+    }
+    /**
+     * Parse a particular file and return an array (parsed file + use statements)
+     * @param  string $filename
+     * @return array  [$processed, [$use, ...]]
+     */
+    private static function parse_file($filename, $root) {
+        $fullpath = fs::ds($root, $filename);
+
+        if (!file::exists($fullpath)) {
+            throw new framework\exception\not_found(
+                        "Template file not found: `{$fullpath}`", 1);
+        }
+
+        $template = file::read($fullpath);
+
+        try {
+            // Process basic tags
+            $processed = self::process($template);
+            return self::find_inclusions($processed, $filename, $root);
+        } catch (\Exception $e) {
+            throw new exception\parser(
+                "Parsing failed for: `{$fullpath}`, message: ".
+                $e->getMessage(), 1);
+        }
+    }
+    /**
+     * Parse translation in format: @TRANSLATION(count) var
+     * @param  string $string
+     * @return string
+     */
+    private static function parse_translation($string) {
+        // dump_r($string);
+        return preg_replace_callback('/^@([A-Z0-9_]+)(?:\((.*?)\))?(.*?)$/',
+        function ($match) {
+            // dump_r($match);
+            $key = trim($match[1]);
+            $plural = trim($match[2]);
+            if (!is_numeric($plural)) {
+                $plural = self::parse_variable_with_functions($plural);
+            }
+            // Process variables
+            $variables = explode(',', trim($match[3]));
+            foreach ($variables as &$var) {
+                try {
+                    $var = self::parse_variable(trim($var));
+                } catch (\Exception $e) {
+                    if ($e->getCode() !== 1) {
+                        throw $e;
+                    } else {
+                        $var = "''";
+                    }
+                }
+            }
+            $variables = implode(', ', $variables);
+            $variables = trim($variables, "'") ? ', [' . $variables . ']' : '';
+            // Do we have plural?
+            $key = $plural ? "['$key', $plural]" : "'{$key}'";
+            return '$tplp_translator_service(' . $key . $variables . ')';
+        }, $string);
     }
     /**
      * Process variable + function string. var|func|func
