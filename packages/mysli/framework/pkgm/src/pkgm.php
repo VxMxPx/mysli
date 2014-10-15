@@ -49,6 +49,30 @@ namespace mysli\framework\pkgm {
             return false;
         }
         /**
+         * Get package namespace from path - this must be full absolute path.
+         * /www/dir/packages/vendor/meta/package/src/sub/file.php =>
+         *     vendor\meta\package\sub\file
+         * @param  string $path
+         * @return mixed  string (package name) or false if not found
+         */
+        static function namespace_from_path($path) {
+            // this will give us: vendor/meta/package
+            if (!($pkg_name = self::name_from_path($path))) {
+                return false;
+            }
+            $file = substr($path, strpos($path, $pkg_name) + strlen($pkg_name));
+            if (substr($file, 1, 3) === 'src') {
+                $file = substr($file, 5);
+            }
+            if ($file) {
+                $file = substr($file, 0, strpos($file, '.'));
+            } else {
+                $file = substr($pkg_name, strrpos($pkg_name, '/'));
+            }
+
+            return str_replace('/', '\\', fs::ds($pkg_name, $file));
+        }
+        /**
          * Check weather package exists (is available) in fs.
          * @param  string  $package
          * @return boolean
