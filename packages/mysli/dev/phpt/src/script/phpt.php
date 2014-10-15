@@ -115,7 +115,8 @@ namespace mysli\dev\phpt\script {
             // Test files path
             $tfp = [fs::pkgpath(fs::ds($pkg, 'tests', $file)),
                     ($method
-                        ? "/".preg_quote(trim($method,'/\\'))."_[a-z]+\\.[a-z]+/"
+                        ? "/".preg_quote(trim($method,'/\\')).
+                          "[a-z0-9_]*?\\.[a-z]+/"
                         : '/.*?\\.[a-z]+/')];
 
             $diff          = false;
