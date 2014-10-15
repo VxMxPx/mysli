@@ -1,10 +1,5 @@
 --TEST--
-Comments
---FILE--
-<?php
-use mysli\util\tplp\parser;
-
-$input = <<<INPUT
+--VIRTUAL (test.tplp)--
 <html>
 <body>
     a{* Comment *} b{* Comment *}
@@ -24,12 +19,15 @@ $input = <<<INPUT
     }}}
 </body>
 </html>
-INPUT;
-
-print_r(parser::process($input));
+--FILE--
+<?php
+use mysli\util\tplp\parser;
+print_r(parser::file('test.tplp', __DIR__));
 ?>
 --EXPECT--
-<html>
+<?php
+namespace tplp\generic\test;
+?><html>
 <body>
     a b
     c

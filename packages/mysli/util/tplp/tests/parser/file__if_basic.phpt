@@ -1,10 +1,5 @@
 --TEST--
-Control structure.
---FILE--
-<?php
-use mysli\util\tplp\parser;
-
-$input = <<<INPUT
+--VIRTUAL (test.tplp)--
 <html>
 <body>
     ::if variable > 0
@@ -31,12 +26,15 @@ $input = <<<INPUT
     ::/if
 </body>
 </html>
-INPUT;
-
-print_r(parser::process($input));
+--FILE--
+<?php
+use mysli\util\tplp\parser;
+print_r(parser::file('test.tplp', __DIR__));
 ?>
 --EXPECT--
-<html>
+<?php
+namespace tplp\generic\test;
+?><html>
 <body>
     <?php if ($variable > 0): ?>
         Above zero.

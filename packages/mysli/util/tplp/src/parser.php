@@ -54,43 +54,92 @@ class parser {
     ];
 
     /**
-     * Parse particular file (this will handle includes)
+     * Parse particular file (this will generate proper output with
+     * namespaces, etc..)
      * @param  string $file
      * @param  string $root
      * @return string
      */
     static function file($file, $root) {
-        list($parseed, $headers) = self::parse_file($file, $root);
-        $namespace = pkgm::namespace_from_path(fs::ds($root, $file)) ?:
+
+        $fullpath = fs::ds($root, $file);
+        if (!file::exists($fullpath)) {
+            throw new framework\exception\not_found(
+                "Template file not found: `{$fullpath}`", 1);
+        }
+
+        // Parse file
+        $uses = [];
+        $parsed = self::parse($fullpath, $uses);
+
+        // Generate namespace
+        $namespace = pkgm::namespace_from_path($fullpath) ?:
                      "tplp\\generic\\" . substr($file, 0, strrpos($file, '.'));
-        $use = self::process_use($headers['use']);
-        return "<?php\n".
-            "namespace {$namespace};\n".
-            $use . "\n?>".
-            $parseed;
+
+        // Process uses
+        $use = '';
+        foreach ($uses as $usear) {
+            $use .= $usear['statement'] . "\n";
+        }
+
+        // Final file format
+        return "<?php\nnamespace {$namespace};\n{$use}?>{$parsed}";
     }
+
     /**
      * Process template
-     * @param  string $template
+     * @param  string $filename
+     * @param  string $uses
+     * @param  array  $sets
+     * @param  string $module  weather to select only particular module in file
      * @return string
      */
-    static function process($template) {
+    private static function parse($filename, array &$uses=[], array $sets=[],
+                                  $module=null) {
+
+        $dirname  = dirname($filename);
+        $sfpath   = substr($filename, strlen(fs::pkgpath()));
+
+        $template = file::read($filename);
         $template = str::to_unix_line_endings($template);
-        $lines    = explode("\n", $template);
-        // Parsed template lines and headers (those are actual PHP commands)
+        if ($module) {
+            if (preg_match(
+            '/^::module '.preg_quote($module).'$\s(.*?)\s^::\/module$/ms',
+            $template, $match)) {
+                $template = $match[1];
+            } else {
+                throw new framework\exception\not_found(
+                    "Module `{$module}` not found in `{$sfpath}`");
+            }
+        }
+        $lines = explode("\n", $template);
+
+        // Parsed template lines (output),
+        // uses (::use)
+        // extends (::extend)
+        // imports (::import)
         $output  = [];
-        $headers = [];
+        $extends = [];
+        $imports = [];
+
+        $in_curr_line = 0;
+        $in_curr = false;
+        $in_set_line  = 0;
+        $in_set  = false;
+
         // Block (multi-line commands)
         $block['start']    = 0;
         $block['contents'] = '';
         $block['close']    = '';
         $block['write']    = false;
+
         // Open tags to throw accurate exceptions, on where an error happened
         $open_tags = [
             'for' => [0, 0],
             'if'  => [0, 0]
         ];
 
+        // Scan lines
         foreach ($lines as $lineno => $line) {
 
             // Escape \{ and \}
@@ -117,6 +166,80 @@ class parser {
             self::find_block_regions($line, $lineno, $block);
 
             try {
+                // Find ::print regions
+                $line = self::find_print($line, $sets);
+
+                // Find ::set opened
+                if (($id = self::find_open_set($line))) {
+                    if ($in_curr === false) {
+                        throw new exception\parser(
+                            "`::set` must be wrapped with ".
+                            "`::extend` or `::import`");
+                    }
+                    $in_set_line = $lineno;
+                    $in_curr['set'][$id] = [];
+                    $in_set = &$in_curr['set'][$id];
+                    continue;
+                }
+
+                // Find ::set closed
+                if (self::find_close_set($line)) {
+                    if ($in_set === false) {
+                        throw new exception\parser(
+                            "closed `::/set` tag before it was opened");
+                    }
+                    $in_set = implode("\n", $in_set);
+                    unset($in_set);
+                    $in_set = false;
+                    continue;
+                }
+
+                // Find closed ::extend or ::import
+                if (($type = self::find_extend_import_close($line))) {
+                    if ($in_curr === false) {
+                        throw new exception\parser(
+                            "Closing unopened tag!");
+                    }
+                    if ($type === 'import') {
+                        $output[] = self::handle_import(
+                                        $in_curr, $uses, $dirname);
+                    }
+                    unset($in_curr);
+                    $in_curr = false;
+                    continue;
+                }
+
+                // Find ::use statements
+                if (($id = self::find_use($line, $uses))) {
+                    $uses[$id]['debug'][] = [
+                        'lines' => self::err_lines($lines, $lineno),
+                        'file'  => $sfpath
+                    ];
+                    continue;
+                }
+
+                // Find ::extend statements
+                if (($id = self::find_extend($line, $extends))) {
+                    if ($extends[$id]['open']) {
+                        $in_curr_line = $lineno;
+                        $in_curr = &$extends[$id];
+                    }
+                    $extends[$id]['line'] = $lineno;
+                    continue;
+                }
+
+                // Find ::import statements
+                if (($id = self::find_import($line, $imports))) {
+                    if ($imports[$id]['open']) {
+                        $in_curr_line = $lineno;
+                        $in_curr = &$imports[$id];
+                    } else {
+                        $output[] = self::handle_import(
+                                        $imports[$id], $uses, $dirname);
+                    }
+                    continue;
+                }
+
                 // Find inline if {var if var else 'No-var'}
                 $line = self::find_inline_if($line);
 
@@ -147,7 +270,7 @@ class parser {
                 $line = self::find_translation($line);
             } catch (\Exception $e) {
                 throw new exception\parser(self::f_error(
-                    $lines, $lineno, $e->getMessage()));
+                    $lines, $lineno, $e->getMessage(), $sfpath));
             }
 
             // Restore escaped curly brackets and single quotes
@@ -162,47 +285,182 @@ class parser {
 
             // Add the line
             if (trim($line)) {
-                $output[] = $line;
+                if ($in_set !== false) {
+                    $in_set[] = $line;
+                } else {
+                    $output[] = $line;
+                }
             }
         }
 
+        if ($in_set !== false) {
+            throw new exception\parser(self::f_error(
+                $lines, $in_set_line,
+                "Unclosed `::set` statement."), $sfpath);
+        }
+        if ($in_curr !== false) {
+            throw new exception\parser(self::f_error(
+                $lines, $in_curr_line,
+                "Unclosed statement."), $sfpath);
+        }
         if ($open_tags['if'][0] > 0) {
             throw new exception\parser(self::f_error(
-                $lines, $open_tags['if'][1], "Unclosed `if` statement."));
+                $lines, $open_tags['if'][1],
+                "Unclosed `::if` statement."), $sfpath);
         }
         if ($open_tags['for'][0] > 0) {
             throw new exception\parser(self::f_error(
-                $lines, $open_tags['for'][1], "Unclosed `for` statement."));
+                $lines, $open_tags['for'][1],
+                "Unclosed `::for` statement."), $sfpath);
         }
         if ($block['close']) {
             throw new exception\parser(self::f_error(
-                $lines, $block['start'], "Unclosed region."));
+                $lines, $block['start'], "Unclosed region."), $sfpath);
         }
 
-        return implode("\n", $output);
+        // Implode output
+        $output = implode("\n", $output);
+
+        // Process extends
+        if (!empty($extends)) {
+            foreach ($extends as $extfile => $extend) {
+                // Set own output as set
+                $extend['set'][$extend['self']] = $output;
+                // Try to include and parse file
+                try {
+                    $path = self::resolve_relative_path($extfile, $dirname);
+                    $output = self::parse($path, $uses, $extend['set']);
+                } catch (\Exception $e) {
+                    throw new exception\parser(self::f_error(
+                        $lines, $extend['line'], $e->getMessage()));
+                }
+            }
+        }
+
+        return $output;
     }
-
-    // Private methods ---------------------------------------------------------
-
     /**
-     * Process use statements array
-     * @param  array  $uses
+     * Find ::print <content> regions
+     * @param  string $line
+     * @param  array  $sets
      * @return string
      */
-    private static function process_use(array $uses) {
-
+    private static function find_print($line, array $sets) {
+        if (preg_match('/^[ \t]*?::print ([a-z0-9_]+)$/', $line, $match)) {
+            if (isset($sets[$match[1]])) {
+                return $sets[$match[1]];
+            } else {
+                return '';
+            }
+        }
+        return $line;
     }
     /**
-     * Find all include statements ::use, ::extend and ::import
-     * @return array
+     * Find open ::set
+     * @param  string $line
+     * @return string id if found, null otherwise
      */
-    private static function find_inclusions($template, $file, $root) {
-        return [
-            $template,
-            [
-                'use' => []
-            ],
-        ];
+    private static function find_open_set($line) {
+        if (preg_match('/^[ \t]*?::set ([a-z0-9_]+)$/', $line, $match)) {
+            return trim($match[1]);
+        }
+    }
+    /**
+     * Find open ::/set
+     * @param  string $line
+     * @return boolean
+     */
+    private static function find_close_set($line) {
+        return preg_match('/^[ \t]*?::\\/set?$/', $line);
+    }
+    /**
+     * Find close for import and extend: ::/extend ::/import
+     * @param  string $line
+     * @return boolean
+     */
+    private static function find_extend_import_close($line) {
+        if (preg_match('/^[ \t]*?::\/(import|extend)?$/', $line, $match)) {
+            return $match[1];
+        }
+    }
+    /**
+     * Find ::import statements
+     * @param  string $line
+     * @param  array  $extend
+     * @return string id is found, null otherwise
+     */
+    private static function find_import($line, array &$extend) {
+        if (preg_match(
+        '/^[ \t]*?::import ([a-z0-9_\.\/]+)(?: from ([a-z0-9_\.\/]+))?( do)?$/',
+        $line, $match)) {
+            if (isset($match[2]) && $match[2] !== ' do') {
+                $module = $match[1];
+                $id = trim($match[2]);
+                $open = isset($match[3]) ? true : false;
+            } else {
+                $module = false;
+                $id = $match[1];
+                $open = isset($match[2]) ? true : false;
+            }
+            $extend[$id] = [
+                'file'   => $id,
+                'open'   => $open,
+                'module' => $module,
+                'set'    => []
+            ];
+            return $id;
+        }
+    }
+    /**
+     * Find ::extend statements
+     * @param  string $line
+     * @param  array  $extend
+     * @return string id is found, null otherwise
+     */
+    private static function find_extend($line, array &$extend) {
+        if (preg_match(
+        '/^[ \t]*?::extend ([a-z0-9_\.\/]+) set ([a-z0-9_]+)( do)?$/',
+        $line, $match)) {
+            $id = trim($match[1]);
+            $extend[$id] = [
+                'open' => isset($match[3]),
+                'self' => trim($match[2]),
+                'set'  => []
+            ];
+            return $id;
+        }
+    }
+    /**
+     * Find ::use statements
+     * @param  string $line
+     * @param  array  $uses
+     * @return string (id) if found, null otherwise
+     */
+    private static function find_use($line, array &$uses) {
+        // Find ::use vendor/package( as name)?
+        if (preg_match(
+        '/^[ \t]*?::use ([a-z0-9_\\/]+)(?: as ([a-z0-9_]+))?$/',
+        $line, $match)) {
+            $use = $match[1];
+            if (!isset($match[2])) {
+                $as = substr($use, strrpos($use, '/')+1);
+            } else {
+                $as = $match[2];
+            }
+            if (isset($uses[$as])) {
+                if ($uses[$as]['use'] !== $use) {
+                    throw new exception\parser(self::f_error_use(
+                        $use, $as, $uses[$as]['debug']), 1);
+                }
+            } else {
+                $uses[$as] = [
+                    'statement' => "use " . str_replace('/', '\\', $use) .
+                                   "\\tplp\\util as {$as};",
+                    'use'       => $use
+                ];
+            }
+            return $as;
+        }
     }
     /**
      * Process translation tags {@KEY}
@@ -504,40 +762,13 @@ class parser {
         return $line;
     }
     /**
-     * Parse a particular file and return an array (parsed file + use statements)
-     * @param  string $filename
-     * @return array  [$processed, [$use, ...]]
-     */
-    private static function parse_file($filename, $root) {
-        $fullpath = fs::ds($root, $filename);
-
-        if (!file::exists($fullpath)) {
-            throw new framework\exception\not_found(
-                        "Template file not found: `{$fullpath}`", 1);
-        }
-
-        $template = file::read($fullpath);
-
-        try {
-            // Process basic tags
-            $processed = self::process($template);
-            return self::find_inclusions($processed, $filename, $root);
-        } catch (\Exception $e) {
-            throw new exception\parser(
-                "Parsing failed for: `{$fullpath}`, message: ".
-                $e->getMessage(), 1);
-        }
-    }
-    /**
      * Parse translation in format: @TRANSLATION(count) var
      * @param  string $string
      * @return string
      */
     private static function parse_translation($string) {
-        // dump_r($string);
         return preg_replace_callback('/^@([A-Z0-9_]+)(?:\((.*?)\))?(.*?)$/',
         function ($match) {
-            // dump_r($match);
             $key = trim($match[1]);
             $plural = trim($match[2]);
             if (!is_numeric($plural)) {
@@ -597,7 +828,6 @@ class parser {
         if (!$has_var) {
             if (preg_match('/\\$?[a-z0-9\\:_]+\\(%seg/i', $processed, $m)) {
                 $m = explode("(", $m[0], 2)[0];
-                // var_dump(substr($m, 0, 1) !== '$' && !strpos($m, '::'));
                 if (substr($m, 0, 1) !== '$' && !strpos($m, '::')) {
                     throw new exception\parser(
                         "Function require argument in format `arg|func`: ".
@@ -732,14 +962,66 @@ class parser {
         }
     }
     /**
+     * Handle file import
+     * @param  array  $import
+     * @param  array  $uses
+     * @param  string $dir
+     * @return string
+     */
+    private static function handle_import(array $import, array $uses, $dir) {
+        $path = self::resolve_relative_path($import['file'], $dir);
+        return self::parse($path, $uses, $import['set'], $import['module']);
+    }
+    /**
+     * Resolve relative filename for inclusions
+     * @param  string $relative
+     * @param  string $dir
+     * @return string
+     */
+    private static function resolve_relative_path($relative, $dir) {
+        if (substr($relative, 0, 1) === '/') {
+            $path = fs::pkgpath($relative.'.tplp');
+        } else {
+            $path = realpath(fs::ds($dir, $relative.'.tplp'));
+        }
+        if (!file::exists($path)) {
+            throw new framework\exception\not_found(
+                "File not found: `{$path}`", 1);
+        }
+
+        return $path;
+    }
+    /**
      * Format generic exception message.
      * @param  integer $lines
      * @param  integer $current
      * @param  string  $message
+     * @param  string  $file
      * @return string
      */
-    private static function f_error($lines, $current, $message) {
-        return $message . "\n" . self::err_lines($lines, $current, 3);
+    private static function f_error($lines, $current, $message, $file=null) {
+        return $message . "\n" . self::err_lines($lines, $current, 3) .
+               ($file ? "File: `{$file}`\n" : "\n");
+    }
+    /**
+     * Format generic use exception message.
+     * @param  string $use
+     * @param  string $as
+     * @param  array  $previous_debug
+     * @return string
+     */
+    private static function f_error_use($use, $as, array $previous_debug) {
+        $return = "Cannot use `{$use}` as `{$as}` because the name ".
+        "is already previously declared in following location(s):\n";
+
+        foreach ($previous_debug as $previous) {
+            $return .= $previous['lines'].
+                       "File `{$previous['file']}`\n\n";
+        }
+
+        $return .= "ERROR:";
+
+        return $return;
     }
     /**
      * Return -$padding, $current, +$padding lines for exceptions, e.g.:
@@ -755,7 +1037,7 @@ class parser {
         $start    = $current - $padding;
         $end      = $current + $padding;
         $result   = '';
-        for ($position = $start; $position < $end; $position++) {
+        for ($position = $start; $position <= $end; $position++) {
             if (isset($lines[$position])) {
                 if ($position === $current) {
                     $result .= ">>";

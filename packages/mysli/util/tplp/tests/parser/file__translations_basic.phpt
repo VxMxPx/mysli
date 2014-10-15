@@ -1,10 +1,5 @@
 --TEST--
-Translations
---FILE--
-<?php
-use mysli\util\tplp\parser;
-
-$input = <<<INPUT
+--VIRTUAL (test.tplp)--
 <html>
 <body>
     {@HELLO}
@@ -15,12 +10,15 @@ $input = <<<INPUT
     {@HELLO_USER user1, user2, false, 'string!'}
 </body>
 </html>
-INPUT;
-
-print_r(parser::process($input));
+--FILE--
+<?php
+use mysli\util\tplp\parser;
+print_r(parser::file('test.tplp', __DIR__));
 ?>
 --EXPECT--
-<html>
+<?php
+namespace tplp\generic\test;
+?><html>
 <body>
     <?php echo $tplp_translator_service('HELLO'); ?>
     <?php echo $tplp_translator_service(['COMMENTS', $comments_count]); ?>

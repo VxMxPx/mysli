@@ -1,10 +1,5 @@
 --TEST--
-For
---FILE--
-<?php
-use mysli\util\tplp\parser;
-
-$input = <<<INPUT
+--VIRTUAL (test.tplp)--
 <html>
 <body>
     ::for user in users
@@ -23,12 +18,15 @@ $input = <<<INPUT
     ::/for
 </body>
 </html>
-INPUT;
-
-print_r(parser::process($input));
+--FILE--
+<?php
+use mysli\util\tplp\parser;
+print_r(parser::file('test.tplp', __DIR__));
 ?>
 --EXPECT--
-<html>
+<?php
+namespace tplp\generic\test;
+?><html>
 <body>
     <?php foreach ($users as $user): ?>
     <?php endforeach; ?>

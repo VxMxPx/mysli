@@ -1,10 +1,5 @@
 --TEST--
-Special functions.
---FILE--
-<?php
-use mysli\util\tplp\parser;
-
-$input = <<<INPUT
+--VIRTUAL (test.tplp)--
 <html>
 <body>
     {variable|max:var|var_fnct:true}
@@ -12,12 +7,15 @@ $input = <<<INPUT
     {|blog/func:true}
 </body>
 </html>
-INPUT;
-
-print_r(parser::process($input));
+--FILE--
+<?php
+use mysli\util\tplp\parser;
+print_r(parser::file('test.tplp', __DIR__));
 ?>
 --EXPECT--
-<html>
+<?php
+namespace tplp\generic\test;
+?><html>
 <body>
     <?php echo $tplp_func_var_fnct(max($variable, $var), true); ?>
     <?php echo $tplp_func_var_funct(true); ?>

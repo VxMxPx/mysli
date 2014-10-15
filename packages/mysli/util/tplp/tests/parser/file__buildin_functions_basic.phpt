@@ -1,10 +1,5 @@
 --TEST--
-Buildin functions.
---FILE--
-<?php
-use mysli\util\tplp\parser;
-
-$input = <<<INPUT
+--VIRTUAL (test.tplp)--
 <html>
 <body>
     {-12|abs}
@@ -71,12 +66,15 @@ $input = <<<INPUT
     {|random:0,5}
 </body>
 </html>
-INPUT;
-
-print_r(parser::process($input));
+--FILE--
+<?php
+use mysli\util\tplp\parser;
+print_r(parser::file('test.tplp', __DIR__));
 ?>
 --EXPECT--
-<html>
+<?php
+namespace tplp\generic\test;
+?><html>
 <body>
     <?php echo abs(-12); ?>
     <?php echo ucfirst('hello world!'); ?>
