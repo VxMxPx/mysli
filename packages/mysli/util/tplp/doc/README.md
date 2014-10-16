@@ -652,6 +652,230 @@ use three curly brackets:
 }}}
 ```
 
+### Use
+
+Some package will offer utility to be used in templates,
+which can be included and used with:
+
+```
+::use vendor/package
+{var|package/method:parameter}
+```
+
+... or if you want to alias is:
+
+```
+::use vendor/package as pkg
+{var|pkg/method:param}
+```
+
+### Extend
+
+file.tplp
+
+```html
+::extend layout set content
+<div>
+    Content
+</div>
+```
+
+layout.tplp
+
+```html
+<html>
+<body>
+    ::print content
+</body>
+</html>
+```
+
+... result:
+
+```html
+<html>
+<body>
+    <div>
+        Content
+    </div>
+</body>
+</html>
+```
+
+You can extend multiple templates:
+
+file.tplp
+
+```html
+::extend layout set content
+::extend master set content
+<div>
+    Content
+</div>
+```
+
+layout.tplp
+
+```html
+<body>
+    ::print content
+</body>
+```
+
+master.tplp
+
+```html
+<html>
+::print content
+</html>
+```
+
+... result:
+
+```html
+<html>
+<body>
+    <div>
+        Content
+    </div>
+</body>
+</html>
+```
+
+You can set additional parameters:
+
+file.tplp
+
+```html
+::extend layout set content do
+    ::set links
+        <link rel="stylesheet" type="text/css" href="main.css">
+    ::/set
+::/extend
+<div>
+    Content
+</div>
+```
+
+layout.tplp
+
+```html
+<html>
+<head>
+    ::print links
+</head>
+<body>
+    ::print content
+</body>
+</html>
+```
+
+... result:
+
+```html
+<html>
+<head>
+    <link rel="stylesheet" type="text/css" href="main.css">
+</head>
+<body>
+    <div>
+        Content
+    </div>
+</body>
+</html>
+```
+
+### Import
+
+file.tplp
+
+```html
+<div class="sidebar">
+    ::import sidebar
+</div>
+```
+
+sidebar.tplp
+
+```html
+<p>I'm sidebar!</p>
+```
+
+... result:
+
+```html
+<div class="sidebar">
+    <p>I'm sidebar!</p>
+</div>
+```
+
+You can set additional parameters:
+
+file.tplp
+
+```html
+<div class="sidebar">
+    ::import sidebar do
+        ::set hello
+            <p>Hello world!</p>
+        ::/set
+    ::/import
+</div>
+```
+
+sidebar.tplp
+
+```html
+<p>I'm sidebar!</p>
+::print hello
+```
+
+... result:
+
+```html
+<div class="sidebar">
+    <p>I'm sidebar!</p>
+    <p>Hello world!</p>
+</div>
+```
+
+#### Modules
+
+You can define modules in a file and import them individually:
+
+file.tplp
+
+```html
+<div class="sidebar">
+    ::import sidebar from modules do
+        ::set hello
+            <p>Hello world!</p>
+        ::/set
+    ::/import
+</div>
+```
+
+modules.tplp
+
+```html
+::module sidebar
+    <p>I'm sidebar!</p>
+    ::print hello
+::/module
+::module another
+::/module
+```
+
+... result:
+
+```html
+<div class="sidebar">
+    <p>I'm sidebar!</p>
+    <p>Hello world!</p>
+</div>
+```
+
+
 ## License
 
 The Mysli Util Tplp is licensed under the GPL-3.0 or later.
