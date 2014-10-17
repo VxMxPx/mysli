@@ -5,7 +5,7 @@ namespace mysli\util\tplp;
 __use(__namespace__, [
     'mysli/framework' => [
         'fs/{fs/file}',
-        'exception' => 'framework/exception/%s'
+        'exception/*' => 'framework/exception/%s'
     ]
 ]);
 
