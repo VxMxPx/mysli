@@ -6,7 +6,7 @@ __use(__namespace__, [
     'mysli/framework' => [
         'fs/{file,fs,dir}',
         'type/{arr,str}',
-        'exception/*'              => 'framework/exception/%s',
+        'exception/*'                   => 'framework/exception/%s',
         'cli/{output,input,param,util}' => 'cout,cinput,cparam,cutil',
     ],
     './util',
