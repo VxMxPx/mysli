@@ -46,7 +46,7 @@ class i18n {
         }
 
         // file to which parsed languages will be saved
-        $file = self::filename_from_package($package);
+        $file = self::package_to_filename($package);
         return json::encode_file($file, $collection);
     }
     /**
@@ -54,8 +54,8 @@ class i18n {
      * @return boolean
      */
     static function remove_cache($package) {
-        $file = self::filename_from_package($package);
-        if (file_exists($file)) {
+        $file = self::package_to_filename($package);
+        if (file::exists($file)) {
             return unlink($file);
         } else return true;
     }
@@ -64,24 +64,30 @@ class i18n {
      * @param  string $package
      * @param  mixed  $translate
      * @param  mixed  $param
-     * @return mysli\util\i18n\translator
+     * @return mysli\util\i18n\translator or string if $translate is present
      */
     static function select($package, $translate, $variable=[]) {
-        if (isset(self::$cache[$package])) {
-            $translator = self::$cache[$package];
-        } else {
-            $filename = self::filename_from_package($package);
-            if (file_exists($filename)) {
-                $dictionary = json::decode_file($filename, true);
-            } else $dictionary = [];
-            $translator = new translator($dictionary,
-                                         self::$default_languages[0],
-                                         self::$default_languages[1]);
-            self::$cache[$package] = $translator;
+        // Get translator + dictionary if not set yet
+        if (!isset(self::$cache[$package])) {
+            $cache_filename = self::package_to_filename($package);
+
+            if (file::exists($cache_filename)) {
+                $dictionary = json::decode_file($cache_filename, true);
+            } else {
+                $dictionary = [];
+            }
+
+            self::$cache[$package] = new translator($dictionary,
+                                            self::$default_languages[0],
+                                            self::$default_languages[1]);
         }
-        if ($translate) {
-            return $translator->translate($translate, $variable);
-        } else return $translator;
+
+        $translator = self::$cache[$package];
+
+        // If we have $translate we'll return translation otherwise translator
+        return $translate
+                    ? $translator->translate($translate, $variable)
+                    : $translator;
     }
 
     /**
@@ -89,7 +95,7 @@ class i18n {
      * @param  string $package
      * @return string
      */
-    private static function filename_from_package($package) {
+    private static function package_to_filename($package) {
         return fs::datpath('mysli/util/i18n/',
                            str_replace('/', '.', $package).'.json');
     }

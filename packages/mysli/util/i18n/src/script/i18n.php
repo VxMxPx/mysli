@@ -48,7 +48,6 @@ class i18n {
         }
     }
 
-
     private static function build($package, $directory='i18n') {
         if (!dir::exists(fs::pkgpath($package, $directory))) {
             cout::error('I18n: Not found: `' .
