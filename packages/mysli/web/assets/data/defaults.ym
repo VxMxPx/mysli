@@ -1,0 +1,26 @@
+settings:
+    require:
+        cleancss:
+            command : {id} --version
+            expect  : 2.*.*
+            level   : warn
+            message : "CSS Compression might not work. Missing `{id}` (npm install -g clean-css). Expected version `{expect}` got `{result}`."
+        stylus:
+            command : {id} --version
+            expect  : 0.*.*
+            level   : warn
+            message : "Styl files might not be processed. Missing `{id}` (npm install -g {id}). Expected version `{expect}` got `{result}`."
+        uglifyjs:
+            command : {id} --version
+            expect  : uglify-js 2.*.*
+            level   : warn
+            message : "JS files might not be compressed. Missing `{id}` (npm install -g {$id}). Expected version `{expect}` got `{result}`."
+    compress:
+        css : cleancss {source} -o {dest}
+        js  : uglifyjs -c -o {dest} {source}
+    process:
+        css  : cp {source} {dest}
+        js   : cp {source} {dest}
+        styl : stylus {source} -o {dest_dir}
+    ext:
+        styl : css

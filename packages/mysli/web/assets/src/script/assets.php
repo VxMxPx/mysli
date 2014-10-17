@@ -1,322 +1,344 @@
 <?php
 
-namespace mysli\assets\script {
+namespace mysli\web\assets\script;
 
-    \inject::to(__namespace__)
-    ->from('mysli/cli/{output,cinput,param}', 'cout,cinput,cparam')
-    ->from('mysli/config')
-    ->from('mysli/fs')
-    ->from('mysli/core/type/{arr,str}')
-    ->from('mysli/web')
-    ->from('mysli/core/exception/*');
+__use(__namespace__, [
+    'mysli/framework' => [
+        'fs/{file,fs,dir}',
+        'type/{arr,str}',
+        'exception/*'              => 'framework/exception/%s',
+        'cli/{output,input,param,util}' => 'cout,cinput,cparam,cutil',
+    ],
+    './util',
+    '../web'
+]);
 
-    class assets {
+class assets {
 
-        use mysli\assets\util;
+    use util;
 
-        /**
-         * CLI frontend.
-         * @param array $arguments
-         * @return null
-         */
-        static function run(array $arguments) {
-            $params = new cparam('Mysli Assets Builder', $arguments);
-            $params->add(
-                '--watch/-w',
-                ['type'    => 'bool',
-                 'default' => false,
-                 'help'    => 'Observe assets']);
-            $params->add(
-                '--build/-b',
-                ['type'    => 'bool',
-                 'default' => true,
-                 'help'    => 'Build assets']);
-            $params->add(
-                '--map/-m',
-                ['type'    => 'str',
-                 'default' => 'assets/map.json',
-                 'help'    => 'Specify costume map file location']);
-            $params->add(
-                '--source/-s',
-                ['type'    => 'str',
-                 'default' => 'src',
-                 'help'    => 'Directory where assets are located']);
-            $params->add(
-                '--destination/-d',
-                ['type'    => 'str',
-                 'default' => 'dist',
-                 'help'    => 'Build destination']);
-            $params->add(
-                '--public/-p',
-                ['type'    => 'str',
-                 'default' => null,
-                 'help'    => 'Public directry, where assets will be placed']);
-            $params->add(
-                'PACKAGE',
-                ['type'       => 'str',
-                 'help'       => 'Package name, e.g.: mysli/ui',
-                 'required'   => true]);
+    /**
+     * CLI frontend.
+     * @param array $arguments
+     * @return null
+     */
+    static function run(array $args) {
+        $params = new cparam('Mysli Assets Builder', $args);
+        $params->command = 'assets';
+        $params->add(
+            '--watch/-w',
+            ['type'    => 'bool',
+             'default' => false,
+             'help'    => 'Watch package\'s assets and rebuild if changed']);
+        $params->add(
+            '--build/-b',
+            ['type'    => 'bool',
+             'default' => true,
+             'help'    => 'Build assets']);
+        $params->add(
+            '--map/-m',
+            ['type'    => 'str',
+             'default' => 'map.ym',
+             'help'    => 'Specify costume map file location (can be .json)']);
+        $params->add(
+            '--source/-s',
+            ['type'    => 'str',
+             'default' => 'assets',
+             'help'    => 'Directory where assets are located']);
+        $params->add(
+            '--destination/-d',
+            ['type'    => 'str',
+             'default' => '_dist/assets',
+             'help'    => 'Build destination']);
+        $params->add(
+            '--public/-p',
+            ['type'    => 'str',
+             'default' => null,
+             'help'    => 'Public directory, where assets will be placed']);
+        $params->add(
+            'PACKAGE',
+            ['type'       => 'str',
+             'help'       => 'Package name, e.g.: mysli/web/ui',
+             'required'   => true]);
 
-            $params->parse();
+        $params->parse();
+        if (!$params->is_valid()) {
             cout::line($params->messages());
-            if ($params->is_valid()) {
-                $values = $params->values();
-                return self::observe_or_build(
-                    $values['package'], $values['map'], $values['source'],
-                    $values['public'], $values['watch']);
-            }
+        } else {
+            // Set values and run process
+            $values = $params->values();
+            return self::observe_or_build(
+                $values['package'], $values['source'], $values['destination'],
+                $values['map'], $values['public'], $values['watch']);
         }
+    }
 
-        // private methods
+    // private methods
 
-        /**
-         * Read assets file for particular package.
-         * @param  string $package
-         * @param  string $assets relative path
-         * @return array
-         */
-        private static function read_assets($package, $assets) {
-            $filename = fs::pkgpath($package, $assets);
-            if (!fs\file::exists($filename)) {
-                throw new exception\not_found(
-                    "File not found: {$filename}.", 1);
-            }
-            return json::decode_file($filename);
-        }
-        /**
-         * Run sstem diagnostic (check if required commands are available).
-         * @return boolean
-         */
-        private static function diagnostic() {
-            $valid = true;
-            $require = config::select('mysli/assets', 'require', []);
 
-            cout::line('Starting self test!');
+    /**
+     * Check if all required modules are available.
+     * @param  array $required list of required modules
+     * @return boolean
+     */
+    private static function check_required_modules(array $required) {
 
-            foreach ($require as $command => $require) {
-                $res = [];
-                cout::line('Test: `%s`.', $command);
-                exec($command, $out, $res);
-                if ($require !== true) {
-                    if (arr::index(0, $out) &&
-                        str::pos($out[0], $require) > -1) {
-                        cout::format(
-                            '+yellow In: `%s`, expect: `%s`, got: `%s` .',
-                            [$command, $require, $out[0]]);
-                        $valid = false;
-                    }
-                } else {
-                    if ($res !== 0) {
-                        cout::format('+yellow Missing: `%s`.', $command);
-                        $valid = false;
-                    }
-                }
-            }
+        cout::line('Checking if required modules are available...');
 
-            if (!$valid) {
-                cout::format('+yellow Some functions might not work properly.');
+        foreach ($required as $id => $params) {
+            $command = str_replace('{id}', $id, $params['command']);
+            $expect  = str_replace('{id}', $id, $params['expect']);
+            $expect  = preg_quote($expect);
+            $expect  = str_replace('\\*', '.*?', $expect);
+            $expect  = "/{$expect}/";
+            $result  = cutil::execute($command);
+            if (preg_match($expect, $result)) {
+                cout::format("{$id}+right+green OK");
             } else {
-                cout::format('+green All ok!');
-            }
-
-            return $valid;
-        }
-        /**
-         * Parse command, replace variables with data.
-         * @param  string $command
-         * @param  string $source_file
-         * @param  string $dest_file
-         * @return string
-         */
-        private static function parse_command($command, $source_file,
-                                              $dest_file) {
-            return str::replace(
-                ['{source}', '{dest}', '{source_dir}', '{dest_dir}'],
-                [$source_file, $dest_file,
-                fs\file::name($source_file), fs\file::name($dest_file)],
-                $command
-            );
-        }
-        /**
-         * Grab multiple files, and merge them into one.
-         * @param  array  $assets
-         * @param  string $dir
-         * @param  array  $changes
-         * @return null
-         */
-        private static function assets_merge(array $assets, $dir,
-                                             array $changes = []) {
-            list($process, $compress) = config::get(
-                'mysli/assets', ['process', 'compress'], []);
-
-            foreach ($assets as $file => $assets_c) {
-                $main_content = '';
-                $processed = $changes ? 0 : 1;
-
-                foreach ($assets_c as $asset) {
-                    $ext = fs\file::extension($asset);
-                    $source_file = fs::ds($dir, 'src', $asset);
-                    $dest_file = fs::ds(
-                        $dir, 'dist', self::parse_extention($asset));
-
-                    if ($changes) {
-                        if (!arr::key(fs::ds('/src', $asset), $changes)) {
-                            continue;
-                        } else {
-                            cout::line(
-                                'Processing: %s', fs::ds('/src', $asset));
-                            $processed++;
-                        }
-                    }
-
-                    if (!fs\file::exists($source_file)) {
-                        cout::format(
-                            '+yellow File not found: %s.', $source_file);
-                        continue;
-                    }
-
-                    if (!arr::key($ext, $process)) {
-                        cout::format(
-                            '+yellow Unknown extention, cannot process: %s.',
-                            $ext);
-                        continue;
-                    }
-
-                    // Excute action for file
-                    system(self::parse_command(
-                        $process[$ext], $source_file, $dest_file));
-                    $main_content .= "\n\n" . fs\file::read($dest_file);
-                }
-            }
-
-            if ($processed) {
-                // Finally create asset file
-                $asset_file = fs::ds($dir, 'dist', $file);
-                $asset_ext  = fs\file::extension($asset_file);
-                fs\file::write($asset_file, $main_content);
-
-                // Compress(?)
-                if (arr::key($asset_ext, $compress)) {
-                    cout::line('Compress: %s.', basename($asset_file));
-                    system(
-                        self::parse_command(
-                            $compress[$asset_ext], $asset_file,
-                            $asset_file));
-                }
-            }
-        }
-        /**
-         * Compare two lists of files, and return changes for each file.
-         * @param  array   $one
-         * @param  array   $two
-         * @param  integer $cutoff how much of pth to remove (for pretty repots)
-         * @return array
-         */
-        private static function what_changed(array $one, array $two,
-                                             $cutoff = 0) {
-            $changes = [];
-            foreach ($one as $file => $hash) {
-                if (!arr::key($file, $two)) {
-                    $changes[str::slice($file, $cutoff)] = 'Added';
+                if ($params['type'] === 'warn') {
+                    cout::format("{$id}+right+yellow WARNING");
                 } else {
-                    if ($two[$file] !== $hash) {
-                        $changes[str::slice($file, $cutoff)] = 'Updated';
-                    }
-                    unset($two[$file]);
+                    cout::format("{$id}+right+red FAILED");
                 }
+                $message = str_replace([
+                    '{id}', '{expect}', '{result}'],
+                    [$id, $params['expect'], $result],
+                    $params['message']);
+                count::line($message);
+
+                if ($params['type'] === 'error') { return false; }
             }
-            if (!arr::is_empty($two)) {
-                foreach ($two as $file => $hash) {
-                    $changes[str::slice($file, $cutoff)] = 'Removed';
-                }
-            }
-            return $changes;
         }
-        /**
-         * Observe (and) build assets.
-         * @param  string  $package
-         * @param  string  $assets_file
-         * @param  string  $assets_dir
-         * @param  string  $web_dir
-         * @param  boolean $loop
-         * @return null
-         */
-        private static function observe_or_build($package, $assets_file,
-                                                 $assets_dir, $web_dir, $loop) {
-            if (!self::diagnostic()) {
-                if (!cinput::confirm(
-                    'Some components are missing. Continue anyway?')) {
-                    cout::line('Canceled by user.');
-                    return;
+
+        return true;
+    }
+    /**
+     * Parse command, replace variables with data.
+     * @param  string $command
+     * @param  string $src
+     * @param  string $dest
+     * @param  string $web
+     * @return string
+     */
+    private static function parse_command($command, $src, $dest, $web) {
+        return str_replace(
+            ['{source}', '{dest}', '{source_dir}', '{dest_dir}', '{web}'],
+            [$src, $dest, file::name($src), file::name($dest), $web],
+            $command
+        );
+    }
+    /**
+     * Grab multiple files, and merge them into one.
+     * @param  array  $map
+     * @param  string $assets   assets path
+     * @param  string $dest     dist path
+     * @param  string $web      dir
+     * @param  array  $changes
+     * @return null
+     */
+    private static function assets_merge(array $map, $assets, $dest, $web,
+                                         array $changes) {
+        // For easy short access
+        $sett = $map['settings'];
+
+        foreach ($map['files'] as $main => $props) {
+            // All processed files...
+            $merged = '';
+
+            foreach ($props['include'] as $file) {
+                $file_ext = file::extension($file);
+                $src_file = fs::ds($assets, $file);
+                // defined in ../util
+                $dest_file = fs::ds($dest, self::parse_extention($file,
+                                                                 $sett['ext']));
+
+                if (!arr::key_in($changes, $file)) {
+                    continue;
+                } else {
+                    cout::line('Processing: ' . $file);
+                    $processed++;
+                }
+
+                if (!file::exists($src_file)) {
+                    cout::warn("File not found: {$src_file}");
+                    continue;
+                }
+
+                if (!arr::key_in($sett['ext'], $ext)) {
+                    cout::warn("Unknown extension, cannot process: `{$ext}`");
+                    continue;
+                }
+
+                // Execute action for file
+                cutil::execute(self::parse_command($sett['process'][$ext],
+                                                   $src_file, $dest_file,
+                                                   $web));
+
+                // Add content to the merged content
+                $merged .= "\n\n" . file::read($dest_file);
+            }
+            // Some file were processed
+            if ($merged) {
+                cout::line("File: `{$main}`", false);
+                $dest_main = fs::ds($dest, $main);
+                $main_ext = file::extension($main);
+                file::create_recursive($dest_main);
+                try {
+                    file::write($dest_file, $merged);
+                } catch (\Exception $e) {
+                    cout::error($e->getMessage());
+                    continue;
+                }
+                cout::format('Saving+right+green OK');
+                if ($props['compress']
+                    && arr::key_in($sett['compress'], $main_ext)) {
+                    if (cutil::execute(self::parse_command(
+                                        $sett['compress'][$main_ext],
+                                        $dest_main, $dest_main,
+                                        $web))) {
+                        cout::format("Compressing +right+green OK");
+                    } else {
+                        cout::format("Compressing +right+red OK");
+                    }
                 }
             }
+        }
+    }
+    /**
+     * Compare two lists of files, and return changes for each file.
+     * @param  array   $one
+     * @param  array   $two
+     * @param  integer $cutoff how much of path to remove (for pretty reports)
+     * @return array
+     */
+    private static function what_changed(array $one, array $two, $cutoff=0) {
+        $changes = [];
 
-            if (!$package) {
-                cout::format('+yellow Please enter a valid package name.');
-                return;
+        foreach ($one as $file => $hash) {
+            if (!arr::key_in($two, $file)) {
+                $changes[str::slice($file, $cutoff)] = 'Added';
+            } else {
+                if ($two[$file] !== $hash) {
+                    $changes[str::slice($file, $cutoff)] = 'Updated';
+                }
+                unset($two[$file]);
             }
+        }
 
-            try {
-                $assets = self::read_assets($package, $assets_file);
-            } catch (exception\not_found $e) {
-                cout::format('+yellow File not found: %s.', $assets_file);
-                return;
+        if (!empty($two)) {
+            foreach ($two as $file => $hash) {
+                $changes[str::slice($file, $cutoff)] = 'Removed';
             }
-            if (arr::valid($assets)) {
-                cout::format(
-                    '+yellow Invalid file format: %s.', $assets_file);
-                return;
-            }
+        }
 
-            $assets_path = fs::pkgpath($package, $assets_dir);
-            if (!fs\dir::exists($assets_path)) {
-                cout::format(
-                    '+yellow Assets path seems to be invalid. '.
-                    'Cannot continue.');
-                return;
-            }
+        return $changes;
+    }
+    /**
+     * Observe (and) build assets.
+     * @param  string  $package
+     * @param  string  $assets  dir
+     * @param  string  $dest    dir
+     * @param  string  $map     file
+     * @param  string  $web     dir
+     * @param  boolean $loop
+     * @return null
+     */
+    private static function observe_or_build($package, $assets, $dest, $map,
+                                             $web, $loop) {
+        // Check if we have a valid assets path
+        $assets_path = fs::pkgpath($package, $assets);
+        if (!dir::exists($assets_path)) {
+            cout::yellow("Assets path is invalid: `{$assets_path}`");
+            return false;
+        }
 
-            if (!$web_dir) {
-                $web_dir = $package;
-            }
-            $web_dir = web::path($web_dir);
-            if (!fs\dir::exists($web_dir)) {
-                cout::format(
-                    '+yellow Public web path seems to be invalid. '.
-                    'Cannot continue.');
-                return;
-            }
+        // Get map file if available...
+        try {
+            $map = self::get_map($package, $assets, $map);
+        } catch (\Exception $e) {
+            cout::warn($e->getMessage());
+            return false;
+        }
 
-            $signature = [];
+        // Check weather required modules are available
+        if ($map['settings']['require'] !== false) {
+            if (!self::check_required_modules($map['settings']['required'])) {
+                return false;
+            }
+        }
 
-            // Do we have @ commands
-            if (isset($assets['@before'])) {
-                $before = $assets['@before'];
-                unset($assets['@before']);
-                foreach ($before as $before_command) {
-                    $command = self::parse_command(
-                        $before_command,
-                        fs::ds($assets_path, 'src/null'),
-                        fs::ds($assets_path, 'dist/null'));
-                    cout::line('Call: %s.', $command);
-                    system($command);
+        // Check public path
+        if (!$web) {
+            $web = str_replace('/', '_', $package);
+        }
+        $web = web::path($web);
+        if (!dir::exists($web)) {
+            if (!cinput::confirm(
+                "Public directory (`{$web}`) not found. Create it now?")) {
+                cout::line('Terminated.');
+                return false;
+            } else {
+                if (dir::create($web)) {
+                    cout::success("Directory successfully created.");
+                } else {
+                    cout::error("Failed to create directory.");
+                    return false;
                 }
             }
+        }
 
-            do {
-                $rsignature = fs\dir::signature(fs::ds($assets_path, 'src'));
-                if ($rsignature !== $signature) {
-                    $changes = self::what_changed(
-                        $rsignature, $signature, str::len($assets_path));
-                    cout::line('What changed: %s', arr::readable($changes));
+        // Dest path
+        $dest_path = fs::pkgpath($package, $dest);
+        if (!dir::exists($dest_path)) {
+            if (!cinput::confirm(
+                "Dist directory (`{$dest}`) not found. Create it now?")) {
+                cout::line('Terminated.');
+                return false;
+            } else {
+                if (dir::create($dest)) {
+                    cout::success("Directory successfully created.");
+                } else {
+                    cout::error("Failed to create directory.");
+                    return false;
+                }
+            }
+        }
+
+        // `before` command
+        if (isset($map['before'])) {
+            foreach ($map['before'] as $before) {
+                $command = self::parse_command($before,
+                                               fs::ds($assets_path, 'null'),
+                                               fs::ds($dest_path, 'null'),
+                                               $web);
+                cout::line('Call: ' . $command);
+                cout::line(cutil::execute($command));
+            }
+        }
+
+        $signature = dir::signature($assets_path);
+
+        do {
+            $rsignature = dir::signature(fs::ds($assets_path, 'src'));
+
+            if ($rsignature !== $signature) {
+                $changes = self::what_changed(
+                    $rsignature, $signature, strlen($assets_path));
+                if (!empty($changes)) {
+                    cout::line('What changed: ' . arr::readable($changes));
                     cout::line('Rebuilding assets...');
                     $signature = $rsignature;
-                    self::assets_merge($assets, $assets_path, $changes);
-                    fs\dir::copy($assets_path, $web_dir);
+                    // Process files...
+                    self::assets_merge($map, $assets_path, $dest_path, $web,
+                                       $changes);
+
+                    dir::copy($dest_path, $web);
                 } else {
-                    $loop and sleep(3);
+                    cout::line('No changes in source files.');
                 }
-            } while ($loop);
-        }
+            }
+
+            $loop and sleep(3);
+        } while ($loop);
     }
 }
