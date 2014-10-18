@@ -113,12 +113,12 @@ class session {
      * @return boolean
      */
     static function set($user, $expires=null) {
-        if (!property_exists($user, 'id')) {
-            throw new exception\sessions(
+        if (!method_exists($user, 'id')) {
+            throw new exception\session(
                 "User object need to have `id` property.", 1);
         }
         self::$user = $user;
-        return self::create($user->id, $expires);
+        return self::create($user->id(), $expires);
     }
     /**
      * Create session (set cookie, etc...) (assume user is already set)
