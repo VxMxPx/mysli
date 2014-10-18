@@ -88,6 +88,20 @@ class request {
         }
     }
     /**
+     * Get IP from which request was made.
+     * @return string
+     */
+    static function ip() {
+        return $_SERVER['REMOTE_ADDR'];
+    }
+    /**
+     * Return user's agent.
+     * @return  string
+     */
+    static function agent() {
+        return $_SERVER['HTTP_USER_AGENT'];
+    }
+    /**
      * Return true if any data was posted, and false if wasn't
      * @param  string $key is particular key set int post
      * @return boolean
