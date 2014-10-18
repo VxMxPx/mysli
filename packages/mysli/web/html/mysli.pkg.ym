@@ -1,0 +1,8 @@
+package     : mysli/util/html
+version     : 1.0.0
+description : Html library.
+license     : GPL-3.0
+authors:
+authors:
+    - Marko Gajšt (Developer) <m@gaj.st>
+require: No
