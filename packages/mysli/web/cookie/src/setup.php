@@ -1,16 +1,18 @@
 <?php
 
-namespace mysli\cookie\setup {
+namespace mysli\web\cookie\setup;
 
-    inject::to(__namespace__)->from('mysli/config');
+__use(__namespace__, 'mysli/util/config');
 
-    function enable() {
-        return config::select('mysli/cookie')
-            ->merge([
-                'timeout' => 60 * 60 * 24 * 7, // 7 Days
-                'domain'  => null, // dynamic
-                'key'     => null, // if provided, cookies will be encrypted
-                'prefix'  => ''])
-            ->save();
-    }
+function enable() {
+    $c = config::select('mysli/web/cookie');
+    $c->merge([
+        'timeout' => 60 * 60 * 24 * 7, // 7 Days
+        'domain'  => null, // automatically acquired
+        'key'     => null, // TODO: if provided, cookies will be encrypted
+        'prefix'  => '']);
+    return $c->save();
+}
+function disable() {
+    return config::select('mysli/web/cookies')->destroy();
 }

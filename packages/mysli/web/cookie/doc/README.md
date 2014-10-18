@@ -1,18 +1,12 @@
-# Mysli Cookie
+# Mysli Web Cookie
 
 ## Introduction
 
-Cookies support for Mysli packages:
-
-    \inject::to(__namespace__)
-    ->from('mysli/cookie');
-    funcition __construct() {
-        $hi = cookie::read('hi');
-    }
+Cookies support for Mysli packages.
 
 ## License
 
-The Mysli Cookie is licensed under the GPL-3.0 or later.
+The Mysli Web Cookie is licensed under the GPL-3.0 or later.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
