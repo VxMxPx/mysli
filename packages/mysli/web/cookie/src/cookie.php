@@ -3,7 +3,7 @@
 namespace mysli\web\cookie;
 
 __use(__namespace__,
-    'mysli/framework/type',
+    'mysli/framework/type/arr',
     'mysli/util/config'
 );
 
