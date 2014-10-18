@@ -1,5 +1,5 @@
 package     : mysli/web/session
-version     : 1.0.0
+version     : 1.0.1
 description : Session Library.
 license     : GPL-3.0
 authors:

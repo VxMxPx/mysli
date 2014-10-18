@@ -1,6 +1,6 @@
 <?php
 
-namespace mysli\web\session;
+namespace mysli\web\session\setup;
 
 __use(__namespace__,
     'mysli/util/config',
