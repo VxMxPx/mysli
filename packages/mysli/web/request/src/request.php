@@ -55,21 +55,6 @@ class request {
         }
     }
     /**
-     * Return true if any data was posted, and false if wasn't
-     * @param  string $key is particular key set int post
-     * @return boolean
-     */
-    static function has_post($key=false) {
-        return $key ? isset($_POST[$key]) : !empty($_POST);
-    }
-    /**
-     * Get server's path info.
-     * @return string
-     */
-    static function get_path_info() {
-        return isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : null;
-    }
-    /**
      * Get _POST segment.
      * @param  mixed $key     false: return all keys,
      *                        string: return particular key
@@ -90,11 +75,32 @@ class request {
         }
     }
     /**
+     * Name and revision of the information protocol
+     * via which the page was requested; i.e. 'HTTP/1.0';
+     * @param  string $default
+     * @return string
+     */
+    static function protocol($default='HTTP/1.1') {
+        if (isset($_SERVER['SERVER_PROTOCOL'])) {
+            return $_SERVER['SERVER_PROTOCOL'];
+        } else {
+            return $default;
+        }
+    }
+    /**
+     * Return true if any data was posted, and false if wasn't
+     * @param  string $key is particular key set int post
+     * @return boolean
+     */
+    static function has_post($key=false) {
+        return $key ? isset($_POST[$key]) : !empty($_POST);
+    }
+    /**
      * Get request method: request::method_get, request::method_post,
      *                     request::method_put, request::method_delete
      * @return string
      */
-    static function get_method() {
+    static function method() {
         // Is it put?
         if ($_SERVER['REQUEST_METHOD'] === 'PUT' ||
             self::post('REQUEST_METHOD') === 'PUT') {
