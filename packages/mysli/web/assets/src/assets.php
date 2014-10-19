@@ -4,13 +4,50 @@ namespace mysli\web\assets;
 
 __use(__namespace__,
     ['mysli/framework/exception/*' => 'framework/exception/%s'],
-    'mysli/util/config'
+    'mysli/framework/fs/{fs,file,dir}',
+    'mysli/util/config',
+    'mysli/web/web'
 );
 
 class assets {
 
     use util;
 
+    /**
+     * Publish assets for particular package.
+     * @param  string $package
+     * @return boolean
+     */
+    static function publish($package, $dist='_dist/assets') {
+        $srcpath  = fs::pkgpath($package, $dist);
+        $id = str_replace('/', '_', $package);
+        $destpath = web::path($id);
+
+        if (!dir::exists($srcpath)) {
+            throw new framework\exception\not_found(
+                "Cannot publish -- folder not found: `{$srcpath}`", 1);
+        }
+
+        if (!dir::exists($destpath)) {
+            dir::create($destpath);
+        }
+
+        return dir::copy($srcpath, $destpath);
+    }
+    /**
+     * Destroy (delete) published assets for package.
+     * @param  string $package
+     * @return boolean
+     */
+    static function destroy($package) {
+        $id = str_replace('/', '_', $package);
+        $path = web::path($id);
+        if (dir::exists($path)) {
+            return dir::remove($path);
+        } else {
+            return false;
+        }
+    }
     /**
      * Get links for particular file/package
      * @param  string $package
