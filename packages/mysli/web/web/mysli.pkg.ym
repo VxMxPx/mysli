@@ -1,14 +1,14 @@
 package     : mysli/web/web
-version     : 1.0.0
+version     : 0.0.1
 description : Web Access library.
 license     : GPL-3.0
 authors:
     - Marko Gajšt (Developer) <m@gaj.st>
 require:
-    mysli/framework/csi    : ~1
-    mysli/framework/event  : ~1
-    mysli/framework/config : ~1
-    mysli/framework/fs     : ~1
-    mysli/web/response     : ~1
-    mysli/web/request      : ~1
-    mysli/util/output      : ~1
+    mysli/framework/csi    : ~0
+    mysli/framework/event  : ~0
+    mysli/framework/config : ~0
+    mysli/framework/fs     : ~0
+    mysli/web/response     : ~0
+    mysli/web/request      : ~0
+    mysli/util/output      : ~0
