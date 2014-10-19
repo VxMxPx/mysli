@@ -9,7 +9,7 @@ __use(__namespace__, [
         'exception/*'                   => 'framework/exception/%s',
         'cli/{output,input,param,util}' => 'cout,cinput,cparam,cutil',
     ],
-    './util',
+    './{util,assetsc}',
     '../web'
 ]);
 
@@ -51,10 +51,10 @@ class assets {
              'default' => '_dist/assets',
              'help'    => 'Build destination']);
         $params->add(
-            '--public/-p',
+            '--publish/-p',
             ['type'    => 'str',
-             'default' => null,
-             'help'    => 'Public directory, where assets will be placed']);
+             'default' => false,
+             'help'    => 'Publish changes to web directory']);
         $params->add(
             'PACKAGE',
             ['type'       => 'str',
@@ -69,7 +69,7 @@ class assets {
             $values = $params->values();
             return self::observe_or_build(
                 $values['package'], $values['source'], $values['destination'],
-                $values['map'], $values['public'], $values['watch']);
+                $values['map'], $values['publish'], $values['watch']);
         }
     }
 
@@ -117,13 +117,12 @@ class assets {
      * @param  string $command
      * @param  string $src
      * @param  string $dest
-     * @param  string $web
      * @return string
      */
-    private static function parse_command($command, $src, $dest, $web) {
+    private static function parse_command($command, $src, $dest) {
         return str_replace(
-            ['{source}', '{dest}', '{source_dir}', '{dest_dir}', '{web}'],
-            [$src, $dest, file::name($src), file::name($dest), $web],
+            ['{source}', '{dest}', '{source_dir}', '{dest_dir}'],
+            [$src, $dest, file::name($src), file::name($dest)],
             $command
         );
     }
@@ -132,12 +131,11 @@ class assets {
      * @param  array  $map
      * @param  string $assets   assets path
      * @param  string $dest     dist path
-     * @param  string $web      dir
      * @param  array  $changes
      * @return null
      */
-    private static function assets_merge(array $map, $assets, $dest, $web,
-                                         array $changes) {
+    private static function assets_merge(array $map, $assets, $dest,
+                                                            array $changes) {
         // For easy short access
         $sett = $map['settings'];
 
@@ -171,8 +169,8 @@ class assets {
 
                 // Execute action for file
                 cutil::execute(self::parse_command($sett['process'][$ext],
-                                                   $src_file, $dest_file,
-                                                   $web));
+                                                    $src_file,
+                                                    $dest_file));
 
                 // Add content to the merged content
                 $merged .= "\n\n" . file::read($dest_file);
@@ -194,8 +192,9 @@ class assets {
                     && arr::key_in($sett['compress'], $main_ext)) {
                     if (cutil::execute(self::parse_command(
                                         $sett['compress'][$main_ext],
-                                        $dest_main, $dest_main,
-                                        $web))) {
+                                        $dest_main,
+                                        $dest_main)))
+                    {
                         cout::format("Compressing +right+green OK");
                     } else {
                         cout::format("Compressing +right+red OK");
@@ -239,12 +238,12 @@ class assets {
      * @param  string  $assets  dir
      * @param  string  $dest    dir
      * @param  string  $map     file
-     * @param  string  $web     dir
+     * @param  boolean $publish
      * @param  boolean $loop
      * @return null
      */
     private static function observe_or_build($package, $assets, $dest, $map,
-                                             $web, $loop) {
+                                             $publish, $loop) {
         // Check if we have a valid assets path
         $assets_path = fs::pkgpath($package, $assets);
         if (!dir::exists($assets_path)) {
@@ -264,26 +263,6 @@ class assets {
         if ($map['settings']['require'] !== false) {
             if (!self::check_required_modules($map['settings']['required'])) {
                 return false;
-            }
-        }
-
-        // Check public path
-        if (!$web) {
-            $web = str_replace('/', '_', $package);
-        }
-        $web = web::path($web);
-        if (!dir::exists($web)) {
-            if (!cinput::confirm(
-                "Public directory (`{$web}`) not found. Create it now?")) {
-                cout::line('Terminated.');
-                return false;
-            } else {
-                if (dir::create($web)) {
-                    cout::success("Directory successfully created.");
-                } else {
-                    cout::error("Failed to create directory.");
-                    return false;
-                }
             }
         }
 
@@ -309,8 +288,7 @@ class assets {
             foreach ($map['before'] as $before) {
                 $command = self::parse_command($before,
                                                fs::ds($assets_path, 'null'),
-                                               fs::ds($dest_path, 'null'),
-                                               $web);
+                                               fs::ds($dest_path, 'null'));
                 cout::line('Call: ' . $command);
                 cout::line(cutil::execute($command));
             }
@@ -329,10 +307,15 @@ class assets {
                     cout::line('Rebuilding assets...');
                     $signature = $rsignature;
                     // Process files...
-                    self::assets_merge($map, $assets_path, $dest_path, $web,
-                                       $changes);
+                    self::assets_merge($map,
+                                        $assets_path,
+                                        $dest_path,
+                                        $changes);
 
-                    dir::copy($dest_path, $web);
+                    if ($publish) {
+                        cout::line("Will publish changes...");
+                        assetsc::publish($package, $dest);
+                    }
                 } else {
                     cout::line('No changes in source files.');
                 }
