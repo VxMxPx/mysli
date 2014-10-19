@@ -3,7 +3,7 @@
 namespace mysli\framework\event {
 
     __use(__namespace__,
-        '../fs',
+        '../fs/{fs,file}',
         '../json',
         ['../exception/*' => 'framework/exception/%s']
     );
@@ -13,10 +13,22 @@ namespace mysli\framework\event {
         const priority_low = 'low';
         const priority_high = 'high';
 
-        private static $data_source;
-        private static $events;
+        private static $registry;
+        private static $events = [];
         private static $eid;
 
+        /**
+         * Init class with registry filename
+         * @param string $filename
+         */
+        static function __init($filename) {
+            if (!file::exists($filename)) {
+                throw new framework\exception\not_found(
+                    "File not found: `{$filename}`.", 1);
+            }
+            self::$registry = $filename;
+            self::reload();
+        }
         /**
          * Wait for particular event to happened,
          * then call the assigned function / method.
@@ -77,7 +89,7 @@ namespace mysli\framework\event {
          * @return boolean
          */
         static function register($event, $call, $priority=self::priority_low) {
-            $events = json::decode_file(self::$data_source, true);
+            $events = json::decode_file(self::$registry, true);
 
             if (!isset($events[$event])) {
                 $events[$event] = [];
@@ -104,7 +116,7 @@ namespace mysli\framework\event {
          * @return boolean
          */
         static function unregister($event, $call) {
-            $events = json::decode_file(self::$data_source, true);
+            $events = json::decode_file(self::$registry, true);
 
             foreach ($events as $cevent => &$calls) {
                 if ($cevent !== $event) {
@@ -155,23 +167,12 @@ namespace mysli\framework\event {
             }
         }
         /**
-         * Set event's data source.
-         * @param string $filename
-         */
-        static function set_datasource($filename) {
-            if (!fs\file::exists($filename)) {
-                throw new framework\exception\not_found(
-                    "File not found: `{$filename}`.", 1);
-            }
-            self::$data_source = $filename;
-        }
-        /**
          * Reload list of events.
          * This will erase all temporary events set with `on`!
          * @return null
          */
         static function reload() {
-            self::$events = json::decode_file(self::$data_source, true);
+            self::$events = json::decode_file(self::$registry, true);
             self::$eid = count(self::$events);
         }
         /**
@@ -183,7 +184,7 @@ namespace mysli\framework\event {
             if (!$events) {
                 $events = self::$events;
             }
-            return json::encode_file(self::$data_source, $events);
+            return json::encode_file(self::$registry, $events);
         }
     }
 }

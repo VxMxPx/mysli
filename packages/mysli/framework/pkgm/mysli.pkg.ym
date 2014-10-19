@@ -1,5 +1,5 @@
 package     : mysli/framework/pkgm
-version     : 0.0.30
+version     : 0.0.54
 description : Mysli Framework Package Manager.
 license     : GPL-3.0
 authors:

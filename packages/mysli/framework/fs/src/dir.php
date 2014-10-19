@@ -15,8 +15,12 @@ namespace mysli\framework\fs {
          * @return boolean
          */
         static function create($directory, $mode=0777, $recursive=true) {
-            if (file::exists($directory)) {
+            if (dir::exists($directory)) {
                 return true;
+            }
+            if (file::exists($directory)) {
+                throw new framework\exception\fs(
+                    "File exists: `{$directory}`.", 1);
             }
             return mkdir($directory, $mode, $recursive);
         }
@@ -134,8 +138,9 @@ namespace mysli\framework\fs {
             }
 
             if (!self::exists($directory)) {
-                throw new framework\exception\argument(
-                    "Directory doesn't exists: `{$directory}`.", 2);
+                return true;
+                // throw new framework\exception\argument(
+                //     "Directory doesn't exists: `{$directory}`.", 2);
             }
 
             if (!self::is_empty($directory)) {

@@ -14,8 +14,8 @@ namespace mysli\util\config {
 
         private $package;
         private $filename;
-        private $data = [];
-        private $cache;
+        private $data  = [];
+        private $cache = [];
 
         /**
          * Config data
@@ -51,7 +51,7 @@ namespace mysli\util\config {
                 return $this->cache[$key];
             }
 
-            $value = arr_path::get($key, $this->data, $default);
+            $value = arr_path::get($this->data, $key, $default);
 
             // We cache only when we assume it's not default value...
             if ($value !== $default) {
@@ -105,7 +105,7 @@ namespace mysli\util\config {
             if (file::exists($this->filename)) {
                 return file::remove($this->filename);
             } else {
-                return null;
+                return true;
             }
         }
 

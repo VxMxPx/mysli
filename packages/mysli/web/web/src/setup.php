@@ -4,33 +4,39 @@ namespace mysli\web\web\setup;
 
 __use(__namespace__,
     './web',
+    'mysli/util/config',
     'mysli/framework/csi',
     'mysli/framework/event',
-    'mysli/framework/config',
     'mysli/framework/fs/{fs,file,dir}'
 );
 
-function enable() {
-    $csi = new csi('mysli/web/web/enable');
-    $csi->input(
-        'relative_path',
-        'Public path (relative to: ' . fs::datpath() . ')',
-        '../public',
-        function (&$field) {
-            if (strpos($field['value'], '..')) {
-                $field['value'] = fs::datpath($field['value']);
+function enable($csi=null) {
+    if (!$csi) {
+        $csi = new csi('mysli/web/web/enable');
+        $csi->input(
+            'relative_path',
+            'Public path (relative to: ' . fs::datpath() . ')',
+            '../public',
+            function (&$field) {
+                if (substr($field['value'], 0, 2) === '..') {
+                    $field['value'] = fs::datpath($field['value']);
+                }
+                return true;
             }
-            return true;
-        }
-    );
+        );
+    }
+
     if ($csi->status() !== 'success') {
         return $csi;
     }
 
     $pubpath = $csi->get('relative_path');
+
     if (!dir::create($pubpath)) {
         return false;
     }
+
+    $pubpath = realpath($pubpath);
 
     $c = config::select('mysli/web/web');
     $c->merge([
@@ -41,7 +47,7 @@ function enable() {
         return false;
     }
 
-    $index_contents = file::read(fs::ds(__DIR__, 'data/index.html'));
+    $index_contents = file::read(fs::pkgpath('mysli/web/web/data/index.html'));
     $index_contents = str_replace(
         [
             '{{PKGPATH}}',

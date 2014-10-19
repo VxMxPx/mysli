@@ -1,5 +1,5 @@
 package     : mysli/framework/fs
-version     : 0.0.8
+version     : 0.0.10
 description : File System Library.
 license     : GPL-3.0
 authors:

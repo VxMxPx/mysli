@@ -39,14 +39,14 @@ include various classes:
 
 ```php
 \inject::to(__namespace__)
-->from('mysli/framework/config');
+->from('mysli/util/config');
 ```
 
 ... more common way to achieve the same is to use alias `__use` instead:
 
 ```php
 __use(__namespace__,
-    'mysli/framework/config'
+    'mysli/util/config'
 );
 ```
 
@@ -56,8 +56,8 @@ we want to inject.
 
 **Note** that slashes (/) are used rather than backslashes (\\).
 
-The above example specified only package name: `mysli/framework/config`, where
-actual class would be `mysli\\framework\\config\\config`. This is automatically
+The above example specified only package name: `mysli/util/config`, where
+actual class would be `mysli\\util\\config\\config`. This is automatically
 resolved for you.
 
 Examples...
@@ -68,7 +68,7 @@ Regular class in package:
     Resolved to:  \\vendor\\package\\package
     Available as: package
 
-Meta package (like mysli/framework/config):
+Meta package (like mysli/util/config):
 
     Argument:     'vendor/meta/package'
     Resolved to:  \\vendor\\meta\\package\\package
@@ -76,8 +76,8 @@ Meta package (like mysli/framework/config):
 
 ... actual example:
 
-    Argument:     'mysli/framework/config'
-    Resolved to:  \\mysli\\framework\\config
+    Argument:     'mysli/util/config'
+    Resolved to:  \\mysli\\util\\config
     Available as: config
     Example:      config::select('me/my_package');
 
@@ -153,7 +153,7 @@ Load class from same namespace (vendor + meta):
 
 ... actual example:
 
-    From:         mysli/framework/config
+    From:         mysli/util/config
     Argument:     '../json'
     Resolved to:  mysli\\framework\\json\\json
     Available as: json

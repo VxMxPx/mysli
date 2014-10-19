@@ -71,8 +71,8 @@ namespace mysli\framework\json {
          */
         static function encode_file($filename, $values, $options=0,
                                     $depth=512) {
-            return !!file::write(
-                $filename, self::encode($values, $options, $depth));
+            return file::write($filename,
+                            self::encode($values, $options, $depth)) !== false;
         }
         /**
          * Returns the JSON representation of a value

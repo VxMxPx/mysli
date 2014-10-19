@@ -7,7 +7,6 @@ namespace mysli\framework\event {
     );
 
     function __init() {
-        event::set_datasource(fs::datpath('event/r.json'));
-        event::reload();
+        event::__init(fs::datpath('mysli/framework/event/r.json'));
     }
 }

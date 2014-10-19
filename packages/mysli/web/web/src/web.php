@@ -53,7 +53,7 @@ class web {
     static function path() {
         if (!defined('MYSLI_PUBPATH')) {
             $pubpath = realpath(
-                fs::datpath(config::get('mysli/web/web', 'relative_path')));
+                fs::datpath(config::select('mysli/web/web', 'relative_path')));
         } else {
             $pubpath = MYSLI_PUBPATH;
         }

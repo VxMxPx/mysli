@@ -230,7 +230,8 @@ class csi {
         $statuses = [];
 
         if (is_callable($this->on_validate)) {
-            $status = call_user_func_array($this->on_validate, [&$this->fields]);
+            $status = call_user_func_array(
+                                        $this->on_validate, [&$this->fields]);
             $statuses[] = $status;
             // if     ($status === true)  $this->status = 'success';
             // elseif ($status === false) $this->status = 'failed';
@@ -243,7 +244,8 @@ class csi {
 
             if (is_callable($properties['callback'])) {
                 // Call costume function
-                $status = call_user_func_array($properties['callback'], [&$properties]);
+                $status = call_user_func_array($properties['callback'],
+                                                [&$properties]);
                 // Set field's status
                 $properties['status'] = $status;
                 // interrupted
@@ -275,7 +277,7 @@ class csi {
             $this->status = 'success';
         }
 
-        return $this->status === 'success';
+        return ($this->status === 'success');
     }
     /**
      * Return current status. Possible values:

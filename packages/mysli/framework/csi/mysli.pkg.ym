@@ -1,5 +1,5 @@
 package     : mysli/framework/csi
-version     : 0.0.1
+version     : 0.0.4
 description : Common Setup Interface.
 license     : GPL-3.0
 authors:

@@ -3,7 +3,7 @@
 namespace mysli\web\request;
 
 __use(__namespace__,
-    'mysli/framework/type/arr'
+    'mysli/framework/type/{arr,str}'
 );
 
 class request {
@@ -23,10 +23,10 @@ class request {
      * @param  mixed  $default
      * @return mixed
      */
-    static function segement($id=false, $default=null) {
+    static function segment($id=false, $default=null) {
         if (self::$segments === false) {
             self::$segments = trim(self::path(), '/');
-            self::$segments = str::split_trim($segments, '/');
+            self::$segments = str::split_trim(self::$segments, '/');
         }
         if ($id === false) {
             return self::$segments;
@@ -71,7 +71,7 @@ class request {
         if (is_array($key)) {
             return arr::get_all($_POST, $key, $default);
         } else {
-            return arr::get($key, $_POST, $default);
+            return arr::get($_POST, $key, $default);
         }
     }
     /**
