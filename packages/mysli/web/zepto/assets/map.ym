@@ -1,0 +1,12 @@
+files:
+    zepto.js:
+        compress: Yes
+        include :
+            - js/zepto.js
+            - js/event.js
+            - js/ajax.js
+            - js/data.js
+            - js/form.js
+            - js/ie.js
+            - js/fx.js
+            - js/fx_methods.js
