@@ -2,6 +2,12 @@
 
 namespace mysli\web\users;
 
+__use(__namespace__,
+    ['mysli/framework/exception/*' => 'framework/exception/%s'],
+    'mysli/framework/json',
+    'mysli/framework/fs/{fs,file}'
+);
+
 class users {
 
     private static $cache = [];
@@ -21,6 +27,29 @@ class users {
         if (!$user->is_active())              return false;
 
         return $user;
+    }
+    /**
+     * Get list of all users
+     * @param  boolean $detailed if true, each user's record will be an array
+     *                           including basic user's details. Otherwise
+     *                           list of IDs will be returned.
+     * @return array
+     */
+    static function get_all($detailed=false) {
+        $users_files = fs::ls(fs::datpath('mysli/web/users'), '/^.*?\.json$/');
+        $users = [];
+
+        foreach ($users_files as $user_file) {
+            $id = substr($users_file, 0, -5); // -.json
+            if ($detailed) {
+                $filename = fs::datpath("mysli/web/users/{$user_file}");
+                $users[$id] = json::decode_file($filename, false);
+            } else {
+                $users[] = $id;
+            }
+        }
+
+        return $users;
     }
     /**
      * Get one user by uname = e-mail.
@@ -78,8 +107,7 @@ class users {
                 'email' => $user
             ];
         } elseif (!isset($user['email'])) {
-            throw new framework\exception\argument(
-                'The e-mail property is required.');
+            throw new framework\exception\argument('The `email` must be set.');
         }
 
         $id = get_id_from_uname($user['email']);
@@ -90,38 +118,12 @@ class users {
         }
 
         $user['id'] = $id;
+        $user['is_active']  = true;
         $user['created_on'] = (int) gmdate('YmdHis');
         $user['updated_on'] = (int) gmdate('YmdHis');
 
         return (self::$cache[$id] = new user($user, true));
     }
-    // /**
-    //  * Delete user by ID or uname (email).
-    //  * @param  string  $user user name or email address.
-    //  * @param  boolean $soft weather user should be soft-deleted
-    //  * @return boolean
-    //  */
-    // static function delete($user, $soft=true) {
-
-    //     if (strpos($user, '@')) {
-    //         $user = self::get_id_from_uname($user);
-    //     }
-
-    //     if ($soft) {
-    //         $user = self::get_by_id($user);
-    //         unset(self::$cache[$user]);
-    //         $user->delete();
-    //         return $user->save();
-    //     } else {
-    //         if (isset(self::$cache[$user])) {
-    //             unset(self::$cache[$user]);
-    //         }
-    //         $filename = self::path_by_id($user);
-    //         if (file::exists($filename)) {
-    //             return file::remove($filename);
-    //         }
-    //     }
-    // }
     /**
      * Get path for particular user's file,
      * @param  string $id
