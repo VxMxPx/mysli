@@ -1,4 +1,4 @@
-package     : mysli/framework/crypt
+package     : mysli/util/crypt
 version     : 1.0.0
 description : AES Cryptography Library.
 license     : GPL-3.0

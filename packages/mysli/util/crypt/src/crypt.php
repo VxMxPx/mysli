@@ -1,6 +1,6 @@
 <?php
 
-namespace mysli\framework\crypt {
+namespace mysli\util\crypt {
 
     /**
      * Encrypt wrapper

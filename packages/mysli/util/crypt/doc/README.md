@@ -1,4 +1,4 @@
-# Mysli Framework Crypt
+# Mysli Util Crypt
 
 ## Introduction
 
@@ -10,7 +10,7 @@ http://github.com/zendframework/zf2
 
 ## License
 
-The Mysli Framework Crypt is licensed under the GPL-3.0 or later.
+The Mysli Util Crypt is licensed under the GPL-3.0 or later.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
