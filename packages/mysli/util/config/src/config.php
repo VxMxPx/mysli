@@ -39,7 +39,7 @@ namespace mysli\util\config {
          */
         function get($key, $default=null) {
             // If key is an array, do recursive search.
-            if (arr::valid($key)) {
+            if (is_array($key)) {
                 $values = [];
                 foreach ($key as $val) {
                     $values[] = $this->get($val, $default);
@@ -60,6 +60,13 @@ namespace mysli\util\config {
 
             // Return value in any case...
             return $value;
+        }
+        /**
+         * Retrun all config as an array.
+         * @return array
+         */
+        function dump() {
+            return $this->data;
         }
         /**
          * Set value for key.
