@@ -40,27 +40,24 @@ $datpath = realpath(str_replace('/', $ds, $pubpath . '{{DATPATH}}'));
 $pkgpath = realpath(str_replace('/', $ds, $pubpath . '{{PKGPATH}}'));
 
 // Define public path here, instead of reading it from config, etc...
-// This will make sure public path will change if you'll move index to new location.
+// This will make sure public path will change
+// if you'll move index to a new location.
 define('MYSLI_PUBPATH', $pubpath);
 
-/**
- * Get core!
- */
-$core_id_file = $datpath . $ds . 'core' . $ds . 'id.json';
+// Get the core.
+$core_id_file = "{$datpath}/core/id.json";
 if (!file_exists($core_id_file)) {
     trigger_error("File not found: `{$core_id_file}`", E_USER_ERROR);
 } else {
     $core_id = json_decode(file_get_contents($core_id_file), true);
 }
-include($pkgpath . $ds . str_replace('/', $ds, $core_id['file']));
-$core = new $core_id['class']($datpath, $pkgpath);
+include("{$pkgpath}/{$core_id['package']}/src/__init.php");
+call_user_func_array(
+    str_replace('/', '\\', $core_id['package']) . '\\__init',
+    [$datpath, $pkgpath]);
 
-// Get event package and trigger some events...
-$event = $core->pkgm()->factory('mysli/event')->produce();
-
-$event->trigger('mysli/web/index:start');
+\mysli\framework\event\event::trigger('mysli/web/web/index:start');
 
 $output = '';
-$event->trigger('mysli/web/index:done', [&$output]);
-// We should have output now, so we'll print it and exit.
+\mysli\framework\event\event::trigger('mysli/web/web/done', [&$output]);
 exit($output);
