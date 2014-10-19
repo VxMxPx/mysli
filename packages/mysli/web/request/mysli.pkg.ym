@@ -1,5 +1,5 @@
 package     : mysli/web/request
-version     : 1.0.12
+version     : 1.0.40
 description : Request Library.
 license     : GPL-3.0
 authors:

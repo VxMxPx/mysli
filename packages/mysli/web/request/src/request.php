@@ -18,14 +18,14 @@ class request {
 
     /**
      * Get parituclar segment(s) e.g.: page.php/segment0/segment1/segment2
-     * @param  string $id      false:   return fall segments
+     * @param  string $id      false:   return all segments
      *                         integer: return paticular segment (zero based)
      * @param  mixed  $default
      * @return mixed
      */
     static function segement($id=false, $default=null) {
         if (self::$segments === false) {
-            self::$segments = trim(self::get_path_info(), '/');
+            self::$segments = trim(self::path(), '/');
             self::$segments = str::split_trim($segments, '/');
         }
         if ($id === false) {
@@ -100,6 +100,91 @@ class request {
      */
     static function agent() {
         return $_SERVER['HTTP_USER_AGENT'];
+    }
+    /**
+     * Check if we're on SSL connection.
+     * _Borrowed from Wordpress_
+     * @return boolean
+     */
+    static function is_ssl() {
+        if (isset($_SERVER['HTTPS'])) {
+            if ('on' == strtolower($_SERVER['HTTPS'])) {
+                return true;
+            }
+            if ('1' == $_SERVER['HTTPS']) {
+                return true;
+            }
+        } elseif (isset($_SERVER['SERVER_PORT'])
+        && ('443' == $_SERVER['SERVER_PORT'])) {
+            return true;
+        }
+
+        return false;
+    }
+    /**
+     * Retrun get current domain
+     * @return string
+     */
+    static function host() {
+        return isset($_SERVER['SERVER_NAME'])
+            ? $_SERVER['SERVER_NAME']
+            : isset($_SERVER['HTTP_HOST'])
+                ? $_SERVER['HTTP_HOST']
+                : null;
+    }
+    /**
+     * Return client-provided pathname information trailing the actual script
+     * filename but preceding the query string, if available.
+     * For instance, if the current script was accessed via the URL
+     * http://www.example.com/php/path_info.php/some/stuff?foo=bar,
+     * then this would return /some/stuff.
+     * @return string
+     */
+    static function path() {
+        if (isset($_SERVER['PATH_INFO'])) {
+            return $_SERVER['PATH_INFO'];
+        }
+        if (isset($_SERVER['REQUEST_URI'])) {
+            $path = explode('?', $_SERVER['REQUEST_URI'])[0];
+            $script_name = isset($_SERVER['SCRIPT_NAME'])
+                                            ? $_SERVER['SCRIPT_NAME'] : null;
+            if (substr($path, 0, strlen($script_name)) === $script_name) {
+                $path = substr($path, strlen($script_name));
+            }
+            return $path;
+        }
+        return null;
+    }
+    /**
+     * Return current url, if with_query is set to true,
+     * it will return full url, query included.
+     * @param   boolean $with_query
+     * @return  string
+     */
+    static function url($with_query=false) {
+
+        $url = (self::is_ssl() ? 'https://' : 'http://') . self::host();
+
+        if ($with_query) {
+            // Make sure we have ending '/'!
+            $url = trim($url, '/') . '/';
+            $url = $url . ltrim($_SERVER['REQUEST_URI'], '/');
+        }
+
+        return rtrim($url, '/');
+    }
+    /**
+     * Modify current uri query, and return new query.
+     * ?k1=val&k2=val2
+     * @param  array $segments
+     * @return string
+     */
+    static function modify_query(array $segments) {
+        $query = $_GET;
+        foreach ($segments as $key => $val) {
+            $query[$key] = $val;
+        }
+        return '?' . http_build_query($query);
     }
     /**
      * Return true if any data was posted, and false if wasn't
