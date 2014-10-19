@@ -2,6 +2,10 @@
 
 namespace mysli\util\tplp;
 
+__use(__namespace__,
+    'mysli/framework/fs/{fs,dir}'
+);
+
 class tplp {
 
     private static $cache = [];
@@ -25,5 +29,15 @@ class tplp {
         return $file
                 ? $template->render($file, $variables)
                 : $template;
+    }
+
+    /**
+     * Remova all cache templates for particular package.
+     * @param  string $package
+     * @return boolean
+     */
+    static function remove_cache($package) {
+        $dir = fs::datpath('mysli/tplp/cache/'.str_replace('/', '.', $package));
+        return dir::remove($dir);
     }
 }
