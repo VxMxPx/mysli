@@ -69,12 +69,14 @@ class web {
      * @return string
      */
     static function url($uri=null) {
-        $url = config::get('mysli/web/web', 'url', request::host());
+        $url = config::select('mysli/web/web', 'url');
+        if (!$url) {
+            $url = (request::is_ssl() ? 'https://' : 'http://').request::host();
+        }
         $url = rtrim($url, '/') . '/'; // Always add ending slash!
         if ($uri) {
             $url .= ltrim($uri, '/');
         }
-
         return $url;
     }
 }

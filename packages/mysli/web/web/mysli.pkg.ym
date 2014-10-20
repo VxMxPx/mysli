@@ -1,5 +1,5 @@
 package     : mysli/web/web
-version     : 0.0.15
+version     : 0.0.17
 description : Web Access library.
 license     : GPL-3.0
 authors:
