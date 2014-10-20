@@ -44,11 +44,11 @@ namespace mysli\framework\core {
                 return false;
             }
 
-            if (!class_exists($class)) {
+            if (!class_exists($class, false) && !trait_exists($class, false)) {
                 include($full_path);
             }
 
-            if (!class_exists($class)) {
+            if (!class_exists($class) && !trait_exists($class, false)) {
                 throw new \Exception(
                     "Class: `{$class}` not found in: `{$full_path}`.", 1);
             }
