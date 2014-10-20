@@ -52,6 +52,16 @@ function dump_rr() {
 }
 
 /**
+ * Used to unline long lines, e.g. - it will remove \n symbold and trim lines.
+ * This can be used to comfortably disply long lines of text.
+ * @param  string $string
+ * @return string
+ */
+function l($string) {
+    return preg_replace('/(\n[ \t]*)/ms', ' ', $string);
+}
+
+/**
  * Inject shortcut.
  * @param  string $namespace
  * @param  mixed  ...        parameters to inject, string or array.
