@@ -1,0 +1,41 @@
+.tabs {
+  position: relative;
+  background-color: #e4e4e2;
+  padding-top: 10px;
+  font-size: 14px;
+  box-shadow: inset 0 -4px 4px -4px rgba(0,0,0,0.2);
+}
+.tabs.center {
+  text-align: center;
+}
+.tabs .tab {
+  padding: 5px 20px;
+  margin: 0;
+  display: inline-block;
+  user-select: none;
+  color: #101010;
+  position: relative;
+  text-decoration: none;
+}
+.tabs .tab:last-child {
+  border-right: none;
+}
+.tabs .tab.active {
+  border-radius: 3px 3px 0 0;
+  background-color: #fefefd;
+  border: none;
+  border-top: 3px solid #0089b4;
+}
+.alt > .tabs,
+.tabs.alt {
+  background-color: #1f1f1f;
+}
+.alt > .tabs .tab,
+.tabs.alt .tab {
+  color: #fff;
+}
+.alt > .tabs .tab.active,
+.tabs.alt .tab.active {
+  border-top-color: #0086a4;
+  background-color: #303030;
+}

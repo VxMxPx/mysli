@@ -1,7 +1,7 @@
 before:
-    - cp -R {source_dir}/common {dest_dir}/common
+    - cp -R {source_dir}/common {dest_dir}/
 files:
-    mysli.ui.css:
+    css/mysli.ui.css:
         compress: Yes
         include :
             - css/fonts.css
@@ -18,8 +18,8 @@ files:
             - css/panel.styl
             - css/alert.styl
             - css/tab.styl
-            - css/calendar.stye
-    mysli.ui.js:
+            - css/calendar.styl
+    js/mysli.ui.js:
         compress: Yes
         include :
             - js/ext.js

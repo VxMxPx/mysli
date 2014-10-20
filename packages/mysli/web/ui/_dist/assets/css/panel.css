@@ -1,0 +1,140 @@
+.panel {
+  height: 100%;
+  position: absolute;
+  background-color: #fefefd;
+  box-shadow: 5px 0 10px rgba(0,0,0,0.1);
+  color: #101010;
+  border-right: 1px solid #ccc;
+}
+.panel > div.loading {
+  position: absolute;
+  z-index: 100;
+  width: 10px;
+  height: 100%;
+  width: 100%;
+  top: 0;
+  left: 0;
+  background: url("../common/img/panel-loading.gif") repeat-y right top #000;
+  opacity: 0.75;
+}
+.panel.selected header {
+  border-top: 3px solid #0089b4;
+}
+.panel.multi {
+  perspective: 900px;
+  -webkit-perspective: 900px;
+  background-color: transparent;
+  box-shadow: none;
+  border-right: none;
+}
+.panel.multi.flipped > .sides {
+  transform: rotateY(180deg);
+  -webkit-transform: rotateY(180deg);
+}
+.panel.multi > .sides {
+  transition: transform 0.3s linear;
+  -webkit-transition: -webkit-transform 0.3s linear;
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+.panel.multi > .sides > .side {
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+.panel.multi > .sides > .side:first-child {
+  transform: rotateY(0deg);
+  -webkit-transform: rotateY(0deg);
+  z-index: 2;
+}
+.panel.multi > .sides > .side:last-child {
+  transform: rotateY(180deg);
+  -webkit-transform: rotateY(180deg);
+}
+.panel header {
+  position: relative;
+  background-color: #e4e4e2;
+  font-size: 16px;
+  overflow: hidden;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.4);
+  box-shadow: inset 0 -1px 0 #ccc;
+  border-top: 0px solid #0089b4;
+  min-height: 46px;
+  transition: border 0.2s linear;
+  -webkit-transition: border 0.2s linear;
+}
+.panel header a {
+  position: absolute;
+  top: 10px;
+  z-index: 1;
+  color: #999;
+}
+.panel header .left {
+  left: 20px;
+}
+.panel header .right {
+  right: 20px;
+}
+.panel header h2 {
+  z-index: 0;
+  position: relative;
+  font-size: 16px;
+  text-align: center;
+  margin: 0;
+}
+.panel .body {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  overflow-y: auto;
+}
+.panel .body.has-header {
+  top: 46px;
+}
+.panel .body .inner {
+  padding: 20px;
+}
+.panel footer {
+  background-color: #e4e4e2;
+  font-size: 16px;
+  overflow: hidden;
+  border-top: 1px solid rgba(255,255,255,0.4);
+  box-shadow: inset 0 1px 0 #ccc;
+  width: 100%;
+  position: absolute;
+  bottom: 0;
+  padding: 10px 0;
+}
+.panel.alt {
+  background-color: #303030;
+  color: #fff;
+  border-color: #252525;
+}
+.panel.alt.selected header {
+  border-top: 3px solid #0086a4;
+}
+.panel.alt header {
+  background-color: #1f1f1f;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  box-shadow: inset 0 -1px 0 #101010;
+}
+.panel.alt header a {
+  color: #8a8a8a;
+}
+.panel.alt footer {
+  background-color: #1f1f1f;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  box-shadow: inset 0 1px 0 #101010;
+}

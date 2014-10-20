@@ -1,0 +1,41 @@
+.popup.menu .field.item {
+  padding: 0;
+  margin: 20px;
+}
+.popup.menu hr.item {
+  padding: 0;
+  margin-top: 10px;
+  border-bottom: 1px solid #ccc;
+  margin-bottom: 10px;
+}
+.popup.menu .item {
+  position: relative;
+  padding: 5px 20px;
+  margin: 10px 0;
+  color: #101010;
+  display: block;
+}
+.popup.menu a.item {
+  text-decoration: none;
+}
+.popup.menu a.item:focus {
+  outline: none;
+}
+.popup.menu a.item:hover {
+  text-shadow: 1px 1px 0 rgba(0,0,0,0.2);
+  background-color: #24a;
+  color: #fefefd;
+}
+.popup.menu a.item:active {
+  top: 3px;
+}
+.popup.menu.alt hr.item {
+  border-bottom: 1px solid #252525;
+}
+.popup.menu.alt .item {
+  color: #fff;
+}
+.popup.menu.alt a.item:hover {
+  background-color: #24a;
+  color: #fefefd;
+}

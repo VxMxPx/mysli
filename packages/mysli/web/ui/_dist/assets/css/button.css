@@ -1,0 +1,143 @@
+button,
+.button,
+a.button {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  border-radius: 3px;
+  text-decoration: none;
+  cursor: pointer;
+  padding: 6px 10px 9px 10px;
+  border: none;
+  box-shadow: inset 0 -3px 0 rgba(0,0,0,0.3);
+  background-color: #eee;
+  display: inline-block;
+  color: #101010;
+  position: relative;
+  text-align: center;
+  line-height: 16px;
+}
+button:focus,
+.button:focus,
+a.button:focus {
+  background-color: #f4f4f4;
+  box-shadow: inset 0 -3px 0 rgba(0,0,0,0.2);
+  outline: none;
+}
+button::-moz-focus-inner,
+.button::-moz-focus-inner,
+a.button::-moz-focus-inner {
+  border: 0;
+}
+button.alt,
+.button.alt,
+a.button.alt {
+  background-color: #555;
+  color: #fff;
+}
+button.alt:focus,
+.button.alt:focus,
+a.button.alt:focus {
+  background-color: #5e5e5e;
+  color: #fff;
+}
+button.alt:disabled,
+.button.alt:disabled,
+a.button.alt:disabled {
+  background-color: #ccc;
+  color: #999;
+}
+button.primary,
+.button.primary,
+a.button.primary {
+  color: #e1ffe0;
+  background-color: #419945;
+}
+button.primary:focus,
+.button.primary:focus,
+a.button.primary:focus {
+  background-color: #4aa24e;
+  color: #fff;
+}
+button.attention,
+.button.attention,
+a.button.attention {
+  color: #f0f1f1;
+  background-color: #994541;
+}
+button.attention:focus,
+.button.attention:focus,
+a.button.attention:focus {
+  background-color: #a24f4a;
+  color: #fff;
+}
+button.pressed,
+.button.pressed,
+a.button.pressed,
+button:active,
+.button:active,
+a.button:active {
+  outline: 0;
+  box-shadow: inset 0 1px 0 rgba(0,0,0,0.1), inset 0 3px 0 rgba(0,0,0,0.1);
+  padding: 6px 10px 6px 10px;
+  margin-top: 3px;
+}
+button:disabled,
+.button:disabled,
+a.button:disabled {
+  background-color: #ccc;
+  box-shadow: none;
+  color: #999;
+  cursor: default;
+  top: 0;
+  margin-top: 0;
+  padding: 6px 10px 9px 10px;
+}
+button i.fa + span,
+.button i.fa + span,
+a.button i.fa + span,
+button span + i.fa,
+.button span + i.fa,
+a.button span + i.fa {
+  margin-left: 5px;
+}
+.group {
+  position: relative;
+}
+.group button,
+.group .button {
+  margin-left: 0;
+  margin-right: 0;
+  border-radius: 0;
+  float: left;
+  box-shadow: inset 0 -3px 0 rgba(0,0,0,0.3), inset 1px 0 0 0 rgba(0,0,0,0.2), inset -1px 0 0 0 rgba(255,255,255,0.2);
+}
+.group button.pressed,
+.group .button.pressed,
+.group button:active,
+.group .button:active {
+  box-shadow: inset 1px 0 0 0 rgba(0,0,0,0.2), inset -1px 0 0 0 rgba(255,255,255,0.2), inset 0 3px 0 0 rgba(0,0,0,0.3);
+}
+.group button:first-child,
+.group .button:first-child {
+  border-radius: 3px 0 0 3px;
+  box-shadow: inset 0 -3px 0 rgba(0,0,0,0.3), inset -1px 0 0 0 rgba(255,255,255,0.2);
+}
+.group button:first-child:active,
+.group .button:first-child:active {
+  box-shadow: inset -1px 0 0 0 rgba(255,255,255,0.2), inset 0 3px 0 0 rgba(0,0,0,0.3);
+}
+.group button:last-child,
+.group .button:last-child {
+  border-radius: 0 3px 3px 0;
+  box-shadow: inset 0 -3px 0 rgba(0,0,0,0.3), inset 1px 0 0 0 rgba(0,0,0,0.2);
+}
+.group button:last-child:active,
+.group .button:last-child:active {
+  box-shadow: inset 1px 0 0 0 rgba(0,0,0,0.2), inset 0 3px 0 0 rgba(0,0,0,0.3);
+}
+.group button:disabled,
+.group .button:disabled,
+.group button.disabled:active,
+.group .button.disabled:active {
+  box-shadow: none;
+}

@@ -1,0 +1,24 @@
+.overlay {
+  position: absolute;
+  background: rgba(255,255,255,0.85);
+  z-index: 10000;
+  width: 100%;
+  height: 100%;
+  border-radius: 4px;
+}
+.overlay.expanded {
+  position: fixed;
+  border-radius: 0;
+}
+.overlay .fa-spinner {
+  font-size: 18px;
+  left: 50%;
+  top: 50%;
+  margin-left: -9px;
+  margin-top: -9px;
+  position: absolute;
+}
+.overlay.alt {
+  background: rgba(0,0,0,0.85);
+  color: #fff;
+}

@@ -1,5 +1,5 @@
 package     : mysli/web/ui
-version     : 0.0.1
+version     : 0.0.3
 description : Front-end framework for Mysli Dashboard
 license     : GPL-3.0
 authors:
@@ -10,5 +10,6 @@ require:
     mysli/web/response    : ~0
     mysli/web/request     : ~0
     mysli/web/web         : ~0
+    mysli/web/zepto       : ~0
     mysli/util/tplp       : ~0
     mysli/util/output     : ~0

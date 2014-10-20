@@ -20,13 +20,13 @@ class ui {
         $template->set_variable('get_alt', self::get_alt());
         $template->set_variable('get_alt_invert', self::get_alt(true));
         $template->set_variable('alt_link', self::alt_link($route));
-        $template->set_variable('get_navigation', function () use ($route) {
-            $files = fs::ls(fs::ds('mysli/web/ui/tplp'));
+        $template->set_function('get_navigation', function () use ($route) {
+            $files = fs::ls(fs::pkgpath('mysli/web/ui/tplp'));
             $links = [];
 
             foreach ($files as $file) {
 
-                if (substr($file, -5) !== '.tplm' || $file === 'index.tplm') {
+                if (substr($file, -5) !== '.tplp' || $file === 'index.tplp') {
                     continue;
                 }
 
@@ -58,7 +58,10 @@ class ui {
     }
     private static function alt_link($uri) {
         $query = ['alt' => request::get('alt') === 'true' ? 'false' : 'true' ];
-        $url = web::url(request::modify_query($query));
-        return '<a href="'.$url.'mysli-ui-examples/'.$uri.'/">Inverse</a>';
+        $url = web::url(
+                'mysli-ui-examples/'.
+                request::segment(1).
+                request::modify_query($query));
+        return '<a href="'.$url.'">Inverse</a>';
     }
 }

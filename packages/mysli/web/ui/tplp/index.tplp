@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <title>Mysli UI | {title}</title>
-    {'mysli/web/ui/mysli.ui.css'|assets/tags}
+    {'mysli/web/ui/css/mysli.ui.css'|assets/tags}
     {{{
     <style type="text/css">
         h1 {
@@ -66,7 +66,7 @@
     ::print content
 
     {'mysli/web/zepto/zepto.js'|assets/tags}
-    {'mysli/web/ui/mysli.ui.js'|assets/tags}
+    {'mysli/web/ui/js/mysli.ui.js'|assets/tags}
     {{{
     <script>
         if (typeof init === 'function') {

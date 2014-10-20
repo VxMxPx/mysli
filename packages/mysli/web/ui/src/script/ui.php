@@ -3,9 +3,9 @@
 namespace mysli\web\ui\script;
 
 __use(__namespace__, [
-    'mysli/framework' => [
-        'cli/{output,param}' => 'cout,cparam',
-    ]
+    'mysli/util/tplp',
+    'mysli/framework/event',
+    'mysli/framework/cli/{output,param}' => 'cout,cparam',
 ]);
 
 class ui {
@@ -33,8 +33,10 @@ class ui {
 
         if ($values['enable']) {
             self::enable_examples();
-        } else {
+        } elseif ($values['disable']) {
             self::disable_examples();
+        } else {
+            cout::line("Enter --help for help");
         }
     }
 
