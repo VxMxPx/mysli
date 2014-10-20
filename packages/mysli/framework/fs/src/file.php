@@ -213,7 +213,7 @@ namespace mysli\framework\fs {
             if (dir::exists($destination)) {
                 $destination = fs::ds($destination, '/', self::name($source));
             } else {
-                if (!dir::exists(dir::name($destination))) {
+                if (!dir::exists(dirname($destination))) {
                     throw new framework\exception\not_found(
                         "Destination directory not found: `{$destination}`.");
                 }
@@ -325,7 +325,7 @@ namespace mysli\framework\fs {
             if (is_array($filename)) {
                 $collection = [];
                 foreach ($filename as $file) {
-                    $collection[] = self::signature($file);
+                    $collection[$file] = self::signature($file);
                 }
                 return $collection;
             }
