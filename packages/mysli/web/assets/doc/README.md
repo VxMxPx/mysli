@@ -94,6 +94,16 @@ Use `./dot assets --help` to see available commands, basic usage example:
 ./dot assets -wb vendor/package
 ```
 
+You can change default paths, either through command line (see help), so to
+define new segment in `mysli.pkg.ym`, with following content:
+
+```yaml
+assets:
+    source: assets
+    dest  : _dist/assets
+    map   : map.ym
+```
+
 ### Templates
 
 If you're using `tplp` then you can request _assets_
@@ -102,9 +112,9 @@ anywhere in your template with:
 
 ```
 // CSS
-{'vendor/package/css/main.css'|assets/tags:'css'}
+{'vendor/package/css/main.css'|assets/tags}
 // JS
-{'vendor/package/js/main.js'|assets/tags:'js'}
+{'vendor/package/js/main.js'|assets/tags}
 ```
 
 ## Config

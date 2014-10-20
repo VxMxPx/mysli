@@ -2,34 +2,25 @@
 
 namespace mysli\web\assets\script;
 
-__use(__namespace__, [
-    'mysli/framework' => [
-        'fs/{file,fs,dir}',
-        'type/{arr,str}',
-        'exception/*'                   => 'framework/exception/%s',
-        'cli/{output,input,param,util}' => 'cout,cinput,cparam,cutil',
-    ],
-    './{util,assets}' => 'util,assetsc',
-    '../web'
-]);
-
 class assets {
 
-    use util;
-
     /**
-     * CLI frontend.
+     * CLI front-end.
      * @param array $arguments
      * @return null
      */
     static function run(array $args) {
         $params = new cparam('Mysli Assets Builder', $args);
         $params->command = 'assets';
+        $params->description_long = l("* If --map, --source and
+            --destination are not provided, they'll be set from `mysli.pkg.ym`
+            (assets section), if not defined there, defaults will be used.");
+
         $params->add(
             '--watch/-w',
             ['type'    => 'bool',
              'default' => false,
-             'help'    => 'Watch package\'s assets and rebuild if changed']);
+             'help'    => "Watch package's assets and rebuild if changed"]);
         $params->add(
             '--build/-b',
             ['type'    => 'bool',
@@ -38,17 +29,17 @@ class assets {
         $params->add(
             '--map/-m',
             ['type'    => 'str',
-             'default' => 'map.ym',
+             'default' => 'map.ym*',
              'help'    => 'Specify costume map file location (can be .json)']);
         $params->add(
             '--source/-s',
             ['type'    => 'str',
-             'default' => 'assets',
+             'default' => 'assets*',
              'help'    => 'Directory where assets are located']);
         $params->add(
             '--destination/-d',
             ['type'    => 'str',
-             'default' => '_dist/assets',
+             'default' => '_dist/assets*',
              'help'    => 'Build destination']);
         $params->add(
             '--publish/-p',
@@ -62,19 +53,49 @@ class assets {
              'required'   => true]);
 
         $params->parse();
+
         if (!$params->is_valid()) {
             cout::line($params->messages());
-        } else {
-            // Set values and run process
-            $values = $params->values();
-            return self::observe_or_build(
-                $values['package'], $values['source'], $values['destination'],
-                $values['map'], $values['publish'], $values['watch']);
+            return;
         }
+
+        $v = $params->values();
+        $package = $v['package'];
+        $publish = $v['publish'];
+        $watch   = $v['watch'];
+
+        // Check weather path was set || was defined in mysli.pkg || default
+        list(
+            $source,
+            $destination,
+            $map
+        ) = root\assets::get_default_paths($package);
+
+        if (substr($v['source'], -1) === '*') {
+            if (!$source) {
+                $source = substr($v['source'], 0, -1);
+            }
+        } else {
+            $source = $v['source'];
+        }
+        if (substr($v['destination'], -1) === '*') {
+            if (!$destination) {
+                $destination = substr($v['destination'], 0, -1);
+            }
+        } else {
+            $destination = $v['destination'];
+        }
+        if (substr($v['map'], -1) === '*') {
+            if (!$map) {
+                $map = substr($v['map'], 0, -1);
+            }
+        } else {
+            $map = $v['map'];
+        }
+
+        return self::observe_or_build(
+                    $package, $source, $destination, $map, $publish, $watch);
     }
-
-    // private methods
-
 
     /**
      * Check if all required modules are available.
@@ -134,8 +155,12 @@ class assets {
      * @param  array  $changes
      * @return null
      */
-    private static function assets_merge(array $map, $assets, $dest,
-                                                            array $changes) {
+    private static function assets_merge(
+                                array $map,
+                                $assets,
+                                $dest,
+                                array $changes)
+    {
         // For easy short access
         $sett = $map['settings'];
 
@@ -147,8 +172,9 @@ class assets {
                 $file_ext = file::extension($file);
                 $src_file = fs::ds($assets, $file);
                 // defined in ../util
-                $dest_file = fs::ds($dest, self::parse_extention($file,
-                                                                 $sett['ext']));
+                $dest_file = fs::ds($dest, root\assets::parse_extention(
+                                                                $file,
+                                                                $sett['ext']));
 
                 if (!arr::key_in($changes, $file)) {
                     // Still needs to be appened...
@@ -180,9 +206,10 @@ class assets {
                         cout::format("+green+right OK");
                     }
                 }
-                cutil::execute(self::parse_command($sett['process'][$file_ext],
-                                                    $src_file,
-                                                    $dest_file));
+                cutil::execute(self::parse_command(
+                                                $sett['process'][$file_ext],
+                                                $src_file,
+                                                $dest_file));
 
                 // Add content to the merged content
                 $merged .= "\n\n" . file::read($dest_file);
@@ -255,8 +282,14 @@ class assets {
      * @param  boolean $loop
      * @return null
      */
-    private static function observe_or_build($package, $assets, $dest, $map,
-                                             $publish, $loop) {
+    private static function observe_or_build(
+                                        $package,
+                                        $assets,
+                                        $dest,
+                                        $map,
+                                        $publish,
+                                        $loop)
+    {
         // Check if we have a valid assets path
         $assets_path = fs::pkgpath($package, $assets);
         if (!dir::exists($assets_path)) {
@@ -266,7 +299,7 @@ class assets {
 
         // Get map file if available...
         try {
-            $map = self::get_map($package, $assets, $map);
+            $map = root\assets::get_map($package, $assets, $map);
         } catch (\Exception $e) {
             cout::warn($e->getMessage());
             return false;
@@ -299,9 +332,10 @@ class assets {
         // `before` command
         if (isset($map['before'])) {
             foreach ($map['before'] as $before) {
-                $command = self::parse_command($before,
-                                               fs::ds($assets_path, 'null'),
-                                               fs::ds($dest_path, 'null'));
+                $command = self::parse_command(
+                                            $before,
+                                            fs::ds($assets_path, 'null'),
+                                            fs::ds($dest_path, 'null'));
                 cout::line('Call: ' . $command);
                 cout::line(cutil::execute($command));
             }
@@ -317,22 +351,24 @@ class assets {
             if ($rsignature !== $signature) {
                 $changes = self::what_changed(
                     $rsignature, $signature, strlen($assets_path)+1);
+
                 if (!empty($changes)) {
                     cout::line("What changed: \n" . arr::readable($changes));
                     cout::line('Rebuilding assets...');
                     $signature = $rsignature;
-                    // Process files...
+
                     self::assets_merge(
-                                    $map, $assets_path, $dest_path, $changes);
+                        $map, $assets_path, $dest_path, $changes);
 
                     if ($publish) {
                         cout::line("Will publish changes...", false);
-                        if (assetsc::publish($package, $dest)) {
+                        if (root\assets::publish($package, $dest)) {
                             cout::format("+green+right OK");
                         } else {
                             cout::format("+red+right FAILED");
                         }
                     }
+
                 } else {
                     cout::line('No changes in source files.');
                 }
@@ -341,7 +377,6 @@ class assets {
             $loop and sleep(3);
         } while ($loop);
     }
-
     /**
      * Get list of files to observe
      * @param  string $dir

@@ -2,15 +2,11 @@
 
 namespace mysli\web\assets\tplp;
 
-__use(__namespace__,
-    'mysli/framework/fs/file',
-    ['mysli/framework/exception/*' => 'framework/exception/%s'],
-    './assets',
-    '../web'
-);
-
 class util {
-/**
+
+    private static $web_dir = 'assets';
+
+    /**
      * {'mysli/cms/blog/js/main.js'|assets/tags}
      * @param  string $id
      * @return string
@@ -35,19 +31,22 @@ class util {
      * @return string
      */
     private static function resolve_id($id) {
+
         $seg = explode('/', $id);
-        $web_path = web::path('assets', implode('_', array_slice($seg, 0, 3)));
+        $wp1 = web::path(self::$web_dir, implode('_', array_slice($seg, 0, 3)));
+        $wp2 = web::path(self::$web_dir, implode('_', array_slice($seg, 0, 2)));
+
         // Get package name
-        if (file::exists($web_path)) {
+        if (file::exists($wp1)) {
             $package = implode('/', array_slice($seg, 0, 3));
             $file = implode('/', array_slice($seg, 3));
-        } elseif (file::exists(implode('_', array_slice($seg, 0, 2)))) {
+        } elseif (file::exists($wp2)) {
             $package = implode('/', array_slice($seg, 0, 2));
             $file = implode('/', array_slice($seg, 2));
         } else {
             throw new framework\exception\not_found("File not found: `{$id}`");
         }
 
-        return [$package, ($file?:null)];
+        return [$package, ($file ?: null)];
     }
 }
