@@ -9,21 +9,21 @@ namespace mysli\framework\cli {
 
     class param {
 
-        protected $line_width = 75;
+        private $term_width;
 
-        protected $params = [];
-        protected $values = [];
-        protected $messages = [];
-        protected $is_valid = false;
+        private $params = [];
+        private $values = [];
+        private $messages = [];
+        private $is_valid = false;
 
         public $title = null;
         public $command = null;
         public $description = null;
         public $description_long = null;
 
-        protected $arguments = [];
+        private $arguments = [];
 
-        protected $defaults = [
+        private $defaults = [
             'id'         => null,  // unique id (position || long || short)
             'short'      => null,  // short (-s)
             'long'       => null,  // long (--long)
@@ -54,6 +54,9 @@ namespace mysli\framework\cli {
          * @param array  $arguments
          */
         function __construct($title=null, array $arguments=null) {
+
+            $this->term_width = util::terminal_width() ?: 75;
+
             $this->arguments = !is_null($arguments)
                 ? $arguments
                 : array_slice($_SERVER['argv'], 1);
@@ -269,8 +272,8 @@ namespace mysli\framework\cli {
             $pargs   = $this->fromat_arguments_detailed('positional');
             $dargs   = $this->fromat_arguments_detailed();
             $description = $this->description
-                ? (strlen($this->description) > 75
-                    ? substr($this->description, 0, 72).'...'
+                ? (strlen($this->description) > $this->term_width
+                    ? substr($this->description, 0, ($this->term_width-3)).'...'
                     : $this->description)
                 : '';
 
@@ -281,7 +284,8 @@ namespace mysli\framework\cli {
                 ($pargs ? "\n{$pargs}\n" : '').
                 ($dargs ? "\nOptions:\n{$dargs}\n" : '').
                 ($this->description_long
-                    ? "\n" . wordwrap($this->description_long) . "\n"
+                    ? "\n".wordwrap($this->description_long, $this->term_width).
+                      "\n"
                     : '');
         }
 
@@ -381,6 +385,7 @@ namespace mysli\framework\cli {
             $params = [];
             $lkey = 0;
             $ldefault = 0;
+            $lmax = $this->term_width - 15;
 
             foreach ($this->params as $pid => $opt) {
                 if (($type === 'positional' && !$opt['positional']) ||
@@ -433,7 +438,7 @@ namespace mysli\framework\cli {
             // --key [default]
             $lfull = ($lkey + 2) + ($ldefault ? $ldefault + 3 : 2);
             // if too long, new line
-            if ($lfull > 60) {
+            if ($lfull > $lmax) {
                 $lfull = 4;
             }
 
@@ -442,7 +447,7 @@ namespace mysli\framework\cli {
                 $opt['default'] .= str_repeat(
                     ' ', $ldefault - strlen($opt['default']));
                 $opt['help'] = wordwrap(
-                    $opt['help'], $this->line_width - $lfull);
+                    $opt['help'], $this->term_width - $lfull);
                 if ($lfull === 4) {
                     $opt['help'] = "\n{$opt['help']}\n";
                 }
