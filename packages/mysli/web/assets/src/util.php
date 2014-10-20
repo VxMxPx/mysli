@@ -44,9 +44,9 @@ trait util {
                     "Map file not found: {$filename}.", 1);
             }
             if (substr($map, -3) === '.ym') {
-                return ym::decode_file($filename);
+                $map = ym::decode_file($filename);
             } elseif (substr($map, -5) === '.json') {
-                return json::decode_file($filename);
+                $map = json::decode_file($filename);
             } else {
                 throw new framework\exception\argument(
                     "Invalid file type: `{$map}`", 1);
@@ -61,8 +61,9 @@ trait util {
             // Default settings
             $map_default = ym::decode_file(
                 fs::pkgpath('mysli/web/assets/data/defaults.ym'));
+
             // Merge with map!
-            self::$cache['$package'] = arr::merge($map_default, $map);
+            self::$cache[$package] = arr::merge($map_default, $map);
         }
 
         return self::$cache[$package];

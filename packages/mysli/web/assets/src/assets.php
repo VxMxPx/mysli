@@ -21,7 +21,7 @@ class assets {
     static function publish($package, $dist='_dist/assets') {
         $srcpath  = fs::pkgpath($package, $dist);
         $id = str_replace('/', '_', $package);
-        $destpath = web::path($id);
+        $destpath = web::path('assets', $id);
 
         if (!dir::exists($srcpath)) {
             throw new framework\exception\not_found(
@@ -41,7 +41,7 @@ class assets {
      */
     static function destroy($package) {
         $id = str_replace('/', '_', $package);
-        $path = web::path($id);
+        $path = web::path('assets', $id);
         if (dir::exists($path)) {
             return dir::remove($path);
         } else {
@@ -58,11 +58,11 @@ class assets {
      */
     static function get_links($package, $file=null, $filter=null) {
         $id = str_replace('/', '_', $package);
-        if (!file::exists(web::path($id))) {
+        if (!file::exists(web::path('assets', $id))) {
             throw new framework\exception\not_found(
                 "Public folder not found: `{$id}`", 1);
         }
-        $map = self::get_map($package);
+        $map = self::get_map($package, 'assets', 'map.ym');
         $debug = config::select('mysli/web/assets', 'debug', false);
         $links = [];
         foreach ($map['files'] as $main => $props) {
@@ -70,14 +70,14 @@ class assets {
                 continue;
             }
             if (!$debug) {
-                $links[] = web::url($id, $main);
+                $links[] = web::url("assets/{$id}/{$main}");
             } else {
                 foreach ($props['include'] as $asset) {
                     $asset = self::parse_extention($asset,
                                                    $map['settings']['ext']);
                     if (!$filter ||
                     substr($asset, -(strlen($filter))) === $filter) {
-                        $links[] = web::url($id, $asset);
+                        $links[] = web::url("assets/{$id}/{$asset}");
                     }
                 }
             }
@@ -97,9 +97,9 @@ class assets {
         $links = self::get_links($package, $file, $filter);
         $tags = [];
         foreach ($links as $link) {
-            if (substr($link, 0, -3) === '.js') {
+            if (substr($link, -3) === '.js') {
                 $tags[] = '<script src="'.$link.'"></script>';
-            } elseif (substr($link, 0, -4) === '.css') {
+            } elseif (substr($link, -4) === '.css') {
                 $tags[] =
                     '<link rel="stylesheet" type="text/css" href="'.$link.'">';
             } else {

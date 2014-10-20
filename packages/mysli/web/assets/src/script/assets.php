@@ -9,7 +9,7 @@ __use(__namespace__, [
         'exception/*'                   => 'framework/exception/%s',
         'cli/{output,input,param,util}' => 'cout,cinput,cparam,cutil',
     ],
-    './{util,assetsc}',
+    './{util,assets}' => 'util,assetsc',
     '../web'
 ]);
 
@@ -52,7 +52,7 @@ class assets {
              'help'    => 'Build destination']);
         $params->add(
             '--publish/-p',
-            ['type'    => 'str',
+            ['type'    => 'bool',
              'default' => false,
              'help'    => 'Publish changes to web directory']);
         $params->add(
@@ -122,7 +122,7 @@ class assets {
     private static function parse_command($command, $src, $dest) {
         return str_replace(
             ['{source}', '{dest}', '{source_dir}', '{dest_dir}'],
-            [$src, $dest, file::name($src), file::name($dest)],
+            [$src, $dest, dirname($src), dirname($dest)],
             $command
         );
     }
@@ -151,10 +151,10 @@ class assets {
                                                                  $sett['ext']));
 
                 if (!arr::key_in($changes, $file)) {
-                    continue;
+                    // Still needs to be appened...
+                    $merged .= "\n\n" . file::read($dest_file);
                 } else {
                     cout::line('Processing: ' . $file);
-                    $processed++;
                 }
 
                 if (!file::exists($src_file)) {
@@ -162,13 +162,25 @@ class assets {
                     continue;
                 }
 
-                if (!arr::key_in($sett['ext'], $ext)) {
-                    cout::warn("Unknown extension, cannot process: `{$ext}`");
+                if (!arr::key_in($sett['process'], $file_ext)) {
+                    cout::warn(
+                        "Unknown extension, cannot process: `{$file_ext}`");
                     continue;
                 }
 
                 // Execute action for file
-                cutil::execute(self::parse_command($sett['process'][$ext],
+                if (!dir::exists(dirname($dest_file))) {
+                    cout::line(
+                        "Directory will be created: `".dirname($dest_file)."`",
+                        false);
+
+                    if (!dir::create(dirname($dest_file))) {
+                        cout::format("+red+right FAILED");
+                    } else {
+                        cout::format("+green+right OK");
+                    }
+                }
+                cutil::execute(self::parse_command($sett['process'][$file_ext],
                                                     $src_file,
                                                     $dest_file));
 
@@ -182,7 +194,7 @@ class assets {
                 $main_ext = file::extension($main);
                 file::create_recursive($dest_main);
                 try {
-                    file::write($dest_file, $merged);
+                    file::write($dest_main, $merged);
                 } catch (\Exception $e) {
                     cout::error($e->getMessage());
                     continue;
@@ -190,15 +202,16 @@ class assets {
                 cout::format('Saving+right+green OK');
                 if ($props['compress']
                     && arr::key_in($sett['compress'], $main_ext)) {
-                    if (cutil::execute(self::parse_command(
+                    cout::line("Compress!");
+                    cutil::execute(self::parse_command(
                                         $sett['compress'][$main_ext],
                                         $dest_main,
-                                        $dest_main)))
-                    {
-                        cout::format("Compressing +right+green OK");
-                    } else {
-                        cout::format("Compressing +right+red OK");
-                    }
+                                        $dest_main));
+                    // {
+                    //     cout::format("+right+green OK");
+                    // } else {
+                    //     cout::format("+right+red FAILED");
+                    // }
                 }
             }
         }
@@ -261,7 +274,7 @@ class assets {
 
         // Check weather required modules are available
         if ($map['settings']['require'] !== false) {
-            if (!self::check_required_modules($map['settings']['required'])) {
+            if (!self::check_required_modules($map['settings']['require'])) {
                 return false;
             }
         }
@@ -274,7 +287,7 @@ class assets {
                 cout::line('Terminated.');
                 return false;
             } else {
-                if (dir::create($dest)) {
+                if (dir::create($dest_path)) {
                     cout::success("Directory successfully created.");
                 } else {
                     cout::error("Failed to create directory.");
@@ -294,27 +307,31 @@ class assets {
             }
         }
 
-        $signature = dir::signature($assets_path);
+        $signature = [];
+        $observable_files = self::observable_files($assets_path, $map['files']);
 
         do {
-            $rsignature = dir::signature(fs::ds($assets_path, 'src'));
+
+            $rsignature = file::signature($observable_files);
 
             if ($rsignature !== $signature) {
                 $changes = self::what_changed(
-                    $rsignature, $signature, strlen($assets_path));
+                    $rsignature, $signature, strlen($assets_path)+1);
                 if (!empty($changes)) {
-                    cout::line('What changed: ' . arr::readable($changes));
+                    cout::line("What changed: \n" . arr::readable($changes));
                     cout::line('Rebuilding assets...');
                     $signature = $rsignature;
                     // Process files...
-                    self::assets_merge($map,
-                                        $assets_path,
-                                        $dest_path,
-                                        $changes);
+                    self::assets_merge(
+                                    $map, $assets_path, $dest_path, $changes);
 
                     if ($publish) {
-                        cout::line("Will publish changes...");
-                        assetsc::publish($package, $dest);
+                        cout::line("Will publish changes...", false);
+                        if (assetsc::publish($package, $dest)) {
+                            cout::format("+green+right OK");
+                        } else {
+                            cout::format("+red+right FAILED");
+                        }
                     }
                 } else {
                     cout::line('No changes in source files.');
@@ -323,5 +340,28 @@ class assets {
 
             $loop and sleep(3);
         } while ($loop);
+    }
+
+    /**
+     * Get list of files to observe
+     * @param  string $dir
+     * @param  array  $files
+     * @return array
+     */
+    private static function observable_files($dir, $files) {
+        $observable = [];
+
+        foreach ($files as $prop) {
+            foreach ($prop['include'] as $file) {
+                $ffile = fs::ds($dir, $file);
+                if (!file::exists($ffile)) {
+                    cout::warn("File not found: `{$file}`, will skip.");
+                } else {
+                    $observable[] = $ffile;
+                }
+            }
+        }
+
+        return $observable;
     }
 }

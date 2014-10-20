@@ -1,6 +1,6 @@
 <?php
 
-namespace mysli\web\asses\tplp;
+namespace mysli\web\assets\tplp;
 
 __use(__namespace__,
     'mysli/framework/fs/file',
@@ -36,9 +36,9 @@ class util {
      */
     private static function resolve_id($id) {
         $seg = explode('/', $id);
-
+        $web_path = web::path('assets', implode('_', array_slice($seg, 0, 3)));
         // Get package name
-        if (file::exists(web::path(implode('_', array_slice($seg, 0, 3))))) {
+        if (file::exists($web_path)) {
             $package = implode('/', array_slice($seg, 0, 3));
             $file = implode('/', array_slice($seg, 3));
         } elseif (file::exists(implode('_', array_slice($seg, 0, 2)))) {
