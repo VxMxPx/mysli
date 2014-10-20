@@ -19,5 +19,5 @@ namespace tplp\generic\test;
 <?php echo (count($user['posts'])) ? $user['posts'] : ''; ?>
 <?php echo (!$name) ? 'Anonymous' : $name; ?>
 <?php echo (!$name and !$user['name']) ? 'Anonymous' : ''; ?>
-<?php echo (!$name and !$user['name']) ? $tplp_translator_service('ANONYMOUS') : ''; ?>
-<?php echo (!$name and !$user['name']) ? $tplp_translator_service(['ANONYMOUS', $count], [$variable['1'], $variable['2']]) : ''; ?>
+<?php echo (!$name and !$user['name']) ? $tplp_func_translator_service('ANONYMOUS') : ''; ?>
+<?php echo (!$name and !$user['name']) ? $tplp_func_translator_service(['ANONYMOUS', $count], [$variable['1'], $variable['2']]) : ''; ?>

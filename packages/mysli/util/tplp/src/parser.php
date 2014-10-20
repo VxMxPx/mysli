@@ -167,7 +167,11 @@ class parser {
 
             try {
                 // Find ::print regions
-                $line = self::find_print($line, $sets);
+                list($line, $break) = self::find_print($line, $sets);
+                if ($break) {
+                    $output[] = $line;
+                    continue;
+                }
 
                 // Find ::set opened
                 if (($id = self::find_open_set($line))) {
@@ -343,17 +347,17 @@ class parser {
      * Find ::print <content> regions
      * @param  string $line
      * @param  array  $sets
-     * @return string
+     * @return array  [line, break]
      */
     private static function find_print($line, array $sets) {
         if (preg_match('/^[ \t]*?::print ([a-z0-9_]+)$/', $line, $match)) {
             if (isset($sets[$match[1]])) {
-                return $sets[$match[1]];
+                return [$sets[$match[1]], true];
             } else {
-                return '';
+                return ['', true];
             }
         }
-        return $line;
+        return [$line, false];
     }
     /**
      * Find open ::set
@@ -791,7 +795,7 @@ class parser {
             $variables = trim($variables, "'") ? ', [' . $variables . ']' : '';
             // Do we have plural?
             $key = $plural ? "['$key', $plural]" : "'{$key}'";
-            return '$tplp_translator_service(' . $key . $variables . ')';
+            return '$tplp_func_translator_service(' . $key . $variables . ')';
         }, $string);
     }
     /**

@@ -4,7 +4,7 @@ namespace mysli\util\tplp;
 
 __use(__namespace__, [
     'mysli/framework' => [
-        'fs/{fs/file}',
+        'fs/{fs,file}',
         'exception/*' => 'framework/exception/%s'
     ]
 ]);
@@ -38,15 +38,15 @@ class template {
      * @param callable $call
      */
     function set_function($name, $call) {
-        $this->variables["tplp_$name"] = $call;
+        $this->variables["tplp_func_{$name}"] = $call;
     }
     /**
      * Unset local function by name
      * @param  string $name
      */
     function unset_function($name) {
-        if (isset($this->variables["tplp_{$name}"])) {
-            unset($this->variables["tplp_{$name}"]);
+        if (isset($this->variables["tplp_func_{$name}"])) {
+            unset($this->variables["tplp_func_{$name}"]);
         }
     }
     /**
@@ -84,7 +84,7 @@ class template {
         // Assign variables...
         $variables = array_merge($this->variables, $variables);
         foreach($variables as $_tplpvar => $_tplpval) {
-            $_tplpvar = $_tplpval;
+            $$_tplpvar = $_tplpval;
         }
 
         ob_start();
@@ -107,7 +107,7 @@ class template {
                                   $file.'.php');
 
         if (!file::exists($cache_file)) {
-            $tplp_folder = fs::datpath($this->package, 'tplp');
+            $tplp_folder = fs::pkgpath($this->package, 'tplp');
             $tplp_path = fs::pkgpath($this->package, "tplp/{$file}.tplp");
             if (!file::exists($tplp_path)) {
                 throw new framework\exception\not_found(
@@ -116,7 +116,7 @@ class template {
             }
             $parsed = parser::file("{$file}.tplp", $tplp_folder);
             file::create_recursive($cache_file, true);
-            file::write($cache_file, $parser);
+            file::write($cache_file, $parsed);
         }
 
         return $cache_file;
