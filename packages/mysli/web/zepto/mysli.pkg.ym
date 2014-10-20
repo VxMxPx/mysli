@@ -1,5 +1,5 @@
 package     : mysli/web/zepto
-version     : 0.0.1
+version     : 0.0.2
 description : Mysli Assets: Zepto.js – a minimalist JavaScript library.
 license:
     - GPL-3.0
