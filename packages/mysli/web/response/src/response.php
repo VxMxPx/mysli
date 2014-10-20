@@ -24,7 +24,7 @@ class response {
                 "'{$file}', on line: '{$line}'.");
         }
 
-        event::trigget('mysli/web/response:apply_headers', [self::$headers]);
+        event::trigger('mysli/web/response:apply_headers', [self::$headers]);
 
         foreach (self::$headers as $type => $header) {
             if (substr($type, 0, 1) !== '-') {
