@@ -3,6 +3,7 @@
 namespace mysli\util\tplp;
 
 __use(__namespace__, [
+    'mysli/util/config',
     'mysli/framework' => [
         'fs/{fs,file}',
         'exception/*' => 'framework/exception/%s'
@@ -15,11 +16,15 @@ class template {
     private $translator;
     private $variables;
 
+    private $source;
+    private $dest;
+
     /**
      * @param string $package
      */
     function __construct($package) {
         $this->package = $package;
+        list($this->source, $this->dest) = util::get_default_paths($package);
     }
     /**
      * Set translator for template
@@ -102,19 +107,20 @@ class template {
      * @return string
      */
     private function create_and_get_file($file) {
-        $cache_file = fs::datpath('mysli/tplp/cache/' .
-                                  str_replace('/', '.', $this->package),
-                                  $file.'.php');
 
-        if (!file::exists($cache_file)) {
-            $tplp_folder = fs::pkgpath($this->package, 'tplp');
-            $tplp_path = fs::pkgpath($this->package, "tplp/{$file}.tplp");
-            if (!file::exists($tplp_path)) {
+        $cache_file  = fs::ds($this->dest, $file.'.php');
+        $source_file = fs::ds($this->source, $file.'.tplp');
+
+        if (!file::exists($cache_file) ||
+            config::select('mysli/util/tplp', 'debug'))
+        {
+            if (!file::exists($source_file)) {
                 throw new framework\exception\not_found(
                     "File `{$file}.tplp` not found in `" .
-                    $tplp_folder . '`', 1);
+                    $this->source . '`', 1);
             }
-            $parsed = parser::file("{$file}.tplp", $tplp_folder);
+
+            $parsed = parser::file("{$file}.tplp", $this->source);
             file::create_recursive($cache_file, true);
             file::write($cache_file, $parsed);
         }

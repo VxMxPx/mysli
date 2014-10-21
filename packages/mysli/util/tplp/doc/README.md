@@ -875,6 +875,28 @@ modules.tplp
 </div>
 ```
 
+## Config
+
+| Key    | Default | Description                                         |
+|--------|---------|-----------------------------------------------------|
+| debug  | false   | If true, templates will be rebuild on each request. |
+
+
+## Paths
+
+You can define costume source and destionation path for your templates
+(and hence prebuild them), to your `mysli.pkg.ym` file add section:
+
+```yaml
+tplp:
+    source      : tplp
+    destination : _dist/tplp
+```
+
+... if you'll build your templates from command line, you can exclude files
+from parsing by prefixing them with underline e.g.: `_layout.tplp`. You should
+exclude layouts and modules -- those will be parsed
+as they're included by other file.
 
 ## License
 

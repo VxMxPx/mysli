@@ -1,6 +1,6 @@
 package     : mysli/util/tplp
 description : Mysli Util Template parser.
-version     : 0.1.20
+version     : 0.2.40
 license     : GPL-3.0
 authors:
     - Marko Gajšt (Developer) <m@gaj.st>
@@ -10,4 +10,5 @@ require:
     mysli/framework/json      : ~0
     mysli/framework/type      : ~0
     mysli/framework/exception : ~0
+    mysli/util/config         : ~0
 
