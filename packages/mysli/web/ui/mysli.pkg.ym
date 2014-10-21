@@ -13,3 +13,5 @@ require:
     mysli/web/zepto       : ~0
     mysli/util/tplp       : ~0
     mysli/util/output     : ~0
+tplp:
+    destination: _dist/tplp
