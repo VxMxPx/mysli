@@ -1,4 +1,4 @@
-::extend index set content
+::extend _layout set content
 
 <div class="section">
     <h2>Button Styles</h2>

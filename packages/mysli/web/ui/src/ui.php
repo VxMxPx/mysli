@@ -26,7 +26,7 @@ class ui {
 
             foreach ($files as $file) {
 
-                if (substr($file, -5) !== '.tplp' || $file === 'index.tplp') {
+                if (substr($file, -5) !== '.tplp' || $file === '_layout.tplp') {
                     continue;
                 }
 

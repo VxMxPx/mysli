@@ -1,4 +1,4 @@
-::extend index set content
+::extend _layout set content
 
 <div class="section">
     <div class="container default {get_alt}">
@@ -58,7 +58,7 @@
                     <label for="ff_gender_female">Female</label>
 
                     <input type="radio" id="ff_gender_not" name="gender" />
-                    <label for="ff_gender_not">I\'d rather not say...</label>
+                    <label for="ff_gender_not">I'd rather not say...</label>
 
                     <input type="radio" id="ff_gender_na" name="gender" disabled="true" />
                     <label for="ff_gender_na">Not available</label>
