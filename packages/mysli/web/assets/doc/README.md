@@ -99,9 +99,9 @@ define new segment in `mysli.pkg.ym`, with following content:
 
 ```yaml
 assets:
-    source: assets
-    dest  : _dist/assets
-    map   : map.ym
+    source      : assets
+    destination : _dist/assets
+    map         : map.ym
 ```
 
 ### Templates

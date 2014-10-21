@@ -22,11 +22,6 @@ class assets {
              'default' => false,
              'help'    => "Watch package's assets and rebuild if changed"]);
         $params->add(
-            '--build/-b',
-            ['type'    => 'bool',
-             'default' => true,
-             'help'    => 'Build assets']);
-        $params->add(
             '--map/-m',
             ['type'    => 'str',
              'default' => 'map.ym*',
@@ -71,25 +66,13 @@ class assets {
             $map
         ) = root\assets::get_default_paths($package);
 
-        if (substr($v['source'], -1) === '*') {
-            if (!$source) {
-                $source = substr($v['source'], 0, -1);
-            }
-        } else {
+        if (substr($v['source'], -1) !== '*') {
             $source = $v['source'];
         }
-        if (substr($v['destination'], -1) === '*') {
-            if (!$destination) {
-                $destination = substr($v['destination'], 0, -1);
-            }
-        } else {
+        if (substr($v['destination'], -1) !== '*') {
             $destination = $v['destination'];
         }
-        if (substr($v['map'], -1) === '*') {
-            if (!$map) {
-                $map = substr($v['map'], 0, -1);
-            }
-        } else {
+        if (substr($v['map'], -1) !== '*') {
             $map = $v['map'];
         }
 
@@ -151,7 +134,7 @@ class assets {
      * Grab multiple files, and merge them into one.
      * @param  array  $map
      * @param  string $assets   assets path
-     * @param  string $dest     dist path
+     * @param  string $dest     destination path
      * @param  array  $changes
      * @return null
      */
@@ -315,8 +298,9 @@ class assets {
         // Dest path
         $dest_path = fs::pkgpath($package, $dest);
         if (!dir::exists($dest_path)) {
-            if (!cinput::confirm(
-                "Dist directory (`{$dest}`) not found. Create it now?")) {
+            if (!cinput::confirm(l("Destination directory (`{$dest}`) not found.
+                                    Create it now?")))
+            {
                 cout::line('Terminated.');
                 return false;
             } else {

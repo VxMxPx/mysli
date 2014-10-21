@@ -191,16 +191,16 @@ class assets {
     static function get_default_paths($package) {
         $meta = pkgm::meta($package);
 
-        $source = null;
-        $dest   = null;
-        $map    = null;
+        $source = 'assets';
+        $dest   = '_dist/assets';
+        $map    = 'map.ym';
 
         if (isset($meta['assets'])) {
             if (isset($meta['assets']['source'])) {
                 $source = $meta['assets']['source'];
             }
-            if (isset($meta['assets']['dest'])) {
-                $dest = $meta['assets']['dest'];
+            if (isset($meta['assets']['destination'])) {
+                $dest = $meta['assets']['destination'];
             }
             if (isset($meta['assets']['map'])) {
                 $map = $meta['assets']['map'];
