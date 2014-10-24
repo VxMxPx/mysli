@@ -43,7 +43,7 @@
                     <input type="radio" name="gender" id="gender_female" />
                     <label for="gender_female">Female</label>
                     <input type="radio" name="gender" id="gender_unknown" />
-                    <label for="gender_unknown">I\'d rather not say...</label>
+                    <label for="gender_unknown">I'd rather not say...</label>
                 </div>
                 <div class="field divided top row">
                     <div class="column x4">
