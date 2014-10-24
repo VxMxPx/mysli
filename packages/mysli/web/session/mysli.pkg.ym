@@ -1,5 +1,5 @@
 package     : mysli/web/session
-version     : 0.0.2
+version     : 0.0.10
 description : Session Library.
 license     : GPL-3.0
 authors:
@@ -10,5 +10,6 @@ require:
     mysli/framework/type      : ~0
     mysli/framework/fs        : ~0
     mysli/framework/exception : ~0
+    mysli/web/users           : ~0
     mysli/web/cookie          : ~0
     mysli/web/request         : ~0

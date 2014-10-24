@@ -8,6 +8,7 @@ __use(__namespace__, '
     mysli/framework/type/str
     mysli/framework/fs/{fs,file}
     mysli/framework/exception/{...} AS framework/exception/{...}
+    mysli/web/users
     mysli/web/cookie
     mysli/web/request
 ');
@@ -90,7 +91,7 @@ class session {
             return false;
         }
 
-        if (!$user->is_active()) {
+        if (!$user->is_active || $user->is_deleted) {
             self::destroy($session_id);
             return false;
         }
@@ -261,7 +262,7 @@ class session {
      * @param  array  $session
      * @return boolean
      */
-    private function write($id, array $session) {
+    private static function write($id, array $session) {
         return json::encode_file(self::path_from_id($id), $session);
     }
 }
