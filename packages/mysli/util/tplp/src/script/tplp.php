@@ -142,6 +142,7 @@ class tplp {
         }
 
         $signature = [];
+        $initial = [];
 
         do {
 
@@ -152,13 +153,28 @@ class tplp {
                 $changes = self::what_changed(
                             $rsignature, $signature, strlen($source)+1);
 
+                if (!$initial) {
+                    $initial = $changes;
+                }
+
                 if (!empty($changes)) {
 
-                    // cout::line("What changed: \n" . arr::readable($changes));
+                    // Check if master changed...
+                    foreach ($changes as $file => $change) {
+                        if (strpos(file::name($file), '_') !== false) {
+                            cout::line("Layout file changed: `{$file}`.");
+                            $changes = $initial;
+                            break;
+                        }
+                    }
 
                     $signature = $rsignature;
 
                     foreach ($changes as $file => $change) {
+
+                        $real_path = fs::ds($source, $file);
+                        $real_file = file::name($real_path, true);
+                        $real_source = dirname($real_path);
 
                         $file_padded = strlen($file) > 35
                             ? substr($file, 0, 32) . '...'
@@ -179,7 +195,7 @@ class tplp {
 
                         cout::line("Parsing > ", false);
                         try {
-                            $parsed = parser::file("$file", $source);
+                            $parsed = parser::file($real_file, $real_source);
                             cout::line("Writting > ", false);
                             file::create_recursive($destination_file, true);
                             file::write($destination_file, $parsed);
@@ -213,9 +229,9 @@ class tplp {
                                 $observable, self::observable_files($fpath));
                 continue;
             }
-            if (substr($file, 0, 1) === '_') {
-                continue;
-            }
+            // if (substr($file, 0, 1) === '_') {
+            //     continue;
+            // }
             if (substr($file, -5) !== '.tplp') {
                 continue;
             }

@@ -18,7 +18,7 @@ class tplp {
      * @param  array  $variables
      * @return mixed  string (rendered template) or mysli\util\tplp\template
      */
-    static function select($package, array $file=null, array $variables=null) {
+    static function select($package, $file=null, array $variables=[]) {
 
         if (!isset(self::$cache[$package])) {
             self::$cache[$package] = new template($package);

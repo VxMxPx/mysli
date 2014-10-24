@@ -12,7 +12,7 @@ class template {
 
     private $package;
     private $translator;
-    private $variables;
+    private $variables = [];
 
     private $source;
     private $dest;
@@ -29,7 +29,7 @@ class template {
      * @param object $translator
      */
     function set_translator($translator) {
-        $this->translator;
+        $this->translator = $translator;
         $this->set_function('translator_service', function () {
             return call_user_func_array(
                         [$this->translator, 'translate'], func_get_args());
