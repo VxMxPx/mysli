@@ -10,10 +10,10 @@ namespace mysli\framework\core {
      * @return null
      */
     function __init(
-        $datpath,
-        $pkgpath,
-        $autoloader=['\\mysli\\framework\\core\\autoloader', 'load'],
-        $injector='\\mysli\\framework\\core\\inject') {
+                $datpath,
+                $pkgpath,
+                $autoloader=['\\mysli\\framework\\core\\autoloader', 'load'])
+    {
 
         if (defined('MYSLI_PKGPATH') || defined('MYSLI_DATPATH')) {
             throw new \Exception(
@@ -38,6 +38,6 @@ namespace mysli\framework\core {
         }
 
         spl_autoload_register($autoloader);
-        class_alias($injector, 'inject');
+        class_alias($autoloader[0], 'core\\autoloader');
     }
 }

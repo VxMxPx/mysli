@@ -64,35 +64,93 @@ function l($string) {
 /**
  * Inject shortcut.
  * @param  string $namespace
- * @param  mixed  ...        parameters to inject, string or array.
+ * @param  string $use
  * @return null
  */
-function __use($namespace) {
-    $inject = \inject::to($namespace);
-    foreach (array_slice(func_get_args(), 1) as $pkg) {
-        // ['vendor/pkg' => 'alias']
-        if (is_array($pkg)) {
-            foreach ($pkg as $spkg => $salias) {
-                if (is_numeric($spkg)) {
-                    $spkg = $salias;
-                    $salias = null;
-                }
-                // ['vendor/meta' => ['pkg', 'pkg' => 'alias']]
-                if (is_array($salias)) {
-                    foreach ($salias as $sspkg => $ssalias) {
-                        if (is_numeric($sspkg)) {
-                            $sspkg = $ssalias;
-                            $ssalias = null;
-                        }
-                        $inject->from($spkg.'/'.$sspkg, $ssalias);
-                    }
-                } else {
-                    $inject->from($spkg, $salias);
-                }
-            }
+function __use($namespace, $use) {
+
+    $namespace = str_replace('\\', '/', $namespace);
+    $lines = explode("\n", $use);
+
+    $segments = explode('/', $namespace);
+
+    if (file_exists(
+        MYSLI_PKGPATH . '/' .
+        implode('/', array_slice($segments, 0, 2)) . '/' .
+        'mysli.pkg.ym'))
+    {
+        $package = implode('/', array_slice($segments, 0, 2));
+    } else {
+        $package = implode('/', array_slice($segments, 0, 3));
+    }
+
+    foreach ($lines as $line) {
+
+        $line = trim(strtolower($line));
+
+        // Empty line, skip
+        if (empty($line)) {
             continue;
         }
-        $inject->from($pkg, null);
+
+        // Comment, skip
+        if (substr($line, 0, 1) === '#') {
+            continue;
+        }
+
+        // is it internal?
+        if (substr($line, 0, 1) === '.') {
+            $line = $package . substr($line, 1);
+        }
+
+        // Contains AS?
+        if (strpos($line, ' as ')) {
+            list($from, $as) = explode(' as ', $line, 2);
+            $as   = trim($as);
+            $from = trim($from);
+        } else {
+            $from = $line;
+            $as   = substr($line, strrpos($line, '/')+1);
+        }
+
+        // is multiple insersion?
+        if (strpos($from, ',')) {
+
+            $segments_from = explode('/', $from);
+            $from = implode('/', array_slice($segments_from, 0, -1));
+            $last_from = trim(array_slice($segments_from, -1)[0], '{}');
+            $multiple_from = explode(',', $last_from);
+
+            if (strpos($as, ',')) {
+                $segments_as = explode('/', $as);
+                $as = implode('/', array_slice($segments_as, 0, -1));
+                $last_as = trim(array_slice($segments_as, -1)[0], '{}');
+                $multiple_as = explode(',', $last_as);
+                if (count($multiple_as) !== count($multiple_from)) {
+                    throw new \Exception(
+                        "Expected the same amout of elements: `{$line}` ".
+                        "when using `AS`. (".
+                        implode(',', $multiple_from).") != (".
+                        implode(',', $multiple_as).")");
+                }
+            } else {
+                $multiple_as = $multiple_from;
+            }
+
+            foreach ($multiple_from as $k => $file) {
+                if (strpos($as, '{...}')) {
+                    $asf = str_replace('{...}', $multiple_as[$k], $as);
+                } else {
+                    $asf = trim($as.'/'.$multiple_as[$k], '/');
+                }
+                $asf = $namespace . '/' . $asf;
+                \core\autoloader::add_alias("{$from}/{$file}", $asf);
+            }
+
+            continue;
+        }
+
+        $as = $namespace . '/' . $as;
+        \core\autoloader::add_alias($from, $as);
     }
-    return $inject;
 }
