@@ -1,7 +1,6 @@
 --TEST--
 --FILE--
 <?php
-include __DIR__.'/../_common.php';
 use mysli\util\datetime as dtime;
 
 $dt = new dtime('2014-04-01 12:10:20', 'UTC');

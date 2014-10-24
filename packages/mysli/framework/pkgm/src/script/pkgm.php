@@ -2,12 +2,12 @@
 
 namespace mysli\framework\pkgm\script;
 
-__use(__namespace__,
-    ['./pkgm' => 'mpkgm'],
-    ['../cli/{param,output,input}' => 'param,cout,cin'],
-    '../type/arr',
-    '../fs'
-);
+__use(__namespace__, '
+    ./pkgm as root/pkgm
+    mysli/framework/cli/{param,output,input} AS {param,cout,cin}
+    mysli/framework/type/arr
+    mysli/framework/fs
+');
 
 class pkgm {
 
@@ -46,16 +46,16 @@ class pkgm {
      * Display (raw list of) currently enabled packages.
      */
     static function dump() {
-        cout::line(arr::readable(mpkgm::dump(), 0, 4));
+        cout::line(arr::readable(root\pkgm::dump(), 0, 4));
     }
     /**
      * Check for disabled/missing packages which are needed, and enable them.
      */
     static function repair() {
         cout::line('Will scan database for missing dependencies....');
-        foreach (mpkgm::list_enabled() as $package) {
+        foreach (root\pkgm::list_enabled() as $package) {
             cout::line("Found: `{$package}`", false);
-            $dependencies = mpkgm::list_dependencies($package);
+            $dependencies = root\pkgm::list_dependencies($package);
             if (empty($dependencies['disabled'])
                 && empty($dependencies['missing'])) {
                 cout::format('+right +green Nothing to do');
@@ -63,7 +63,7 @@ class pkgm {
             if (!empty($dependencies['disabled'])) {
                 cout::nl();
                 foreach ($dependencies['disabled'] as $ddep => $vel) {
-                    if (!mpkgm::is_enabled($ddep)) {
+                    if (!root\pkgm::is_enabled($ddep)) {
                         self::enable($ddep);
                     }
                 }
@@ -84,16 +84,16 @@ class pkgm {
      * @param string $pkg
      */
     static function enable($pkg) {
-        if (mpkgm::is_enabled($pkg)) {
+        if (root\pkgm::is_enabled($pkg)) {
             cout::warn("Package is already enabled: {$pkg}");
             return false;
         }
-        if (!mpkgm::exists($pkg)) {
+        if (!root\pkgm::exists($pkg)) {
             cout::warn("Package not found: {$pkg}");
             return false;
         }
 
-        $dependencies = mpkgm::list_dependencies($pkg, true);
+        $dependencies = root\pkgm::list_dependencies($pkg, true);
 
         if (!empty($dependencies['missing'])) {
             cout::format(
@@ -127,7 +127,7 @@ class pkgm {
 
         if (self::run_setup($package, 'enable')) {
 
-            if (mpkgm::enable($package, $by)) {
+            if (root\pkgm::enable($package, $by)) {
                 cout::success("Enabled: {$package}");
                 return true;
             } else {
@@ -149,13 +149,13 @@ class pkgm {
      */
     static function disable($pkg) {
         // Can't disable something that isn't enabled
-        if (!mpkgm::is_enabled($pkg)) {
+        if (!root\pkgm::is_enabled($pkg)) {
             cout::warn("Package not enabled: `{$pkg}`.");
             return false;
         }
 
         // Get package dependees!
-        $dependees = mpkgm::list_dependees($pkg, true);
+        $dependees = root\pkgm::list_dependees($pkg, true);
         array_pop($dependees); // remove self
 
         // If we have dependees, then disable them all first!
@@ -185,7 +185,7 @@ class pkgm {
 
         if (self::run_setup($package, 'disable')) {
 
-            if (mpkgm::disable($package)) {
+            if (root\pkgm::disable($package)) {
                 cout::success("Disabled: {$package}");
                 return true;
             } else {

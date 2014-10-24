@@ -2,9 +2,9 @@
 
 namespace mysli\util\i18n;
 
-__use(__namespace__,
-    'mysli/framework/type/{str,arr}'
-);
+__use(__namespace__, '
+    mysli/framework/type/{str,arr}
+');
 
 class parser {
     /**

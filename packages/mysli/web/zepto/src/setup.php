@@ -2,7 +2,9 @@
 
 namespace mysli\web\zepto\setup;
 
-__use(__namespace__, 'mysli/web/assets');
+__use(__namespace__, '
+    mysli/web/assets
+');
 
 function enable() {
     return assets::publish('mysli/web/zepto');

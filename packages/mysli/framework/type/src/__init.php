@@ -1,7 +1,7 @@
 <?php
 
-namespace mysli\framework\type {
-    function __init() {
-        str::encoding('UTF-8');
-    }
+namespace mysli\framework\type;
+
+function __init() {
+    str::encoding('UTF-8');
 }

@@ -2,13 +2,12 @@
 
 namespace mysli\web\web\setup;
 
-__use(__namespace__,
-    './web',
-    'mysli/util/config',
-    'mysli/framework/csi',
-    'mysli/framework/event',
-    'mysli/framework/fs/{fs,file,dir}'
-);
+__use(__namespace__, '
+    mysli/util/config
+    mysli/framework/csi
+    mysli/framework/event
+    mysli/framework/fs/{fs,file,dir}
+');
 
 function enable($csi=null) {
     if (!$csi) {

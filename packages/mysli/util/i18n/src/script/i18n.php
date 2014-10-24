@@ -2,12 +2,12 @@
 
 namespace mysli\util\i18n\script;
 
-__use(__namespace__,
-    'mysli/framework/pkgm',
-    'mysli/framework/fs/{fs,dir}',
-    ['./i18n' => 'main/i18n'],
-    ['mysli/framework/cli/{param,output}' => 'param,cout']
-);
+__use(__namespace__, '
+    ./i18n AS root/i18n
+    mysli/framework/pkgm
+    mysli/framework/fs/{fs,dir}
+    mysli/framework/cli/{param,output} AS {param,cout}
+');
 
 class i18n {
     static function run($args) {
@@ -54,7 +54,7 @@ class i18n {
                         fs::ds($package, $directory) . '`');
             return;
         }
-        if (main\i18n::create_cache($package, $directory)) {
+        if (root\i18n::create_cache($package, $directory)) {
             cout::format('I18n: %s +right+green OK', [$package]);
         } else {
             cout::format('I18n: %s +right+red FAILED', [$package]);

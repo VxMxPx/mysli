@@ -2,9 +2,9 @@
 
 namespace mysli\web\request;
 
-__use(__namespace__,
-    'mysli/framework/type/{arr,str}'
-);
+__use(__namespace__, '
+    mysli/framework/type/{arr,str}
+');
 
 class request {
 

@@ -2,11 +2,11 @@
 
 namespace mysli\web\users;
 
-__use(__namespace__,
-    ['mysli/framework/exception/*' => 'framework/exception/%s'],
-    'mysli/framework/json',
-    'mysli/framework/fs/{fs,file}'
-);
+__use(__namespace__, '
+    mysli/framework/exception/{...} AS framework/exception/{...}
+    mysli/framework/json
+    mysli/framework/fs/{fs,file}
+');
 
 class users {
 

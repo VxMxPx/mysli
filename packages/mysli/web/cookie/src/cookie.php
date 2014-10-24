@@ -2,10 +2,10 @@
 
 namespace mysli\web\cookie;
 
-__use(__namespace__,
-    'mysli/framework/type/arr',
-    'mysli/util/config'
-);
+__use(__namespace__, '
+    mysli/framework/type/arr
+    mysli/util/config
+');
 
 class cookie {
     /**

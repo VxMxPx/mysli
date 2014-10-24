@@ -2,7 +2,9 @@
 
 namespace mysli\web\users;
 
-__use(__namespace__, 'mysli/framework/fs/{fs,dir}');
+__use(__namespace__, '
+    mysli/framework/fs/{fs,dir}
+');
 
 function enable() {
 	return dir::create(fs::datpath('mysli/web/users'));

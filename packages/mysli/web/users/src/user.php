@@ -2,13 +2,13 @@
 
 namespace mysli\web\users;
 
-__use(__namespace__,
-    ['mysli/framework/exception/*' => 'framework/exception/%s'],
-    'mysli/framework/json',
-    'mysli/framework/fs/{fs,file}',
-    'mysli/util/config',
-    'mysli/web/html'
-);
+__use(__namespace__, '
+    mysli/framework/exception/{...} AS framework/exception/{...}
+    mysli/framework/json
+    mysli/framework/fs/{fs,file}
+    mysli/util/config
+    mysli/web/html
+');
 
 class user {
 
@@ -247,7 +247,7 @@ class user {
             $this->properties[$p] = null;
         }
         return file::remove(users::path_by_id($id))
-            and $this->config->destroy();
+            && $this->config->destroy();
     }
     /**
      * Weather user is active.
@@ -298,6 +298,6 @@ class user {
         $filename = users::path_by_id($this->id);
 
         return $this->config->save()
-            and json::encode_file($filename, $this->properties);
+            && json::encode_file($filename, $this->properties);
     }
 }

@@ -2,14 +2,14 @@
 
 namespace mysli\web\ui;
 
-__use(__namespace__,
-    'mysli/framework/fs',
-    'mysli/web/response',
-    'mysli/web/request',
-    'mysli/web/web',
-    'mysli/util/tplp',
-    'mysli/util/output'
-);
+__use(__namespace__, '
+    mysli/framework/fs
+    mysli/web/response
+    mysli/web/request
+    mysli/web/web
+    mysli/util/tplp
+    mysli/util/output
+');
 
 class ui {
     static function examples() {

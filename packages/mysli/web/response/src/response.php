@@ -2,10 +2,10 @@
 
 namespace mysli\web\response;
 
-__use(__namespace__,
-    'mysli/web/request',
-    'mysli/framework/event'
-);
+__use(__namespace__, '
+    mysli/web/request
+    mysli/framework/event
+');
 
 class response {
 

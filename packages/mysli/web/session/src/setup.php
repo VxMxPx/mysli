@@ -2,10 +2,10 @@
 
 namespace mysli\web\session\setup;
 
-__use(__namespace__,
-    'mysli/util/config',
-    'mysli/framework/fs/{fs,dir}'
-);
+__use(__namespace__, '
+    mysli/util/config
+    mysli/framework/fs/{fs,dir}
+');
 
 function enable() {
     $c = config::select('mysli/web/session');

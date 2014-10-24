@@ -2,17 +2,15 @@
 
 namespace mysli\web\session;
 
-__use(__namespace__, [
-    'mysli/util/config',
-    'mysli/framework' => [
-        'json',
-        'type/str',
-        'fs/{fs,file}',
-        'exception/*' => 'framework/exception/%s',
-    ],
-    'mysli/web/cookie',
-    'mysli/web/request'
-]);
+__use(__namespace__, '
+    mysli/util/config
+    mysli/framework/json
+    mysli/framework/type/str
+    mysli/framework/fs/{fs,file}
+    mysli/framework/exception/{...} AS framework/exception/{...}
+    mysli/web/cookie
+    mysli/web/request
+');
 
 class session {
 

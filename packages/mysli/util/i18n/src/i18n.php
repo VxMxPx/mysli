@@ -2,11 +2,10 @@
 
 namespace mysli\util\i18n;
 
-__use(__namespace__,
-    './{parser,translator}',
-    'mysli/framework/fs/{file,fs}',
-    ['mysli/framework/exception/*' => 'framework/exception/%s']
-);
+__use(__namespace__, '
+    mysli/framework/fs/{file,fs}
+    mysli/framework/exception/{...} AS framework/exception/{...}
+');
 
 class i18n {
     // created instances of translator

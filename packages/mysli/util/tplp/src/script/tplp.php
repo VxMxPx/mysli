@@ -2,12 +2,12 @@
 
 namespace mysli\util\tplp\script;
 
-__use(__namespace__, [
-    'mysli/util/tplp/{util,parser}',
-    'mysli/framework/fs/{fs,file,dir}',
-    'mysli/framework/type/{arr,str}',
-    'mysli/framework/cli/{output,input,param,util}' => 'cout,cinput,cparam,cutil',
-]);
+__use(__namespace__, '
+    ./{util,parser}
+    mysli/framework/fs/{fs,file,dir}
+    mysli/framework/type/{arr,str}
+    mysli/framework/cli/{output,input,param,util} AS {cout,cinput,cparam,cutil}
+');
 
 class tplp {
 
@@ -160,9 +160,16 @@ class tplp {
 
                     foreach ($changes as $file => $change) {
 
-                        cout::line("{$change}: {$file} ... ", false);
+                        $file_padded = strlen($file) > 35
+                            ? substr($file, 0, 32) . '...'
+                            : str_pad($file, 35);
+
+                        cout::line(
+                            str_pad($change, 7)." > {$file_padded} > ",
+                            false);
 
                         if ($change === 'Removed') {
+                            cout::format("+right+green OK");
                             continue;
                         }
 
@@ -170,10 +177,10 @@ class tplp {
                                                 $dest,
                                                 substr($file, 0, -4).'php');
 
-                        cout::line("parsing ... ", false);
+                        cout::line("Parsing > ", false);
                         try {
                             $parsed = parser::file("$file", $source);
-                            cout::line("writting ... ", false);
+                            cout::line("Writting > ", false);
                             file::create_recursive($destination_file, true);
                             file::write($destination_file, $parsed);
                         } catch (\Exception $e) {

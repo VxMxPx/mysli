@@ -2,9 +2,9 @@
 
 namespace mysli\util\i18n;
 
-__use(__namespace__,
-    ['mysli/framework/exception/*' => 'framework/exception/%s']
-);
+__use(__namespace__, '
+    mysli/framework/exception/{...} AS framework/exception/{...}
+');
 
 class translator {
 

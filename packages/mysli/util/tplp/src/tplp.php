@@ -2,9 +2,9 @@
 
 namespace mysli\util\tplp;
 
-__use(__namespace__,
-    'mysli/framework/fs/{fs,dir}'
-);
+__use(__namespace__, '
+    mysli/framework/fs/{fs,dir}
+');
 
 class tplp {
 

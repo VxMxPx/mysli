@@ -2,13 +2,16 @@
 
 namespace mysli\web\ui\setup;
 
-use mysli\web\assets;
-use mysli\util\tplp;
-use mysli\framework\event;
+__use(__namespace__, '
+    mysli/web/assets
+    mysli/util/tplp
+    mysli/framework/event
+');
 
 function enable() {
     return assets::publish('mysli/web/ui');
 }
+
 function disable() {
     tplp::remove_cache('mysli/web/ui');
     event::unregister('mysli/web/web:route<*><mysli-ui-examples*>',

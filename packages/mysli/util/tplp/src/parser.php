@@ -2,16 +2,13 @@
 
 namespace mysli\util\tplp;
 
-__use(__namespace__, [
-    './exception/parser',
-    'mysli/framework' => [
-        'pkgm',
-        'json',
-        'type/str',
-        'fs/{fs,file}',
-        'exception/*' => 'framework/exception/%s']
-    ]
-);
+__use(__namespace__, '
+    mysli/framework/pkgm
+    mysli/framework/json
+    mysli/framework/type/str
+    mysli/framework/fs/{fs,file}
+    mysli/framework/exception/{...} AS framework/exception/{...}
+');
 
 class parser {
 

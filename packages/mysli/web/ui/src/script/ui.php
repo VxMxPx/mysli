@@ -2,11 +2,11 @@
 
 namespace mysli\web\ui\script;
 
-__use(__namespace__, [
-    'mysli/util/tplp',
-    'mysli/framework/event',
-    'mysli/framework/cli/{output,param}' => 'cout,cparam',
-]);
+__use(__namespace__, '
+    mysli/util/tplp
+    mysli/framework/event
+    mysli/framework/cli/{output,param} AS {cout,cparam}
+');
 
 class ui {
     static function run(array $args=[]) {
