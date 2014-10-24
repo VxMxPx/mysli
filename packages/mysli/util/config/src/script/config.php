@@ -54,12 +54,14 @@ class config {
         $values = $params->values();
         if ($values['list']) {
             self::get_list($values['package']);
-        } else {
+        } elseif (is_array($values['set'])) {
             self::set_value(
                 $values['package'],
                 $values['set'][0],
                 $values['set'][1],
                 $values['string']);
+        } else {
+            cout::line($params->help());
         }
     }
 
