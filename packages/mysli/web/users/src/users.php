@@ -24,7 +24,9 @@ class users {
 
         if (!$user)                           return false;
         if (!$user->auth_password($password)) return false;
-        if (!$user->is_active())              return false;
+        if (!$user->is_active)                return false;
+        if (!$user->password)                 return false;
+        if ($user->is_deleted)                return false;
 
         return $user;
     }
@@ -69,7 +71,7 @@ class users {
 
         if (!isset(self::$cache[$id])) {
             if (self::exists($id)) {
-                $u = new user(json::decode_file(self::path_by_id($id), false));
+                $u = new user(json::decode_file(self::path_by_id($id), true));
                 self::$cache[$id] = $u;
             } else {
                 return false;
@@ -95,6 +97,22 @@ class users {
         return md5($email);
     }
     /**
+     * This will hard delete the user (by id) the user exists.
+     * @param  string $id
+     * @return boolean
+     */
+    static function delete($id) {
+        $file = self::path_by_id($id);
+        if (file::exists($file)) {
+            if (isset(self::$cache[$id])) {
+                unset(self::$cache[$id]);
+            }
+            return file::remove($file);
+        } else {
+            return true;
+        }
+    }
+    /**
      * Create new user and return \mysli\users\user
      * @param  mixed $user If string, it should be valid e-mail address,
      *                     if array, then the `email` key should exists.
@@ -110,19 +128,21 @@ class users {
             throw new framework\exception\argument('The `email` must be set.');
         }
 
-        $id = get_id_from_uname($user['email']);
+        $id = self::get_id_from_uname($user['email']);
 
         // User already exists?
         if (self::exists($id)) {
             return false;
         }
 
-        $user['id'] = $id;
+        // $user['id'] = $id;
         $user['is_active']  = true;
         $user['created_on'] = (int) gmdate('YmdHis');
         $user['updated_on'] = (int) gmdate('YmdHis');
 
-        return (self::$cache[$id] = new user($user, true));
+        $user = new user($user, true);
+
+        return ($user && (self::$cache[$id] = $user->save()));
     }
     /**
      * Get path for particular user's file,

@@ -39,7 +39,7 @@ class user {
         foreach ($this->properties as $k => $v) {
             if (isset($record[$k])) {
                 if ($validate) {
-                    $this->{$k}($record[$k]);
+                    $this->{"set_{$k}"}($record[$k]);
                 } else {
                     $this->properties[$k] = $record[$k];
                 }
@@ -291,7 +291,7 @@ class user {
             users::delete($this->id);
             $this->properties['id'] = users::get_id_from_uname(
                                                         $this->modified_email);
-            $this->properties['email'] = $thi->modified_email;
+            $this->properties['email'] = $this->modified_email;
             $this->modified_email = false;
         }
 
