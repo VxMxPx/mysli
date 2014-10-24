@@ -14,6 +14,7 @@ if (!function_exists('version_compare')) {
         'The function "version_compare" was not found.',
         E_USER_ERROR);
 }
+
 if (!(version_compare(PHP_VERSION, '5.4.0') >= 0)) {
     trigger_error(
         'PHP needs to be at least version 5.4.0 Your version: ' . PHP_VERSION,
@@ -29,12 +30,15 @@ $pkgpath = realpath($datpath . '{{PKGPATH}}');
 
 // Get the core.
 $core_id_file = "{$datpath}/core/id.json";
+
 if (!file_exists($core_id_file)) {
     trigger_error("File not found: `{$core_id_file}`", E_USER_ERROR);
 } else {
     $core_id = json_decode(file_get_contents($core_id_file), true);
 }
+
 include("{$pkgpath}/{$core_id['package']}/src/__init.php");
+
 call_user_func_array(
     str_replace('/', '\\', $core_id['package']) . '\\__init',
     [$datpath, $pkgpath]);

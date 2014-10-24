@@ -155,7 +155,11 @@ The `$options` parameter is an array with following options:
     id         // unique id (position || long || short) (auto set from $name)
     short      // short (-s) (auto set from $name)
     long       // long (--long) (auto set from $name)
-    type       // type (str,bool,int,float)
+    type       // type (str,bool,int,float,arr)
+    min        // minimum value for float or integer,
+               // minimum number of arguments if type is arr
+    max        // maximum value for float or integer,
+               // maximum number of arguments if type is arr
     default    // default value
     help       // help text
     required   // weather field is required
