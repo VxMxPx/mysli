@@ -1,131 +1,130 @@
 <?php
 
-namespace mysli\util\config {
+namespace mysli\util\config;
 
-    __use(__namespace__,
-        'mysli/framework/fs/{fs,file}',
-        'mysli/framework/json',
-        'mysli/framework/type/{arr,arr_path}'
-    );
+__use(__namespace__, '
+    mysli/framework/fs/{fs,file}
+    mysli/framework/json
+    mysli/framework/type/{arr,arr_path}
+');
 
-    class config {
+class config {
 
-        static private $registry = [];
+    static private $registry = [];
 
-        private $package;
-        private $filename;
-        private $data  = [];
-        private $cache = [];
+    private $package;
+    private $filename;
+    private $data  = [];
+    private $cache = [];
 
-        /**
-         * Config data
-         * @param string $package vendor/package
-         */
-        function __construct($package) {
-            $this->package = $package;
-            $this->filename = fs::datpath(
-                'mysli/util/config', str_replace('/', '.', $package) . '.json');
+    /**
+     * Config data
+     * @param string $package vendor/package
+     */
+    function __construct($package) {
+        $this->package = $package;
+        $this->filename = fs::datpath(
+            'mysli/util/config', str_replace('/', '.', $package) . '.json');
 
-            // If we have file, then load contents...
-            if (file::exists($this->filename)) {
-                $this->data = json::decode_file($this->filename, true);
+        // If we have file, then load contents...
+        if (file::exists($this->filename)) {
+            $this->data = json::decode_file($this->filename, true);
+        }
+    }
+    /**
+     * Get config element, by: sub/key/main
+     * @param  mixed $key string (sub/key) or array ([sub/key, sub/key2])
+     * @param  mixed $default value if key not found
+     * @return mixed
+     */
+    function get($key, $default=null) {
+        // If key is an array, do recursive search.
+        if (is_array($key)) {
+            $values = [];
+            foreach ($key as $val) {
+                $values[] = $this->get($val, $default);
             }
-        }
-        /**
-         * Get config element, by: sub/key/main
-         * @param  mixed $key string (sub/key) or array ([sub/key, sub/key2])
-         * @param  mixed $default value if key not found
-         * @return mixed
-         */
-        function get($key, $default=null) {
-            // If key is an array, do recursive search.
-            if (is_array($key)) {
-                $values = [];
-                foreach ($key as $val) {
-                    $values[] = $this->get($val, $default);
-                }
-                return $values;
-            }
-
-            if (arr::get($this->cache, $key)) {
-                return $this->cache[$key];
-            }
-
-            $value = arr_path::get($this->data, $key, $default);
-
-            // We cache only when we assume it's not default value...
-            if ($value !== $default) {
-                $this->cache[$key] = $value;
-            }
-
-            // Return value in any case...
-            return $value;
-        }
-        /**
-         * Retrun all config as an array.
-         * @return array
-         */
-        function dump() {
-            return $this->data;
-        }
-        /**
-         * Set value for key.
-         * @param string $path sub/key
-         * @param mixed  $value
-         * @return null
-         */
-        function set($path, $value) {
-            // Clear cache to avoid corrupted data
-            $this->cache = [];
-            return arr_path::set($path, $value, $this->data);
-        }
-        /**
-         * Append config to the file.
-         * @param  array  $config
-         * @return null
-         */
-        function merge(array $config) {
-            $this->cache = [];
-            $this->data = arr::merge($this->data, $config);
-        }
-        /**
-         * Save config file.
-         * @return boolean
-         */
-        function save() {
-            return json::encode_file($this->filename, $this->data);
-        }
-        /**
-         * Delete config file.
-         * @return boolean
-         */
-        function destroy() {
-            $this->cache = $this->data = [];
-            unset(self::$registry[$this->package]);
-            if (file::exists($this->filename)) {
-                return file::remove($this->filename);
-            } else {
-                return true;
-            }
+            return $values;
         }
 
-        /**
-         * Get config instance or value.
-         * @param  string $package vendor/package
-         * @param  mixed  $key
-         * @param  mixed  $default
-         * @return mixed
-         */
-        static function select($package, $key=false, $default=null) {
-            if (!arr::get(self::$registry, $package)) {
-                self::$registry[$package] = new self($package);
-            }
-            $config = self::$registry[$package];
-            if ($key) {
-                return $config->get($key, $default);
-            } else {
-                return $config;
-            }
+        if (arr::get($this->cache, $key)) {
+            return $this->cache[$key];
+        }
+
+        $value = arr_path::get($this->data, $key, $default);
+
+        // We cache only when we assume it's not default value...
+        if ($value !== $default) {
+            $this->cache[$key] = $value;
+        }
+
+        // Return value in any case...
+        return $value;
+    }
+    /**
+     * Retrun all config as an array.
+     * @return array
+     */
+    function dump() {
+        return $this->data;
+    }
+    /**
+     * Set value for key.
+     * @param string $path sub/key
+     * @param mixed  $value
+     * @return null
+     */
+    function set($path, $value) {
+        // Clear cache to avoid corrupted data
+        $this->cache = [];
+        return arr_path::set($this->data, $path, $value);
+    }
+    /**
+     * Append config to the file.
+     * @param  array  $config
+     * @return null
+     */
+    function merge(array $config) {
+        $this->cache = [];
+        $this->data = arr::merge($this->data, $config);
+    }
+    /**
+     * Save config file.
+     * @return boolean
+     */
+    function save() {
+        return json::encode_file($this->filename, $this->data);
+    }
+    /**
+     * Delete config file.
+     * @return boolean
+     */
+    function destroy() {
+        $this->cache = $this->data = [];
+        unset(self::$registry[$this->package]);
+        if (file::exists($this->filename)) {
+            return file::remove($this->filename);
+        } else {
+            return true;
+        }
+    }
+
+    /**
+     * Get config instance or value.
+     * @param  string $package vendor/package
+     * @param  mixed  $key
+     * @param  mixed  $default
+     * @return mixed
+     */
+    static function select($package, $key=false, $default=null) {
+        if (!arr::get(self::$registry, $package)) {
+            self::$registry[$package] = new self($package);
+        }
+        $config = self::$registry[$package];
+        if ($key) {
+            return $config->get($key, $default);
+        } else {
+            return $config;
         }
     }
 }
