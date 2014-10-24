@@ -1,5 +1,5 @@
 package : mysli/framework/json
-version : 0.0.3
+version : 0.0.4
 description : Basic JSON Library.
 authors:
     - Marko Gajšt (Developer) <m@gaj.st>
