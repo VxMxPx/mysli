@@ -3,6 +3,7 @@
 namespace mysli\util\i18n;
 
 __use(__namespace__, '
+    mysli/framework/json
     mysli/framework/fs/{file,fs}
     mysli/framework/exception/{...} AS framework/exception/{...}
 ');
@@ -40,7 +41,7 @@ class i18n {
                 continue;
             }
             $collection[substr($file, 0, -3)] = parser::parse(
-                file_get_contents(ds($dir, $file))
+                file_get_contents(fs::ds($dir, $file))
             );
         }
 
@@ -65,7 +66,7 @@ class i18n {
      * @param  mixed  $param
      * @return mysli\util\i18n\translator or string if $translate is present
      */
-    static function select($package, $translate, $variable=[]) {
+    static function select($package, $translate=null, $variable=[]) {
         // Get translator + dictionary if not set yet
         if (!isset(self::$cache[$package])) {
             $cache_filename = self::package_to_filename($package);

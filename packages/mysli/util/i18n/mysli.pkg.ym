@@ -1,5 +1,5 @@
 package     : mysli/util/i18n
-version     : 0.0.16
+version     : 0.0.20
 description : Internationalization Library.
 license     : GPL-3.0
 authors:
@@ -8,5 +8,6 @@ require:
     mysli/framework/exception : ~0
     mysli/framework/pkgm      : ~0
     mysli/framework/type      : ~0
+    mysli/framework/json      : ~0
     mysli/framework/fs        : ~0
     mysli/util/config         : ~0
