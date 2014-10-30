@@ -81,8 +81,8 @@ class parser {
         }
 
         if (!arr::key_in($phpt, 'test')) {
-            throw new framework\exception\data("
-                Field `--TEST--` is missing in file", 10);
+            throw new framework\exception\data(
+                "Field `--TEST--` is missing in file", 10);
         }
         if (!($file = self::get_first_key($phpt,
             ['file', 'fileeof', 'file_external']))) {

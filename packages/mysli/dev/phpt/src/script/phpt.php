@@ -238,7 +238,8 @@ class phpt {
             $method = substr($method, strrpos($method, '/')+1);
             $method_type = substr($method, strrpos($method, '_')+1);
             $method = substr($method, 0, -(strlen($method_type)+1));
-            $prefix = substr($tf,
+            $prefix = substr(
+                        $tf,
                         strrpos($tf, 'tests/')+6,
                         -(strlen("{$method}_{$method_type}.{$ext}")+1));
             if ($ext === 'ignore' || $ext === 'delete') {
@@ -253,8 +254,7 @@ class phpt {
                     : true;
                 if ($set_deleted) {
                     $do_delete[] = $method;
-                    if (!file::rename($tf,
-                                      "{$method}_{$method_type}.delete")) {
+                    if (!file::rename($tf, "{$method}_{$method_type}.delete")) {
                         cout::warn("Couldn't rename: `{$method}_".
                                    "{$method_type}.{$ext}` to `{$method}_".
                                    "{$method_type}.delete`");
@@ -339,8 +339,14 @@ class phpt {
         }
 
         foreach ($tests as $test) {
-            $test->execute();
-            $test->cleanup();
+            try {
+                $test->execute();
+                $test->cleanup();
+            } catch (\Exception $e) {
+                cout::warn('Failed with message: ' . $e->getMessage());
+                cout::warn('Will skipp: `' . $test->filename() . '`');
+                continue;
+            }
             cout::line("TEST [{$test->filename()}]", false);
             if ($test->succeed()) {
                 cout::format('+right+green%s', ['OK']);

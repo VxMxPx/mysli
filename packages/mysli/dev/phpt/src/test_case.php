@@ -105,7 +105,6 @@ class test_case {
             $this->parsed['args'], '2>&1', $in]);
 
         // run the command
-        // dump($this->parsed);
         $r = engine::run($command, $this->parsed['env'], $dir);
         if ($this->parsed['file_type'] === 'fileeof') {
             $r = preg_replace("/[\r\n]+$/", '', $r);
