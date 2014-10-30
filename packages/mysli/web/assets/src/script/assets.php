@@ -199,7 +199,7 @@ class assets {
             }
             // Some file were processed
             if ($merged) {
-                cout::line("File: `{$main}`", false);
+                cout::line("File: `{$main}`");
                 $dest_main = fs::ds($dest, $main);
                 $main_ext = file::extension($main);
                 file::create_recursive($dest_main);
@@ -209,10 +209,10 @@ class assets {
                     cout::error($e->getMessage());
                     continue;
                 }
-                cout::format('Saving+right+green OK');
+                cout::format('  Saving+right+green OK');
                 if ($props['compress']
                     && arr::key_in($sett['compress'], $main_ext)) {
-                    cout::line("Compress!");
+                    cout::line("  Compress!");
                     cutil::execute(self::parse_command(
                                         $sett['compress'][$main_ext],
                                         $dest_main,
@@ -370,7 +370,14 @@ class assets {
     private static function observable_files($dir, $files) {
         $observable = [];
 
-        foreach ($files as $prop) {
+        foreach ($files as $id => $prop) {
+
+            if (!isset($prop['include'])) {
+                cout::warn(
+                    "Include statement is missing. Skip: `{$id}`");
+                continue;
+            }
+
             foreach ($prop['include'] as $file) {
                 $ffile = fs::ds($dir, $file);
                 if (!file::exists($ffile)) {

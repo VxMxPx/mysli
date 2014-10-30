@@ -1,5 +1,5 @@
 package     : mysli/web/assets
-version     : 0.0.124
+version     : 0.0.128
 description : Help build CSS / Stylus and JavaScript files.
 license     : GPL-3.0
 authors:
