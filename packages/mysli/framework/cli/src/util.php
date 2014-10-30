@@ -12,13 +12,20 @@ class util {
      * @return integer
      */
     static function terminal_width() {
-        $r = 80;
+
+        if (!is_cli()) {
+            return 80;
+        }
+
         // standard method
-        $r = (int) self::execute('tput cols 2> /dev/null')
-            ?: (int) self::execute('echo $COLUMNS 2> /dev/null');
+        $r = (int) self::execute('tput cols');
+
+        if (!$r) {
+            $r = (int) self::execute('echo $COLUMNS');
+        }
         // try to get it from stty
         if (!$r) {
-            $r = self::execute('stty size 2> /dev/null');
+            $r = self::execute('stty size');
             $r = explode(' ', $r, 2);
             $r = (int) (isset($r[1]) ? $r[1] : 0);
         }
@@ -26,6 +33,10 @@ class util {
         if (!$r && strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
             $r = self::execute('mode');
             $r = (int) preg_match('/^ *Columns\: *([0-9]+)$/', $r);
+        }
+        // Default
+        if (!$r) {
+            $r = 80;
         }
         return $r;
     }
