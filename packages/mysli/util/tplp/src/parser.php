@@ -115,14 +115,16 @@ class parser {
         // uses (::use)
         // extends (::extend)
         // imports (::import)
+        // let (::let)
         $output  = [];
         $extends = [];
         $imports = [];
+        $let     = false;
 
         $in_curr_line = 0;
         $in_curr = false;
-        $in_set_line  = 0;
-        $in_set  = false;
+        $in_set_line = 0;
+        $in_set = false;
 
         // Block (multi-line commands)
         $block['start']    = 0;
@@ -138,6 +140,25 @@ class parser {
 
         // Scan lines
         foreach ($lines as $lineno => $line) {
+
+            // Find ::/let closed
+            if (self::find_close_let($line)) {
+                if (!$let) {
+                    throw new exception\parser(
+                        "Closed `::/let` tag before it was opened.");
+                }
+                $p = self::process_let($let['lines'], $let['set']);
+                $output[] = "<?php {$let['id']} = {$p}; ?>";
+                $let = false;
+                unset($p);
+                continue;
+            }
+
+            // We're in ::let
+            if ($let) {
+                $let['lines'][] = $line;
+                continue;
+            }
 
             // Escape \{ and \}
             $line = self::escape_curly_brackets($line, true);
@@ -167,6 +188,33 @@ class parser {
                 list($line, $break) = self::find_print($line, $sets);
                 if ($break) {
                     $output[] = $line;
+                    continue;
+                }
+
+                // Find ::let (opened)
+                if (($let_o = self::find_let($line))) {
+                    if ($in_curr || $in_set) {
+                        throw new exception\parser(
+                            "`::let` cannot nested in `::extend`, ".
+                            "`::import` or `::set`");
+                    }
+                    if ($let) {
+                        throw new exception\parser(
+                            "`::let` is already opened on line: ".
+                            "`{$let['lineno']}`");
+                    } else {
+                        $let = $let_o;
+                    }
+                    if ($let['closed']) {
+                        $p = self::find_var_and_func($let['lines']);
+                        $p = self::escape_single_quotes($p, false);
+                        $p = self::escape_curly_brackets($p, false);
+                        $output[] = "<?php {$let['id']} = {$p}; ?>";
+                        $let = false;
+                        unset($p);
+                    } else {
+                        $let['lineno'] = $lineno;
+                    }
                     continue;
                 }
 
@@ -341,6 +389,119 @@ class parser {
         return $output;
     }
     /**
+     * Find ::let
+     * @param  string $line
+     * @return array [id, closed?, lines, ] if found, false otherwise
+     */
+    private static function find_let($line) {
+        if (preg_match(
+            '/^[ \t]*?::let ([a-z0-9_]+)( set (.*?))?( \= (.*?))?( do)?$/',
+            $line,
+            $match))
+        {
+            $result = ['lines' => [], 'set' => false];
+            $result['id'] = self::parse_variable(trim($match[1]));
+
+            if (count($match) < 3) {
+                throw new exception\parser(
+                    "Missing assign statement (not enough elements).");
+            }
+
+            if (substr($result['id'], 0, 1) !== '$') {
+                throw new  exception\parser(
+                    "Not a valid variable name: `{$result['id']}`");
+            }
+
+            // Do we have do ?
+            if (trim($match[count($match)-1]) !== 'do') {
+                if (substr(trim($match[4]), 0, 1) !== '=') {
+                    throw new exception\parser(
+                        "Missing assign statement (::let var = 'value')");
+                }
+                $result['lines']  = trim($match[5]);
+                $result['closed'] = true;
+
+                return $result;
+            } else {
+                array_pop($match); // Remove last element
+                $result['closed'] = false;
+            }
+
+            if (!empty(trim($match[2])) &&
+                !empty(trim($match[3])) &&
+                substr(trim($match[2]), 0, 4) === 'set ')
+            {
+                $result['set'] = trim($match[3]);
+            }
+
+            return $result;
+        } else {
+            return false;
+        }
+    }
+    /**
+     * Process ::let value
+     * @param  array  $lines
+     * @param  string $set
+     * @return string
+     */
+    private static function process_let(array $lines, $set) {
+        if (strpos($set, '(')) {
+            $arg = explode('(', $set, 2);
+            $set = $arg[0];
+            $arg = substr($arg[1], 0, -1);
+        } else {
+            $arg = null;
+        }
+        if ($set && !in_array($set, ['dictionary', 'implode', 'array'])) {
+            throw new exception\parser(
+                "Invalid `set` parameter, expected: ".
+                "`dictionary`, `implode` or `array`.");
+        }
+        if (in_array($set, ['dictionary', 'implode']) && !$arg) {
+            throw new exception\parser(
+                "Expected parameter for `{$set}` ".
+                "in format: `{$set}(<PARAMETER>)`");
+        }
+        $output = [];
+        foreach ($lines as $lineno => $line) {
+
+            if ($set === 'dictionary') {
+                if (strpos($line, $arg) === false) {
+                    throw new exception\parser(
+                        "Expected dictionary divider: `{$arg}` in:\n".
+                        self::err_lines($liens, $lineno));
+                }
+                list($k, $l) = explode($arg, $line, 2);
+                $output[trim($k)] = trim($l);
+                continue;
+            } else {
+                $output[] = trim($line);
+            }
+        }
+
+        if ($set === 'array' || $set === 'dictionary') {
+            $output = "unserialize('" . serialize($output) . "')";
+        } else {
+            if (!$arg) {
+                $arg = " ";
+            }
+            $output = implode($arg, $output);
+            $output = preg_replace("/[^\\\]'/", "\\'", $output);
+            $output = "'{$output}'";
+        }
+
+        return $output;
+    }
+    /**
+     * Find closed ::/let
+     * @param  string $line
+     * @return boolean
+     */
+    private static function find_close_let($line) {
+        return preg_match('/^[ \t]*?::\\/let?$/', $line);
+    }
+    /**
      * Find ::print <content> regions
      * @param  string $line
      * @param  array  $sets
@@ -367,7 +528,7 @@ class parser {
         }
     }
     /**
-     * Find open ::/set
+     * Find closed ::/set
      * @param  string $line
      * @return boolean
      */
@@ -570,8 +731,8 @@ class parser {
             // Variable / function / boolean, numeric, null
             $variable = $match[3];
             // AND, OR, !=, ==, <, >, <=, >=
-            $logical = str_replace(['==', '!=', '&lt;', '&gt;'],
-                                   ['===', '!==', '<', '>'],
+            $logical = str_replace(['&lt;', '&gt;'],
+                                   ['<', '>'],
                                    $match[4]);
             $logical = str_replace(' ', '', $logical);
             if (substr($logical, 0, 1) !== ')') {
@@ -734,6 +895,20 @@ class parser {
         return $line;
     }
     /**
+     * Helper method to escape single quotes
+     * @param  string $match
+     * @return string
+     */
+    private static function escape_single_quotes_in($match) {
+        return
+            preg_replace_callback("/'(.*?)'/",
+            function ($match) {
+                return '--MYSLI-QUOT-ST-'.
+                        base64_encode($match[1]).
+                        '-MYSLI-END-QUOT';
+            }, $match);
+    }
+    /**
      * Protect things wrapped in {''}
      * @param  string  $line
      * @param  boolean $protect protection on/off
@@ -741,15 +916,16 @@ class parser {
      */
     private static function escape_single_quotes($line, $protect) {
         if ($protect) {
-            // Protect everything wrapped in ''
+            // Protect everything prefixed with ::''
+            $line =
+            preg_replace_callback("/^([ \t]*?::[a-z]*? .*?)$/",
+            function ($match) {
+                return self::escape_single_quotes_in($match[1]);
+            }, $line);
+            // Protect everything wrapped in {''}
             $line =
             preg_replace_callback("/{(.*?)}/", function ($match) {
-                $match = $match[1];
-                return '{' . preg_replace_callback("/'(.*?)'/",
-                function ($match) {
-                    return '--MYSLI-QUOT-ST-' . base64_encode($match[1]) .
-                           '-MYSLI-END-QUOT';
-                }, $match) . '}';
+                return '{'.self::escape_single_quotes_in($match[1]).'}';
             }, $line);
         } else {
             // Restore everything wrapped in ''
