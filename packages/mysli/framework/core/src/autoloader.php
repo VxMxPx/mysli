@@ -93,7 +93,9 @@ namespace mysli\framework\core {
 
             // As is being unique here, so we set it as key
             // there can be multiple `from` for different as
-            self::$aliases[$as] = $from;
+            if ($as !== $from) {
+                self::$aliases[$as] = $from;
+            }
         }
 
         /**
