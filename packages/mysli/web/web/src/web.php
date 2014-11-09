@@ -24,10 +24,7 @@ class web {
         event::trigger("mysli/web/web:route<{$method}><$route>");
 
         if (response::get_status() === 0) {
-            response::status_404_not_found();
-        }
-
-        if (response::get_status() === 404) {
+            response::set_status(404);
             event::trigger('mysli/web/web:404');
         }
     }
@@ -36,9 +33,8 @@ class web {
      * @param string $output
      */
     static function output(&$output) {
-
         if (response::get_status() === 0) {
-            response::status_200_ok();
+            response::set_status(200);
         }
         response::apply_headers();
 
@@ -73,10 +69,10 @@ class web {
         if (!$url) {
             $url = (request::is_ssl() ? 'https://' : 'http://').request::host();
         }
-        $url = rtrim($url, '/') . '/'; // Always add ending slash!
         if ($uri) {
-            $url .= ltrim($uri, '/');
+            $url .= '/'.$uri;
         }
-        return $url;
+        // Remove doube // and return
+        return preg_replace('#([^:])/+#', '\1/', $url);
     }
 }
