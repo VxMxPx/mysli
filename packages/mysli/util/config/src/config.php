@@ -65,7 +65,7 @@ class config {
      * Retrun all config as an array.
      * @return array
      */
-    function dump() {
+    function as_array() {
         return $this->data;
     }
     /**

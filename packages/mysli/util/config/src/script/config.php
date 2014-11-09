@@ -107,7 +107,7 @@ class config {
         if ($package) {
             cout::nl();
             cout::line("Available options for `{$package}`:");
-            $options = root\config::select($package)->dump();
+            $options = root\config::select($package)->as_array();
             if (empty($options)) {
                 cout::line('No options available.');
             } else {
