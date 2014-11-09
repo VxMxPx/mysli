@@ -13,7 +13,7 @@ __use(__namespace__, '
 
 class ui {
     static function examples() {
-        response::status_200_ok();
+        response::set_status(200);
         $route = request::segment(1) ?: 'alerts';
 
         $template = tplp::select('mysli/web/ui');

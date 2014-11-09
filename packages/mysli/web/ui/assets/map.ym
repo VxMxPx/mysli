@@ -1,7 +1,7 @@
 before:
     - cp -R {source_dir}/common {dest_dir}/
 files:
-    css/mysli.ui.css:
+    css-min/ui.css:
         compress: Yes
         include :
             - css/fonts.css
@@ -19,7 +19,7 @@ files:
             - css/alert.styl
             - css/tab.styl
             - css/calendar.styl
-    js/mysli.ui.js:
+    ui.js:
         compress: Yes
         include :
             - js/ext.js
