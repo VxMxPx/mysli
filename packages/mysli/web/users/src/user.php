@@ -61,7 +61,7 @@ class user {
             return call_user_func([$this, "get_{$property}"]);
         }
         if ($property === 'config') {
-            return $this->config->dump();
+            return $this->config->as_array();
         }
     }
     /**
