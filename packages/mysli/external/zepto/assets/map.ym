@@ -1,6 +1,7 @@
 files:
     zepto.js:
         compress: Yes
+        export  : Zepto
         include :
             - js/zepto.js
             - js/event.js
