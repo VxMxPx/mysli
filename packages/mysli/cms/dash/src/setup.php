@@ -7,13 +7,14 @@ __use(__namespace__, '
     mysli/framework/event
     mysli/util/i18n
     mysli/web/users
+    mysli/web/assets
 ');
 
 function enable($csi=null) {
 
     if (!$csi) {
         $csi = new csi('mysli/cms/dash/enable');
-        $csi->text('You need to create one user account...');
+        $csi->text('Create first user account...');
         $csi->input(
         'email',
         'Email: ',
@@ -34,7 +35,8 @@ function enable($csi=null) {
         'Password: ',
         function (&$field) {
             if (strlen($field['value']) < 3) {
-                $field['messages'] = 'Password should be at least 3 characters long...';
+                $field['messages'] =
+                    'Password should be at least 3 characters long...';
                 return false;
             }
             return true;
@@ -46,14 +48,18 @@ function enable($csi=null) {
     }
 
     return i18n::create_cache('mysli/cms/dash')
-    && users::create(
-        ['email' => $csi->get('email'), 'password' => $csi->get('password')])
-    && event::register(
-        'mysli/web/web:route<*><dashboard*>', 'mysli\\cms\\dash\\dash::run');
+        && users::create([
+            'email' => $csi->get('email'), 'password' => $csi->get('password')])
+        && assets::publish('mysli/cms/dash')
+        && event::register(
+            'mysli/web/web:route<*><dashboard*>',
+            'mysli\\cms\\dash\\service::run');
 }
 
 function disable() {
     return i18n::remove_cache('mysli/cms/dash')
-    && event::unregister(
-        'mysli/web/web:route<*><dashboard*>', 'mysli\\cms\\dash\\dash::run');
+        && assets::destroy('mysli/cms/dash')
+        && event::unregister(
+            'mysli/web/web:route<*><dashboard*>',
+            'mysli\\cms\\dash\\service::run');
 }

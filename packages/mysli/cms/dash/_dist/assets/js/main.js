@@ -1,0 +1,2 @@
+Mysli.Dash.Main = (function () {
+}());

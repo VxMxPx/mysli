@@ -3,32 +3,71 @@
 namespace mysli\cms\dash;
 
 __use(__namespace__, '
-    mysli/util/tplp
-    mysli/util/i18n
-    mysli/util/output
-    mysli/web/request
-    mysli/web/session
+    mysli/framework/type/arr
 ');
 
 class dash {
-    static function run() {
-        $token = request::get('mysli_token');
-        // Valid token if exists...
-        if ($token) {
-            // Pass, for now...
-            die('Token valid, here shall be your response...');
-        } elseif (request::segment(1) === 'login') {
-            return auth::get_login();
-        } elseif (request::segment(1) === 'api') {
-            if (request::get('mysli/cms/dash') === 'token') {
-                // Get token from session
-            } else {
-                // Return that this is invalid request
-            }
+
+    private $data = [];
+
+    const msg_error   = 'error';
+    const msg_info    = 'info';
+    const msg_warn    = 'warn';
+    const msg_success = 'success';
+
+    /**
+     * Return new instance of self, with data added.
+     * @param  array  $data
+     * @return mysli\cms\dash\dash
+     */
+    static function response(array $data) {
+        return (new self)->add($data);
+    }
+    /**
+     * Return new instance of self, with message added.
+     * @param  string $message
+     * @param  string $type
+     * @return mysli\cms\dash\dash
+     */
+    static function response_message($message, $type=self::msg_info) {
+        return (new self)->message($message, $type);
+    }
+
+    /**
+     * Add data.
+     * @param mixed $key  string (key) or array (merge)
+     * @param array $data null if key is array
+     * @return mysli\cms\dash\dash
+     */
+    function add($key, $data=null) {
+        if (is_array($key)) {
+            $this->data = arr::merge($this->data, $key);
         } else {
-            $template = tplp::select('mysli/cms/dash');
-            $template->set_translator(i18n::select('mysli/cms/dash'));
-            output::add($template->render('index', ['title' => 'Index']));
+            $this->data[$key] = $data;
         }
+        return $this;
+    }
+    /**
+     * Add message.
+     * @param  string $message
+     * @param  string $type
+     * @return mysli\cms\dash\dash
+     */
+    function message($message, $type=self::msg_info) {
+        if (!isset($this->data['messages'])) {
+            $this->data['messages'] = [];
+        }
+        if (!isset($this->data['messages'][$type])) {
+            $this->data['messages'][$type] = [];
+        }
+        $this->data['messages'][$type][] = $message;
+        return $this;
+    }
+    /**
+     * Return all data as an array
+     * @return array
+     */
+    function as_array() {
+        return $this->data;
     }
 }

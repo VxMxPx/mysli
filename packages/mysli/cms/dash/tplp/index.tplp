@@ -1,4 +1,0 @@
-::extend _layout set content
-<div id="index">
-    {@LOADING_RESOURCES}
-</div>

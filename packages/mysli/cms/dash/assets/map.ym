@@ -1,0 +1,14 @@
+files:
+    css-min/dash.css:
+        compress: Yes
+        include:
+            - css/dash.styl
+
+    dash.js:
+        compress: Yes
+        include:
+            - js/define.js
+            - js/login.js
+            - js/request.js
+            - js/module.js
+            - js/init.js

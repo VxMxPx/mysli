@@ -1,4 +1,0 @@
-Mysli = Mysli || {};
-Mysli.Dash = ({
-
-}());
