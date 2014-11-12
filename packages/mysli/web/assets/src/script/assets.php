@@ -22,6 +22,10 @@ class assets {
              'default' => false,
              'help'    => "Watch package's assets and rebuild if changed"]);
         $params->add(
+            '--file/-f',
+            ['type' => 'str',
+             'help' => "Observe only specific file (defined in map.ym)"]);
+        $params->add(
             '--map/-m',
             ['type'    => 'str',
              'default' => 'map.ym*',
@@ -56,6 +60,7 @@ class assets {
 
         $v = $params->values();
         $package = $v['package'];
+        $file    = $v['file'];
         $publish = $v['publish'];
         $watch   = $v['watch'];
 
@@ -77,7 +82,7 @@ class assets {
         }
 
         return self::observe_or_build(
-                    $package, $source, $destination, $map, $publish, $watch);
+                $package, $file, $source, $destination, $map, $publish, $watch);
     }
 
     /**
@@ -133,6 +138,7 @@ class assets {
     /**
      * Grab multiple files, and merge them into one.
      * @param  array  $map
+     * @param  string $t_file   target file
      * @param  string $assets   assets path
      * @param  string $dest     destination path
      * @param  array  $changes
@@ -140,6 +146,7 @@ class assets {
      */
     private static function assets_merge(
                                 array $map,
+                                $t_file,
                                 $assets,
                                 $dest,
                                 array $changes)
@@ -148,6 +155,11 @@ class assets {
         $sett = $map['settings'];
 
         foreach ($map['files'] as $main => $props) {
+
+            if ($t_file && $main !== $t_file) {
+                continue;
+            }
+
             // All processed files...
             $merged = '';
 
@@ -258,18 +270,20 @@ class assets {
     /**
      * Observe (and) build assets.
      * @param  string  $package
+     * @param  string  $file    file to observe (if any)
      * @param  string  $assets  dir
      * @param  string  $dest    dir
-     * @param  string  $map     file
+     * @param  string  $map_fn  file
      * @param  boolean $publish
      * @param  boolean $loop
      * @return null
      */
     private static function observe_or_build(
                                         $package,
+                                        $file,
                                         $assets,
                                         $dest,
-                                        $map,
+                                        $map_fn,
                                         $publish,
                                         $loop)
     {
@@ -282,7 +296,7 @@ class assets {
 
         // Get map file if available...
         try {
-            $map = root\assets::get_map($package, $assets, $map);
+            $map = root\assets::get_map($package, $assets, $map_fn);
         } catch (\Exception $e) {
             cout::warn($e->getMessage());
             return false;
@@ -326,9 +340,29 @@ class assets {
         }
 
         $signature = [];
-        $observable_files = self::observable_files($assets_path, $map['files']);
+        $observable_files = self::observable_files(
+                                $assets_path, $file, $map['files']);
+
+        $map_sig = file::signature(fs::pkgpath($package, $assets, $map_fn));
+        $map_rsig = null;
 
         do {
+            // Does map needs to be reloaded?
+            $map_rsig = file::signature(
+                            fs::pkgpath($package, $assets, $map_fn));
+            // Reload map...
+            if ($map_sig !== $map_rsig) {
+                cout::line("Map changed, reloading...");
+                try {
+                    $map = root\assets::get_map($package, $assets, $map);
+                    $observable_files = self::observable_files(
+                        $assets_path, $file, $map['files']);
+                } catch (\Exception $e) {
+                    cout::warn($e->getMessage());
+                    return false;
+                }
+                $map_sig = $map_rsig;
+            }
 
             $rsignature = file::signature($observable_files);
 
@@ -342,7 +376,7 @@ class assets {
                     $signature = $rsignature;
 
                     self::assets_merge(
-                        $map, $assets_path, $dest_path, $changes);
+                        $map, $file, $assets_path, $dest_path, $changes);
 
                     if ($publish) {
                         cout::line("Will publish changes...", false);
@@ -364,10 +398,11 @@ class assets {
     /**
      * Get list of files to observe
      * @param  string $dir
+     * @param  string $t_file
      * @param  array  $files
      * @return array
      */
-    private static function observable_files($dir, $files) {
+    private static function observable_files($dir, $t_file, $files) {
         $observable = [];
 
         foreach ($files as $id => $prop) {
@@ -375,6 +410,10 @@ class assets {
             if (!isset($prop['include'])) {
                 cout::warn(
                     "Include statement is missing. Skip: `{$id}`");
+                continue;
+            }
+
+            if ($t_file && $t_file !== $id) {
                 continue;
             }
 
