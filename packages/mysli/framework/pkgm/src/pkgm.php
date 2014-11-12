@@ -190,21 +190,47 @@ class pkgm {
      * i.e. dependencies of dependencies
      * @param  string  $package
      * @param  boolean $deep
+     * @param  string  $group packages of which group to enable:
+     * null (required), recommend, dev, ... (other special groups)
      * @param  array   $process internal helper. Prevent infinite loop,
      * if cross dependency situation occurs (a require b and b require a).
      * @return array
      */
-    static function list_dependencies($package, $deep=false,
-                                      array $process=[]) {
+    static function list_dependencies(
+                        $package,
+                        $deep=false,
+                        $group='',
+                        array $process=[])
+    {
         $meta = self::meta($package);
 
         $list = [
-            'enabled'  => [],
-            'disabled' => [],
-            'missing'  => []
+            'enabled'   => [],
+            'disabled'  => [],
+            'missing'   => []
         ];
 
-        foreach ($meta['require'] as $dependency => $version) {
+        // Resolve group
+        $group = $group ? "require-{$group}" : 'require';
+
+        if (!isset($meta[$group])) {
+            return $list;
+        }
+
+        foreach ($meta[$group] as $dependency => $version) {
+
+            // Extension?
+            if (substr($dependency, 0, 14) === 'php/extension/') {
+                $extension = substr($dependency, 14);
+                if (extension_loaded($extension)) {
+                    $list['enabled'][$dependency] = $version;
+                } else {
+                    $list['missing'][$dependency] = $version;
+                }
+                continue;
+            }
+
+            // Normal package
             $dependency = self::resolve_relative($dependency, $package);
             if (!self::exists($dependency)) {
                 $list['missing'][$dependency] = $version;
@@ -221,7 +247,7 @@ class pkgm {
 
         // Prevent infinite loops
         $hash = $package . ': ' . implode(
-            ', ', array_keys($meta['require']));
+            ', ', array_keys($meta[$group]));
 
         if (in_array($hash, $process)) {
             $process[count($process) - 1] = ' >> ' .
@@ -237,12 +263,12 @@ class pkgm {
 
         foreach ($list['disabled'] as $dependency => $version) {
             $nlist = self::list_dependencies($dependency, true, $process);
-            $list['enabled'] = array_merge(
-                $nlist['enabled'], $list['enabled']);
+            $list['enabled']  = array_merge(
+                                    $nlist['enabled'], $list['enabled']);
             $list['disabled'] = array_merge(
-                $nlist['disabled'], $list['disabled']);
-            $list['missing'] = array_merge(
-                $nlist['missing'], $list['missing']);
+                                    $nlist['disabled'], $list['disabled']);
+            $list['missing']  = array_merge(
+                                    $nlist['missing'], $list['missing']);
         }
 
         return $list;
@@ -309,8 +335,7 @@ class pkgm {
                     continue;
                 }
                 foreach ($lmeta['require'] as $depends_on => $version) {
-                    $depends_on =
-                        self::resolve_relative($depends_on, $lpkg);
+                    $depends_on = self::resolve_relative($depends_on, $lpkg);
                     if ($depends_on === $package &&
                         !in_array($lpkg, $meta['required_by'])) {
                         $meta['required_by'][] = $lpkg;

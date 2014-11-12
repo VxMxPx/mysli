@@ -19,61 +19,65 @@ class pkgm {
         $param = new param('Mysli Pkgm', $args);
         $param->command = 'pkgm';
         $param->description = 'Manage Mysli Packages.';
-        $param->add('--repair', [
-            'help'   => 'Scan and repair (if needed) packages database.',
-            'type'   => 'bool',
-            'invoke' => __namespace__.'\\pkgm::repair'
-        ]);
         $param->add('-e/--enable', [
             'help' => 'Enable a package',
-            'invoke' => __namespace__.'\\pkgm::enable'
+            'type' => 'bool'
+        ]);
+        $param->add('--rec', [
+            'help' => 'Enable recommended packages for particular package.',
+            'type' => 'bool'
+        ]);
+        $param->add('--dev', [
+            'help' => 'Enable development packages for particular package.',
+            'type' => 'bool'
         ]);
         $param->add('-d/--disable', [
-            'help' => 'Disable a package',
-            'invoke' => __namespace__.'\\pkgm::disable'
+            'exclude' => ['enable', 'rec', 'dev'],
+            'help'    => 'Disable a package',
+            'type'    => 'bool'
         ]);
-        $param->add('--dump', [
-            'help'   => 'Display (raw list of) currently enabled packages.',
-            'type'   => 'bool',
-            'invoke' => __namespace__.'\\pkgm::dump'
+        $param->add('--repair', [
+            'help'   => 'Scan and repair (if needed) packages database.',
+            'type'   => 'bool'
         ]);
+        $param->add('--list', [
+            'exclude' => ['enable', 'disable', 'rec', 'dev'],
+            'help' => 'Display a list of packages. Available options: '.
+                      'all, enabled, disabled.',
+            'type' => 'str'
+        ]);
+        $param->add('--meta', [
+            'exclude' => ['enable', 'disable', 'list', 'rec', 'dev'],
+            'help'    => 'Display meta information for particular package.',
+            'type'    => 'bool'
+        ]);
+        $param->add('PACKAGE', [
+            'help'     => 'Package to preform action on.',
+            'type'     => 'str',
+            'required' => false
+        ]);
+
         $param->parse();
         if (!$param->is_valid()) {
             cout::line($param->messages());
+            return;
         }
-    }
-    /**
-     * Display (raw list of) currently enabled packages.
-     */
-    static function dump() {
-        cout::line(arr::readable(root\pkgm::dump(), 0, 4));
-    }
-    /**
-     * Check for disabled/missing packages which are needed, and enable them.
-     */
-    static function repair() {
-        cout::line('Will scan database for missing dependencies....');
-        foreach (root\pkgm::list_enabled() as $package) {
-            cout::line("Found: `{$package}`", false);
-            $dependencies = root\pkgm::list_dependencies($package);
-            if (empty($dependencies['disabled'])
-                && empty($dependencies['missing'])) {
-                cout::format('+right +green Nothing to do');
-            }
-            if (!empty($dependencies['disabled'])) {
-                cout::nl();
-                foreach ($dependencies['disabled'] as $ddep => $vel) {
-                    if (!root\pkgm::is_enabled($ddep)) {
-                        self::enable($ddep);
-                    }
-                }
-            }
-            if (!empty($dependencies['missing'])) {
-                cout::nl();
-                cout::format(
-                    "+redMissing packages:\n%s\n",
-                    arr::readable($dependencies['missing'], 2));
-            }
+
+        $val = $param->values();
+
+        if ($val['enable']) {
+            self::enable($val['package'], $val['rec'], $val['dev']);
+        } elseif ($val['disable']) {
+            self::disable($val['package']);
+        } elseif ($val['repair']) {
+            self::repair();
+        } elseif ($val['list']) {
+            self::do_list($val['list']);
+        } elseif ($val['meta']) {
+            self::meta($val['package']);
+        } else {
+            cout::warn(
+                'Invalid command, use --help to see available commands.');
         }
     }
 
@@ -82,8 +86,10 @@ class pkgm {
     /**
      * Enable particular package, and dependencies.
      * @param string $pkg
+     * @param boolean $rec include recommended packages
+     * @param boolean $dev include development packages
      */
-    static function enable($pkg) {
+    static function enable($pkg, $rec=false, $dev=false) {
         if (root\pkgm::is_enabled($pkg)) {
             cout::warn("Package is already enabled: {$pkg}");
             return false;
@@ -93,11 +99,37 @@ class pkgm {
             return false;
         }
 
-        $dependencies = root\pkgm::list_dependencies($pkg, true);
+        // Regular dependencies
+        $dependencies     = root\pkgm::list_dependencies(
+                                                $pkg, true);
+        // Recommended
+        $rec_dependencies = root\pkgm::list_dependencies(
+                                                $pkg, true, 'recommend');
+        // Development
+        $dev_dependencies = root\pkgm::list_dependencies(
+                                                $pkg, true, 'dev');
+
+        if ($rec) {
+            if ($rec && !empty($rec_dependencies['missing'])) {
+                cout::line('Following recommended dependencies are missing: ');
+                cout::line(arr::readable($rec_dependencies['missing'], 2));
+            }
+            $dependencies = array_merge(
+                $dependencies['disabled'], $rec_dependencies['disabled']);
+        }
+        if ($dev) {
+            if ($rec && !empty($dev_dependencies['missing'])) {
+                cout::line('Following development dependencies are missing: ');
+                cout::line(arr::readable($dev_dependencies['missing'], 2));
+            }
+            $dependencies = array_merge(
+                $dependencies['disabled'], $dev_dependencies['disabled']);
+        }
 
         if (!empty($dependencies['missing'])) {
             cout::format(
-                "+red Cannot enable, following packages are missing:\n%s\n",
+                "+red Cannot enable, following packages/extensions ".
+                "are missing:\n\n%s\n",
                 [arr::readable($dependencies['missing'], 2)]);
             return false;
         }
@@ -120,6 +152,17 @@ class pkgm {
         }
 
         self::enable_helper($pkg, 'installer');
+
+        // Print recommendations...
+        if (!$rec && !empty($rec_dependencies['disabled'])) {
+            cout::line('Recommended dependencies: ');
+            cout::line(arr::readable($rec_dependencies['disabled'], 2));
+        }
+        // Print recommendations...
+        if (!$dev && !empty($dev_dependencies['disabled'])) {
+            cout::line('Development dependencies: ');
+            cout::line(arr::readable($dev_dependencies['disabled'], 2));
+        }
     }
     private static function enable_helper($package, $by) {
 
@@ -197,6 +240,81 @@ class pkgm {
             cout::error("Setup failed for: {$package}");
             return false;
         }
+    }
+
+    // Repair
+
+    /**
+     * Check for disabled/missing packages which are needed, and enable them.
+     */
+    static function repair() {
+        cout::line('Will scan database for missing dependencies....');
+        foreach (root\pkgm::list_enabled() as $package) {
+            cout::line("Found: `{$package}`", false);
+            $dependencies = root\pkgm::list_dependencies($package);
+            if (empty($dependencies['disabled'])
+                && empty($dependencies['missing'])) {
+                cout::format('+right +green Nothing to do');
+            }
+            if (!empty($dependencies['disabled'])) {
+                cout::nl();
+                foreach ($dependencies['disabled'] as $ddep => $vel) {
+                    if (!root\pkgm::is_enabled($ddep)) {
+                        self::enable($ddep);
+                    }
+                }
+            }
+            if (!empty($dependencies['missing'])) {
+                cout::nl();
+                cout::format(
+                    "+redMissing packages:\n%s\n",
+                    arr::readable($dependencies['missing'], 2));
+            }
+        }
+    }
+
+    // List
+
+    /**
+     * List packages.
+     * @param  string $option all|enabled|disabled
+     */
+    static function do_list($option) {
+        switch ($option) {
+            case 'enabled':
+                cout::line(arr::readable(root\pkgm::list_enabled(), 2));
+                break;
+
+            case 'disabled':
+                cout::line(arr::readable(root\pkgm::list_disabled(), 2));
+                break;
+
+            case 'all':
+                cout::line('Enabled packages: ');
+                self::do_list('enabled');
+                cout::nl();
+                cout::line('Disabled packages: ');
+                self::do_list('disabled');
+                break;
+
+            default:
+                cout::line('Invalid value.');
+                break;
+        }
+    }
+
+    // Meta
+
+    /**
+     * Get meta for particular package.
+     * @param  string $package
+     */
+    static function meta($package) {
+        if (!root\pkgm::exists($package)) {
+            cout::warn('No such package: `'.$package.'`');
+            return;
+        }
+        cout::line(arr::readable(root\pkgm::meta($package)));
     }
 
     // CSI Handling
