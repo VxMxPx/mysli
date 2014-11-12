@@ -36,8 +36,8 @@
     {{{
     <script>
         (function mysli_cms_defer() {
-            if (Zepto && Mysli.UI && mysli.cms.dash) {
-                mysli.cms.dash.init(mysli_dash_config, Zepto, Mysli.UI);
+            if (Zepto && mysli.web.ui && mysli.cms.dash) {
+                mysli.cms.dash.init(mysli_dash_config, Zepto, mysli.web.ui);
             } else {
                 setTimeout(function () { mysli_cms_defer(); }, 100);
             }
