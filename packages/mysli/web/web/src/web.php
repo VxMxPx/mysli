@@ -59,8 +59,8 @@ class web {
     }
     /**
      * Get URL, with appended URI (if so desired).
-     * This will try to read url setting from config, and if not found, it will
-     * use request::host()
+     * This will try to read url setting from config,
+     * and if not found, it will use request::host()
      * @param  string $uri
      * @return string
      */
@@ -73,6 +73,6 @@ class web {
             $url .= '/'.$uri;
         }
         // Remove doube // and return
-        return preg_replace('#([^:])/+#', '\1/', $url);
+        return rtrim(preg_replace('#([^:])/+#', '\1/', $url), '/');
     }
 }
