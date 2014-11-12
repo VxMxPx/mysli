@@ -14,7 +14,10 @@ function enable() {
 
 function disable() {
     tplp::remove_cache('mysli/web/ui');
-    event::unregister('mysli/web/web:route<*><mysli-ui-examples*>',
-                        'mysli\\web\\ui::examples');
+
+    event::unregister(
+        'mysli/web/web:route<*><mwu-developer*>',
+        'mysli\\web\\ui::developer');
+
     return assets::destroy('mysli/web/ui');
 }

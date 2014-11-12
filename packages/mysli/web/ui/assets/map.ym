@@ -1,5 +1,5 @@
 before:
-    - cp -R {source_dir}/common {dest_dir}/
+    - cp -R {source_dir}/common {dest_dir}/common
 files:
     css-min/ui.css:
         compress: Yes
@@ -22,13 +22,8 @@ files:
     ui.js:
         compress: Yes
         include :
-            - js/ext.js
-            - js/mu.js
+            - js/namespace.js
+            - js/mixins/event.js
+            - js/mixins/widget.js
+            - js/mixins/button.js
             - js/button.js
-            - js/overlay.js
-            - js/aarray.js
-            - js/calc.js
-            - js/popup.js
-            - js/panel_side.js
-            - js/panel.js
-            - js/panels.js

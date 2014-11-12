@@ -1,0 +1,45 @@
+::use mysli/web/assets
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{page|ucfirst} :: Mysli Web Ui :: Developer</title>
+    {'mysli/web/ui/css-min/ui.css'|assets/tags}
+    {{{
+    <style type="text/css">
+        nav#primary {
+            font-size: 12px;
+            padding: 5px;
+            background-color: #eee;
+            border-bottom: #ddd;
+            color: #333;
+        }
+        nav#primary a {
+            color: #336;
+            padding: 5px;
+            text-decoration: none;
+        }
+        nav#primary a.selected {
+            background-color: #fff;
+            font-weight: bold;
+        }
+    </style>
+    }}}
+</head>
+<body id="mysli-web-ui-developer">
+
+    <nav id="primary">
+        <a class="{'selected' if page == 'index' else 'defalt'}" href="?script=index">Home</a>
+        <a class="{'selected' if page == 'buttons' else 'defalt'}" href="?script=buttons">Buttons</a>
+    </nav>
+
+    <div class="container">
+
+    </div>
+
+    {'mysli/external/zepto/zepto.js'|assets/tags}
+    {'mysli/web/ui/ui.js'|assets/tags}
+    <script>
+        {script}
+    </script>
+</body>
+</html>

@@ -3,65 +3,37 @@
 namespace mysli\web\ui;
 
 __use(__namespace__, '
-    mysli/framework/fs
-    mysli/web/response
-    mysli/web/request
-    mysli/web/web
+    mysli/framework/fs/fs,file
+
     mysli/util/tplp
     mysli/util/output
+
+    mysli/web/response
+    mysli/web/request
 ');
 
 class ui {
-    static function examples() {
+    static function developer() {
+
+        $script = request::get('script', 'index');
+
         response::set_status(200);
-        $route = request::segment(1) ?: 'alerts';
-
-        $template = tplp::select('mysli/web/ui');
-        $template->set_variable('get_alt', self::get_alt());
-        $template->set_variable('get_alt_invert', self::get_alt(true));
-        $template->set_variable('alt_link', self::alt_link($route));
-        $template->set_function('get_navigation', function () use ($route) {
-            $files = fs::ls(fs::pkgpath('mysli/web/ui/tplp'));
-            $links = [];
-
-            foreach ($files as $file) {
-
-                if (substr($file, -5) !== '.tplp' || $file === '_layout.tplp') {
-                    continue;
-                }
-
-                $clean = substr($file, 0, -5);
-
-                if ($clean === $route) {
-                    $links[] = '<strong>' . ucfirst($clean) . '</strong>';
-                } else {
-                    $links[] = '<a href="'.web::url('mysli-ui-examples/'.
-                                $clean).'">'.ucfirst($clean).'</a>';
-                }
-            }
-            return implode(' | ', $links);
-        });
-
-        output::add($template->render($route, ['title' => ucfirst($route)]));
+        output::add(
+            tplp::select(
+                'mysli/web/ui',
+                'ui',
+                [
+                    'script' => self::get_script($script),
+                    'page'   => $script
+                ]
+            )
+        );
     }
 
-    private static function get_alt($double=false) {
-
-        if (request::get('alt') === 'true') {
-            $alt = true;
-        } else {
-            $alt = false;
+    private static function get_script($script) {
+        $file = fs::pkgpath('mysli/web/ui/tplp/scripts/', $script.'.js');
+        if (file::exists($file)) {
+            return file::read($file);
         }
-
-        $alt = $double ? !$alt : $alt;
-        return ($alt ? 'alt' : '');
-    }
-    private static function alt_link($uri) {
-        $query = ['alt' => request::get('alt') === 'true' ? 'false' : 'true' ];
-        $url = web::url(
-                'mysli-ui-examples/'.
-                request::segment(1).
-                request::modify_query($query));
-        return '<a href="'.$url.'">Inverse</a>';
     }
 }
