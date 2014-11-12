@@ -1,4 +1,5 @@
 ::use mysli/web/assets
+::use mysli/external/jquery
 <!DOCTYPE html>
 <html>
 <head>
@@ -36,7 +37,7 @@
 
     </div>
 
-    {'mysli/external/zepto/zepto.js'|assets/tags}
+    {|jquery/tag}
     {'mysli/web/ui/ui.js'|assets/tags}
     <script>
         {script}

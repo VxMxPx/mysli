@@ -1,6 +1,7 @@
 <?php
 namespace mysli\web\ui\tplp\ui;
 use mysli\web\assets\tplp\util as assets;
+use mysli\external\jquery\tplp\util as jquery;
 ?><!DOCTYPE html>
 <html>
 <head>
@@ -33,7 +34,7 @@ use mysli\web\assets\tplp\util as assets;
     </nav>
     <div class="container">
     </div>
-    <?php echo assets::tags('mysli/external/zepto/zepto.js'); ?>
+    <?php echo jquery::tag(); ?>
     <?php echo assets::tags('mysli/web/ui/ui.js'); ?>
     <script>
         <?php echo $script; ?>
