@@ -8,6 +8,15 @@ class assets {
     private static $cache = [];
 
     /**
+     * Get full absolute path for particular package. This will NOT check weather
+     * path already exists.
+     * @param  string $package
+     * @return string
+     */
+    static function get_public_path($package) {
+        return web::path(self::$web_dir, self::get_id($package));
+    }
+    /**
      * Get parsed ext, e.g.: stly => css
      * @param  string $file
      * @return string
@@ -71,8 +80,7 @@ class assets {
             list($_, $dist, $_ ) = self::get_default_paths($package);
         }
         $dist  = fs::pkgpath($package, $dist);
-        $id = self::get_id($package);
-        $webpath = web::path(self::$web_dir, $id);
+        $webpath = self::get_public_path($package);
 
         if (!dir::exists($dist)) {
             throw new framework\exception\not_found(
@@ -91,8 +99,8 @@ class assets {
      * @return boolean
      */
     static function destroy($package) {
-        $id = self::get_id($package);
-        $path = web::path(self::$web_dir, $id);
+
+        $path = self::get_public_path($package);
 
         if (dir::exists($path)) {
             return dir::remove($path);
@@ -112,7 +120,7 @@ class assets {
 
         $id = self::get_id($package);
 
-        if (!file::exists(web::path('assets', $id))) {
+        if (!file::exists(self::get_public_path($package))) {
             throw new framework\exception\not_found(
                 "Public folder not found: `{$id}`", 1);
         }
