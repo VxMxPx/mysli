@@ -8,13 +8,22 @@ class assets {
     private static $cache = [];
 
     /**
-     * Get full absolute path for particular package. This will NOT check weather
-     * path already exists.
+     * Get full absolute path for particular package.
+     * This will NOT check weather path already exists.
      * @param  string $package
      * @return string
      */
     static function get_public_path($package) {
         return web::path(self::$web_dir, self::get_id($package));
+    }
+    /**
+     * Get full absolute public url fro particular package.
+     * This will NOT check weather path exists.
+     * @param  string $package
+     * @return string
+     */
+    static function get_public_url($package) {
+        return web::url(self::$web_dir.'/'.self::get_id($package));
     }
     /**
      * Get parsed ext, e.g.: stly => css
