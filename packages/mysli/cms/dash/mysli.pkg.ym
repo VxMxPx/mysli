@@ -1,5 +1,5 @@
 package     : mysli/cms/dash
-version     : 0.0.21
+version     : 0.0.22
 description : Default Mysli Dashboard.
 license     : GPL-3.0
 authors:
@@ -18,4 +18,4 @@ require:
     mysli/web/users       : ~0
     mysli/web/token       : ~0
     mysli/web/ui          : ~0
-    mysli/external/zepto  : ~0
+    mysli/external/jquery : ~0

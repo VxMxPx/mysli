@@ -1,5 +1,6 @@
 ::use mysli/web/assets
 ::use mysli/cms/dash
+::use mysli/external/jquery
 <!DOCTYPE html>
 <html>
 <head>
@@ -25,7 +26,7 @@
     <div id="waiting-box">
         Now loading dashboard...
     </div>
-    {'mysli/external/zepto/zepto.js'|assets/tags}
+    {|jquery/tag}
     {'mysli/web/ui/ui.js'|assets/tags}
     {'mysli/cms/dash/dash.js'|assets/tags}
     <script>
@@ -36,8 +37,8 @@
     {{{
     <script>
         (function mysli_cms_defer() {
-            if (Zepto && mysli.web.ui && mysli.cms.dash) {
-                mysli.cms.dash.init(mysli_dash_config, Zepto, mysli.web.ui);
+            if (jQuery && mysli.web.ui && mysli.cms.dash) {
+                mysli.cms.dash.init(mysli_dash_config, jQuery, mysli.web.ui);
             } else {
                 setTimeout(function () { mysli_cms_defer(); }, 100);
             }
