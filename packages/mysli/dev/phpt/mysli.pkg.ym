@@ -1,5 +1,5 @@
 package     : mysli/util/phpt
-version     : 0.2.10
+version     : 0.2.12
 description : Wrapper for PHPT
 license     : GPL-3.0
 authors:

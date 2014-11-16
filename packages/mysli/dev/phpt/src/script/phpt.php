@@ -337,7 +337,6 @@ class phpt {
                 "No tests found for: `{$pkg}` in `{$spath}:{$method}`");
             return;
         }
-
         foreach ($tests as $test) {
             try {
                 $test->execute();

@@ -23,21 +23,22 @@ class engine {
      * @param  string $stdin
      * @return string
      */
-    static function run($command, $env, $cwd, $stdin=null) {
+    static function run($command, array $env, $cwd, $stdin=null) {
 
         $data = '';
-        $bin_env = [];
 
-        foreach((array) $env as $key => $value) {
-            $bin_env[$key] = $value;
+        foreach ($_SERVER as $k => $v) {
+            if (!array_key_exists($k, $env) && !is_array($v)) {
+                $env[$k] = $v;
+            }
         }
 
         $proc = proc_open($command, [
                 0 => array('pipe', 'r'),
                 1 => array('pipe', 'w'),
                 2 => array('pipe', 'w')
-            ], $pipes, $cwd, $bin_env,
-            array('suppress_errors' => true, 'binary_pipes' => true));
+            ], $pipes, $cwd, $env,
+            array('suppress_errors' => true));
 
         if (!$proc) {
             return false;
