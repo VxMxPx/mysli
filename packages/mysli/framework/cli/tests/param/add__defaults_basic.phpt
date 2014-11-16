@@ -33,6 +33,8 @@ Array
             [short] =>%s
             [long] => type_bool
             [type] => bool
+            [min] =>%s
+            [max] =>%s
             [default] => 1
             [help] =>%s
             [required] =>%s
@@ -51,6 +53,8 @@ Array
             [short] =>%s
             [long] => type_int
             [type] => int
+            [min] =>%s
+            [max] =>%s
             [default] => 42
             [help] =>%s
             [required] =>%s
@@ -69,6 +73,8 @@ Array
             [short] =>%s
             [long] => type_float
             [type] => float
+            [min] =>%s
+            [max] =>%s
             [default] => 12.2
             [help] =>%s
             [required] =>%s
@@ -87,6 +93,8 @@ Array
             [short] =>%s
             [long] => type_string
             [type] => str
+            [min] =>%s
+            [max] =>%s
             [default] => hello world
             [help] =>%s
             [required] =>%s

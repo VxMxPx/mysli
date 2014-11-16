@@ -49,6 +49,8 @@ Array
             [short] => l
             [long] => long
             [type] => str
+            [min] =>%s
+            [max] =>%s
             [default] =>%s
             [help] => Long and short parameter.
             [required] =>%s
@@ -67,6 +69,8 @@ Array
             [short] => s
             [long] =>%s
             [type] => str
+            [min] =>%s
+            [max] =>%s
             [default] =>%s
             [help] => Only short parameter.
             [required] =>%s
@@ -85,6 +89,8 @@ Array
             [short] =>%s
             [long] => noshort
             [type] => str
+            [min] =>%s
+            [max] =>%s
             [default] =>%s
             [help] => Only long parameter.
             [required] =>%s
@@ -103,6 +109,8 @@ Array
             [short] =>%s
             [long] => type_bool
             [type] => bool
+            [min] =>%s
+            [max] =>%s
             [default] =>%s
             [help] =>%s
             [required] =>%s
@@ -121,6 +129,8 @@ Array
             [short] =>%s
             [long] => type_int
             [type] => int
+            [min] =>%s
+            [max] =>%s
             [default] =>%s
             [help] =>%s
             [required] =>%s
@@ -139,6 +149,8 @@ Array
             [short] =>%s
             [long] => type_float
             [type] => float
+            [min] =>%s
+            [max] =>%s
             [default] =>%s
             [help] =>%s
             [required] =>%s
@@ -157,6 +169,8 @@ Array
             [short] =>%s
             [long] => required
             [type] => str
+            [min] =>%s
+            [max] =>%s
             [default] =>%s
             [help] =>%s
             [required] => 1
@@ -175,6 +189,8 @@ Array
             [short] => d
             [long] =>%s
             [type] => str
+            [min] =>%s
+            [max] =>%s
             [default] =>%s
             [help] =>%s
             [required] =>%s
@@ -193,6 +209,8 @@ Array
             [short] =>%s
             [long] =>%s
             [type] => str
+            [min] =>%s
+            [max] =>%s
             [default] =>%s
             [help] => Positional parameter.
             [required] => 1

@@ -41,8 +41,7 @@ Options:
     Display this help
 %s
   -l, --a-very-very-very-very-very-long-argument [a-very-very-v...]%s
-    Long and short parameter, with a very, very, very, very long
-    description.
+    Long and short parameter, with a very, very, very, very long description.
 %s
   -s%s
     Only short parameter, with a very, very long description.

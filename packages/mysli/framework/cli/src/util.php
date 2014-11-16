@@ -7,6 +7,7 @@ __use(__namespace__, '
 ');
 
 class util {
+
     /**
      * Detect terminal width.
      * @return integer
@@ -15,30 +16,36 @@ class util {
 
         if (!is_cli()) {
             return 80;
+        } elseif (!self::is_win()) {
+            return self::execute('tput cols');
+            // $result = self::popen('resize');
+            // preg_match("/COLUMNS=([0-9]+)/", $result, $matches);
+            // return $matches[1];
+        } else {
+            $result = self::popen('mode');
+            preg_match('/^ *Columns\: *([0-9]+)$/m', $result, $matches);
+            return $matches[1];
         }
+    }
+    /**
+     * Check if we're in windows environment
+     * @return boolean
+     */
+    static function is_win() {
+        return strtoupper(substr(PHP_OS, 0, 3) === 'WIN');
+    }
+    /**
+     * Simple popen wrapper.
+     * @param  string $command
+     * @param  string $mode
+     * @return string
+     */
+    static function popen($command, $mode='r') {
+        $fp = popen($command, $mode);
+        $result = stream_get_contents($fp);
+        pclose($fp);
 
-        // standard method
-        $r = (int) self::execute('tput cols');
-
-        if (!$r) {
-            $r = (int) self::execute('echo $COLUMNS');
-        }
-        // try to get it from stty
-        if (!$r) {
-            $r = self::execute('stty size');
-            $r = explode(' ', $r, 2);
-            $r = (int) (isset($r[1]) ? $r[1] : 0);
-        }
-        // windows environment
-        if (!$r && strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-            $r = self::execute('mode');
-            $r = (int) preg_match('/^ *Columns\: *([0-9]+)$/', $r);
-        }
-        // Default
-        if (!$r) {
-            $r = 80;
-        }
-        return $r;
+        return $result;
     }
     /**
      * Execute command.

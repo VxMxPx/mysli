@@ -398,21 +398,23 @@ class param {
             if ($opt['type'] === 'arr') {
                 $this->values[$opt['id']][] = $value;
             } else {
-                if ($opt['max'] !== null
-                && ($opt['type'] === 'int' || $opt['type'] === 'float')
-                && $opt['max'] > $value)
+                if ($opt['max'] !== null &&
+                    ($opt['type'] === 'int' || $opt['type'] === 'float') &&
+                    $value > $opt['max'])
                 {
                     $this->invalidate(
                         "The `{$opt['id']}` is more than the maximum allowed ".
-                        "value (`{$opt['max']}` < `{$value}`)");
+                        "value, can be maximum: `{$opt['max']}`, ".
+                        "your value: `{$value}`");
                 }
-                if ($opt['min'] !== null
-                && ($opt['type'] === 'int' || $opt['type'] === 'float')
-                && $opt['min'] < $value)
+                if ($opt['min'] !== null &&
+                    ($opt['type'] === 'int' || $opt['type'] === 'float') &&
+                    $value < $opt['min'])
                 {
                     $this->invalidate(
                         "The `{$opt['id']}` is less than the minimum allowed ".
-                        "value (`{$opt['min']}` > `{$value}`)");
+                        "value. Need to be at least `{$opt['min']}`, ".
+                        "your value: `{$value}`");
                 }
                 $this->values[$opt['id']] = $value;
             }

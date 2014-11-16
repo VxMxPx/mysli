@@ -39,6 +39,5 @@ Usage: ./dot test [OPTIONS]... POSITIONAL
 Options:
   -h, --help           Display this help
   -l, --long           Long and short parameter
-  -s            [def]  Only short parameter, with a very, very long
-                       description.
+  -s            [def]  Only short parameter, with a very, very long description.
       --noshort        Only long parameter

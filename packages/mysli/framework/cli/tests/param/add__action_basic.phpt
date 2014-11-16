@@ -21,6 +21,8 @@ Array
             [short] =>%s
             [long] => test
             [type] => str
+            [min] =>%s
+            [max] =>%s
             [default] =>%s
             [help] =>%s
             [required] =>%s
