@@ -20,11 +20,11 @@ class assets {
             '--watch/-w',
             ['type'    => 'bool',
              'default' => false,
-             'help'    => "Watch package's assets and rebuild if changed"]);
+             'help'    => 'Watch package\'s assets and rebuild if changed']);
         $params->add(
             '--file/-f',
             ['type' => 'str',
-             'help' => "Observe only specific file (defined in map.ym)"]);
+             'help' => 'Observe only specific file (defined in map.ym)']);
         $params->add(
             '--map/-m',
             ['type'    => 'str',
@@ -46,6 +46,13 @@ class assets {
              'default' => false,
              'help'    => 'Publish changes to web directory']);
         $params->add(
+            '--interval/-i',
+            ['type'    => 'int',
+             'min'     => 1,
+             'default' => 3,
+             'help'    => 'How often (in seconds) should files be re-checked '.
+                          'when watching (-w).']);
+        $params->add(
             'PACKAGE',
             ['type'       => 'str',
              'help'       => 'Package name, e.g.: mysli/web/ui',
@@ -59,10 +66,11 @@ class assets {
         }
 
         $v = $params->values();
-        $package = $v['package'];
-        $file    = $v['file'];
-        $publish = $v['publish'];
-        $watch   = $v['watch'];
+        $package  = $v['package'];
+        $file     = $v['file'];
+        $publish  = $v['publish'];
+        $watch    = $v['watch'];
+        $interval = $v['interval'];
 
         // Check weather path was set || was defined in mysli.pkg || default
         list(
@@ -82,7 +90,8 @@ class assets {
         }
 
         return self::observe_or_build(
-                $package, $file, $source, $destination, $map, $publish, $watch);
+                $package, $file, $source, $destination, $map, $publish, $watch,
+                $interval);
     }
 
     /**
@@ -164,12 +173,18 @@ class assets {
             $merged = '';
 
             foreach ($props['include'] as $file) {
+
                 $file_ext = file::extension($file);
                 $src_file = fs::ds($assets, $file);
                 // defined in ../util
                 $dest_file = fs::ds($dest, root\assets::parse_extention(
                                                                 $file,
                                                                 $sett['ext']));
+
+                if (!file::exists($src_file)) {
+                    cout::warn('File not found: `'.$src_file.'`');
+                    continue;
+                }
 
                 if (!arr::key_in($changes, $file)) {
                     // Still needs to be appened...
@@ -229,11 +244,6 @@ class assets {
                                         $sett['compress'][$main_ext],
                                         $dest_main,
                                         $dest_main));
-                    // {
-                    //     cout::format("+right+green OK");
-                    // } else {
-                    //     cout::format("+right+red FAILED");
-                    // }
                 }
             }
         }
@@ -276,25 +286,19 @@ class assets {
      * @param  string  $map_fn  file
      * @param  boolean $publish
      * @param  boolean $loop
-     * @return null
+     * @param  integer $interval
      */
     private static function observe_or_build(
-                                        $package,
-                                        $file,
-                                        $assets,
-                                        $dest,
-                                        $map_fn,
-                                        $publish,
-                                        $loop)
+        $package, $file, $assets, $dest, $map_fn, $publish, $loop, $interval)
     {
-        // Check if we have a valid assets path
+        // Check weather assets path is valid
         $assets_path = fs::pkgpath($package, $assets);
         if (!dir::exists($assets_path)) {
             cout::yellow("Assets path is invalid: `{$assets_path}`");
             return false;
         }
 
-        // Get map file if available...
+        // Get map file
         try {
             $map = root\assets::get_map($package, $assets, $map_fn);
         } catch (\Exception $e) {
@@ -302,18 +306,18 @@ class assets {
             return false;
         }
 
-        // Check weather required modules are available
+        // Check required modules set in map file
         if ($map['settings']['require'] !== false) {
             if (!self::check_required_modules($map['settings']['require'])) {
                 return false;
             }
         }
 
-        // Dest path
+        // Set destinatination path
         $dest_path = fs::pkgpath($package, $dest);
         if (!dir::exists($dest_path)) {
-            if (!cinput::confirm(l("Destination directory (`{$dest}`) not found.
-                                    Create it now?")))
+            if (!cinput::confirm(
+                "Destination directory (`{$dest}`) not found. Create it now?"))
             {
                 cout::line('Terminated.');
                 return false;
@@ -327,50 +331,69 @@ class assets {
             }
         }
 
-        // `before` command
+        // Execute `before` commands
         if (isset($map['before'])) {
             foreach ($map['before'] as $before) {
                 $command = self::parse_command(
-                                            $before,
-                                            fs::ds($assets_path, 'null'),
-                                            fs::ds($dest_path, 'null'));
+                    $before, fs::ds($assets_path, 'null'),
+                    fs::ds($dest_path, 'null'));
+
                 cout::line('Call: ' . $command);
                 cout::line(cutil::execute($command));
             }
         }
 
+        // Files signature
         $signature = [];
+        $rsignature = null;
         $observable_files = self::observable_files(
-                                $assets_path, $file, $map['files']);
+            $assets_path, $file, $map['files']);
 
-        $map_sig = file::signature(fs::pkgpath($package, $assets, $map_fn));
+        // Map signature
+        $map_sig  = file::signature(fs::pkgpath($package, $assets, $map_fn));
         $map_rsig = null;
 
         do {
-            // Does map needs to be reloaded?
+            // Get new map signature
             $map_rsig = file::signature(
-                            fs::pkgpath($package, $assets, $map_fn));
+                fs::pkgpath($package, $assets, $map_fn));
+
             // Reload map...
             if ($map_sig !== $map_rsig) {
                 cout::line("Map changed, reloading...");
                 try {
-                    $map = root\assets::get_map($package, $assets, $map);
+                    $map = root\assets::get_map(
+                        $package, $assets, $map_fn, true);
+
                     $observable_files = self::observable_files(
                         $assets_path, $file, $map['files']);
                 } catch (\Exception $e) {
-                    cout::warn($e->getMessage());
+                    cout::warn('Error: '.$e->getMessage());
                     return false;
                 }
                 $map_sig = $map_rsig;
             }
 
-            $rsignature = file::signature($observable_files);
+            // Get new signature of observable files
+            try {
+                $rsignature = file::signature($observable_files);
+            } catch (\Exception $e) {
+                cout::warn($e->getMessage());
+                cout::warn('Retrying in '.($interval*2).' seconds...');
+                sleep($interval*2);
+                continue;
+            }
 
+            // Signature is the same, continue or break...
             if ($rsignature !== $signature) {
+
                 $changes = self::what_changed(
                     $rsignature, $signature, strlen($assets_path)+1);
 
-                if (!empty($changes)) {
+                if (empty($changes)) {
+                    cout::line('No changes in source files.');
+                } else {
+
                     cout::line("What changed: \n" . arr::readable($changes));
                     cout::line('Rebuilding assets...');
                     $signature = $rsignature;
@@ -386,13 +409,11 @@ class assets {
                             cout::format("+red+right FAILED");
                         }
                     }
-
-                } else {
-                    cout::line('No changes in source files.');
                 }
             }
 
-            $loop and sleep(3);
+            $loop and sleep($interval);
+
         } while ($loop);
     }
     /**
@@ -420,10 +441,10 @@ class assets {
             foreach ($prop['include'] as $file) {
                 $ffile = fs::ds($dir, $file);
                 if (!file::exists($ffile)) {
-                    cout::warn("File not found: `{$file}`, will skip.");
-                } else {
-                    $observable[] = $ffile;
+                    cout::warn("File not found: `{$file}`");
                 }
+
+                $observable[] = $ffile;
             }
         }
 

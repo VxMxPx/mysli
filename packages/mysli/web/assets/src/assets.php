@@ -40,14 +40,15 @@ class assets {
     }
     /**
      * Read assets file for particular package.
-     * @param  string $package
-     * @param  string $assets relative folder path
-     * @param  string $map filename
+     * @param  string  $package
+     * @param  string  $assets relative folder path
+     * @param  string  $map filename
+     * @param  boolean $reload load map even if cached
      * @return array
      */
-    static function get_map($package, $assets, $map) {
+    static function get_map($package, $assets, $map, $reload=false) {
 
-        if (!isset(self::$cache[$package])) {
+        if ($reload || !isset(self::$cache[$package])) {
             $filename = fs::pkgpath($package, $assets, $map);
             if (!file::exists($filename)) {
                 throw new framework\exception\not_found(
