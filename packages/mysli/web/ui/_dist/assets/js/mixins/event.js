@@ -13,7 +13,7 @@ mysli.web.ui.mixins.event = (function () {
             params = [];
         }
 
-        params.unshift(this);
+        params.push(this);
 
         var call, id = null;
         for (id in this.events[event]) {
@@ -39,8 +39,8 @@ mysli.web.ui.mixins.event = (function () {
         var id = "";
         if (event.indexOf("*") > 0) {
             id = event.split("*", 2);
-            id = "*" + id[1] + "*";
             event = id[0];
+            id = "*" + id[1] + "*";
         }
 
         if (typeof this.events[event] === 'undefined') {
@@ -81,6 +81,7 @@ mysli.web.ui.mixins.event = (function () {
     }
 
     return function () {
+
         this.events_counter = 0;
         this.events = {};
 

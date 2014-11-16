@@ -2,9 +2,10 @@
 
     'use strict';
 
-    var container = $('.container'),
-        intro = container.append('<p>');
+    var ui = mysli.web.ui,
+        panels = new ui.panel_container();
 
-    intro.text('Please use navigation to swich pages...');
+    panels.set_track_resize(true);
+    panels.show();
 
 }());

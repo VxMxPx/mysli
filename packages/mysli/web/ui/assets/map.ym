@@ -1,4 +1,5 @@
 before:
+    - rm -rf {dest_dir}/common
     - cp -R {source_dir}/common {dest_dir}/common
 files:
     css-min/ui.css:
@@ -8,22 +9,17 @@ files:
             - css/font-awesome.css
             - css/variables.styl
             - css/common.styl
-            - css/overlay.styl
-            - css/menu.styl
-            - css/grid.styl
-            - css/table.styl
-            - css/form.styl
-            - css/button.styl
-            - css/popup.styl
-            - css/panel.styl
-            - css/alert.styl
-            - css/tab.styl
-            - css/calendar.styl
+            - css/box.styl
+            - css/widget.styl
     ui.js:
         compress: Yes
         include :
             - js/namespace.js
             - js/mixins/event.js
             - js/mixins/widget.js
+            - js/mixins/container.js
+            - js/mixins/box.js
+            - js/mixins/root.js
             - js/mixins/button.js
             - js/button.js
+            - js/panel_container.js

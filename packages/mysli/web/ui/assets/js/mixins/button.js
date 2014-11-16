@@ -1,7 +1,13 @@
 mysli.web.ui.mixins.button = (function () {
 
+    var ui = mysli.web.ui,
+        template = '<button></button>';
+
     return function () {
-        mysli.web.ui.mixins.widget.call(this);
+        ui.mixins.widget.call(this);
+
+        this.elements.push($(template));
+
         return this;
     };
 

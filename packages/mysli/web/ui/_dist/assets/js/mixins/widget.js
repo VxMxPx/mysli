@@ -1,6 +1,7 @@
 mysli.web.ui.mixins.widget = (function () {
 
-    var ui = mysli.web.ui;
+    var ui = mysli.web.ui,
+        ids_pool = {};
 
     /// Set busy state for the button
     /// @param {boolean} state
@@ -15,16 +16,16 @@ mysli.web.ui.mixins.widget = (function () {
             this.busy.set_dimension(this.get_dimension());
 
             this.connect(
-                'destroy*self.overlay',
+                'destroy*widget.overlay',
                 this.busy.destroy.bind(this.busy));
             this.connect(
-                'position-change*self.overlay',
+                'position-change*widget.overlay',
                 function (__, position) {
                     this.busy.set_position(position);
                 }
             );
             this.connect(
-                'size-change*self.overlay',
+                'size-change*widget.overlay',
                 function (__, size) {
                     this.busy.set_size(size);
                 }
@@ -32,7 +33,7 @@ mysli.web.ui.mixins.widget = (function () {
 
             this.busy.show();
         } else {
-            this.disconnect('*self.overlay');
+            this.disconnect('*widget.overlay');
             this.trigger('busy-change', [state]);
             this.busy = this.busy.destroy();
         }
@@ -65,7 +66,6 @@ mysli.web.ui.mixins.widget = (function () {
     function set_size(size) {
 
         var element = this.elements[0];
-        this.trigger('size-change', [size, !!element]);
 
         if (element) {
             if (size.width) {
@@ -75,6 +75,8 @@ mysli.web.ui.mixins.widget = (function () {
                 element.css('height', size.height);
             }
         }
+
+        this.trigger('size-change', [size, !!element]);
     }
     /// Get main element's size.
     /// @returns {object} {width: int, height: int}
@@ -88,11 +90,34 @@ mysli.web.ui.mixins.widget = (function () {
             };
         }
     }
+    /// You can set an ID only once for particular object
+    /// ID must be unique amoung all object.
+    /// @param {string} id
+    function set_id(id) {
+        if (this.id) {
+            throw new Error("You cannot change ID once it was set: `"+id+"`");
+        }
+        if (typeof ids_pool[id] !== 'undefined') {
+            throw new Error("Item with such ID already exists: `"+id+"`");
+        }
+        this.elements[0].attr('id', id);
+        this.id = id;
+        ids_pool[id] = this;
+    }
+    /// Get ID for this object
+    /// @returns {string} | false if not set
+    function get_id() {
+        return this.id;
+    }
     /// Destroy this widget, please note: this will destroy all elements
     /// in DOM, trigger 'destroy', and clear connected events.
     /// You still need to manually delete(ref) afer that.
     function destroy() {
         this.trigger('destroy');
+
+        if (this.id) {
+            delete ids_pool[this.id];
+        }
 
         for (var event in this.events) {
             this.events[event] = {};
@@ -111,20 +136,29 @@ mysli.web.ui.mixins.widget = (function () {
 
         this.events = {
             // On busy changed
-            // => ( boolean state )
+            // => ( boolean state, object this )
             'busy-change'     : {},
             // On position changed
-            // => ( object position, boolean elementExists )
+            // => ( object position, boolean elementExists, object this )
             'position-change' : {},
             // On size changed
-            // => ( object size, boolean elementExists )
+            // => ( object size, boolean elementExists, object this )
             'size-change'     : {},
+            // When this widget is added to a container
+            // => ( object container, object this )
+            'added'           : {},
+            // When this widget is removed from a container
+            // => ( object container, object this )
+            'removed'         : {},
             // On destroy called
-            // => ( void )
+            // => ( object this )
             'destroy'         : {}
         };
+
         this.elements = [];
         this.busy = false;
+        this.id = false;
+        this.parent = false;
 
         // Export functions
         this.set_busy     = set_busy;
@@ -133,6 +167,8 @@ mysli.web.ui.mixins.widget = (function () {
         this.get_position = get_position;
         this.set_size     = set_size;
         this.get_size     = get_size;
+        this.set_id       = set_id;
+        this.get_id       = get_id;
         this.destroy      = destroy;
 
         return this;
