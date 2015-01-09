@@ -339,7 +339,7 @@ something particular with it. In this example, we need `login here` to be
 a link, which will login the user. As in the example above, we can be creative,
 and do so: `{1 Login here} please`, or `{1 Login}`.
 
-There can be a text, for example, which has more than one variable assigned:
+There can be text, for example, which has more than one variable assigned:
 
 ```
 @USER_NAME_AND_AGE Your name is {1} and you're {2} years old.
