@@ -56,7 +56,7 @@ class users {
     /**
      * Get one user by uname = e-mail.
      * @param  string $email
-     * @return mixed  false, or object \mysli\users\user
+     * @return mixed  false, or object \mysli\web\users\user
      */
     static function get_by_uname($email) {
         // The id is just a md5 version of email...
@@ -65,7 +65,7 @@ class users {
     /**
      * Get one user by ID.
      * @param  string  $id
-     * @return mixed   false, or object \mysli\users\user
+     * @return mixed   false, or object \mysli\web\users\user
      */
     static function get_by_id($id) {
 
@@ -113,10 +113,10 @@ class users {
         }
     }
     /**
-     * Create new user and return \mysli\users\user
+     * Create new user and return \mysli\web\users\user
      * @param  mixed $user If string, it should be valid e-mail address,
      *                     if array, then the `email` key should exists.
-     * @return mixed \mysli\users\user or false if user already exists.
+     * @return mixed \mysli\web\users\user or false if user already exists.
      */
     static function create($user) {
 
