@@ -87,10 +87,7 @@ class jquery {
      * @return boolean
      */
     private static function fetch_library(
-                                $version,
-                                $dev,
-                                $destination,
-                                $remote_url)
+        $version, $dev, $destination, $remote_url)
     {
 
         if (!pkgm::is_enabled('mysli/util/curl')) {
