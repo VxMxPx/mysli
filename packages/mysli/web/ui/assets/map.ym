@@ -1,6 +1,19 @@
+settings:
+    require:
+        coffee:
+            command : {id} --version
+            expect  : CoffeeScript version 1.8.*
+            level   : warn
+            message : "CoffeeScript compiler might not work. Missing `{id}` (npm install -g coffee-script). Expected version `{expect}` got `{result}`."
+    process:
+        coffee : coffee -c -o {dest_dir} {source}
+    ext:
+        coffee : js
+
 before:
     - rm -rf {dest_dir}/common
     - cp -R {source_dir}/common {dest_dir}/common
+
 files:
     css-min/ui.css:
         compress: Yes
@@ -9,17 +22,27 @@ files:
             - css/font-awesome.css
             - css/variables.styl
             - css/common.styl
-            - css/box.styl
             - css/widget.styl
+            - css/panel_container.styl
+            - css/panel.styl
+            - css/box.styl
+            - css/button.styl
     ui.js:
         compress: Yes
         include :
+            # Util
             - js/namespace.js
-            - js/mixins/event.js
-            - js/mixins/widget.js
-            - js/mixins/container.js
-            - js/mixins/box.js
-            - js/mixins/root.js
-            - js/mixins/button.js
-            - js/button.js
-            - js/panel_container.js
+            - js/constants.js
+            - js/util.coffee
+            - js/arr.coffee
+            # Common
+            - js/event.coffee
+            # Elements
+            - js/widget.coffee
+            - js/container.coffee
+            - js/button.coffee
+            - js/box.coffee
+            - js/panel.coffee
+            - js/panel_container.coffee
+            - js/panel_side.coffee
+            - js/titlebar.coffee

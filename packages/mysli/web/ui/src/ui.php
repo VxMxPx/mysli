@@ -13,10 +13,9 @@ __use(__namespace__, '
 ');
 
 class ui {
+
     static function developer() {
-
         $script = request::get('script', 'index');
-
         response::set_status(200);
         output::add(
             tplp::select(

@@ -1,3 +1,5 @@
 .ui-widget {
   position: relative;
+  background-color: #fff;
+  color: color-text-element;
 }

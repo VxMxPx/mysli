@@ -109,6 +109,11 @@ mysli.web.ui.mixins.widget = (function () {
     function get_id() {
         return this.id;
     }
+    /// Get primary DOM element for this widget.
+    /// @returns {object}
+    function get_element() {
+        return this.elements[0];
+    }
     /// Destroy this widget, please note: this will destroy all elements
     /// in DOM, trigger 'destroy', and clear connected events.
     /// You still need to manually delete(ref) afer that.
@@ -169,6 +174,7 @@ mysli.web.ui.mixins.widget = (function () {
         this.get_size     = get_size;
         this.set_id       = set_id;
         this.get_id       = get_id;
+        this.get_element  = get_element;
         this.destroy      = destroy;
 
         return this;

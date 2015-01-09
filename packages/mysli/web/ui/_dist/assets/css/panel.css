@@ -1,0 +1,9 @@
+.ui-panel {
+  height: 100%;
+  background: #ff0;
+  position: absolute;
+  border-right: 1px solid #666;
+}
+.ui-panel.focused {
+  background: #ffc0cb;
+}

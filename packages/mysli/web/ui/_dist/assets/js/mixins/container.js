@@ -2,56 +2,58 @@ mysli.web.ui.mixins.container = (function () {
 
     var ui = mysli.web.ui;
 
-    /// Add a new element to the container
-    /// @param   {object} element
+    /// Add a new widget to the container
+    /// @param   {object} widget
     /// @returns {integer} id
-    function add(element) {
+    function add(widget) {
 
-        element.parent = this;
+        widget.parent = this;
 
-        element.trigger('added', [this]);
-        this.trigger('add', [element]);
+        widget.trigger('added', [this]);
+        this.trigger('add', [widget]);
 
-        var id = this.container.elements.push(element)-1;
+        var id = this.container.elements.push(widget)-1;
 
-        if (element.get_id()) {
-            this.container.ids[element.get_id()] = id;
+        if (widget.get_id()) {
+            this.container.ids[widget.get_id()] = id;
         }
-        element.connect('destroy*container.add', function (id) {
+        widget.connect('destroy*container.add', function (id) {
             this.remove(id);
         }.bind(this, id));
 
-        element.elements[0].addClass('contained-element-n-'+id);
-        this.elements[0].append(element.elements[0]);
+        widget.get_element().addClass('contained-widget-n-'+id);
+        this.target.append(widget.get_element());
+
+        return id;
     }
-    /// Remove an element from a container
-    /// @param {mixed} id string (element's internal id)|integer
+    /// Remove an widget from a container
+    /// @param {mixed} id string (widget's internal id)|integer
     function remove(id) {
 
         idn = get_internal_id(id);
-        var element = this.get(idn);
+        var widget = this.get(idn);
 
-        this.trigger('remove', [element]);
-        element.trigger('removed', [this]);
-        element.disconnect('*container.add');
-        element.parent = false;
+        this.trigger('remove', [widget]);
+        widget.trigger('removed', [this]);
+        widget.disconnect('*container.add');
+        widget.parent = false;
 
         delete this.container.elements[id];
         if (idn !== id) {
             delete this.container.ids[id];
         }
 
-        this.elements[0].find('.contained-element-n-'+idn).remove();
+        this.get_element().find('.contained-widget-n-'+idn).remove();
     }
-    /// Get element by id.
-    /// @param   {mixed} id string (element's internal id)|integer
+    /// Get widget by id.
+    /// @param   {mixed} id string (widget's internal id)|integer
     /// @returns {mixed} object|false
     function get(id) {
         return this.container.elements[get_internal_id(id)];
     }
 
-    /// Get internal element's ID
-    /// @param   {mixed} id string (element's internal id)|integer
+    /// Get internal widget's ID
+    /// @param   {mixed} id string (widget's internal id)|integer
     /// @returns {integer}
     function get_internal_id(id) {
         if (typeof id === 'number') {
@@ -63,6 +65,7 @@ mysli.web.ui.mixins.container = (function () {
     }
 
     return function () {
+        // Extend...
         ui.mixins.widget.call(this);
 
         // Container append an element
@@ -74,10 +77,15 @@ mysli.web.ui.mixins.container = (function () {
 
         // Contained elements
         this.container = {
+            master   : null,
+            target   : null,
             elements : [],
             ids      : {}
         };
+        this.container.master = this.get_element();
+        this.container.target = this.get_element();
 
+        // Public methods
         this.add = add;
         this.remove = remove;
         this.get = get;

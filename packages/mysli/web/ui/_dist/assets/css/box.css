@@ -1,3 +1,11 @@
 .ui-box {
+  background-color: transparent;
   display: table;
+}
+.ui-box .cell {
+  display: table-cell;
+  padding: 10px;
+}
+.ui-box .row {
+  display: table-row;
 }

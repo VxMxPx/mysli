@@ -9,9 +9,14 @@ use mysli\external\jquery\tplp\util as jquery;
     <?php echo assets::tags('mysli/web/ui/css-min/ui.css'); ?>
 
     <style type="text/css">
-        .ui-root {
-            background-color: #ffa;
-            position: relative;
+        body {
+            overflow: hidden;
+        }
+        .ui-panel-container {
+            background-color: #3a2b2b;
+        }
+        .ui-panel {
+            box-shadow: 2px 0px 6px rgba(0, 0, 0, .2);
         }
     </style>
 </head>
