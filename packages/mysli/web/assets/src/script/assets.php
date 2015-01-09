@@ -90,8 +90,8 @@ class assets {
         }
 
         return self::observe_or_build(
-                $package, $file, $source, $destination, $map, $publish, $watch,
-                $interval);
+            $package, $file, $source, $destination, $map, $publish, $watch,
+            $interval);
     }
 
     /**
@@ -154,11 +154,7 @@ class assets {
      * @return null
      */
     private static function assets_merge(
-                                array $map,
-                                $t_file,
-                                $assets,
-                                $dest,
-                                array $changes)
+        array $map, $t_file, $assets, $dest, array $changes)
     {
         // For easy short access
         $sett = $map['settings'];
@@ -216,6 +212,7 @@ class assets {
                         cout::format("+green+right OK");
                     }
                 }
+
                 cutil::execute(self::parse_command(
                                                 $sett['process'][$file_ext],
                                                 $src_file,

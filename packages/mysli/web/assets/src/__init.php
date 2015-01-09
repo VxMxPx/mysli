@@ -18,7 +18,7 @@ function __init() {
 
     // Script
     $script = '
-        mysli/framework/cli/{output,input,param,util} AS  {cout,cinput,cparam,cutil}
+        mysli/framework/cli/{output,input,param,util} AS {cout,cinput,cparam,cutil}
         mysli/web/assets AS root/assets
     ';
 
