@@ -99,6 +99,16 @@ class template {
     }
 
     /**
+     * Check weather particuar template file exists.
+     * @param  string  $file
+     * @return boolean
+     */
+    function has($file) {
+        $source_file = fs::ds($this->source, $file.'.tplp');
+        return file::exists($source_file);
+    }
+
+    /**
      * Get parsed template absolute path, if exists,
      * otherwise parse it and then return the path
      * @param  string $file
@@ -106,13 +116,12 @@ class template {
      */
     private function create_and_get_file($file) {
 
-        $cache_file  = fs::ds($this->dest, $file.'.php');
-        $source_file = fs::ds($this->source, $file.'.tplp');
+        $cache_file = fs::ds($this->dest, $file.'.php');
 
         if (!file::exists($cache_file) ||
             config::select('mysli/util/tplp', 'debug'))
         {
-            if (!file::exists($source_file)) {
+            if (!$this->has($file)) {
                 throw new framework\exception\not_found(
                     "File `{$file}.tplp` not found in `" .
                     $this->source . '`', 1);
