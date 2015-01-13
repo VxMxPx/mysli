@@ -7,8 +7,8 @@ __use(__namespace__, '
 ');
 
 function enable() {
-	return dir::create(fs::datpath('mysli/web/users'));
+    return dir::create(fs::datpath('mysli/web/users'));
 }
 function disable() {
-	return dir::remove(fs::datpath('mysli/web/users'));
+    return dir::remove(fs::datpath('mysli/web/users'));
 }
