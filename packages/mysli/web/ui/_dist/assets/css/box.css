@@ -1,11 +1,18 @@
 .ui-box {
   background-color: transparent;
   display: table;
+  position: relative;
+  overflow: hidden;
 }
 .ui-box .cell {
   display: table-cell;
-  padding: 10px;
+}
+.ui-box .cell.collapsed {
+  width: 1%;
 }
 .ui-box .row {
   display: table-row;
+}
+.ui-box .row.collapsed {
+  height: 1%;
 }

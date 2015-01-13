@@ -32,12 +32,12 @@ class mysli.web.ui.container extends mysli.web.ui.widget
         widget.trigger 'added', [this]
         @trigger   'add', [widget]
 
-        id = @get_new_id if not id
+        id = @get_new_id() if not id
 
         widget.connect 'destroyed*container.add', =>
             @remove id
 
-        widget.get_element().addClass "mcontained-widget-#{id}"
+        widget.get_element().addClass "contained-widget-#{id}"
 
         if @container.target
             @container.target.append widget.get_element()
@@ -57,7 +57,7 @@ class mysli.web.ui.container extends mysli.web.ui.widget
     @returns {object} widget
     ###
     push_after: (after_id, widget, id=null) ->
-        id = @get_new_id if not id
+        id = @get_new_id() if not id
         index_to = @get_index(after_id) + 1
 
         widget.parent = this
@@ -68,7 +68,7 @@ class mysli.web.ui.container extends mysli.web.ui.widget
         widget.connect 'destroyed*container.add', =>
             @remove id
 
-        widget.get_element().addClass "mcontained-widget-#{id}"
+        widget.get_element().addClass "contained-widget-#{id}"
 
         if @container.target
             @container.target.append widget.get_element()
@@ -97,7 +97,7 @@ class mysli.web.ui.container extends mysli.web.ui.widget
         delete @container.stack[id]
         @container.ids.splice(@get_index(id), 1)
 
-        @get_element().find(".mcontained-widget-#{id}").remove()
+        @get_element().find(".contained-widget-#{id}").remove()
 
     ###
     Get widget by id.
@@ -212,4 +212,4 @@ class mysli.web.ui.container extends mysli.web.ui.widget
     ###
     get_new_id: ->
         @container.icounter++
-        return 'aid-'+@container.icounter
+        return "aid-#{@container.icounter}"

@@ -11,12 +11,7 @@ use mysli\external\jquery\tplp\util as jquery;
     <style type="text/css">
         body {
             overflow: hidden;
-        }
-        .ui-panel-container {
-            background-color: #3a2b2b;
-        }
-        .ui-panel {
-            box-shadow: 2px 0px 6px rgba(0, 0, 0, .2);
+            background-color: #ebebe1;
         }
     </style>
 </head>

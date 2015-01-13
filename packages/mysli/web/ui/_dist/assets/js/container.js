@@ -40,14 +40,14 @@
       widget.trigger('added', [this]);
       this.trigger('add', [widget]);
       if (!id) {
-        id = this.get_new_id;
+        id = this.get_new_id();
       }
       widget.connect('destroyed*container.add', (function(_this) {
         return function() {
           return _this.remove(id);
         };
       })(this));
-      widget.get_element().addClass("mcontained-widget-" + id);
+      widget.get_element().addClass("contained-widget-" + id);
       if (this.container.target) {
         this.container.target.append(widget.get_element());
       } else {
@@ -73,7 +73,7 @@
         id = null;
       }
       if (!id) {
-        id = this.get_new_id;
+        id = this.get_new_id();
       }
       index_to = this.get_index(after_id) + 1;
       widget.parent = this;
@@ -84,7 +84,7 @@
           return _this.remove(id);
         };
       })(this));
-      widget.get_element().addClass("mcontained-widget-" + id);
+      widget.get_element().addClass("contained-widget-" + id);
       if (this.container.target) {
         this.container.target.append(widget.get_element());
       } else {
@@ -112,7 +112,7 @@
       widget.parent = false;
       delete this.container.stack[id];
       this.container.ids.splice(this.get_index(id), 1);
-      return this.get_element().find(".mcontained-widget-" + id).remove();
+      return this.get_element().find(".contained-widget-" + id).remove();
     };
 
 
@@ -279,7 +279,7 @@
 
     container.prototype.get_new_id = function() {
       this.container.icounter++;
-      return 'aid-' + this.container.icounter;
+      return "aid-" + this.container.icounter;
     };
 
     return container;

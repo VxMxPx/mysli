@@ -2,8 +2,11 @@
 
 .ui-panel
     height: 100%
-    background: yellow
     position: absolute
-    border-right: 1px solid #666
+    box-shadow: 2px 0 6px rgba(0, 0, 0, .1)
+    -webkit-transition: box-shadow .4s ease-out
+    -moz-transition: box-shadow .4s ease-out
+    -ms-transition: box-shadow .4s ease-out
+    transition: box-shadow .4s ease-out
     &.focused
-        background: pink
+        box-shadow: 4px 0 8px rgba(0, 0, 0, .3)

@@ -4,10 +4,15 @@
 
     function mk_navigation() {
         var ui = mysli.web.ui,
-            panel = new ui.panel('mysli-cms-dash-navigation', {
-                flippable: true
-            });
+            panel = new ui.panel('mysli-cms-dash-navigation'),
+            usermeta = new ui.titlebar({style: 'flat'});
+            // imageurl = null;
 
+        // usermeta.push(new ui.image(imageurl));
+        usermeta.push(new ui.title('Mysli Web Ui :: Developer'));
+
+        panel.front.push(usermeta);
+        panel.front.set_style('alt');
         return panel;
     }
     function mk_introduction() {
@@ -16,7 +21,8 @@
                 size : 'big',
                 min_size : 'default'
             }),
-            titlebar = new ui.titlebar({color: 'default'});
+            titlebar = new ui.titlebar({color: 'default'}),
+            content = new ui.html();
 
         titlebar.push(new ui.button({
             icon: 'times',
@@ -24,13 +30,12 @@
         })).connect('click', function () {
             panel.destroy();
         });
+        titlebar.push(new ui.title("Introduction"), true);
 
         panel.front.push(titlebar);
-        return panel;
-    }
-    function mk_aisde() {
-        var ui = mysli.web.ui,
-            panel = new ui.panel('mysli-cms-dash-aside');
+        panel.front.push(content);
+
+        $.get('?html=introduction').done(content.push.bind(content));
 
         return panel;
     }
@@ -39,8 +44,5 @@
 
     panels.push(mk_navigation());
     panels.push(mk_introduction());
-    panels.push(mk_aisde());
     panels.show();
-
-    window.panels = panels;
 }());

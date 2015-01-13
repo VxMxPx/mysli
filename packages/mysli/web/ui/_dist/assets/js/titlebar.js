@@ -4,20 +4,60 @@
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   mysli.web.ui.titlebar = (function(_super) {
-    var template;
+    var ui;
 
     __extends(titlebar, _super);
 
-    template = '<div class="ui-widget ui-panel-container ui-titlebar" />';
+    ui = mysli.web.ui;
 
-    function titlebar() {
-      titlebar.__super__.constructor.apply(this, arguments);
-      this.elements.push($(template));
-      this.container.master = this.container.target = this.elements[0];
+    function titlebar(options) {
+      if (options == null) {
+        options = {};
+      }
+      options.orientation = ui["const"].VERTICAL;
+      this.options = ui.util.merge_options(options, {
+        style: ui["const"].STYLE_DEFAULT
+      });
+      titlebar.__super__.constructor.call(this, options);
+      this.get_element().addClass('ui-titlebar');
+      ui.util.apply_options(this.options, this, {
+        set_style: ['style']
+      });
     }
+
+
+    /*
+    Set titlebar style
+    @param {string}  style default|flat
+     */
+
+    titlebar.prototype.set_style = function(style) {
+      if (style === 'flat') {
+        return this.get_element().addClass('style-flat');
+      } else {
+        return this.get_element().removeClass('style-flat');
+      }
+    };
+
+
+    /*
+    Get button's style
+    @returns {string}
+     */
+
+    titlebar.prototype.get_style = function() {
+      var class_name, classes, _i, _len;
+      classes = this.get_element()[0].className.split(' ');
+      for (_i = 0, _len = classes.length; _i < _len; _i++) {
+        class_name = classes[_i];
+        if (class_name.substr(0, 6) === 'style-') {
+          return class_name.substr(6);
+        }
+      }
+    };
 
     return titlebar;
 
-  })(mysli.web.ui.container);
+  })(mysli.web.ui.box);
 
 }).call(this);

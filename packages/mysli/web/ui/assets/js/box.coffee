@@ -19,20 +19,23 @@ class mysli.web.ui.box extends mysli.web.ui.container
 
     ###
     Add widget to the box
-    @param {object} widget
-    @param {string} position (mysli.web.ui.const.START, mysli.web.ui.const.END)
+    @param {object}  widget
+    @param {boolean} expand weather cell should expand to max width / height
     @returns {integer} id
     ###
-    add: (widget, position) ->
+    push: (widget, expand=false) ->
+
+        expanded = if expand then 'expanded' else 'collapsed'
 
         if @orientation == ui.const.HORIZONTAL
-            wrapper = $('<div class="row"><div class="cell" /></div>')
+            wrapper = $("<div class=\"row #{expanded}\"><div class=\"cell\" /></div>")
             target = wrapper.find('.cell')
         else
-            wrapper = $('<div class="cell" />')
+            wrapper = $("<div class=\"cell #{expanded}\" />")
             target = wrapper
 
-        method = if position == ui.const.START then 'prepend' else 'append'
+        # method = if position == ui.const.START then 'prepend' else 'append'
+        method = 'append'
 
         @container.master[method](wrapper)
         @container.target = target

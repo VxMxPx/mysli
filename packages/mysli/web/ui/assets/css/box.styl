@@ -3,8 +3,13 @@
 .ui-box
     background-color: transparent
     display: table
+    position: relative
+    overflow: hidden
     .cell
         display: table-cell
-        padding: 10px
+        &.collapsed
+            width: 1%
     .row
         display: table-row
+        &.collapsed
+            height: 1%

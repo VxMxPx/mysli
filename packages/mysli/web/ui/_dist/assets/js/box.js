@@ -29,24 +29,28 @@
 
     /*
     Add widget to the box
-    @param {object} widget
-    @param {string} position (mysli.web.ui.const.START, mysli.web.ui.const.END)
+    @param {object}  widget
+    @param {boolean} expand weather cell should expand to max width / height
     @returns {integer} id
      */
 
-    box.prototype.add = function(widget, position) {
-      var method, target, wrapper;
+    box.prototype.push = function(widget, expand) {
+      var expanded, method, target, wrapper;
+      if (expand == null) {
+        expand = false;
+      }
+      expanded = expand ? 'expanded' : 'collapsed';
       if (this.orientation === ui["const"].HORIZONTAL) {
-        wrapper = $('<div class="row"><div class="cell" /></div>');
+        wrapper = $("<div class=\"row " + expanded + "\"><div class=\"cell\" /></div>");
         target = wrapper.find('.cell');
       } else {
-        wrapper = $('<div class="cell" />');
+        wrapper = $("<div class=\"cell " + expanded + "\" />");
         target = wrapper;
       }
-      method = position === ui["const"].START ? 'prepend' : 'append';
+      method = 'append';
       this.container.master[method](wrapper);
       this.container.target = target;
-      return box.__super__.add.call(this, widget);
+      return box.__super__.push.call(this, widget);
     };
 
     return box;

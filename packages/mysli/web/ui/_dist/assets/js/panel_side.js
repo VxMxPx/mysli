@@ -4,21 +4,71 @@
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   mysli.web.ui.panel_side = (function(_super) {
-    var template;
+    var template, ui;
 
     __extends(panel_side, _super);
 
     template = '<div class="ui-widget ui-panel-container ui-panel-side" />';
 
-    function panel_side(id) {
+    ui = mysli.web.ui;
+
+    function panel_side(id, options) {
       if (id == null) {
         id = 'front';
       }
-      panel_side.__super__.constructor.apply(this, arguments);
+      this.options = ui.util.merge_options(options, {
+        style: ui["const"].STYLE_DEFAULT
+      });
+      panel_side.__super__.constructor.call(this, this.options);
       this.elements.push($(template));
       this.container.master = this.container.target = this.elements[0];
       this.elements[0].addClass("ui-panel-side-type-" + id);
+      ui.util.apply_options(this.options, this, {
+        set_style: ['style']
+      });
     }
+
+
+    /*
+    Set panels side's style
+    @param {string}  style default|alt
+     */
+
+    panel_side.prototype.set_style = function(style) {
+      var current_style;
+      if (style == null) {
+        style = 'default';
+      }
+      current_style = "style-" + (this.get_style());
+      this.get_element().removeClass(current_style);
+      return this.get_element().addClass((function() {
+        switch (style) {
+          case ui["const"].STYLE_DEFAULT:
+            return 'style-default';
+          case ui["const"].STYLE_ALT:
+            return 'style-alt';
+          default:
+            throw new Error("Invalid style: `" + style + "`");
+        }
+      })());
+    };
+
+
+    /*
+    Get button's style
+    @returns {string}
+     */
+
+    panel_side.prototype.get_style = function() {
+      var class_name, classes, _i, _len;
+      classes = this.get_element()[0].className.split(' ');
+      for (_i = 0, _len = classes.length; _i < _len; _i++) {
+        class_name = classes[_i];
+        if (class_name.substr(0, 6) === 'style-') {
+          return class_name.substr(6);
+        }
+      }
+    };
 
     return panel_side;
 

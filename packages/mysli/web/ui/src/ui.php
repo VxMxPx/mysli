@@ -15,18 +15,30 @@ __use(__namespace__, '
 class ui {
 
     static function developer() {
-        $script = request::get('script', 'index');
-        response::set_status(200);
-        output::add(
-            tplp::select(
-                'mysli/web/ui',
-                'ui',
-                [
-                    'script' => self::get_script($script),
-                    'page'   => $script
-                ]
-            )
-        );
+
+        $template = tplp::select('mysli/web/ui');
+
+        if ($html = request::get('html')) {
+            if (!$template->has($html)) {
+                response::set_status(404);
+                output::add("Template not found: `{$html}`");
+            } else {
+                response::set_status(200);
+                output::add($template->render($html));
+            }
+        } else {
+            response::set_status(200);
+            $script = request::get('script', 'index');
+            output::add(
+                $template->render(
+                    'ui',
+                    [
+                        'script' => self::get_script($script),
+                        'page'   => $script
+                    ]
+                )
+            );
+        }
     }
 
     private static function get_script($script) {
