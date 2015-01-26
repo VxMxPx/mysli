@@ -31,6 +31,7 @@ files:
             - css/button.styl
             - css/titlebar.styl
             - css/overlay.styl
+            - css/navigation.styl
     ui.js:
         compress: Yes
         include :

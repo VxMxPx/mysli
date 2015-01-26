@@ -5,13 +5,22 @@
     function mk_navigation() {
         var ui = mysli.web.ui,
             panel = new ui.panel('mysli-cms-dash-navigation'),
-            usermeta = new ui.titlebar({style: 'flat'});
+            usermeta = new ui.titlebar({style: 'flat'}),
+            navigation = new ui.navigation({
+                introduction: "Introduction",
+                buttons: "Buttons"
+            });
 
         panel.front.set_style('alt');
+        navigation.set_style('alt');
+        navigation.connect('action', function (id, self) {
+            console.log(id);
+        });
+
 
         usermeta.push(new ui.title('Mysli Web Ui :: Developer'));
         panel.front.push(usermeta);
-        panel.front.push(new ui.navigation());
+        panel.front.push(navigation);
 
         return panel;
     }

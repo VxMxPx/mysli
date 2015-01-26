@@ -1,0 +1,21 @@
+@import "variables"
+
+.ui-navigation
+    &.style-alt
+        a
+            color: #fff
+        .ui-navigation-item
+            border-bottom: 1px solid rgba(255, 255, 255, .1)
+            box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .3)
+    a
+        color: #333
+        text-decoration: none
+    .ui-navigation-item
+        padding: 15px
+        border-bottom: 1px solid green
+        border-bottom: 1px solid red
+    .ui-navigation-options
+        &.collapsed
+            display: none
+        &.expanded
+            display: block

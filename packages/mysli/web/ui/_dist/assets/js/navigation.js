@@ -4,7 +4,7 @@
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   mysli.web.ui.navigation = (function(_super) {
-    var template, ui;
+    var push_sub, template, ui;
 
     __extends(navigation, _super);
 
@@ -12,10 +12,126 @@
 
     ui = mysli.web.ui;
 
-    function navigation() {
+    function navigation(items) {
+      if (items == null) {
+        items = {};
+      }
+      this.items = {};
       navigation.__super__.constructor.apply(this, arguments);
       this.elements.push($(template));
+      this.push_multiple(items);
+      this.events['action'] = {};
+      this.get_element().on('click', 'a.action', (function(_this) {
+        return function(e) {
+          var id;
+          e.stopPropagation();
+          id = e.currentTarget.id.substr(6);
+          return _this.trigger('action', id);
+        };
+      })(this));
     }
+
+
+    /*
+    Push multiple items to the collection.
+    @param {object} items
+     */
+
+    navigation.prototype.push_multiple = function(items) {
+      var id, item, _results;
+      _results = [];
+      for (id in items) {
+        item = items[id];
+        _results.push(this.push(id, item));
+      }
+      return _results;
+    };
+
+
+    /*
+    Push one item to the collection.
+    @param {string} id
+    @param {mixed}  string: label | object: element
+     */
+
+    navigation.prototype.push = function(id, element) {
+      var item;
+      if (typeof element === 'string') {
+        element = {
+          label: element
+        };
+      }
+      item = $('<div class="ui-navigation-item" />');
+      item.attr('id', "mnip--" + id);
+      item.append("<a href=\"#\" class=\"action\" id=\"mnic--" + id + "\"><span></span></a>").find('a span').text(element.label);
+      if (typeof element.options === 'object') {
+        push_sub(id, item, element.options);
+      }
+      this.items[id] = item;
+      return this.get_element().append(item);
+    };
+
+
+    /*
+    Set panels side's style
+    @param {string}  style default|alt
+     */
+
+    navigation.prototype.set_style = function(style) {
+      var current_style;
+      if (style == null) {
+        style = 'default';
+      }
+      current_style = "style-" + (this.get_style());
+      this.get_element().removeClass(current_style);
+      return this.get_element().addClass((function() {
+        switch (style) {
+          case ui["const"].STYLE_DEFAULT:
+            return 'style-default';
+          case ui["const"].STYLE_ALT:
+            return 'style-alt';
+          default:
+            throw new Error("Invalid style: `" + style + "`");
+        }
+      })());
+    };
+
+
+    /*
+    Get button's style
+    @returns {string}
+     */
+
+    navigation.prototype.get_style = function() {
+      var class_name, classes, _i, _len;
+      classes = this.get_element()[0].className.split(' ');
+      for (_i = 0, _len = classes.length; _i < _len; _i++) {
+        class_name = classes[_i];
+        if (class_name.substr(0, 6) === 'style-') {
+          return class_name.substr(6);
+        }
+      }
+    };
+
+
+    /*
+    Push sub navigation to the parent.
+    @param {string} id of the parent
+    @param {object} parent
+    @param {object} items
+     */
+
+    push_sub = function(id, parent, items) {
+      var label, options, sid;
+      parent.append($('<a href="#" class="ui-navigation-toggle collapsed">&nbsp;</a>'));
+      options = $('<div class="ui-navigation-options collapsed" />');
+      for (sid in items) {
+        label = items[sid];
+        sid = id + '-' + sid;
+        options.append("<a href=\"#\" class=\"action\" id=\"mnis--" + sid + "\"/><span>" + label + "</span></a>");
+      }
+      return parent.append(options);
+    };
 
     return navigation;
 

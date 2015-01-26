@@ -1,0 +1,22 @@
+.ui-navigation.style-alt a {
+  color: #fff;
+}
+.ui-navigation.style-alt .ui-navigation-item {
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  box-shadow: inset 0 -1px 0 rgba(0,0,0,0.3);
+}
+.ui-navigation a {
+  color: #333;
+  text-decoration: none;
+}
+.ui-navigation .ui-navigation-item {
+  padding: 15px;
+  border-bottom: 1px solid #008000;
+  border-bottom: 1px solid #f00;
+}
+.ui-navigation .ui-navigation-options.collapsed {
+  display: none;
+}
+.ui-navigation .ui-navigation-options.expanded {
+  display: block;
+}
