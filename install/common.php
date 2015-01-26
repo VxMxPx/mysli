@@ -1,5 +1,7 @@
 <?php
 
+define('MYSLI_INSTALLER_VERSION', '1.1.16');
+
 /**
  * Execute setup for particular package.
  * @param  string   $pkg      e.g.: mysli/framework/core

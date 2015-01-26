@@ -1,8 +1,6 @@
 #!/usr/bin/env php
 <?php
 
-define('MYSLI_INSTALLER_VERSION', '1.1.15');
-
 /**
 * Print help message.
 * @return null
@@ -132,7 +130,9 @@ $datpath = resolve_path($datpath, __DIR__ . DIRECTORY_SEPARATOR);
 $datpath = $datpath[1] ? implode('', $datpath) : $datpath[0];
 
 // Ask if all seems ok...
-print_line('Review before setup...');
+print_line(null);
+print_line('Review of the installation.');
+print_line('Use `./install.sh -h` for help.');
 print_line(null);
 print_line('Paths:');
 print_line('  Private  ' . $datpath);
