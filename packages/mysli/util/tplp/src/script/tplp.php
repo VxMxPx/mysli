@@ -39,7 +39,7 @@ class tplp {
             ['type'    => 'str',
              'default' => '*',
              'help'    => l("Directory where templates will be saved.
-                            By default this is MYSLI_DATPATH/templ/tplp/cache.
+                            By default this is MYSLI_DATPATH/mysli/util/tplp/cache.
                             If you set this value, it will be relative to the
                             root of your package.")]);
         $params->add(

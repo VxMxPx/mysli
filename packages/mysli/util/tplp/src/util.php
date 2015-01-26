@@ -18,7 +18,7 @@ class util {
 
         $source = fs::pkgpath($package, 'tplp');
         $dest   = fs::datpath(
-                    'mysli/tplp/cache',
+                    'mysli/util/tplp/cache',
                     str_replace('/', '.', $package));
 
         if (isset($meta['tplp'])) {

@@ -37,7 +37,7 @@ class tplp {
      * @return boolean
      */
     static function remove_cache($package) {
-        $dir = fs::datpath('mysli/tplp/cache/'.str_replace('/', '.', $package));
+        $dir = fs::datpath('mysli/util/tplp/cache/'.str_replace('/', '.', $package));
         return dir::remove($dir);
     }
 }
