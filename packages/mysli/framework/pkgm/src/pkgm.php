@@ -197,10 +197,7 @@ class pkgm {
      * @return array
      */
     static function list_dependencies(
-                        $package,
-                        $deep=false,
-                        $group='',
-                        array $process=[])
+        $package, $deep=false, $group=null, array $process=[])
     {
         $meta = self::meta($package);
 
@@ -262,7 +259,7 @@ class pkgm {
         $process[] = $hash;
 
         foreach ($list['disabled'] as $dependency => $version) {
-            $nlist = self::list_dependencies($dependency, true, $process);
+            $nlist = self::list_dependencies($dependency, true, null, $process);
             $list['enabled']  = array_merge(
                                     $nlist['enabled'], $list['enabled']);
             $list['disabled'] = array_merge(

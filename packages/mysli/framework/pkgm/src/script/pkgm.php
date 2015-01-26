@@ -100,14 +100,11 @@ class pkgm {
         }
 
         // Regular dependencies
-        $dependencies     = root\pkgm::list_dependencies(
-                                                $pkg, true);
+        $dependencies     = root\pkgm::list_dependencies($pkg, true);
         // Recommended
-        $rec_dependencies = root\pkgm::list_dependencies(
-                                                $pkg, true, 'recommend');
+        $rec_dependencies = root\pkgm::list_dependencies($pkg, true, 'recommend');
         // Development
-        $dev_dependencies = root\pkgm::list_dependencies(
-                                                $pkg, true, 'dev');
+        $dev_dependencies = root\pkgm::list_dependencies($pkg, true, 'dev');
 
         if ($rec) {
             if ($rec && !empty($rec_dependencies['missing'])) {
