@@ -6,13 +6,13 @@
         var ui = mysli.web.ui,
             panel = new ui.panel('mysli-cms-dash-navigation'),
             usermeta = new ui.titlebar({style: 'flat'});
-            // imageurl = null;
 
-        // usermeta.push(new ui.image(imageurl));
-        usermeta.push(new ui.title('Mysli Web Ui :: Developer'));
-
-        panel.front.push(usermeta);
         panel.front.set_style('alt');
+
+        usermeta.push(new ui.title('Mysli Web Ui :: Developer'));
+        panel.front.push(usermeta);
+        panel.front.push(new ui.navigation());
+
         return panel;
     }
     function mk_introduction() {
@@ -35,7 +35,11 @@
         panel.front.push(titlebar);
         panel.front.push(content);
 
-        $.get('?html=introduction').done(content.push.bind(content));
+        content.set_busy(true);
+        $.get('?html=introduction').done(function (data) {
+            content.set_busy(false);
+            content.push(data);
+        });
 
         return panel;
     }

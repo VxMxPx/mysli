@@ -30,6 +30,7 @@ files:
             - css/box.styl
             - css/button.styl
             - css/titlebar.styl
+            - css/overlay.styl
     ui.js:
         compress: Yes
         include :
@@ -52,3 +53,5 @@ files:
             - js/titlebar.coffee
             - js/label.coffee
             - js/title.coffee
+            - js/overlay.coffee
+            - js/navigation.coffee

@@ -124,15 +124,14 @@ class mysli.web.ui.widget extends mysli.web.ui.event
 
             @trigger 'busy-change', [state]
 
-            @busy = new ui.overlay()
-            @busy.set_position  @get_position()
-            @busy.set_dimension @get_dimension()
+            @busy = new ui.overlay(this.get_element())
 
             @connect 'destroyed*widget.overlay', @busy.destroy.bind(@busy)
             @connect 'position-change*widget.overlay', (__, position) ->
                 @busy.set_position position
             @connect 'size-change*widget.overlay', (__, size) ->
                 @busy.set_size size
+            @busy.set_busy true
             @busy.show()
         else
             @disconnect '*widget.overlay'
@@ -262,7 +261,7 @@ class mysli.web.ui.widget extends mysli.web.ui.event
     destroy: ->
         @trigger 'destroyed'
 
-        for element in @elements.length
+        for element in @elements
             element.remove()
 
         if @id

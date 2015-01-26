@@ -117,9 +117,7 @@
           return;
         }
         this.trigger('busy-change', [state]);
-        this.busy = new ui.overlay();
-        this.busy.set_position(this.get_position());
-        this.busy.set_dimension(this.get_dimension());
+        this.busy = new ui.overlay(this.get_element());
         this.connect('destroyed*widget.overlay', this.busy.destroy.bind(this.busy));
         this.connect('position-change*widget.overlay', function(__, position) {
           return this.busy.set_position(position);
@@ -127,6 +125,7 @@
         this.connect('size-change*widget.overlay', function(__, size) {
           return this.busy.set_size(size);
         });
+        this.busy.set_busy(true);
         return this.busy.show();
       } else {
         this.disconnect('*widget.overlay');
@@ -316,7 +315,7 @@
     widget.prototype.destroy = function() {
       var element, event, _i, _len, _ref;
       this.trigger('destroyed');
-      _ref = this.elements.length;
+      _ref = this.elements;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         element = _ref[_i];
         element.remove();
