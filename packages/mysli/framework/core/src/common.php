@@ -153,4 +153,6 @@ function __use($namespace, $use) {
         $as = $namespace . '/' . $as;
         \core\autoloader::add_alias($from, $as);
     }
+
+    return true;
 }
