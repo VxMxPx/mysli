@@ -1,12 +1,12 @@
-package     : mysli/web/users
-version     : 0.0.11
-description : Users library.
-license     : GPL-3.0
+package:     mysli/web/users
+version:     0.0.11
+description: Support for users collections.
+license:     GPL-3.0
 authors:
     - Marko Gajšt (Developer) <m@gaj.st>
 require:
-    mysli/framework/exception : ~0
-    mysli/framework/json      : ~0
-    mysli/framework/fs        : ~0
-    mysli/util/config         : ~0
-    mysli/web/html            : ~0
+    mysli/framework/exception: ~0
+    mysli/framework/json:      ~0
+    mysli/framework/fs:        ~0
+    mysli/util/config:         ~0
+    mysli/web/html:            ~0

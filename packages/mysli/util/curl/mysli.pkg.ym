@@ -1,12 +1,12 @@
-package     : mysli/util/curl
-version     : 0.0.1
-description : Mysli cURL wrapper.
+package:     mysli/util/curl
+version:     0.0.1
+description: A simple cURL wrapper.
 license:
     - GPL-3.0
 authors:
     - Marko Gajšt (Package Developer) <m@gaj.st>
 require:
-    php/extension/curl        : ~
-    mysli/framework/fs        : ~0
-    mysli/framework/exception : ~0
-    mysli/util/config         : ~0
+    php/extension/curl:        ~
+    mysli/framework/fs:        ~0
+    mysli/framework/exception: ~0
+    mysli/util/config:         ~0

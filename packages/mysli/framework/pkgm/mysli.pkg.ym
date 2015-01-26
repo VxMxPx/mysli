@@ -1,13 +1,13 @@
-package     : mysli/framework/pkgm
-version     : 0.1.1
-description : Mysli Framework Package Manager.
-license     : GPL-3.0
+package:     mysli/framework/pkgm
+version:     0.1.1
+description: Mysli Framework Package Manager.
+license:     GPL-3.0
 authors:
     - Marko Gajšt (Developer) <m@gaj.st>
 require:
-    mysli/framework/core      : ~0
-    mysli/framework/fs        : ~0
-    mysli/framework/exception : ~0
-    mysli/framework/json      : ~0
-    mysli/framework/ym        : ~0
-    mysli/framework/type      : ~0
+    mysli/framework/core:      ~0
+    mysli/framework/fs:        ~0
+    mysli/framework/exception: ~0
+    mysli/framework/json:      ~0
+    mysli/framework/ym:        ~0
+    mysli/framework/type:      ~0

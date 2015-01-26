@@ -1,8 +1,8 @@
-package     : mysli/web/response
-version     : 0.1.0
-description : Response Library.
-license     : GPL-3.0
+package:     mysli/web/response
+version:     0.1.0
+description: A simple Response Library.
+license:     GPL-3.0
 authors:
     - Marko Gajšt (Developer) <m@gaj.st>
 require:
-    mysli/framework/type : ~0
+    mysli/framework/type: ~0

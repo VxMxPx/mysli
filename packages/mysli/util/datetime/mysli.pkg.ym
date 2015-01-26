@@ -1,8 +1,8 @@
-package     : mysli/util/datetime
-version     : 0.0.3
-description : Datetime library.
-license     : GPL-3.0
+package:     mysli/util/datetime
+version:     0.0.3
+description: A simple Datetime library.
+license:     GPL-3.0
 authors:
     - Marko Gajšt (Developer) <m@gaj.st>
 require:
-    mysli/framework/exception : ~0
+    mysli/framework/exception: ~0

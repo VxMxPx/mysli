@@ -1,9 +1,9 @@
-package     : mysli/framework/ym
-version     : 0.0.10
-description : Simplified YAML (ym) parser.
-license     : GPL-3.0
+package:     mysli/framework/ym
+version:     0.0.10
+description: Simplified YAML (ym) parser.
+license:     GPL-3.0
 authors:
     - Marko Gajšt (Developer) <m@gaj.st>
 require:
-    ../type : ~0
-    ../fs   : ~0
+    mysli/framework/type: ~0
+    mysli/framework/fs:   ~0

@@ -1,9 +1,9 @@
-package     : mysli/web/cookie
-version     : 0.0.2
-description : Cookies Library. Allow you to set, get, delete cookies.
-license     : GPL-3.0
+package:     mysli/web/cookie
+version:     0.0.2
+description: Cookies Library. Allow you to set, get, delete cookies.
+license:     GPL-3.0
 authors:
     - Marko Gajšt (Developer) <m@gaj.st>
 require:
-    mysli/framework/type : ~0
-    mysli/util/config    : ~0
+    mysli/framework/type: ~0
+    mysli/util/config:    ~0

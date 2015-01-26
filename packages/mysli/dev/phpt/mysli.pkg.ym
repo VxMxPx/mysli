@@ -1,11 +1,11 @@
-package     : mysli/util/phpt
-version     : 0.2.12
-description : Wrapper for PHPT
-license     : GPL-3.0
+package:     mysli/util/phpt
+version:     0.2.12
+description: Wrapper for PHPT
+license:     GPL-3.0
 authors:
     - Marko Gajšt (Developer) <m@gaj.st>
 require:
-    mysli/framework/pkgm      : ~0
-    mysli/framework/cli       : ~0
-    mysli/framework/fs        : ~0
-    mysli/framework/exception : ~0
+    mysli/framework/pkgm:      ~0
+    mysli/framework/cli:       ~0
+    mysli/framework/fs:        ~0
+    mysli/framework/exception: ~0
