@@ -1,5 +1,5 @@
 package:     mysli/web/assets
-version:     0.1.20
+version:     0.1.22
 description: Help to manage, include and process front-end assets.
 license:     GPL-3.0
 authors:

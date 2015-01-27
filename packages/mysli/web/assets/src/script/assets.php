@@ -101,7 +101,7 @@ class assets {
      */
     private static function check_required_modules(array $required) {
 
-        cout::line('Checking if required modules are available...');
+        cout::line("\n* Checking if required modules are available:");
 
         foreach ($required as $id => $params) {
             $command = str_replace('{id}', $id, $params['command']);
@@ -111,18 +111,18 @@ class assets {
             $expect  = "/{$expect}/";
             $result  = cutil::execute($command);
             if (preg_match($expect, $result)) {
-                cout::format("{$id}+right+green OK");
+                cout::format("    {$id}+right+green OK");
             } else {
                 if ($params['type'] === 'warn') {
-                    cout::format("{$id}+right+yellow WARNING");
+                    cout::format("    {$id}+right+yellow WARNING");
                 } else {
-                    cout::format("{$id}+right+red FAILED");
+                    cout::format("    {$id}+right+red FAILED");
                 }
                 $message = str_replace([
                     '{id}', '{expect}', '{result}'],
                     [$id, $params['expect'], $result],
                     $params['message']);
-                count::line($message);
+                count::line('    '.$message);
 
                 if ($params['type'] === 'error') { return false; }
             }
@@ -178,7 +178,7 @@ class assets {
                                                                 $sett['ext']));
 
                 if (!file::exists($src_file)) {
-                    cout::warn('File not found: `'.$src_file.'`');
+                    cout::warn('[!] File not found: `'.$src_file.'`');
                     continue;
                 }
 
@@ -186,24 +186,24 @@ class assets {
                     // Still needs to be appened...
                     $merged .= "\n\n" . file::read($dest_file);
                 } else {
-                    cout::line('Processing: ' . $file);
+                    cout::line('    Processing: ' . $file);
                 }
 
                 if (!file::exists($src_file)) {
-                    cout::warn("File not found: {$src_file}");
+                    cout::warn("[!] File not found: {$src_file}");
                     continue;
                 }
 
                 if (!arr::key_in($sett['process'], $file_ext)) {
                     cout::warn(
-                        "Unknown extension, cannot process: `{$file_ext}`");
+                        "[!] Unknown extension, cannot process: `{$file_ext}`");
                     continue;
                 }
 
                 // Execute action for file
                 if (!dir::exists(dirname($dest_file))) {
                     cout::line(
-                        "Directory will be created: `".dirname($dest_file)."`",
+                        "[i] Directory will be created: `".dirname($dest_file)."`",
                         false);
 
                     if (!dir::create(dirname($dest_file))) {
@@ -223,20 +223,20 @@ class assets {
             }
             // Some file were processed
             if ($merged) {
-                cout::line("File: `{$main}`");
+                cout::line("    > `{$main}`");
                 $dest_main = fs::ds($dest, $main);
                 $main_ext = file::extension($main);
                 file::create_recursive($dest_main);
                 try {
                     file::write($dest_main, $merged);
                 } catch (\Exception $e) {
-                    cout::error($e->getMessage());
+                    cout::error('[!] '.$e->getMessage());
                     continue;
                 }
-                cout::format('  Saving+right+green OK');
+                cout::format('        Saving+right+green OK');
                 if ($props['compress']
                     && arr::key_in($sett['compress'], $main_ext)) {
-                    cout::line("  Compress!");
+                    cout::line("        Compressing");
                     cutil::execute(self::parse_command(
                                         $sett['compress'][$main_ext],
                                         $dest_main,
@@ -288,10 +288,19 @@ class assets {
     private static function observe_or_build(
         $package, $file, $assets, $dest, $map_fn, $publish, $loop, $interval)
     {
+        cout::line("\n* Mysli Web Assets");
+        cout::line(
+            "    ".
+            "{$package} | ".
+            ($file ? "file: {$file} | " : '').
+            ($publish ? 'publish | ' : '').
+            ($loop    ? 'watch (interval: '.$interval.'s)' : '')
+        );
+
         // Check weather assets path is valid
         $assets_path = fs::pkgpath($package, $assets);
         if (!dir::exists($assets_path)) {
-            cout::yellow("Assets path is invalid: `{$assets_path}`");
+            cout::yellow("[!] Assets path is invalid: `{$assets_path}`");
             return false;
         }
 
@@ -299,7 +308,7 @@ class assets {
         try {
             $map = root\assets::get_map($package, $assets, $map_fn);
         } catch (\Exception $e) {
-            cout::warn($e->getMessage());
+            cout::warn("[!] ".$e->getMessage());
             return false;
         }
 
@@ -314,15 +323,16 @@ class assets {
         $dest_path = fs::pkgpath($package, $dest);
         if (!dir::exists($dest_path)) {
             if (!cinput::confirm(
-                "Destination directory (`{$dest}`) not found. Create it now?"))
+                "\n[?] Destination directory (`{$dest}`) not found. ".
+                "Create it now?"))
             {
-                cout::line('Terminated.');
+                cout::line('    Terminated.');
                 return false;
             } else {
                 if (dir::create($dest_path)) {
-                    cout::success("Directory successfully created.");
+                    cout::success("[^] Directory successfully created.");
                 } else {
-                    cout::error("Failed to create directory.");
+                    cout::error("[!] Failed to create directory.");
                     return false;
                 }
             }
@@ -330,13 +340,16 @@ class assets {
 
         // Execute `before` commands
         if (isset($map['before'])) {
+            cout::line("\n* Executing `before` commands:");
             foreach ($map['before'] as $before) {
                 $command = self::parse_command(
                     $before, fs::ds($assets_path, 'null'),
                     fs::ds($dest_path, 'null'));
 
-                cout::line('Call: ' . $command);
-                cout::line(cutil::execute($command));
+                cout::line('    '.$command);
+                if ($co = cutil::execute($command)) {
+                    cout::line('    '.$co);
+                }
             }
         }
 
@@ -357,7 +370,7 @@ class assets {
 
             // Reload map...
             if ($map_sig !== $map_rsig) {
-                cout::line("Map changed, reloading...");
+                cout::line("\n* Map changed, it will be reloaded.");
                 try {
                     $map = root\assets::get_map(
                         $package, $assets, $map_fn, true);
@@ -365,7 +378,7 @@ class assets {
                     $observable_files = self::observable_files(
                         $assets_path, $file, $map['files']);
                 } catch (\Exception $e) {
-                    cout::warn('Error: '.$e->getMessage());
+                    cout::warn('[!] '.$e->getMessage());
                     return false;
                 }
                 $map_sig = $map_rsig;
@@ -375,8 +388,8 @@ class assets {
             try {
                 $rsignature = file::signature($observable_files);
             } catch (\Exception $e) {
-                cout::warn($e->getMessage());
-                cout::warn('Retrying in '.($interval*2).' seconds...');
+                cout::warn('[!] '.$e->getMessage());
+                cout::warn('    Retrying in '.($interval*2).' seconds.');
                 sleep($interval*2);
                 continue;
             }
@@ -386,24 +399,22 @@ class assets {
 
                 $changes = self::what_changed(
                     $rsignature, $signature, strlen($assets_path)+1);
-
                 if (empty($changes)) {
-                    cout::line('No changes in source files.');
+                    cout::line("\n* No changes in source files.");
                 } else {
-
-                    cout::line("What changed: \n" . arr::readable($changes));
-                    cout::line('Rebuilding assets...');
+                    cout::line("\n* What changed: \n".arr::readable($changes, 4));
+                    cout::line("\n* Rebuilding assets:");
                     $signature = $rsignature;
 
                     self::assets_merge(
                         $map, $file, $assets_path, $dest_path, $changes);
 
                     if ($publish) {
-                        cout::line("Will publish changes...", false);
+                        cout::line("\n* Publishing changes:");
                         if (root\assets::publish($package, $dest)) {
-                            cout::format("+green+right OK");
+                            cout::format("+green     DONE");
                         } else {
-                            cout::format("+red+right FAILED");
+                            cout::format("+red     FAILED");
                         }
                     }
                 }
@@ -427,7 +438,7 @@ class assets {
 
             if (!isset($prop['include'])) {
                 cout::warn(
-                    "Include statement is missing. Skip: `{$id}`");
+                    "[!] Include statement is missing. Skip: `{$id}`");
                 continue;
             }
 
@@ -438,7 +449,7 @@ class assets {
             foreach ($prop['include'] as $file) {
                 $ffile = fs::ds($dir, $file);
                 if (!file::exists($ffile)) {
-                    cout::warn("File not found: `{$file}`");
+                    cout::warn("[!] File not found: `{$file}`");
                 }
 
                 $observable[] = $ffile;
