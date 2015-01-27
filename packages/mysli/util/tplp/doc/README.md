@@ -885,7 +885,7 @@ modules.tplp
 ## Paths
 
 You can define costume source and destionation path for your templates
-(and hence prebuild them), to your `mysli.pkg.ym` file add section:
+(and hence prebuild them). Add the following section to your `mysli.pkg.ym` file:
 
 ```yaml
 tplp:

@@ -94,8 +94,8 @@ Use `./dot assets --help` to see available commands, basic usage example:
 ./dot assets -wb vendor/package
 ```
 
-You can change default paths, either through command line (see help), so to
-define new segment in `mysli.pkg.ym`, with following content:
+You can change default paths, either through command line (see help), and
+define a new segment in `mysli.pkg.ym`, with following content:
 
 ```yaml
 assets:
