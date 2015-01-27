@@ -1,4 +1,4 @@
-# Mysli Util PHPT
+# Mysli Dev PHPT
 
 ## Introduction
 
@@ -279,7 +279,7 @@ just stating a filename where to load the expected output from.
 
 ## License
 
-The Mysli Util PHPT is licensed under the GPL-3.0 or later.
+The Mysli Dev PHPT is licensed under the GPL-3.0 or later.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
