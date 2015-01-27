@@ -272,11 +272,12 @@ class pkgm {
     }
     /**
      * Get meta for particular package.
-     * @param  string $package
+     * @param  string  $package
+     * @param  boolean $force_read force package meta to be read from file
      * @return array
      */
-    static function meta($package) {
-        if (self::is_enabled($package)) {
+    static function meta($package, $force_read=false) {
+        if (self::is_enabled($package) && !$force_read) {
             return self::$packages[$package];
         } elseif (self::exists($package)) {
             $file = fs::pkgpath($package, 'mysli.pkg.ym');
