@@ -31,7 +31,7 @@ class test_case {
                 "File not found: `{$filename}`");
         }
         $this->filename = $filename;
-        $this->dir_temp = fs::datpath('temp/phpt');
+        $this->dir_temp = fs::tmppath('phpt');
         $this->filename_temp = md5($this->filename);
     }
     /**

@@ -7,9 +7,9 @@ __use(__namespace__, '
 ');
 
 function enable() {
-    return dir::create(fs::datpath('temp/phpt'));
+    return dir::create(fs::tmppath('phpt'));
 }
 
 function disable() {
-    return dir::remove(fs::datpath('temp/phpt'));
+    return dir::remove(fs::tmppath('phpt'));
 }
