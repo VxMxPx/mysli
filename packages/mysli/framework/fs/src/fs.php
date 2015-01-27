@@ -79,6 +79,17 @@ class fs {
         return self::ds(MYSLI_PKGPATH, $arguments);
     }
     /**
+     * Retrun temporary path.
+     * @param string ... Accept multiple parameters,
+     * to build full path from them.
+     * @return string
+     */
+    static function tmppath() {
+        $arguments = func_get_args();
+        $arguments = implode(DIRECTORY_SEPARATOR, $arguments);
+        return self::ds(MYSLI_TMPPATH, $arguments);
+    }
+    /**
      * Correct Directory Separators.
      * @param string ... Accept multiple parameters,
      * to build full path from them.

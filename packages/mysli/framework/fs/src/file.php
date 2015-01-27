@@ -125,8 +125,9 @@ class file {
      * @param  boolean $create
      * @return integer number of bytes written
      */
-    static function write($filename, $content, $method=self::replace,
-                          $lock=false, $create=true) {
+    static function write(
+        $filename, $content, $method=self::replace, $lock=false, $create=true)
+    {
         if (!self::exists($filename) && $create) {
             self::create($filename);
         }
