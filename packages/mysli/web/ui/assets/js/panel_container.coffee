@@ -140,6 +140,7 @@ class mysli.web.ui.panel_container extends mysli.web.ui.container
             @each_before after_id, (index, ipanel) ->
                 ipanel.get_element().css('z-index', 10000 - index)
                 size += ipanel.get_size().width
+                return
             panel.properties.position = size
         else
             panel.properties.position = @sum_size
@@ -153,7 +154,13 @@ class mysli.web.ui.panel_container extends mysli.web.ui.container
 
         if after_id
             super(after_id, panel, panel.get_id())
-            @get(after_id).get_element().css('z-index', 10000 - @get_index(after_id))
+            # @get(after_id).get_element().css('z-index', 10000 - @get_index(after_id))
+            if panel.get_id() != @get_last().get_id()
+                @each_after panel.get_id(), (index, ipanel) ->
+                    ipanel.get_element().css('z-index', 10000 - index)
+                    ipanel.properties.position = ipanel.properties.position + panel.get_size().width
+                    ipanel.animate()
+                    return
 
         index = @get_index panel.get_id()
         panel.get_element().css('z-index', 10000 - index)
@@ -166,7 +173,7 @@ class mysli.web.ui.panel_container extends mysli.web.ui.container
         if panel.get_expandable()
             @expandable_count++
 
-        panel.animate()
+        # panel.animate()
 
     # Remove panel from stack
     remove: (id) ->

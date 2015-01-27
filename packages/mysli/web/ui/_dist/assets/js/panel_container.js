@@ -152,7 +152,7 @@
         size = this.get(after_id).get_size().width;
         this.each_before(after_id, function(index, ipanel) {
           ipanel.get_element().css('z-index', 10000 - index);
-          return size += ipanel.get_size().width;
+          size += ipanel.get_size().width;
         });
         panel.properties.position = size;
       } else {
@@ -165,16 +165,21 @@
       });
       if (after_id) {
         panel_container.__super__.push_after.call(this, after_id, panel, panel.get_id());
-        this.get(after_id).get_element().css('z-index', 10000 - this.get_index(after_id));
+        if (panel.get_id() !== this.get_last().get_id()) {
+          this.each_after(panel.get_id(), function(index, ipanel) {
+            ipanel.get_element().css('z-index', 10000 - index);
+            ipanel.properties.position = ipanel.properties.position + panel.get_size().width;
+            ipanel.animate();
+          });
+        }
       }
       index = this.get_index(panel.get_id());
       panel.get_element().css('z-index', 10000 - index);
       panel.connect('focus-change', this.switch_focus.bind(this));
       panel.set_focus(true);
       if (panel.get_expandable()) {
-        this.expandable_count++;
+        return this.expandable_count++;
       }
-      return panel.animate();
     };
 
     panel_container.prototype.remove = function(id) {
