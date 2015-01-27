@@ -45,9 +45,13 @@ class mysli.web.ui.panel_container extends mysli.web.ui.container
         if not @active_id
             return
 
+        active_panel = @get(@active_id)
+        # if active_panel.get_size().width > @container_width
+        #     active_panel.set_size('small')
+
         overflow = @container_width - @sum_size
         overflow_part = if @expandable_count > 0 then Math.ceil(overflow / @expandable_count) else 0
-        active_panel = @get(@active_id)
+
         screen_left = @container_width - active_panel.get_size().width
         overflow_percent = 100 - util.get_percent(screen_left, @sum_size - active_panel.get_size().width)
         offset_so_far = 0
@@ -154,6 +158,9 @@ class mysli.web.ui.panel_container extends mysli.web.ui.container
         index = @get_index panel.get_id()
         panel.get_element().css('z-index', 10000 - index)
         panel.connect 'focus-change', @switch_focus.bind(this)
+        # panel.connect 'size-change', (size, panel) =>
+        #     @update_sum size.diff, panel.get_id()
+
         panel.set_focus(true)
 
         if panel.get_expandable()

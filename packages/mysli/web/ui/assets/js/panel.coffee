@@ -3,8 +3,9 @@ class mysli.web.ui.panel extends mysli.web.ui.widget
     ui = mysli.web.ui
     template = '<div class="ui-panel ui-widget" />'
     dimensions =
-        small: 160
-        default: 260
+        tiny: 160
+        small: 260
+        default: 340
         big: 500
         huge: 800
 

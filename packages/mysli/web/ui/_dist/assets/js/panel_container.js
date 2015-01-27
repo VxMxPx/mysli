@@ -58,9 +58,9 @@
       if (!this.active_id) {
         return;
       }
+      active_panel = this.get(this.active_id);
       overflow = this.container_width - this.sum_size;
       overflow_part = this.expandable_count > 0 ? Math.ceil(overflow / this.expandable_count) : 0;
-      active_panel = this.get(this.active_id);
       screen_left = this.container_width - active_panel.get_size().width;
       overflow_percent = 100 - util.get_percent(screen_left, this.sum_size - active_panel.get_size().width);
       offset_so_far = 0;
