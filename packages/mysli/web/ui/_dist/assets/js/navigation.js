@@ -4,7 +4,7 @@
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   mysli.web.ui.navigation = (function(_super) {
-    var push_sub, template, ui;
+    var template, ui;
 
     __extends(navigation, _super);
 
@@ -12,16 +12,21 @@
 
     ui = mysli.web.ui;
 
+
+    /*
+    @param {object} items
+     */
+
     function navigation(items) {
       if (items == null) {
         items = {};
       }
-      this.items = {};
       navigation.__super__.constructor.apply(this, arguments);
       this.elements.push($(template));
+      this.container.master = this.container.target = this.elements[0];
       this.push_multiple(items);
       this.events['action'] = {};
-      this.get_element().on('click', 'a.action', (function(_this) {
+      this.get_element().on('click', '.ui-navigation-item > a.action', (function(_this) {
         return function(e) {
           var id;
           e.stopPropagation();
@@ -51,7 +56,7 @@
     /*
     Push one item to the collection.
     @param {string} id
-    @param {mixed}  string: label | object: element
+    @param {mixed}  string: label | object: element (additional options)
      */
 
     navigation.prototype.push = function(id, element) {
@@ -61,14 +66,11 @@
           label: element
         };
       }
-      item = $('<div class="ui-navigation-item" />');
-      item.attr('id', "mnip--" + id);
-      item.append("<a href=\"#\" class=\"action\" id=\"mnic--" + id + "\"><span></span></a>").find('a span').text(element.label);
-      if (typeof element.options === 'object') {
-        push_sub(id, item, element.options);
-      }
-      this.items[id] = item;
-      return this.get_element().append(item);
+      item = new ui.widget();
+      item.elements.push($('<div class="ui-navigation-item" />'));
+      item.set_id("mnip--" + id);
+      item.get_element().append("<a href=\"#\" class=\"action\" id=\"mnic--" + id + "\"><span></span></a>").find('a span').text(element.label);
+      return navigation.__super__.push.call(this, item, id);
     };
 
 
@@ -113,28 +115,8 @@
       }
     };
 
-
-    /*
-    Push sub navigation to the parent.
-    @param {string} id of the parent
-    @param {object} parent
-    @param {object} items
-     */
-
-    push_sub = function(id, parent, items) {
-      var label, options, sid;
-      parent.append($('<a href="#" class="ui-navigation-toggle collapsed">&nbsp;</a>'));
-      options = $('<div class="ui-navigation-options collapsed" />');
-      for (sid in items) {
-        label = items[sid];
-        sid = id + '-' + sid;
-        options.append("<a href=\"#\" class=\"action\" id=\"mnis--" + sid + "\"/><span>" + label + "</span></a>");
-      }
-      return parent.append(options);
-    };
-
     return navigation;
 
-  })(mysli.web.ui.widget);
+  })(mysli.web.ui.container);
 
 }).call(this);

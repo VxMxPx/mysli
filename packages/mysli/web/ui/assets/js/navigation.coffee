@@ -1,12 +1,16 @@
-class mysli.web.ui.navigation extends mysli.web.ui.widget
+class mysli.web.ui.navigation extends mysli.web.ui.container
 
     template = '<div class="ui-widget ui-navigation" />'
     ui = mysli.web.ui
 
+    ###
+    @param {object} items
+    ###
     constructor: (items={}) ->
-        @items = {}
         super
         @elements.push $(template)
+        @container.master = @container.target = @elements[0]
+
         @push_multiple items
 
         # Events
@@ -14,7 +18,7 @@ class mysli.web.ui.navigation extends mysli.web.ui.widget
         # => ( string item_id, object this )
         @events['action'] = {}
 
-        @get_element().on 'click', 'a.action', (e) =>
+        @get_element().on 'click', '.ui-navigation-item > a.action', (e) =>
             e.stopPropagation()
             id = e.currentTarget.id.substr(6)
             @trigger 'action', id
@@ -31,21 +35,20 @@ class mysli.web.ui.navigation extends mysli.web.ui.widget
     ###
     Push one item to the collection.
     @param {string} id
-    @param {mixed}  string: label | object: element
+    @param {mixed}  string: label | object: element (additional options)
     ###
     push: (id, element) ->
         if typeof element == 'string'
             element = {label: element}
-        item = $('<div class="ui-navigation-item" />')
-        item.attr('id', "mnip--#{id}")
-        item
+
+        item = new ui.widget();
+        item.elements.push($('<div class="ui-navigation-item" />'))
+        item.set_id("mnip--#{id}")
+        item.get_element()
             .append("<a href=\"#\" class=\"action\" id=\"mnic--#{id}\"><span></span></a>")
             .find('a span')
             .text(element.label)
-        if typeof element.options == 'object'
-            push_sub id, item, element.options
-        @items[id] = item
-        @get_element().append item
+        super(item, id)
 
     ###
     Set panels side's style
@@ -70,20 +73,3 @@ class mysli.web.ui.navigation extends mysli.web.ui.widget
         for class_name in classes
             if class_name.substr(0, 6) == 'style-'
                 return class_name.substr(6)
-
-
-    # --- Private ---
-
-    ###
-    Push sub navigation to the parent.
-    @param {string} id of the parent
-    @param {object} parent
-    @param {object} items
-    ###
-    push_sub= (id, parent, items) ->
-        parent.append $('<a href="#" class="ui-navigation-toggle collapsed">&nbsp;</a>')
-        options = $('<div class="ui-navigation-options collapsed" />')
-        for sid, label of items
-            sid = id + '-' + sid
-            options.append("<a href=\"#\" class=\"action\" id=\"mnis--#{sid}\"/><span>#{label}</span></a>")
-        parent.append options

@@ -1,7 +1,7 @@
 class mysli.web.ui.overlay extends mysli.web.ui.widget
 
     ui = mysli.web.ui
-    template = '<div class="ui-overlay ui-widget"></div>'
+    template = '<div class="ui-overlay ui-widget"><div class="ui-overlay-busy"><i class="fa fa-cog fa-spin"></i></div></div>'
 
     constructor: (caller) ->
         super
