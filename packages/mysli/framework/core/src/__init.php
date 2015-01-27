@@ -14,22 +14,27 @@ namespace mysli\framework\core {
                 $pkgpath,
                 $autoloader=['\\mysli\\framework\\core\\autoloader', 'load'])
     {
+        $tmppath = rtrim($datpath,'\\/').DIRECTORY_SEPARATOR.'temp';
 
         if (defined('MYSLI_PKGPATH') || defined('MYSLI_DATPATH')) {
             throw new \Exception(
                 "MYSLI_PKGPATH or MYSLI_DATPATH is already defined.", 1);
         }
         if (!$datpath || !is_dir($datpath)) {
-            throw new \Exception("Invalid datpath: `{$datpath}`.", 1);
+            throw new \Exception("Invalid datpath: `{$datpath}`.", 2);
+        }
+        if (!$tmppath || !is_dir($tmppath)) {
+            throw new \Exception("Invalid tmppath: `{$tmppath}`.", 3);
         }
         if (!$pkgpath || !is_dir($pkgpath) ||
             mb_substr(__DIR__, 0, mb_strlen($pkgpath)) !== $pkgpath) {
-            throw new \Exception("Invalid pkgpath: `{$pkgpath}`.", 2);
+            throw new \Exception("Invalid pkgpath: `{$pkgpath}`.", 4);
         }
 
         define('MYSLI_CORE',    'mysli/framework/core');
         define('MYSLI_DATPATH', $datpath);
         define('MYSLI_PKGPATH', $pkgpath);
+        define('MYSLI_TMPPATH', $tmppath);
 
         include(rtrim(__DIR__, '\\/') . '/common.php');
 
