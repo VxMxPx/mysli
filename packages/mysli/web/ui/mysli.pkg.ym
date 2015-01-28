@@ -1,16 +1,16 @@
 package:     mysli/web/ui
-version:     0.0.21
+version:     1
 description: UI framework mostly used in mysli/cms/dash.
 license:     GPL-3.0
 authors:
     - Marko Gajšt (Developer) <m@gaj.st>
 require:
-    mysli/framework/event: ~0
-    mysli/framework/fs:    ~0
-    mysli/util/tplp:       ~0
-    mysli/util/output:     ~0
-    mysli/web/response:    ~0
-    mysli/web/request:     ~0
-    mysli/external/jquery: ~0
+    mysli/framework/event: 1
+    mysli/framework/fs:    1
+    mysli/util/tplp:       1
+    mysli/util/output:     1
+    mysli/web/response:    1
+    mysli/web/request:     1
+    mysli/external/jquery: 1
 tplp:
     destination: _dist/tplp

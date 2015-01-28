@@ -1,5 +1,5 @@
 package:     mysli/util/crypt
-version:     0.0.1
+version:     1
 description: AES Cryptography Library.
 license:     GPL-3.0
 authors:

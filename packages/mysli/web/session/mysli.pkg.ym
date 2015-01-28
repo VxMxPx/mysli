@@ -1,15 +1,15 @@
 package:     mysli/web/session
-version:     0.0.10
+version:     1
 description: A simple Session Library.
 license:     GPL-3.0
 authors:
     - Marko Gajšt (Developer) <m@gaj.st>
 require:
-    mysli/util/config:         ~0
-    mysli/framework/json:      ~0
-    mysli/framework/type:      ~0
-    mysli/framework/fs:        ~0
-    mysli/framework/exception: ~0
-    mysli/web/users:           ~0
-    mysli/web/cookie:          ~0
-    mysli/web/request:         ~0
+    mysli/framework/exception: 1
+    mysli/framework/json:      1
+    mysli/framework/type:      1
+    mysli/framework/fs:        1
+    mysli/util/config:         1
+    mysli/web/request:         1
+    mysli/web/cookie:          1
+    mysli/web/users:           1

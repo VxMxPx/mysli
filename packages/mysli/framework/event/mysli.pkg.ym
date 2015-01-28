@@ -1,10 +1,10 @@
 package:     mysli/framework/event
-version:     0.0.10
+version:     1
 description: Mysli Framework Event Library.
 license:     GPL-3.0
 authors:
     - Marko Gajšt (Developer) <m@gaj.st>
 require:
-    mysli/framework/fs:        ~0
-    mysli/framework/json:      ~0
-    mysli/framework/exception: ~0
+    mysli/framework/fs:        1
+    mysli/framework/json:      1
+    mysli/framework/exception: 1

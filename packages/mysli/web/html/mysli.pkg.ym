@@ -1,5 +1,5 @@
 package:     mysli/util/html
-version:     0.0.1
+version:     1
 description: A collection of HTML related tools.
 license:     GPL-3.0
 authors:

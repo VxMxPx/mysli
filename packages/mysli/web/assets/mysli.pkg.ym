@@ -1,15 +1,15 @@
 package:     mysli/web/assets
-version:     0.1.22
+version:     1
 description: Help to manage, include and process front-end assets.
 license:     GPL-3.0
 authors:
     - Marko Gajšt (Developer) <m@gaj.st>
 require:
-    mysli/framework/exception: ~0
-    mysli/framework/type:      ~0
-    mysli/framework/json:      ~0
-    mysli/framework/pkgm:      ~0
-    mysli/framework/ym:        ~0
-    mysli/framework/fs:        ~0
-    mysli/util/config:         ~0
-    mysli/web/web:             ~0
+    mysli/framework/exception: 1
+    mysli/framework/type:      1
+    mysli/framework/json:      1
+    mysli/framework/pkgm:      1
+    mysli/framework/ym:        1
+    mysli/framework/fs:        1
+    mysli/util/config:         1
+    mysli/web/web:             1

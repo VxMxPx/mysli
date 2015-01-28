@@ -1,9 +1,9 @@
 package:     mysli/framework/json
-version:     0.0.4
+version:     1
 description: Basic JSON Library.
 authors:
     - Marko Gajšt (Developer) <m@gaj.st>
 require:
-    mysli/framework/core:      ~0
-    mysli/framework/fs:        ~0
-    mysli/framework/exception: ~0
+    mysli/framework/core:      1
+    mysli/framework/fs:        1
+    mysli/framework/exception: 1

@@ -1,5 +1,5 @@
 package:     mysli/web/token
-version:     0.0.3
+version:     1
 description: A simple token library.
 license:     GPL-3.0
 authors:
