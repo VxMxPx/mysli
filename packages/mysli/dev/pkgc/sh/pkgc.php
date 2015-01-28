@@ -88,7 +88,7 @@ function create($package) {
         }
     }
 
-    cout::line("    Copying files...", false);
+    cout::line("    Copying files", false);
     if (dir::copy($path, $tmp_dir)) {
         cout::format('+green+right OK');
     } else {
@@ -97,7 +97,7 @@ function create($package) {
     }
 
     // Increase version in mysli.pkg.ym file
-    cout::line("    Writting a new version...", false);
+    cout::line("    Writting a new version", false);
     try {
         write_version(
             fs::ds($tmp_dir, 'mysli.pkg.ym'),
