@@ -3,7 +3,7 @@
 namespace mysli\framework\cli;
 
 __use(__namespace__, '
-    mysli/framework/fs/{fs,dir}
+    mysli/framework/fs/{fs,file,dir}
     mysli/framework/type/arr
     mysli/framework/pkgm
 ');
@@ -33,9 +33,12 @@ class cli {
         foreach (self::discover_scripts() as $script => $data) {
             $commands[$script] = $data['description'];
         }
-        output::line('Mysli Cli. List of Available Commands:');
-        output::line('<COMMAND> [OPTIONS...]');
-        output::line(arr::readable($commands));
+        output::nl();
+        output::line('* Mysli Cli');
+        output::line('    To run a command use: ./dot <COMMAND> [OPTIONS...]');
+        output::nl();
+        output::line('* List of Available Commands:');
+        output::line(arr::readable($commands, 4));
     }
     /**
      * Scan packages to find scripts.
@@ -43,24 +46,18 @@ class cli {
      */
     private static function discover_scripts() {
         $scripts = [];
-
-        foreach (pkgm::list_enabled() as $package) {
-            $path = fs::pkgpath($package, 'src/script');
-            if (!dir::exists($path)) {
+        foreach (pkgm::dump() as $package) {
+            if (empty($package['sh'])) {
                 continue;
             }
             //$files = scandir($path);
-            foreach (fs::ls($path, '\\.php$') as $file) {
-                $id = substr($file, 0, -4);
-                $meta = pkgm::meta($package);
-                $scripts[$id] = [
-                    'package'     => $package,
-                    'script'      => fs::ds('script', $id),
-                    'description' => $meta['description']
+            foreach ($package['sh'] as $script) {
+                $scripts[$script] = [
+                    'package'     => $package['package'],
+                    'description' => $package['description']
                 ];
             }
         }
-
         return $scripts;
     }
     /**
@@ -74,14 +71,26 @@ class cli {
             output::line(output::yellow("Command not found: `{$script}`."));
             return false;
         }
-        $script = str_replace(
-            '/', '\\', $scripts[$script]['package'] . "/script/{$script}");
+        $namespace = str_replace(
+            '/', '\\', $scripts[$script]['package']."/sh/{$script}");
 
-        if (method_exists($script, 'run')) {
-            call_user_func_array([$script, 'run'], [$arguments]);
+        if (!function_exists($namespace.'\__init')) {
+            $file = fs::pkgpath(
+                $scripts[$script]['package'], 'sh', $script.'.php');
+
+            if (file::exists($file)) {
+                include $file;
+            } else {
+                output::error("[!] File not found: `{$file}`");
+                return false;
+            }
+        }
+
+        if (function_exists($namespace.'\__init')) {
+            call_user_func_array($namespace.'\__init', [$arguments]);
         } else {
             output::format(
-                '+yellow Method `run` not found for: `%s`.', $script);
+                '+yellow Method `__init` not found for `%s`.', $script);
         }
     }
 }

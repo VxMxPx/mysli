@@ -3,7 +3,7 @@
 namespace mysli\framework\pkgm;
 
 __use(__namespace__, '
-    mysli/framework/fs/{fs,file}
+    mysli/framework/fs/{fs,dir,file}
     mysli/framework/json
     mysli/framework/ym
     mysli/framework/exception/{...} AS framework/exception/{...}
@@ -324,6 +324,7 @@ class pkgm {
         $meta['enabled_by']  = $enabled_by;
         $meta['enabled_on']  = time();
         $meta['required_by'] = [];
+        $meta['sh'] = self::discover_scripts($package);
 
         // Does any of the enabled packages require this package?
         // This happened sometimes, especially when replacing packages.
@@ -375,6 +376,21 @@ class pkgm {
         self::$packages = json::decode_file(
             fs::datpath('pkgm/r.json'), true);
         return is_array(self::$packages);
+    }
+    /**
+     * Discover scripts for package.
+     * @param  string $package
+     * @return array
+     */
+    private static function discover_scripts($package) {
+        $files = [];
+        if (dir::exists(fs::pkgpath($package, 'sh'))) {
+            foreach (fs::ls(fs::pkgpath($package, 'sh'), '/\\.php$/') as $file)
+            {
+                $files[] = substr($file, 0, -4);
+            }
+        }
+        return $files;
     }
     /**
      * Resolve relative package relationship (../ => n/s/pkg)

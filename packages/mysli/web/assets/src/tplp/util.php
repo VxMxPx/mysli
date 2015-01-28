@@ -2,6 +2,13 @@
 
 namespace mysli\web\assets\tplp;
 
+__use(__namespace__, '
+    mysli/framework/exception/{...} AS framework/exception/{...}
+    mysli/framework/fs/file
+    mysli/web/web
+    mysli/web/assets
+');
+
 class util {
 
     private static $web_dir = 'assets';

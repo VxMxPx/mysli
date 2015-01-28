@@ -1,6 +1,6 @@
 <?php
 
-define('MYSLI_INSTALLER_VERSION', '1.1.16');
+define('MYSLI_INSTALLER_VERSION', '1.1.17');
 
 /**
  * Execute setup for particular package.

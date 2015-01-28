@@ -192,4 +192,5 @@ if (!$pkgm::enable($packages['cli'], 'installer')) {
 }
 
 print_line("\nWill refresh packages database now...\n");
-call_user_func(substr($pkgm, 0, strrpos($pkgm, '\\')).'\\script\\pkgm::repair');
+include(realpath(dst($pkgpath, $packages['pkgm'], '/sh/pkgm.php')));
+call_user_func(substr($pkgm, 0, strrpos($pkgm, '\\')).'\\sh\\pkgm\\repair');
