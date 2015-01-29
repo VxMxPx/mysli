@@ -3,6 +3,7 @@
 namespace mysli\util\config;
 
 __use(__namespace__, '
+    mysli/framework/pkgm
     mysli/framework/fs/{fs,file}
     mysli/framework/json
     mysli/framework/type/{arr,arr_path}
@@ -22,9 +23,9 @@ class config {
      * @param string $package vendor/package
      */
     function __construct($package) {
-        $this->package = $package;
+        $this->package = self::ns_to_pkg($package);
         $this->filename = fs::datpath(
-            'mysli/util/config', str_replace('/', '.', $package) . '.json');
+            'mysli/util/config', str_replace('/', '.', $this->package).'.json');
 
         // If we have file, then load contents...
         if (file::exists($this->filename)) {
@@ -117,6 +118,7 @@ class config {
      * @return mixed
      */
     static function select($package, $key=false, $default=null) {
+        $package = self::ns_to_pkg($package);
         if (!arr::get(self::$registry, $package)) {
             self::$registry[$package] = new self($package);
         }
@@ -126,5 +128,26 @@ class config {
         } else {
             return $config;
         }
+    }
+
+    /**
+     * Check if provided package is actually namespace and if it is, convert it
+     * to package name.
+     * @param  string $in
+     * @return string
+     */
+    private static function ns_to_pkg($in) {
+        if (strpos($in, '\\') !== false) {
+            $in = explode('\\', $in);
+            if (pkgm::exists($pkg = implode('/', array_slice($in, 0, 3)))) {
+                return $pkg;
+            } elseif (pkgm::exists($pkg = implode('/', array_slice($in, 0, 2))))
+            {
+                return $pkg;
+            } else {
+                throw new framework\exception\not_found(
+                    "No package for namespace: `{$in}`.");
+            }
+        } else return $in;
     }
 }
