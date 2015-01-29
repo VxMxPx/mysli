@@ -1,4 +1,4 @@
-package:     mysli/util/html
+package:     mysli/web/html
 version:     1
 description: A collection of HTML related tools.
 license:     GPL-3.0
