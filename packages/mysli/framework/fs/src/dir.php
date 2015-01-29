@@ -163,7 +163,10 @@ class dir {
             }
         }
 
-        return rmdir($directory);
+        if (!rmdir($directory)) {
+            throw new framework\exception\fs(
+                "Could not remove directory: `{$directory}`.", 3);
+        } else return true;
     }
     /**
      * Get signatures of all files in the directory +
