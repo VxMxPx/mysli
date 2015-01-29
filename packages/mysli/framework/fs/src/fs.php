@@ -2,7 +2,14 @@
 
 namespace mysli\framework\fs;
 
+__use(__namespace__, '
+    mysli/framework/exception/{...} AS framework/exception/{...}
+');
+
 class fs {
+
+    const map_continue = '\\/map continue\\/';
+
     /**
      * Convert size (from bytes) to nicer (human readable) value (kb, mb)
      * Return: bytes|KB|MB|GB
@@ -100,7 +107,8 @@ class fs {
         $path = implode(DIRECTORY_SEPARATOR, $path);
 
         if ($path) {
-            return preg_replace('/[\/\\\\]+/', DIRECTORY_SEPARATOR, $path);
+            return preg_replace(
+                '/(?<![:\/])[\/\\\\]+/', DIRECTORY_SEPARATOR, $path);
         } else {
             return null;
         }
@@ -148,6 +156,53 @@ class fs {
         }
 
         return self::ds($directory, $new_filename);
+    }
+    /**
+     * Call function for each file/dir.
+     * function ($full_absolute_path, $relative_path, $is_directory)
+     *   return fs::map_continue - skip to the next file
+     *       if you used on a directory the whole directory (with all content)
+     *       will be skipped.
+     * @param  string   $directory
+     * @param  callable $callback
+     * @param  integer  $rcut
+     * @return array
+     */
+    static function map($directory, $callback, $rcut=null) {
+        $collection = [];
+        if (!dir::exists($directory)) {
+            throw new framework\exception\not_found(
+                "Not a valid directory: `{$directory}`.", 1);
+        }
+        foreach (self::ls($directory) as $file) {
+
+            $abs_path = self::ds($directory, $file);
+
+            if ($rcut !== null) {
+                $file = substr($abs_path, $rcut);
+            }
+
+            $is_dir = dir::exists($abs_path);
+
+            $r = $callback($abs_path, $file, $is_dir);
+
+            if ($r === self::map_continue) {
+                continue;
+            }
+
+            if ($r !== null) {
+                $collection[] = $r;
+            }
+
+            if ($is_dir) {
+                if ($rcut === null) {
+                    $rcut = strlen($directory)+1;
+                }
+                $collection = array_merge(
+                    $collection, self::map($abs_path, $callback, $rcut));
+            }
+        }
+        return $collection;
     }
     /**
      * Return list of file(s) and folders in a particular directory.
