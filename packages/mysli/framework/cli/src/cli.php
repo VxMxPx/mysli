@@ -90,7 +90,7 @@ class cli {
             call_user_func_array($namespace.'\__init', [$arguments]);
         } else {
             output::format(
-                '+yellow Method `__init` not found for `%s`.', $script);
+                '+yellow Method `__init` not found for `%s`.', [$script]);
         }
     }
 }
