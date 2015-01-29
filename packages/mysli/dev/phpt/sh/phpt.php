@@ -1,6 +1,6 @@
 <?php
 
-namespace mysli\dev\phpt\sh\pht;
+namespace mysli\dev\phpt\sh\phpt;
 
 __use(__namespace__, '
     ./{collection,generator}
