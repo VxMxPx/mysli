@@ -11,4 +11,6 @@ EOT
 
 ?>
 --EXPECTF--
-Fatal error: Uncaught exception 'mysli\framework\exception\data' with message 'Error unexpected value: `this makes no sense...` on line: `1`. Colon (:) is required.' in %a
+Fatal error: Uncaught exception 'mysli\framework\exception\parser' with message 'Missing colon (:) or dash (-).
+>>1. this makes no sense...
+' in %a
