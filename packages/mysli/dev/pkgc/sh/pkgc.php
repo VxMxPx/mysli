@@ -49,29 +49,43 @@ function create($package) {
     } elseif (!file::exists($path)) {
         cout::error("[!] Package not found: `{$package}`.");
         return;
-    } else cout::line("* New release of `{$package}`");
+    } else cout::line("\n* New release of `{$package}`");
 
     $meta = pkgm::meta($package, true);
-    $new_version = increase_version($meta['version']);
+    $new_version = (int) ($meta['version']);
     $new_version = cin::line(
-        "[?] Previous version: {$meta['version']}; ".
-        "enter a new version [{$new_version}]: ",
+        "[?] Enter a new version [{$new_version}]: ",
         function ($input) use ($new_version) {
             if ($input) {
-                if (preg_match('/[0-9]+\.[0-9]+\.[0-9]/', $input)) {
+                if (preg_match('/^\d+$/', $input)) {
                     $new_version = $input;
                 } else {
-                    cout::warn(
-                        "[!] Please enter a valid version in format: ".
-                        "`major.minor.bug`");
+                    cout::warn("[!] Version must be a valid number.");
                     return;
                 }
             }
             return $new_version;
         });
 
+    $release = gmdate('ymd').'00';
+    $release = cin::line(
+        "[?] Release number [{$release}]: ",
+        function ($input) use ($release) {
+            if ($input) {
+                if (preg_match('/^\d{8}$/', $input)) {
+                    $release = $input;
+                } else {
+                    cout::warn(
+                        '[!] Please enter a valid release '.
+                        'which must be an eight digit number.');
+                    return;
+                }
+            }
+            return $release;
+        });
+
     $package_full = str_replace('/', '.', $package);
-    $package_full .= '-v'.$new_version;
+    $package_full .= "-r{$release}.{$new_version}";
     $tmp_dir = fs::tmppath('pkgc', $package_full);
 
     cout::line("\n* Creating release:");
@@ -79,7 +93,8 @@ function create($package) {
 
     // Dir exists?
     if (dir::exists($tmp_dir)) {
-        cout::line("    Temporariy directory exists, it will be deleted...", false);
+        cout::line(
+            "    Temporary directory exists, it will be deleted", false);
         if (dir::remove($tmp_dir)) {
             cout::format('+green+right OK');
         } else {
@@ -97,20 +112,46 @@ function create($package) {
     }
 
     // Increase version in mysli.pkg.ym file
-    cout::line("    Writting a new version", false);
+    if ((int) $meta['version'] !== (int) $new_version) {
+        cout::line("    Writing a new version", false);
+        try {
+            write_version(
+                fs::ds($tmp_dir, 'mysli.pkg.ym'),
+                $meta['version'],
+                $new_version);
+            cout::format('+green+right OK');
+        } catch (\Exception $e) {
+            cout::format('+red+right FAILED');
+            cout::line('    '.$e->getMessage());
+            return false;
+        }
+    }
+
+    // Create PHAR archive // dev version
+    cout::line("    Creating dev package: {$package_full}-dev.phar", false);
     try {
-        write_version(
-            fs::ds($tmp_dir, 'mysli.pkg.ym'),
-            $meta['version'],
-            $new_version);
+        $devfn = "{$package_full}-dev.phar";
+        $dev_phar = new \Phar(fs::tmppath('pkgc', $devfn), 0, $devfn);
+        $dev_phar->buildFromDirectory($tmp_dir);
+        $dev_phar->compress(\Phar::GZ);
+        cout::format('+green+right OK');
     } catch (\Exception $e) {
         cout::format('+red+right FAILED');
         cout::line('    '.$e->getMessage());
         return false;
     }
-    cout::format('+green+right OK');
 
-    // Create phar archive
+    // Remove temp directory
+    cout::line("\n* Cleaning up");
+    cout::line('    Removing a temporary directory', false);
+    try {
+        dir::remove($tmp_dir);
+        cout::format('+green+right OK');
+    } catch (\Exception $e) {
+        cout::format('+red+right FAILED');
+        cout::line('    '.$e->getMessage());
+        return false;
+    }
 }
 /**
  * Write new version to meta file.
@@ -137,14 +178,4 @@ function write_version($file, $old, $new) {
 
     file::write($file, $meta);
 }
-/**
- * Calculate new version from old.
- * @param  string $version
- * @return string
- */
-function increase_version($version) {
-    $seg = explode('.', $version);
-    $seg[2] = (int) $seg[2];
-    $seg[2]++;
-    return implode('.', $seg);
-}
+
