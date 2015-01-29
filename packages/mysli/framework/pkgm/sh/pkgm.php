@@ -259,7 +259,7 @@ function repair() {
             cout::nl();
             cout::format(
                 "+redMissing packages:\n%s\n",
-                arr::readable($dependencies['missing'], 2));
+                [arr::readable($dependencies['missing'], 2)]);
         }
     }
 }
