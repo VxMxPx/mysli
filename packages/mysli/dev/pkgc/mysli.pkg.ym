@@ -9,3 +9,4 @@ require:
     mysli/framework/cli:       1
     mysli/framework/fs:        1
     mysli/framework/exception: 1
+    mysli/web/assets:          1
