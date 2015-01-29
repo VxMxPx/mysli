@@ -258,19 +258,21 @@ class file {
      * @return boolean
      */
     static function rename($source, $destination) {
-        if (!strpos($destination, '/') && !strpos($destination, '\\')) {
+        if (strpos($destination, '/') === false &&
+            strpos($destination, '\\') === false)
+        {
             $destination = fs::ds(dirname($source), $destination);
         }
         if (dirname($source) !== dirname($destination)) {
             throw new framework\exception\argument(
-                "Destination and source must directories be the same.", 1);
+                "Destination and source directories must be the same.", 1);
         }
         if (basename($source) === basename($destination)) {
             throw new framework\exception\argument(
                 "Destination and source filenames must be different.", 2);
         }
 
-        return move($source, $destination);
+        return \rename($source, $destination);
     }
     /**
      * Find files in particular directory.
