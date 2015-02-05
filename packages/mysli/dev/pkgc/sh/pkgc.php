@@ -18,6 +18,10 @@ __use(__namespace__, '
 function __init(array $args) {
     $param = new param('Mysli Package Creator', $args);
     $param->command = 'pkgc';
+    $param->add('--stub/-s', [
+        'type'    => 'str',
+        'help'    => 'Specify a costume stub file (relative to the package root)'
+    ]);
     $param->add('PACKAGE', [
         'help'     => 'Package name. If not provided, current '.
                       'directory will be used.',
@@ -33,22 +37,23 @@ function __init(array $args) {
         if (!$v['package']) {
             $v['package'] = pkgm::name_from_path(getcwd());
         }
-        create($v['package']);
+        create($v['package'], $v['stub']);
     }
 }
 /**
  * Handle action.
- * @param  array $package
+ * @param  array  $package
+ * @param  string $stub
  * @return null
  */
-function create($package) {
+function create($package, $stub) {
 
     $path = fs::pkgpath($package);
 
     // Check if we have a valid package
     if (!$package) {
         cout::error("[!] Please specify a valid package name.");
-        return flase;
+        return false;
     } elseif (!file::exists($path)) {
         cout::error("[!] Package not found: `{$package}`.");
         return;
@@ -56,47 +61,44 @@ function create($package) {
 
     // Get packag's meta, version and release
     $meta = pkgm::meta($package, true);
-    $new_version = ask_for_version((int) $meta['version']);
+    $api_version = ask_for_version((int) $meta['version']);
     $release = ask_for_release();
+    $pre_repease = ask_for_pre_release();
 
     // Create filenames
     $pkg_filename = str_replace('/', '.', $package);
-    $pkg_filename .= "-r{$release}.{$new_version}";
-    $tmp_filename = sha1($pkg_filename);
-    $tmp_fullpath = fs::tmppath('pkgc', $tmp_filename.'.phar');
-    $rel_fullpath = fs::tmppath('pkgc', $pkg_filename.'.phar');
-    $dev_fullpath = fs::tmppath('pkgc', $pkg_filename.'-dev.phar.gz');
+    $pkg_filename .= "-r{$release}.{$api_version}";
+    $pkg_filename .= $pre_repease ? "-{$pre_repease}" : '';
+    $pkg_fullpath = fs::tmppath('pkgc', $pkg_filename.'.phar');
 
     // Intro, let the user know which release we're creating
     cout::line("\n* Creating release:");
     cout::line("    {$pkg_filename}");
 
-    clean_files([$tmp_fullpath, $dev_fullpath, $rel_fullpath]);
+    clean_files([$pkg_fullpath]);
 
-    // Create DEV archive
-    $phar_dev = create_phar($tmp_fullpath, $pkg_filename.'-dev.phar') or exit;
-    $phar_dev->buildFromDirectory($path);
-    increase_version($tmp_fullpath, $meta['version'], $new_version) or exit;
-    compress($phar_dev) or exit;
-    cout::line("    Rename to {$pkg_filename}-dev.phar", false);
-    try {
-        file::rename($tmp_fullpath.'.gz', "{$pkg_filename}-dev.phar.gz");
-        cout::format('+green+right OK');
-    } catch (\Exception $e) {
-        cout::format('+red+right FAILED');
-        cout::line('    [!] '.$e->getMessage());
-        return false;
+    // Resolve stub path
+    if ($stub) {
+        if (file::exists(fs::ds($path, $stub))) {
+            $stubc = file::read(fs::ds($path, $stub));
+            cout::line("    Stub file found: `{$stub}`");
+        } else {
+            cout::err("    [!] Stub file not found: `{$stub}`");
+            return false;
+        }
+    } else {
+        $stubc = false;
     }
-    print_signature($phar_dev);
 
-    clean_files([$tmp_fullpath]);
-
-    // Create RELEASE archive
-    $phar_rel = create_phar($rel_fullpath, "{$pkg_filename}.phar") or exit;
+    // Create PHAR archive
+    $phar = create_phar($pkg_fullpath, "{$pkg_filename}.phar", $stubc) or exit;
 
     cout::line("    Adding files:");
     $ignore = generate_ignore_list($meta);
-    fs::map($path, function ($apath, $rpath, $is_dir) use ($phar_rel, $ignore) {
+    if ($stub) {
+        $ignore[] = $stub;
+    }
+    fs::map($path, function ($apath, $rpath, $is_dir) use ($phar, $ignore) {
         cout::line("        File: `{$rpath}`", false);
         if (substr(file::name($rpath, true), 0, 1) === '.') {
             cout::format('+yellow+right SKIP');
@@ -107,7 +109,7 @@ function create($package) {
                 cout::format('+yellow+right IGNORED');
                 return fs::map_continue;
             } else {
-                $phar_rel->addEmptyDir($rpath);
+                $phar->addEmptyDir($rpath);
                 cout::format('+green+right DIR');
             }
         } else {
@@ -116,19 +118,19 @@ function create($package) {
                 return;
             } else {
                 if (substr($rpath, -4) === '.php') {
-                    $phar_rel->addFromString(
+                    $phar->addFromString(
                         $rpath, php_strip_whitespace($apath));
                     cout::format('+green+right COMPRESSED');
                 } else {
-                    $phar_rel->addFile($apath, $rpath);
+                    $phar->addFile($apath, $rpath);
                     cout::format('+green+right FILE');
                 }
             }
         }
     });
 
-    increase_version($rel_fullpath, $meta['version'], $new_version);
-    print_signature($phar_rel);
+    increase_version($pkg_fullpath, $meta['version'], $api_version);
+    print_signature($phar);
 }
 
 /**
@@ -138,7 +140,7 @@ function create($package) {
  */
 function ask_for_version($version) {
     return (int) cin::line(
-        "[?] Enter a new version [{$version}]: ",
+        "[?] Enter a new api version [{$version}]: ",
         function ($input) use ($version) {
             if ($input) {
                 if (preg_match('/^\d+$/', $input)) {
@@ -156,20 +158,41 @@ function ask_for_version($version) {
  * @return integer
  */
 function ask_for_release() {
-    $release = gmdate('ymd').'00';
+    $release = gmdate('ymd');
     return (int) cin::line(
         "[?] Release number [{$release}]: ",
         function ($input) use ($release) {
             if ($input) {
-                if (preg_match('/^\d{8}$/', $input)) {
+                if (preg_match('/^\d{6}$/', $input)) {
                     return $input;
                 } else {
                     cout::warn(
-                        '[!] A valid release must be an eight digit number.');
+                        '[!] A valid release must be an six digit number.');
                     return;
                 }
             }
             return $release;
+        });
+}
+/**
+ * Get pre-release from user.
+ * @return string
+ */
+function ask_for_pre_release() {
+    return cin::line(
+        "[?] Enter pre-release version (alpha, beta, rc, ...) []: ",
+        function ($input) {
+            if ($input) {
+                if ($input && preg_match('/^[0-9A-Z]+$/i', $input)) {
+                    return $input;
+                } else {
+                    cout::warn(
+                        '[!] Pre-release consist only of alpha-numeric '.
+                        '[0-9a-z] characters.');
+                    return;
+                }
+            }
+            return false;
         });
 }
 /**
@@ -228,23 +251,6 @@ function increase_version($filename, $old, $new) {
     cout::line("    Writing a new version", false);
     try {
         write_version("phar://{$filename}/mysli.pkg.ym", $old, $new);
-        cout::format('+green+right OK');
-        return true;
-    } catch (\Exception $e) {
-        cout::format('+red+right FAILED');
-        cout::line('    [!] '.$e->getMessage());
-        return false;
-    }
-}
-/**
- * Compress package.
- * @param  \Phar  $phar
- * @return boolean
- */
-function compress(\Phar $phar) {
-    cout::line("    Compressing", false);
-    try {
-        $phar->compress(\Phar::GZ);
         cout::format('+green+right OK');
         return true;
     } catch (\Exception $e) {
