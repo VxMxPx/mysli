@@ -22,6 +22,11 @@ function __init(array $args) {
         'type'    => 'str',
         'help'    => 'Specify a costume stub file (relative to the package root)'
     ]);
+    $param->add('-y/--yes', [
+        'help'    => 'Answer to all questions with yes.',
+        'type'    => 'bool',
+        'default' => false
+    ]);
     $param->add('PACKAGE', [
         'help'     => 'Package name. If not provided, current '.
                       'directory will be used.',
@@ -37,7 +42,7 @@ function __init(array $args) {
         if (!$v['package']) {
             $v['package'] = pkgm::name_from_path(getcwd());
         }
-        create($v['package'], $v['stub']);
+        create($v['package'], $v['stub'], $v['yes']);
     }
 }
 /**
@@ -46,8 +51,7 @@ function __init(array $args) {
  * @param  string $stub
  * @return null
  */
-function create($package, $stub) {
-
+function create($package, $stub, $yes) {
     $path = fs::pkgpath($package);
 
     // Check if we have a valid package
@@ -61,9 +65,15 @@ function create($package, $stub) {
 
     // Get packag's meta, version and release
     $meta = pkgm::meta($package, true);
-    $api_version = ask_for_version((int) $meta['version']);
-    $release = ask_for_release();
-    $pre_repease = ask_for_pre_release();
+    $api_version = ! $yes ?
+                        ask_for_version((int) $meta['version']) :
+                        (int) $meta['version'];
+    $release =     ! $yes ?
+                        ask_for_release(gmdate('ymd')) :
+                        gmdate('ymd');
+    $pre_repease = ! $yes ?
+                        ask_for_pre_release('') :
+                        '';
 
     // Create filenames
     $pkg_filename = str_replace('/', '.', $package);
@@ -135,13 +145,13 @@ function create($package, $stub) {
 
 /**
  * Get version from user.
- * @param  integer $version
+ * @param  integer $default
  * @return integer
  */
-function ask_for_version($version) {
+function ask_for_version($default) {
     return (int) cin::line(
-        "[?] Enter a new api version [{$version}]: ",
-        function ($input) use ($version) {
+        "[?] Enter a new api version [{$default}]: ",
+        function ($input) use ($default) {
             if ($input) {
                 if (preg_match('/^\d+$/', $input)) {
                     return $input;
@@ -150,18 +160,19 @@ function ask_for_version($version) {
                     return;
                 }
             }
-            return $version;
+            return $default;
         });
 }
 /**
  * Get release from user.
+ * @param  integer $default
  * @return integer
  */
-function ask_for_release() {
-    $release = gmdate('ymd');
+function ask_for_release($default) {
+    $default = gmdate('ymd');
     return (int) cin::line(
-        "[?] Release number [{$release}]: ",
-        function ($input) use ($release) {
+        "[?] Release number [{$default}]: ",
+        function ($input) use ($default) {
             if ($input) {
                 if (preg_match('/^\d{6}$/', $input)) {
                     return $input;
@@ -171,17 +182,18 @@ function ask_for_release() {
                     return;
                 }
             }
-            return $release;
+            return $default;
         });
 }
 /**
  * Get pre-release from user.
+ * @param  string $default
  * @return string
  */
-function ask_for_pre_release() {
+function ask_for_pre_release($default) {
     return cin::line(
-        "[?] Enter pre-release version (alpha, beta, rc, ...) []: ",
-        function ($input) {
+        "[?] Enter pre-release version (alpha, beta, rc, ...) [{$default}]: ",
+        function ($input) use ($default) {
             if ($input) {
                 if ($input && preg_match('/^[0-9A-Z]+$/i', $input)) {
                     return $input;
@@ -192,7 +204,7 @@ function ask_for_pre_release() {
                     return;
                 }
             }
-            return false;
+            return $default;
         });
 }
 /**
