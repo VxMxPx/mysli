@@ -56,9 +56,9 @@ class diff {
      * @param  integer $steps
      * @return integer
      */
-    private static function count_array(array $ar1, array $ar2, $regex,
-                                        $idx1, $idx2,
-                                        $cnt1, $cnt2, $steps) {
+    private static function count_array(
+        array $ar1, array $ar2, $regex, $idx1, $idx2, $cnt1, $cnt2, $steps)
+    {
         $equal = 0;
 
         while ($idx1 < $cnt1 && $idx2 < $cnt2 &&
@@ -109,8 +109,9 @@ class diff {
      * @param  boolean $regex
      * @return array
      */
-    private static function generate_array(array $expect, array $expect_raw,
-                                           array $output, $regex) {
+    private static function generate_array(
+        array $expect, array $expect_raw, array $output, $regex)
+    {
         $idx1 = 0; $ofs1 = 0; $cnt1 = count($expect);
         $idx2 = 0; $ofs2 = 0; $cnt2 = count($output);
         $diff = [];
