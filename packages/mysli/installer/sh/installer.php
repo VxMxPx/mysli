@@ -63,18 +63,18 @@ function __init() {
 
     // Ask if all seems ok...
     print_line(null);
-    print_line('Review of the installation.');
-    print_line('Use -h for help.');
+    print_line('* Review of the installation.');
+    print_line('    Use -h for help.');
     print_line(null);
-    print_line('Paths:');
-    print_line('  Packages ' . $pkgpath);
-    print_line('  Private  ' . $datpath);
+    print_line('* Paths:');
+    print_line('    Packages ' . $pkgpath);
+    print_line('    Private  ' . $datpath);
     print_line(null);
-    print_line('List of packages to enable:');
-    print_line(nice_array($packages, 2));
+    print_line('* List of packages to enable:');
+    print_line(nice_array($packages, 4));
 
     if (!$is_yes) {
-        fwrite(STDOUT, 'Proceed? [Y/n] ');
+        fwrite(STDOUT, '[?] Proceed? [Y/n] ');
         $answer = fread(STDIN, 1);
         if (!in_array(strtolower(trim($answer)), ['y', '']))
             fatal('You selected `no`! See you latter....');
@@ -91,14 +91,16 @@ function __init() {
             $missing[$pac] = c\dst($pkgpath, $pac);
 
     if (!empty($missing))
-        fatal("Packages not found:\n" . nice_array($missing));
+        fatal("Packages not found:\n" . nice_array($missing, 4));
 
     // Enable core package...
+    print_line(null);
+    print_line('* Now enabling core packages....');
     if (c\exe_setup(
         $packages['core'], $pkgpath, $datpath,
         '\mysli\installer\sh\installer\fatal'))
     {
-        print_line("Setup done: {$packages['core']}");
+        print_line("    Done: {$packages['core']} (SETUP)");
     }
     $core = c\pkg_class(
         $packages['core'], '__init', $pkgpath,
@@ -110,16 +112,16 @@ function __init() {
         $packages['pkgm'], $pkgpath, $datpath,
         '\mysli\installer\sh\installer\fatal'))
     {
-        print_line("Setup done: {$packages['pkgm']}");
+        print_line("    Done: {$packages['pkgm']} (SETUP)");
     }
     $pkgm = c\pkg_class(
         $packages['pkgm'], 'pkgm', $pkgpath,
         '\mysli\installer\sh\installer\fatal');
 
     if (!$pkgm::enable($packages['core'], 'installer')) {
-        fatal("Failed to enable: {$packages['core']}");
+        fatal("Failed: {$packages['core']}");
     } else {
-        print_line("Done: {$packages['core']}");
+        print_line("    Done: {$packages['core']}");
     }
 
     // Enable cli package...
@@ -127,15 +129,15 @@ function __init() {
         $packages['cli'], $pkgpath, $datpath,
         '\mysli\installer\sh\installer\fatal'))
     {
-        print_line("Setup done: {$packages['cli']}");
+        print_line("    Done: {$packages['cli']} (SETUP)");
     }
     if (!$pkgm::enable($packages['cli'], 'installer')) {
         fatal("Failed to enable: {$packages['cli']}");
     } else {
-        print_line("Done: {$packages['cli']}");
+        print_line("    Done: {$packages['cli']}");
     }
 
-    print_line("\nWill refresh packages database now...\n");
+    print_line('    All done!');
     include(realpath(c\dst($pkgpath, $packages['pkgm'], '/sh/pkgm.php')));
     call_user_func(substr($pkgm, 0, strrpos($pkgm, '\\')).'\\sh\\pkgm\\repair');
 }
@@ -180,7 +182,7 @@ function print_line($line) {
  * @param  string $line
  */
 function fatal($line) {
-    print_line('[!!] ERROR: '.$line);
+    print_line('[!] '.$line);
     exit(1);
 }
 /**

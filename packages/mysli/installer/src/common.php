@@ -20,7 +20,7 @@ function exe_setup($pkg, $pkgpath, $datpath, callable $errout) {
     if (function_exists($ns.'\\setup\\enable')) {
         if (!call_user_func_array($ns.'\\setup\\enable', [$pkgpath, $datpath]))
         {
-            $errout("Setup failed for: `{$pkg}`");
+            $errout("Failed: `{$pkg}` (SETUP)");
             return false;
         }
     }
@@ -39,7 +39,7 @@ function pkg_class($pkg, $class, $pkgpath, callable $errout) {
     $classfile = dst($pkgpath, $pkg, "src/{$class}.php");
 
     if (!file_exists($classfile)) {
-        $errout("Cannot find file `{$classfile}`.");
+        $errout("Cannot find file `{$classfile}`");
         return false;
     }
 
@@ -52,8 +52,8 @@ function pkg_class($pkg, $class, $pkgpath, callable $errout) {
     if (!function_exists("{$ns}\\{$class}") &&
         !class_exists("{$ns}\\{$class}"))
     {
-        $errout(
-            "Main file was loaded, but function not found: `{$ns}\\{$class}`");
+        $errout("Main file was loaded, but function not found: ".
+                "`{$ns}\\{$class}`");
         return false;
     } else {
         return "{$ns}\\{$class}";
