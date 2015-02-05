@@ -1,6 +1,6 @@
 <?php
 
-define('MYSLI_INSTALLER_VERSION', '1.1.17');
+namespace mysli\installer\common;
 
 /**
  * Execute setup for particular package.
@@ -18,8 +18,8 @@ function exe_setup($pkg, $pkgpath, $datpath, callable $errout) {
         include($setupfile);
     }
     if (function_exists($ns.'\\setup\\enable')) {
-        if (!call_user_func_array(
-            $ns.'\\setup\\enable', [$pkgpath, $datpath])) {
+        if (!call_user_func_array($ns.'\\setup\\enable', [$pkgpath, $datpath]))
+        {
             $errout("Setup failed for: `{$pkg}`");
             return false;
         }
@@ -43,19 +43,38 @@ function pkg_class($pkg, $class, $pkgpath, callable $errout) {
         return false;
     }
 
-    if (!function_exists("{$ns}\\{$class}") && !class_exists("{$ns}\\{$class}")) {
+    if (!function_exists("{$ns}\\{$class}") &&
+        !class_exists("{$ns}\\{$class}"))
+    {
         include $classfile;
     }
 
-    if (!function_exists("{$ns}\\{$class}")
-        && !class_exists("{$ns}\\{$class}")) {
+    if (!function_exists("{$ns}\\{$class}") &&
+        !class_exists("{$ns}\\{$class}"))
+    {
         $errout(
-            "Main file was loaded, ".
-            "but function not found: `{$ns}\\{$class}`");
+            "Main file was loaded, but function not found: `{$ns}\\{$class}`");
         return false;
     } else {
         return "{$ns}\\{$class}";
     }
+}
+/**
+ * Find packages folder, relative to path.
+ * @param  string $path
+ * @param  string $name
+ * @return string null if path not found
+ */
+function discover_path($path, $name) {
+    $relative = $path;
+    do {
+        $relative = substr($relative, 0, strrpos($relative, DIRECTORY_SEPARATOR));
+        $path = $relative.DIRECTORY_SEPARATOR.$name;
+        if (file_exists($path) && is_dir($path)) {
+            return $path;
+        }
+    } while (strlen($relative) > strpos($path, DIRECTORY_SEPARATOR));
+    return false;
 }
 /**
  * Resolve relative path (to be absolute).
@@ -71,7 +90,8 @@ function pkg_class($pkg, $class, $pkgpath, callable $errout) {
 function resolve_path($path, $relative_to) {
     // We're dealing with absolute path
     if (substr($path, 1, 1) !== ':' && substr($path, 0, 1) !== '/') {
-        $path = rtrim($relative_to, '\\/') . DIRECTORY_SEPARATOR . ltrim($path, '\\/');
+        $path = rtrim($relative_to, '\\/').DIRECTORY_SEPARATOR.
+                ltrim($path, '\\/');
     }
 
     $existing = $path;
@@ -93,11 +113,7 @@ function resolve_path($path, $relative_to) {
 function dst() {
     $path = func_get_args();
     $path = implode(DIRECTORY_SEPARATOR, $path);
-
-    if ($path) {
-        return preg_replace('/[\/\\\\]+/', DIRECTORY_SEPARATOR, $path);
-    }
-    else {
-        return null;
-    }
+    return $path
+        ? preg_replace('/[\/\\\\]+/', DIRECTORY_SEPARATOR, $path)
+        : null;
 }
