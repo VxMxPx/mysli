@@ -66,6 +66,9 @@ function pkg_class($pkg, $class, $pkgpath, callable $errout) {
  * @return string null if path not found
  */
 function discover_path($path, $name) {
+    if (substr($path, 0, 7) === 'phar://') {
+        $path = substr($path, 7);
+    }
     $relative = $path;
     do {
         $relative = substr($relative, 0, strrpos($relative, DIRECTORY_SEPARATOR));

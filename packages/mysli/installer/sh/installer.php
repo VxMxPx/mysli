@@ -37,12 +37,9 @@ function __init() {
         if (!isset($packages[$role])) continue;
         $packages[$role] = $pac;
     }
-
     // Absolute full path is needed;
     // If relative path was provided, it needs to be resolved.
     if (substr($pkgpath, 0, 3) === '<a:') {
-        echo "\n".__DIR__;
-        echo "\n".substr($pkgpath, 3, -1);
         $pkgpath = c\discover_path(__DIR__, substr($pkgpath, 3, -1));
         if (!$pkgpath) {
             fatal('Packages path is invalid.');
