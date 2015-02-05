@@ -33,8 +33,9 @@ class dir {
      * @param  boolean $overwrite if destination (file!) exists overwrite it
      * @return integer number of copied files and directories
      */
-    static function copy($source, $destination, $recursive=true,
-                         $overwrite=true) {
+    static function copy(
+        $source, $destination, $recursive=true, $overwrite=true)
+    {
         $count = 0; // number of copied files and directories
 
         if (!self::exists($source)) {

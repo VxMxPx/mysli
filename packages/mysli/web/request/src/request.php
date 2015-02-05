@@ -202,14 +202,16 @@ class request {
     static function method() {
         // Is it put?
         if ($_SERVER['REQUEST_METHOD'] === 'PUT' ||
-            self::post('REQUEST_METHOD') === 'PUT') {
+            self::post('REQUEST_METHOD') === 'PUT')
+        {
             return self::method_put;
         }
 
         // Is it delete?
-        if ($_SERVER['REQUEST_METHOD'] === 'DELETE'
-        || self::post('REQUEST_METHOD') === 'DELETE'
-        || self::get('request_method') === 'delete') {
+        if ($_SERVER['REQUEST_METHOD'] === 'DELETE' ||
+            self::post('REQUEST_METHOD') === 'DELETE' ||
+            self::get('request_method') === 'delete')
+        {
             return self::method_delete;
         }
 

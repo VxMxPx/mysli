@@ -64,8 +64,9 @@ class html {
      * @param  boolean $double_encode
      * @return string
      */
-    static function entities_encode($string, $flags=1550, $encoding='UTF-8',
-                                    $double_encode=true) {
+    static function entities_encode(
+        $string, $flags=1550, $encoding='UTF-8', $double_encode=true)
+    {
         $tflags = self::translate_flags($flags);
 
         return call_user_func_array(
@@ -84,8 +85,7 @@ class html {
      * @param  string  $encoding
      * @return string
      */
-    static function entities_decode($string, $flags=1542,
-                                    $encoding='UTF-8') {
+    static function entities_decode($string, $flags=1542, $encoding='UTF-8') {
         $tflags = self::translate_flags($flags);
 
         return call_user_func_array(

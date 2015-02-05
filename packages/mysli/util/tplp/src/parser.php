@@ -91,9 +91,9 @@ class parser {
      * @param  string $module  weather to select only particular module in file
      * @return string
      */
-    private static function parse($filename, array &$uses=[], array $sets=[],
-                                  $module=null) {
-
+    private static function parse(
+        $filename, array &$uses=[], array $sets=[], $module=null)
+    {
         $dirname  = dirname($filename);
         $sfpath   = substr($filename, strlen(fs::pkgpath()));
 

@@ -72,8 +72,9 @@ class csi {
      * @param  callable $callback
      * @return object   $this
      */
-    function generic($id, $type, $label='', $options=[],
-                            $default='', $callback=false) {
+    function generic(
+        $id, $type, $label='', $options=[], $default='', $callback=false)
+    {
         $this->fields[$id] = [
             'id'       => $id,
             'type'     => $type,
@@ -150,8 +151,8 @@ class csi {
      * @param  callable $callback
      * @return object   $this
      */
-    function checkbox($id, $label, array $options, $default='',
-                      $callback=false) {
+    function checkbox($id, $label, array $options, $default='', $callback=false)
+    {
         return $this->generic(
             $id, 'checkbox', $label, $options, $default, $callback);
     }
