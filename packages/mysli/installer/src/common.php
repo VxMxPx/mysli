@@ -11,7 +11,8 @@ namespace mysli\installer\common;
  * @return string             core init function name
  */
 function exe_setup($pkg, $pkgpath, $datpath, callable $errout) {
-    $ns = str_replace('/', '\\', $pkg);
+    $ns  = str_replace(['/', '.'], '\\', explode('-', $pkg, 2)[0]);
+    $pkgpath = substr($pkg, -5) === '.phar' ? 'phar://'.$pkgpath : $pkgpath;
     $setupfile = dst($pkgpath, $pkg, 'src/setup.php');
 
     if (file_exists($setupfile) && !function_exists($ns.'\\setup\\enable')) {
@@ -35,7 +36,8 @@ function exe_setup($pkg, $pkgpath, $datpath, callable $errout) {
  * @return string
  */
 function pkg_class($pkg, $class, $pkgpath, callable $errout) {
-    $ns = str_replace('/', '\\', $pkg);
+    $ns  = str_replace(['/', '.'], '\\', explode('-', $pkg, 2)[0]);
+    $pkgpath = substr($pkg, -5) === '.phar' ? 'phar://'.$pkgpath : $pkgpath;
     $classfile = dst($pkgpath, $pkg, "src/{$class}.php");
 
     if (!file_exists($classfile)) {
@@ -43,29 +45,27 @@ function pkg_class($pkg, $class, $pkgpath, callable $errout) {
         return false;
     }
 
-    if (!function_exists("{$ns}\\{$class}") &&
-        !class_exists("{$ns}\\{$class}"))
+    if (!function_exists("{$ns}\\{$class}") && !class_exists("{$ns}\\{$class}"))
     {
         include $classfile;
     }
 
-    if (!function_exists("{$ns}\\{$class}") &&
-        !class_exists("{$ns}\\{$class}"))
+    if (!function_exists("{$ns}\\{$class}") && !class_exists("{$ns}\\{$class}"))
     {
-        $errout("Main file was loaded, but function not found: ".
-                "`{$ns}\\{$class}`");
+        $errout(
+            "Main file was loaded, but function not found: `{$ns}\\{$class}`");
         return false;
     } else {
         return "{$ns}\\{$class}";
     }
 }
 /**
- * Find packages folder, relative to path.
+ * Find particular folder, relative to path.
  * @param  string $path
  * @param  string $name
  * @return string null if path not found
  */
-function discover_path($path, $name) {
+function find_folder($path, $name) {
     if (substr($path, 0, 7) === 'phar://') {
         $path = substr($path, 7);
     }
@@ -80,6 +80,26 @@ function discover_path($path, $name) {
     return false;
 }
 /**
+ * Resolve package's name (and return it)
+ * @param  string $path
+ * @param  string $package
+ * @return string
+ */
+function find_package($path, $package) {
+    $package_regex = '/^'.preg_quote($package).'-r(.*?)\\.phar$/';
+    foreach (scandir($path) as $file) {
+        if (preg_match($package_regex, $file)) {
+            return $file;
+        }
+    }
+    // Is there source version of the package perhaps?
+    $package = str_replace('.', '/', $package);
+    if (file_exists(dst($path, $package, 'mysli.pkg.ym'))) {
+        return $package;
+    }
+    return null;
+}
+/**
  * Resolve relative path (to be absolute).
  * This works even if (part of the) path doesn't exists.
  * Return array with two elements, first is the existing part, and second is
@@ -90,7 +110,7 @@ function discover_path($path, $name) {
  * @param  string $relative_to
  * @return array
  */
-function resolve_path($path, $relative_to) {
+function relative_to_absolute($path, $relative_to) {
     // We're dealing with absolute path
     if (substr($path, 1, 1) !== ':' && substr($path, 0, 1) !== '/') {
         $path = rtrim($relative_to, '\\/').DIRECTORY_SEPARATOR.
@@ -116,7 +136,11 @@ function resolve_path($path, $relative_to) {
 function dst() {
     $path = func_get_args();
     $path = implode(DIRECTORY_SEPARATOR, $path);
-    return $path
-        ? preg_replace('/[\/\\\\]+/', DIRECTORY_SEPARATOR, $path)
-        : null;
+
+    if ($path) {
+        return preg_replace(
+            '/(?<![:\/])[\/\\\\]+/', DIRECTORY_SEPARATOR, $path);
+    } else {
+        return null;
+    }
 }

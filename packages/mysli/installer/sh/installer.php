@@ -19,10 +19,11 @@ function __init() {
         exit(0);
     }
 
+    // Minimal core packages required for system to work
     $packages = [
-        'core'   => 'mysli/framework/core',
-        'cli'    => 'mysli/framework/cli',
-        'pkgm'   => 'mysli/framework/pkgm',
+        'core'   => 'mysli.framework.core',
+        'cli'    => 'mysli.framework.cli',
+        'pkgm'   => 'mysli.framework.pkgm',
     ];
     $is_yes  = !get_parameter($options, 'y', false, true); // Need to invert it
     $pkgpath =  get_parameter($options, 'p', 'pkgpath', '<a:packages>');
@@ -40,12 +41,12 @@ function __init() {
     // Absolute full path is needed;
     // If relative path was provided, it needs to be resolved.
     if (substr($pkgpath, 0, 3) === '<a:') {
-        $pkgpath = c\discover_path(__DIR__, substr($pkgpath, 3, -1));
+        $pkgpath = c\find_folder(__DIR__, substr($pkgpath, 3, -1));
         if (!$pkgpath) {
             fatal('Packages path is invalid.');
         }
     } else {
-        $pkgpath = c\resolve_path($pkgpath, __DIR__.DIRECTORY_SEPARATOR);
+        $pkgpath = c\relative_to_absolute($pkgpath, __DIR__.DIRECTORY_SEPARATOR);
         if ($pkgpath[1]) {
             fatal('Packages path is invalid: ' . implode('', $pkgpath));
         }
@@ -58,13 +59,33 @@ function __init() {
     } else {
         $datpath_rel = __DIR__;
     }
-    $datpath = c\resolve_path($datpath, $datpath_rel.DIRECTORY_SEPARATOR);
+    $datpath = c\relative_to_absolute($datpath, $datpath_rel.DIRECTORY_SEPARATOR);
     $datpath = $datpath[1] ? implode('', $datpath) : $datpath[0];
 
+    // Validate data...
+    if (!file_exists($pkgpath)) {
+        fatal('Cannot continue, packages path is not valid: ' . $pkgpath);
+    }
+
+    $missing = [];
+    foreach ($packages as $role => &$pac) {
+        if (substr($pac, -5) === '.phar' || strpos($pac, '/')) {
+            if (!file_exists(c\dst($pkgpath, $pac))) {
+                $missing[] = $pac;
+            } else continue;
+        }
+        if (! ($rpac = c\find_package($pkgpath, $pac)) ) {
+            $missing[$pac] = c\dst($pkgpath, $pac);
+        } else {
+            $pac = $rpac;
+        }
+    }
+
+    if (!empty($missing)) {
+        fatal("Packages not found:\n" . nice_array($missing, 4));
+    }
+
     // Ask if all seems ok...
-    print_line(null);
-    print_line('* Review of the installation.');
-    print_line('    Use -h for help.');
     print_line(null);
     print_line('* Paths:');
     print_line('    Packages ' . $pkgpath);
@@ -80,43 +101,23 @@ function __init() {
             fatal('You selected `no`! See you latter....');
     }
 
-    // Validate data...
-    if (!file_exists($pkgpath)) {
-        fatal('Cannot continue, packages path is not valid: ' . $pkgpath);
-    }
-
-    $missing = [];
-    foreach ($packages as $role => $pac)
-        if (!file_exists(c\dst($pkgpath, $pac)))
-            $missing[$pac] = c\dst($pkgpath, $pac);
-
-    if (!empty($missing))
-        fatal("Packages not found:\n" . nice_array($missing, 4));
+    // Alis fatal function
+    $func_fatal = '\mysli\installer\sh\installer\fatal';
 
     // Enable core package...
     print_line(null);
     print_line('* Now enabling core packages....');
-    if (c\exe_setup(
-        $packages['core'], $pkgpath, $datpath,
-        '\mysli\installer\sh\installer\fatal'))
-    {
+    if (c\exe_setup($packages['core'], $pkgpath, $datpath, $func_fatal)) {
         print_line("    Done: {$packages['core']} (SETUP)");
     }
-    $core = c\pkg_class(
-        $packages['core'], '__init', $pkgpath,
-        '\mysli\installer\sh\installer\fatal');
+    $core = c\pkg_class($packages['core'], '__init', $pkgpath, $func_fatal);
     $core($datpath, $pkgpath);
 
     // Enable pkgm package...
-    if (c\exe_setup(
-        $packages['pkgm'], $pkgpath, $datpath,
-        '\mysli\installer\sh\installer\fatal'))
-    {
+    if (c\exe_setup($packages['pkgm'], $pkgpath, $datpath, $func_fatal)) {
         print_line("    Done: {$packages['pkgm']} (SETUP)");
     }
-    $pkgm = c\pkg_class(
-        $packages['pkgm'], 'pkgm', $pkgpath,
-        '\mysli\installer\sh\installer\fatal');
+    $pkgm = c\pkg_class($packages['pkgm'], 'pkgm', $pkgpath, $func_fatal);
 
     if (!$pkgm::enable($packages['core'], 'installer')) {
         fatal("Failed: {$packages['core']}");
@@ -125,10 +126,7 @@ function __init() {
     }
 
     // Enable cli package...
-    if (c\exe_setup(
-        $packages['cli'], $pkgpath, $datpath,
-        '\mysli\installer\sh\installer\fatal'))
-    {
+    if (c\exe_setup($packages['cli'], $pkgpath, $datpath, $func_fatal)) {
         print_line("    Done: {$packages['cli']} (SETUP)");
     }
     if (!$pkgm::enable($packages['cli'], 'installer')) {
@@ -138,6 +136,9 @@ function __init() {
     }
 
     print_line('    All done!');
+    $packages['pkgm'] = substr($pkg, -5) === '.phar' ?
+        'phar://'.$packages['pkgm'] :
+        $packages['pkgm'];
     include(realpath(c\dst($pkgpath, $packages['pkgm'], '/sh/pkgm.php')));
     call_user_func(substr($pkgm, 0, strrpos($pkgm, '\\')).'\\sh\\pkgm\\repair');
 }
@@ -151,7 +152,7 @@ function intro() {
 
 Mysli Installer
 
-Usage: php mysli.installer.phar [OPTIONS]...
+Usage: php mysli.installer<current release>.phar [OPTIONS]...
 
   -p, --pkgpath <name>    Packages\'s path. The default is: <a:packages>
                           This will try to automatically discover packages path.
@@ -160,10 +161,10 @@ Usage: php mysli.installer.phar [OPTIONS]...
   -d, --datpath <name>    Data / private path (where configuration and databases
                           will be stored. Should not be URL accessible)
                           The default is: {pkgpath}/../private
-  -r, --replace <options> Replace core packages in format: role:vendor\package,...
+  -r, --replace <options> Replace core packages in format: role:vendor.package,...
                           The default values are:
-                          core:mysli/framework/core,cli:mysli/framework/cli,
-                          pkgm:mysli/framework/pkgm
+                          core:mysli.framework.core,cli:mysli.framework.cli,
+                          pkgm:mysli.framework.pkgm
 
   -y                      Assume `yes` as an answer to all questions.
   -h, --help              Print this help.
