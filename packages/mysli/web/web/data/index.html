@@ -53,8 +53,8 @@ if (!file_exists($core_id_file)) {
 }
 include("{$pkgpath}/{$core_id['package']}/src/__init.php");
 call_user_func_array(
-    str_replace('/', '\\', $core_id['package']) . '\\__init',
-    [$datpath, $pkgpath]);
+    str_replace('/', '\\', $core_id['package']).'\\__init', [$datpath, $pkgpath]
+);
 
 \mysli\framework\event\event::trigger('mysli/web/web/index:start');
 
