@@ -316,7 +316,8 @@ function generate_ignore_list($meta) {
 
     // Assets
     list($as_src, $as_dest, $as_map) = assets::get_default_paths(
-                                        $meta['package']);
+        $meta['package']
+    );
     $ignore[] = $as_src.'/';
     $map = false;
     try {
@@ -325,9 +326,8 @@ function generate_ignore_list($meta) {
         // Pass
     }
     if (is_array($map) && isset($map['files']) && is_array($map['files'])) {
-        $extlist = is_array($map['settings'])
-                && is_array($map['settings']['ext'])
-                    ? $map['settings']['ext'] : [];
+        $extlist = is_array($map['settings']) &&
+            is_array($map['settings']['ext']) ? $map['settings']['ext'] : [];
 
         foreach ($map['files'] as $file) {
             if (!is_array($file)) { continue; }
@@ -359,7 +359,8 @@ function write_version($file, $old, $new) {
     $meta = preg_replace(
         '/^(version[\t\ ]*?\:[\t\ ]*?)('.preg_quote($old).')$/m',
         '${1}'.$new,
-        $meta, -1, $r);
+        $meta, -1, $r
+    );
 
     if ($r != 1) {
         throw new exception\data(
