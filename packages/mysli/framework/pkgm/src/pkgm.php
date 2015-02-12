@@ -243,8 +243,7 @@ class pkgm {
         if (!$deep) return $list;
 
         // Prevent infinite loops
-        $hash = $package . ': ' . implode(
-            ', ', array_keys($meta[$group]));
+        $hash = $package . ': ' . implode(', ', array_keys($meta[$group]));
 
         if (in_array($hash, $process)) {
             $process[count($process) - 1] = ' >> ' .
@@ -253,8 +252,7 @@ class pkgm {
             array_unshift($process, '----------');
             $process[] = '----------';
             throw new exception\dependency(
-                "Infinite loop, cross dependencies:\n" .
-                implode("\n", $process));
+                "Infinite loop, cross dependencies:\n".implode("\n", $process));
         }
         $process[] = $hash;
 
