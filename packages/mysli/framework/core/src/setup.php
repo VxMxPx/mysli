@@ -28,7 +28,7 @@ function enable($pkgpath, $datpath) {
     return (bool) file_put_contents(
         $datpath . '/core/id.json',
         json_encode([
-            'package' => 'mysli/framework/core',
+            'package' => 'mysli.framework.core',
             'enabled' => gmdate('YmdHis')
         ])
     );

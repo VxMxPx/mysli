@@ -10,9 +10,8 @@ namespace mysli\framework\core {
      * @return null
      */
     function __init(
-                $datpath,
-                $pkgpath,
-                $autoloader=['\\mysli\\framework\\core\\autoloader', 'load'])
+        $datpath, $pkgpath,
+        $autoloader=['\\mysli\\framework\\core\\autoloader', 'load'])
     {
         $tmppath = rtrim($datpath,'\\/').DIRECTORY_SEPARATOR.'temp';
 
@@ -26,12 +25,15 @@ namespace mysli\framework\core {
         if (!$tmppath || !is_dir($tmppath)) {
             throw new \Exception("Invalid tmppath: `{$tmppath}`.", 3);
         }
+        $abs = substr(__DIR__, 0, 7) === 'phar://' ?
+            substr(__DIR__, 7) :
+            __DIR__;
         if (!$pkgpath || !is_dir($pkgpath) ||
-            mb_substr(__DIR__, 0, mb_strlen($pkgpath)) !== $pkgpath) {
+            mb_substr($abs, 0, mb_strlen($pkgpath)) !== $pkgpath) {
             throw new \Exception("Invalid pkgpath: `{$pkgpath}`.", 4);
         }
 
-        define('MYSLI_CORE',    'mysli/framework/core');
+        define('MYSLI_CORE',    'mysli.framework.core');
         define('MYSLI_DATPATH', $datpath);
         define('MYSLI_PKGPATH', $pkgpath);
         define('MYSLI_TMPPATH', $tmppath);
