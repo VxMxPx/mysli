@@ -3,7 +3,7 @@
 namespace mysli\web\ui;
 
 __use(__namespace__, '
-    mysli/framework/fs/fs,file
+    mysli/framework/fs/{fs,file}
 
     mysli/util/tplp
     mysli/util/output
