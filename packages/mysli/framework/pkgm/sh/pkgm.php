@@ -4,9 +4,9 @@ namespace mysli\framework\pkgm\sh\pkgm;
 
 __use(__namespace__, '
     ./pkgm
-    mysli/framework/cli/{param,output,input} AS {param,cout,cin}
-    mysli/framework/type/arr
-    mysli/framework/fs
+    mysli.framework.cli/param,output,input  AS  param,cout,cin
+    mysli.framework.type/arr
+    mysli.framework.fs
 ');
 
 /**

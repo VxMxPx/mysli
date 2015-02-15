@@ -3,7 +3,7 @@
 namespace mysli\web\token\setup;
 
 __use(__namespace__, '
-    mysli/framework/fs/{fs,file,dir}
+    mysli.framework.fs/fs,file,dir
 ');
 
 function enable() {

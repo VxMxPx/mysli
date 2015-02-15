@@ -3,7 +3,7 @@
 namespace mysli\framework\event;
 
 __use(__namespace__, '
-    mysli/framework/fs
+    mysli.framework.fs
 ');
 
 function __init() {

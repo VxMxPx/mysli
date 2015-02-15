@@ -3,11 +3,11 @@
 namespace mysli\cms\dash\setup;
 
 __use(__namespace__, '
-    mysli/framework/csi
-    mysli/framework/event
-    mysli/util/i18n
-    mysli/web/users
-    mysli/web/assets
+    mysli.framework.csi
+    mysli.framework.event
+    mysli.util.i18n
+    mysli.web.users
+    mysli.web.assets
 ');
 
 function enable($csi=null) {

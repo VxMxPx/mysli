@@ -3,8 +3,8 @@
 namespace mysli\util\tplp\setup;
 
 __use(__namespace__, '
-    mysli/util/config
-    mysli/framework/fs/{fs,file,dir}
+    mysli.util.config
+    mysli.framework.fs/fs,file,dir
 ');
 
 const basedir = 'mysli/util/tplp';

@@ -3,14 +3,14 @@
 namespace mysli\web\session;
 
 __use(__namespace__, '
-    mysli/util/config
-    mysli/framework/json
-    mysli/framework/type/str
-    mysli/framework/fs/{fs,file}
-    mysli/framework/exception/{...} AS framework/exception/{...}
-    mysli/web/users
-    mysli/web/cookie
-    mysli/web/request
+    mysli.util.config
+    mysli.framework.json
+    mysli.framework.type/str
+    mysli.framework.fs/fs,file
+    mysli.framework.exception/* as framework\exception\*
+    mysli.web.users
+    mysli.web.cookie
+    mysli.web.request
 ');
 
 class session {

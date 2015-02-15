@@ -3,8 +3,8 @@
 namespace mysli\web\response;
 
 __use(__namespace__, '
-    mysli/web/request
-    mysli/framework/event
+    mysli.web.request
+    mysli.framework.event
 ');
 
 class response {

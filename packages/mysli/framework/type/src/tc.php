@@ -3,7 +3,7 @@
 namespace mysli\framework\type;
 
 __use(__namespace__, '
-    mysli/framework/exception/{...} as framework/exception/{...}
+    mysli.framework.exception/* as framework\exception\*
 ');
 
 class tc {

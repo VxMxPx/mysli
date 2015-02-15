@@ -3,7 +3,7 @@
 namespace mysli\web\cookie\setup;
 
 __use(__namespace__, '
-    mysli/util/config
+    mysli.util.config
 ');
 
 function enable() {

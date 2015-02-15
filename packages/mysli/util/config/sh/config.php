@@ -4,10 +4,10 @@ namespace mysli\util\config\sh\config;
 
 __use(__namespace__, '
     ./config
-    mysli/framework/fs
-    mysli/framework/pkgm
-    mysli/framework/type/arr
-    mysli/framework/cli/param,output AS cparam,cout
+    mysli.framework.fs
+    mysli.framework.pkgm
+    mysli.framework.type/arr
+    mysli.framework.cli/param,output  as  cparam,cout
 ');
 
 /**

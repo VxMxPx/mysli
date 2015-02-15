@@ -3,9 +3,9 @@
 namespace mysli\util\tplp;
 
 __use(__namespace__, '
-    mysli/util/config
-    mysli/framework/fs/{fs,file}
-    mysli/framework/exception/{...} AS framework/exception/{...}
+    mysli.util.config
+    mysli.framework.fs/fs,file
+    mysli.framework.exception/* as framework\exception\*
 ');
 
 class template {

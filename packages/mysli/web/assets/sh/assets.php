@@ -3,10 +3,10 @@
 namespace mysli\web\assets\sh\assets;
 
 __use(__namespace__, '
-    mysli/framework/fs/{fs,file,dir}
-    mysli/framework/type/{arr,str}
-    mysli/framework/cli/{output,input,param,util} AS {cout,cinput,cparam,cutil}
-    mysli/web/assets
+    mysli.framework.fs/fs,file,dir
+    mysli.framework.type/arr,str
+    mysli.framework.cli/output,input,param,util as cout,cinput,cparam,cutil
+    mysli.web.assets
 ');
 
 /**

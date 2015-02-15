@@ -3,8 +3,8 @@
 namespace mysli\util\curl;
 
 __use(__namespace__, '
-    mysli/framework/fs/fs,dir
-    mysli/util/config
+    mysli.framework.fs/fs,dir
+    mysli.util.config
 ');
 
 class curl {

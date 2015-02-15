@@ -3,7 +3,7 @@
 namespace mysli\cms\dash;
 
 __use(__namespace__, '
-    mysli/framework/type/arr
+    mysli.framework.type/arr
 ');
 
 class dash {

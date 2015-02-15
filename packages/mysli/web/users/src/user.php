@@ -3,11 +3,11 @@
 namespace mysli\web\users;
 
 __use(__namespace__, '
-    mysli/framework/exception/{...} AS framework/exception/{...}
-    mysli/framework/json
-    mysli/framework/fs/{fs,file}
-    mysli/util/config
-    mysli/web/html
+    mysli.framework.exception/*  AS  framework\exception\*
+    mysli.framework.json
+    mysli.framework.fs/fs,file
+    mysli.util.config
+    mysli.web.html
 ');
 
 class user {

@@ -4,7 +4,7 @@ namespace mysli\framework\cli;
 
 __use(__namespace__, '
     ./output
-    mysli/framework/type/str
+    mysli.framework.type/str
 ');
 
 class input {

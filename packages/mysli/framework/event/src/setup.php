@@ -3,8 +3,8 @@
 namespace mysli\framework\event\setup;
 
 __use(__namespace__, '
-    mysli/framework/fs/{fs,dir}
-    mysli/framework/json
+    mysli.framework.fs/fs,dir
+    mysli.framework.json
 ');
 
 function enable() {

@@ -3,10 +3,10 @@
 namespace mysli\util\config;
 
 __use(__namespace__, '
-    mysli/framework/pkgm
-    mysli/framework/fs/{fs,file}
-    mysli/framework/json
-    mysli/framework/type/{arr,arr_path}
+    mysli.framework.pkgm
+    mysli.framework.json
+    mysli.framework.fs/fs,file
+    mysli.framework.type/arr,arr_path
 ');
 
 class config {

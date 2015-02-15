@@ -3,8 +3,8 @@
 namespace mysli\util\curl\setup;
 
 __use(__namespace__, '
-    mysli/util/config
-    mysli/framework/fs/fs,dir
+    mysli.util.config
+    mysli.framework.fs/fs,dir
 ');
 
 function enable() {

@@ -3,8 +3,8 @@
 namespace mysli\dev\phpt;
 
 __use(__namespace__, '
-    mysli/framework/fs/{fs,file,dir}
-    mysli/framework/exception/{...} AS framework/exception/{...}
+    mysli.framework.fs/fs,file,dir
+    mysli.framework.exception/*  AS  framework\exception\*
 ');
 
 class collection implements \Countable, \Iterator {

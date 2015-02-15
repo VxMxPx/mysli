@@ -3,10 +3,10 @@
 namespace mysli\util\tplp\sh\tplp;
 
 __use(__namespace__, '
-    ./{util,parser}
-    mysli/framework/fs/{fs,file,dir}
-    mysli/framework/type/{arr,str}
-    mysli/framework/cli/{output,input,param,util} AS {cout,cinput,cparam,cutil}
+    ./util,parser
+    mysli.framework.fs/fs,file,dir
+    mysli.framework.type/arr,str
+    mysli.framework.cli/output,input,param,util as cout,cinput,cparam,cutil
 ');
 
 /**

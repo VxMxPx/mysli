@@ -15,9 +15,9 @@
 namespace mysli\dev\phpt;
 
 __use(__namespace__, '
-    mysli/framework/fs/{fs,file}
-    mysli/framework/type/{str,arr}
-    mysli/framework/exception/{...} AS framework/exception/{...}
+    mysli.framework.fs/fs,file
+    mysli.framework.type/str,arr
+    mysli.framework.exception/*  AS  framework\exception\*
 ');
 
 class parser {

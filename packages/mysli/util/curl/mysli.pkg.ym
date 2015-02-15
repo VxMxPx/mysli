@@ -1,4 +1,4 @@
-package:     mysli/util/curl
+package:     mysli.util.curl
 version:     1
 description: A simple cURL wrapper.
 license:
@@ -6,7 +6,7 @@ license:
 authors:
     - Marko Gajšt (Package Developer) <m@gaj.st>
 require:
-    php/extension/curl:        *
-    mysli/framework/fs:        1
-    mysli/framework/exception: 1
-    mysli/util/config:         1
+    php.extension.curl:        *
+    mysli.framework.fs:        1
+    mysli.framework.exception: 1
+    mysli.util.config:         1

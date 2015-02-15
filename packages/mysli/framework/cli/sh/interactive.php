@@ -3,7 +3,7 @@
 namespace mysli\framework\cli\sh\interactive;
 
 __use(__namespace__, '
-    ./{output,input} AS {cout,cin}
+    ./output,input  AS  cout,cin
 ');
 
 function __init() {

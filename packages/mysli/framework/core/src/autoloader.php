@@ -4,8 +4,16 @@ namespace mysli\framework\core;
 
 class autoloader {
 
+    private static $packages    = [];
     private static $aliases     = [];
-    private static $initialized = ['mysli/framework/core/'];
+    private static $initialized = ['mysli.framework.core'];
+
+    /**
+     * Init the autoloader set packages list.
+     */
+    static function __init(array $packages) {
+        self::$packages = $packages;
+    }
 
     /**
      * Autoloader

@@ -3,10 +3,10 @@
 namespace mysli\dev\phpt\sh\phpt;
 
 __use(__namespace__, '
-    ./{collection,generator}
-    mysli/framework/pkgm
-    mysli/framework/fs/{fs,file,dir}
-    mysli/framework/cli/{param,output,input} AS {param,cout,cin}
+    ./collection,generator
+    mysli.framework.pkgm
+    mysli.framework.fs/fs,file,dir
+    mysli.framework.cli/param,output,input  AS  param,cout,cin
 ');
 
 /**

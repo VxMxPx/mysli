@@ -3,18 +3,15 @@
 namespace mysli\cms\dash;
 
 __use(__namespace__, '
-    mysli/cms/dash
-
-    mysli/framework/json
-
-    mysli/util/tplp
-    mysli/util/i18n
-    mysli/util/output
-
-    mysli/web/request
-    mysli/web/response
-    mysli/web/token
-    mysli/web/session
+    mysli.cms.dash
+    mysli.framework.json
+    mysli.util.tplp
+    mysli.util.i18n
+    mysli.util.output
+    mysli.web.request
+    mysli.web.response
+    mysli.web.token
+    mysli.web.session
 ');
 
 class service {

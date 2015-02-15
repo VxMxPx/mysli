@@ -3,7 +3,7 @@
 namespace mysli\util\i18n;
 
 __use(__namespace__, '
-    mysli/util/config
+    mysli.util.config
 ');
 
 function __init() {

@@ -4,9 +4,9 @@ namespace mysli\util\i18n\sh\i18n;
 
 __use(__namespace__, '
     ./i18n
-    mysli/framework/pkgm
-    mysli/framework/fs/{fs,dir}
-    mysli/framework/cli/{param,output} AS {param,cout}
+    mysli.framework.pkgm
+    mysli.framework.fs/fs,dir
+    mysli.framework.cli/param,output as param,cout
 ');
 
 function __init($args) {

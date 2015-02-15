@@ -1,4 +1,4 @@
-package:     mysli/framework/exception
+package:     mysli.framework.exception
 version:     1
 description: Collection of commonly used framework exceptions.
 license:     GPL-3.0

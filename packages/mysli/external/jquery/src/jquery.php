@@ -3,12 +3,12 @@
 namespace mysli\external\jquery;
 
 __use(__namespace__, '
-    mysli/framework/fs/fs,file
-    mysli/framework/pkgm
-    mysli/framework/exception/{...} AS framework/exception/{...}
-    mysli/util/curl
-    mysli/util/config
-    mysli/web/assets
+    mysli.framework.fs/fs,file
+    mysli.framework.pkgm
+    mysli.framework.exception/*  AS  framework\exception\*
+    mysli.util.curl
+    mysli.util.config
+    mysli.web.assets
 ');
 
 class jquery {

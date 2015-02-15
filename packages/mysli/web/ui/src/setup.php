@@ -3,9 +3,9 @@
 namespace mysli\web\ui\setup;
 
 __use(__namespace__, '
-    mysli/web/assets
-    mysli/util/tplp
-    mysli/framework/event
+    mysli.web.assets
+    mysli.util.tplp
+    mysli.framework.event
 ');
 
 function enable() {

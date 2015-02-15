@@ -3,9 +3,9 @@
 namespace mysli\web\ui\sh\ui;
 
 __use(__namespace__, '
-    mysli/util/tplp
-    mysli/framework/event
-    mysli/framework/cli/{output,param} AS {cout,cparam}
+    mysli.util.tplp
+    mysli.framework.event
+    mysli.framework.cli/output,param  AS  cout,cparam
 ');
 
 

@@ -3,9 +3,9 @@
 namespace mysli\framework\cli;
 
 __use(__namespace__, '
-    mysli/framework/fs/{fs,file,dir}
-    mysli/framework/type/arr
-    mysli/framework/pkgm
+    mysli.framework.fs/fs,file,dir
+    mysli.framework.type/arr
+    mysli.framework.pkgm
 ');
 
 class cli {

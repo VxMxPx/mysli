@@ -3,9 +3,9 @@
 namespace mysli\framework\ym;
 
 __use(__namespace__, '
-    mysli/framework/type/str
-    mysli/framework/fs/file
-    mysli/framework/exception/{...} AS framework/exception/{...}
+    mysli.framework.type/str
+    mysli.framework.fs/file
+    mysli.framework.exception/*  as  framework\exception\*
 ');
 
 class ym {

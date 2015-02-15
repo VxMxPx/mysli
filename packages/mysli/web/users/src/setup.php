@@ -3,7 +3,7 @@
 namespace mysli\web\users\setup;
 
 __use(__namespace__, '
-    mysli/framework/fs/{fs,dir}
+    mysli.framework.fs/fs,dir
 ');
 
 function enable() {

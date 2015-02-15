@@ -3,9 +3,9 @@
 namespace mysli\web\token;
 
 __use(__namespace__, '
-    mysli/framework/fs
-    mysli/framework/json
-    mysli/framework/type/int
+    mysli.framework.fs
+    mysli.framework.json
+    mysli.framework.type/int
 ');
 
 class token {

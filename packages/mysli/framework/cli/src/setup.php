@@ -3,8 +3,8 @@
 namespace mysli\framework\cli\setup;
 
 __use(__namespace__, '
-    ./util AS cutil
-    mysli/framework/fs/{fs,file}
+    ./util  AS  cutil
+    mysli.framework.fs/fs,file
 ');
 
 function enable() {

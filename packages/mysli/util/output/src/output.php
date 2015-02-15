@@ -3,7 +3,7 @@
 namespace mysli\util\output;
 
 __use(__namespace__, '
-    mysli/web/html
+    mysli.web.html
 ');
 
 class output {

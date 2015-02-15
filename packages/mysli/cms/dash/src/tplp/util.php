@@ -2,7 +2,9 @@
 
 namespace mysli\cms\dash\tplp;
 
-__use(__namespace__, 'mysli/web/web');
+__use(__namespace__, '
+    mysli.web.web
+');
 
 class util {
     static function url($url=null) {

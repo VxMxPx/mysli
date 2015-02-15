@@ -3,9 +3,9 @@
 namespace mysli\framework\event;
 
 __use(__namespace__, '
-    mysli/framework/fs/{fs,file}
-    mysli/framework/json
-    mysli/framework/exception/{...} AS framework/exception/{...}
+    mysli.framework.fs/fs,file
+    mysli.framework.json
+    mysli.framework.exception/*  AS  framework\exception\*
 ');
 
 class event {

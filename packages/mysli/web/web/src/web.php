@@ -3,12 +3,12 @@
 namespace mysli\web\web;
 
 __use(__namespace__, '
-    mysli/framework/event
-    mysli/framework/fs
-    mysli/web/response
-    mysli/web/request
-    mysli/util/output
-    mysli/util/config
+    mysli.framework.event
+    mysli.framework.fs
+    mysli.web.response
+    mysli.web.request
+    mysli.util.output
+    mysli.util.config
 ');
 
 class web {

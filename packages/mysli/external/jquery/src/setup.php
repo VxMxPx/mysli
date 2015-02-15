@@ -3,9 +3,9 @@
 namespace mysli\external\jquery\setup;
 
 __use(__namespace__, '
-    mysli/framework/fs/dir
-    mysli/util/config
-    mysli/web/assets
+    mysli.framework.fs/dir
+    mysli.util.config
+    mysli.web.assets
 ');
 
 function enable() {

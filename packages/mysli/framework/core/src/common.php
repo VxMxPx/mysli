@@ -69,13 +69,12 @@ function l($string) {
  */
 function __use($namespace, $use) {
 
-    $namespace = str_replace('\\', '/', $namespace);
+    // $namespace = str_replace('\\', '/', $namespace);
     $lines = explode("\n", $use);
-
-    $segments = explode('/', $namespace);
+    $segments = explode('\\', $namespace);
 
     if (file_exists(
-        MYSLI_PKGPATH . '/' .
+        MYSLI_PKGPATH.'/'.
         implode('/', array_slice($segments, 0, 2)) . '/' .
         'mysli.pkg.ym'))
     {
@@ -128,8 +127,8 @@ function __use($namespace, $use) {
                 $multiple_as = explode(',', $last_as);
                 if (count($multiple_as) !== count($multiple_from)) {
                     throw new \Exception(
-                        "Expected the same amout of elements: `{$line}` ".
-                        "when using `AS`. (".
+                        "Expected the same amout of elements: ".
+                        "`{$line}` when using `AS`. (".
                         implode(',', $multiple_from).") != (".
                         implode(',', $multiple_as).")");
                 }

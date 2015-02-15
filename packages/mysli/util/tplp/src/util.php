@@ -3,8 +3,8 @@
 namespace mysli\util\tplp;
 
 __use(__namespace__, '
-    mysli/framework/pkgm
-    mysli/framework/fs
+    mysli.framework.pkgm
+    mysli.framework.fs
 ');
 
 class util {

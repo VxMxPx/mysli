@@ -3,7 +3,7 @@
 namespace mysli\web\request;
 
 __use(__namespace__, '
-    mysli/framework/type/{arr,str}
+    mysli.framework.type/arr,str
 ');
 
 class request {

@@ -1,4 +1,4 @@
-package:     mysli/installer
+package:     mysli.installer
 version:     1
 description: Setup Mysli
 license:     GPL-3.0

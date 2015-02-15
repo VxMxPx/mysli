@@ -3,8 +3,8 @@
 namespace mysli\web\cookie;
 
 __use(__namespace__, '
-    mysli/framework/type/arr
-    mysli/util/config
+    mysli.framework.type/arr
+    mysli.util.config
 ');
 
 class cookie {

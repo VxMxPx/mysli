@@ -3,7 +3,7 @@
 namespace mysli\util\i18n;
 
 __use(__namespace__, '
-    mysli/framework/exception/{...} AS framework/exception/{...}
+    mysli.framework.exception/* as framework\exception\*
 ');
 
 class translator {

@@ -3,14 +3,14 @@
 namespace mysli\web\assets;
 
 __use(__namespace__, '
-    mysli/framework/exception/{...} AS framework/exception/{...}
-    mysli/framework/fs/{fs,file,dir}
-    mysli/framework/type/arr
-    mysli/framework/pkgm
-    mysli/framework/json
-    mysli/framework/ym
-    mysli/util/config
-    mysli/web/web
+    mysli.framework.exception/* as framework\exception\*
+    mysli.framework.fs/fs,file,dir
+    mysli.framework.type/arr
+    mysli.framework.pkgm
+    mysli.framework.json
+    mysli.framework.ym
+    mysli.util.config
+    mysli.web.web
 ');
 
 class assets {

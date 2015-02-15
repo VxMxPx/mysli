@@ -1,4 +1,4 @@
-package:     mysli/framework/core
+package:     mysli.framework.core
 version:     1
 description: Mysli Framework Core Library.
 license:     GPL-3.0

@@ -3,11 +3,11 @@
 namespace mysli\dev\pkgc\sh\pkgc;
 
 __use(__namespace__, '
-    mysli/web/assets
-    mysli/framework/pkgm
-    mysli/framework/fs/{fs,file,dir}
-    mysli/framework/cli/{param,output,input} AS {param,cout,cin}
-    mysli/framework/exception/{...}          AS exception/{...}
+    mysli.web.assets
+    mysli.framework.pkgm
+    mysli.framework.fs/fs,file,dir
+    mysli.framework.cli/param,output,input  AS  param,cout,cin
+    mysli.framework.exception/*             AS framework\exception\*
 ');
 
 /**
@@ -352,7 +352,7 @@ function generate_ignore_list($meta) {
  */
 function write_version($file, $old, $new) {
     if (!file::exists($file)) {
-        throw new exception\not_found("File not found: `{$file}`");
+        throw new framework\exception\not_found("File not found: `{$file}`");
     }
     $r = 0;
     $meta = file::read($file);
@@ -363,7 +363,7 @@ function write_version($file, $old, $new) {
     );
 
     if ($r != 1) {
-        throw new exception\data(
+        throw new framework\exception\data(
             "Could not change version in meta file ({$old} => {$new}), ".
             "replacement result is: `{$r}`, expected: `1`.");
     }

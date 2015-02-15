@@ -3,7 +3,7 @@
 namespace mysli\framework\cli;
 
 __use(__namespace__, '
-    ./output AS cout
+    ./output  AS  cout
 ');
 
 class util {

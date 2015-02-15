@@ -3,9 +3,9 @@
 namespace mysli\util\i18n;
 
 __use(__namespace__, '
-    mysli/framework/json
-    mysli/framework/fs/{file,fs}
-    mysli/framework/exception/{...} AS framework/exception/{...}
+    mysli.framework.json
+    mysli.framework.fs/file,fs
+    mysli.framework.exception/* as framework\exception\*
 ');
 
 class i18n {

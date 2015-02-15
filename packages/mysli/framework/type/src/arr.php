@@ -3,7 +3,7 @@
 namespace mysli\framework\type;
 
 __use(__namespace__, '
-    mysli/framework/exception/{...} AS framework/exception/{...}
+    mysli.framework.exception/*  AS  framework\exception\*
 ');
 
 class arr {
