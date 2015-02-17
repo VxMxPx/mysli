@@ -171,7 +171,12 @@ class pkgm {
                 continue;
             }
             foreach (fs::ls(fs::pkgpath($vendor)) as $sub) {
+
                 $root = "{$vendor}/{$sub}";
+
+                if (!dir::exists($root)) {
+                    continue;
+                }
 
                 if (file::exists(fs::pkgpath($root, 'mysli.pkg.ym'))) {
                     if (!self::is_enabled($root)) {
@@ -347,6 +352,7 @@ class pkgm {
         if (!$source) {
             $source = self::list_all();
         }
+
         if (substr($release, 0, 1) !== 'r') {
             $release = "r*.{$release}";
         }
@@ -362,7 +368,13 @@ class pkgm {
             }
         }
 
-        return false;
+        // Take care of source packages
+        $package = str_replace('.', '/', $package);
+        if (in_array($package, $source)) {
+            return $package;
+        } else {
+            return false;
+        }
     }
     /**
      * Get meta for particular package.
@@ -406,11 +418,11 @@ class pkgm {
                 "The package doesn't exists: `{$package}`.", 2);
         }
         $meta = self::meta($package);
-        if (isset(self::$packages['map'][$meta['package']])) {
-            throw new exception\package(
-                "Different version of this package `{$package}` is already ".
-                "enabled: `".self::$packages['map'][$meta['package']].'`', 3);
-        }
+        // if (isset(self::$packages['map'][$meta['package']])) {
+        //     throw new exception\package(
+        //         "Different version of this package `{$package}` is already ".
+        //         "enabled: `".self::$packages['map'][$meta['package']].'`', 3);
+        // }
 
         foreach ($meta['require'] as $dependency => $version) {
             $rdependency = self::find_by_release($dependency, $version);
@@ -503,7 +515,7 @@ class pkgm {
         self::$packages['map'] = json::decode_file(
             self::$packages['map_path'], true);
 
-        self::$packages['full'] = json::encode_file(
+        self::$packages['full'] = json::decode_file(
             self::$packages['full_path'], true);
 
         return is_array(self::$packages['map']) &&
@@ -518,6 +530,8 @@ class pkgm {
         if (!self::$packages['map_path'] || !self::$packages['full_path']) {
             throw new framework\exception\init("Not initialized.", 30);
         }
+
+        // \core\autoloader::__init(self::$packages['map']);
 
         return json::encode_file(
             self::$packages['map_path'], self::$packages['map']
