@@ -119,11 +119,11 @@ function __init() {
     }
     $pkgm = c\pkg_class($packages['pkgm'], 'pkgm', $pkgpath, $func_fatal);
 
-    if (!$pkgm::enable($packages['core'], 'installer')) {
-        fatal("Failed: {$packages['core']}");
-    } else {
-        print_line("    Done: {$packages['core']}");
-    }
+    // if (!$pkgm::enable($packages['core'], 'installer')) {
+    //     fatal("Failed: {$packages['core']}");
+    // } else {
+    //     print_line("    Done: {$packages['core']}");
+    // }
 
     // Enable cli package...
     if (c\exe_setup($packages['cli'], $pkgpath, $datpath, $func_fatal)) {
