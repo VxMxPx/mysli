@@ -10,7 +10,7 @@ function enable($pkgpath, $datpath) {
     // Get self path
     $selfrelease = __FILE__;
     if (substr($selfrelease, -5) === '.phar') {
-        $selfrelease = basename($selfrelease);
+        $selfrelease = substr(basename($selfrelease), 0, -5);
     } else {
         $selfrelease = 'mysli/framework/core';
     }
