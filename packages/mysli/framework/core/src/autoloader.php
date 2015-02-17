@@ -2,72 +2,52 @@
 
 namespace mysli\framework\core;
 
+use \core\pkg;
+
 class autoloader {
 
-    private static $packages    = [];
     private static $aliases     = [];
     private static $initialized = ['mysli.framework.core'];
 
     /**
-     * Init the autoloader set packages list.
-     */
-    static function __init(array $packages) {
-        self::$packages = $packages;
-    }
-
-    /**
-     * Add/remove package from packages list for purposes of package being able
-     * to be autoloaded without being enabled.
-     * This is mostly used in a installation phase of the system, above all
-     * pkgm will use it to enable itself.
-     * @param  string $package
-     * @param  string $path if not provided, package will be removed from list
-     */
-    static function __modify_packages_list($package, $path=null) {
-        if (!$path) {
-            if (isset(self::$packages[$package])) {
-                unset(self::$packages[$package]);
-            }
-        } else {
-            self::$packages[$package] = $path;
-        }
-    }
-
-    /**
-     * Autoloader
+     * Load fully namespaced class, if package is enabled.
+     * Also resolve aliases
      * @param  string $class
      * @return boolean
      */
-    static function load($class) {
-
-        // See if it's set in aliases
-        if (isset(self::$aliases[$class])) {
-            if (self::load_class(self::$aliases[$class])) {
+    static function load($class)
+    {
+        if (isset(self::$aliases[$class]))
+        {
+            if (self::init_class(self::$aliases[$class]))
+            {
                 class_alias(self::$aliases[$class], $class);
                 return true;
-            } else {
+            }
+            else
+            {
                 return false;
             }
         }
 
-        if (self::load_class($class)) {
+        if (self::init_class($class))
             return true;
-        }
 
-        // See if it's set as regex in aliseas
-        foreach (self::$aliases as $pattern => $required) {
-
-            // Only regex classes here
-            if (substr($pattern, 0, 1) !== '/') {
+        foreach (self::$aliases as $pattern => $required)
+        {
+            if (substr($pattern, 0, 1) !== '/')
                 continue;
-            }
 
-            if (preg_match($pattern, $class, $match)) {
+            if (preg_match($pattern, $class, $match))
+            {
                 $required = str_replace('*', $match[1], $required);
-                if (self::load_class($required)) {
+                if (self::init_class($required))
+                {
                     class_alias($required, $class);
                     return true;
-                } else {
+                }
+                else
+                {
                     return false;
                 }
             }
@@ -76,272 +56,198 @@ class autoloader {
         return false;
     }
     /**
-     * Add alias to be considered when autoloading.
-     * @param string $from vendor\package\{...}
-     * @param string $as   vendor\package\{...}
-     */
-    static function add_alias($from, $as) {
-
-        if ($from === $as) {
-            return;
-        }
-
-        // Resolve *
-        if (strpos($as, '*') !== false) {
-            // $as = str_replace('/', '\\', $as);
-            $as = preg_quote($as);
-            $as = str_replace('\\*', '(.*?)', $as);
-            $as = "/^{$as}$/";
-        }
-
-        // Correct / in alias
-        // $from = str_replace('.', '\\', $from);
-        // if (!strpos($from, '*') && !strpos($from, ',')) {
-        //     list($_, $_, $_, $from, $alias) = self::resolve_class($from);
-        //     dump_r("From, alias", $from, $alias);
-        //     if (!$from) {
-        //         throw new \Exception(
-        //             "Couldn't resolve class:\n>> {$from} << AS {$as}");
-        //     }
-        // }
-
-        if (isset(self::$aliases[$as]) && self::$aliases[$as] !== $from) {
-            throw new \Exception(
-                "Failed:\n   ".self::$aliases[$as] . " AS {$as}\n".
-                ">> {$from} AS {$as}\n");
-        }
-
-        // As is being unique here, so we set it as key
-        // there can be multiple `from` for different as
-        if ($as !== $from) {
-            self::$aliases[$as] = $from;
-        }
-    }
-
-    /**
-     * Resolve use statement.
+     * Resolve __use statement.
      * @param  string $namespace
      * @param  string $use
-     * @return boolean
      */
-    static function resolve_use($namespace, $use) {
-
-        $lines = explode("\n", $use);
+    static function ruse($namespace, $use)
+    {
         $segments = explode('\\', $namespace);
+        $self_package = pkg::has(implode('.', array_slice($segments, 0, 2))) ?
+            implode('.', array_slice($segments, 0, 2)) :
+            implode('.', array_slice($segments, 0, 3));
 
-        if (isset(self::$packages[implode('.', array_slice($segments, 0, 3))]))
+        foreach (explode("\n", $use) as $lineno => $line)
         {
-            $rootc = 3;
-        }
-        elseif (isset(self::$packages[implode('.', array_slice($segments, 0, 2))]))
-        {
-            $rootc = 2;
-        }
-        else
-        {
-            throw new \Exception(
-                "Not found: `{$namespace}`, perhaps package is not enabled."
-            );
-        }
-
-        $package = implode('.', array_slice($segments, 0, $rootc));
-
-        foreach ($lines as $line) {
-
             $line = trim(strtolower($line));
 
-            // Empty line, skip
-            if (empty($line)) {
+            if (empty($line))
                 continue;
-            }
 
-            // Comment, skip
-            if (substr($line, 0, 1) === '#') {
+            // Comment
+            if (substr($line, 0, 1) === '#')
                 continue;
-            }
 
-            // is it internal?
-            if (substr($line, 0, 2) === './') {
-                $line = $package.'/'.substr($line, 2);
-            }
+            // ./pkg => self.vendor.package/pkg
+            if (substr($line, 0, 2) === './')
+                $line = $self_package.'/'.substr($line, 2);
 
-            // Contains AS?
-            if (strpos($line, ' as ')) {
+            // Contain ' as '?
+            if (strpos($line, ' as '))
+            {
                 list($from, $as) = explode(' as ', $line, 2);
-                $as   = trim($as);
                 $from = trim($from);
-            } else {
+                $as   = trim($as);
+            }
+            else
+            {
                 $from = $line;
-                // namespace.package/class ...
-                if (strpos($line, '/')) {
-                    $as = explode('/', $line)[1];
-                } else {
-                    // ... or namespace.package
-                    $as   = substr($line, strrpos($line, '.')+1);
-                    // $from = $from.'/'.substr($from, strrpos($from, '.')+1);
-                    $from = $from.'/'.$as;
+
+                // Is it in format: vendor.sub.package/class
+                // Set `as` to be `class`
+                if (strpos($line, '/'))
+                {
+                    $as = array_pop(explode('/', $line, 2));
                 }
+                else
+                {
+                    $as   = substr($line, strrpos($line, '.')+1);
+                    $from = "{$from}/{$as}";
+                }
+
+                $as = str_replace('/', '\\', $as);
             }
 
-            // is multiple insersion?
-            if (strpos($from, ',')) {
-                $sfrom = explode('/', $from, 2);
-                $last_from = trim($sfrom[1]);
-                $from = $sfrom[0];
-                // $from = implode('/', array_slice($sfrom, 0, -1));
-                $multiple_from = explode(',', $last_from);
+            // Multiple classes in one line, e.g.:
+            // mysli.framework.core/one,two,three
+            if (strpos($from, ','))
+            {
+                if (!strpos($as, ','))
+                    throw new \Exception(
+                        "Wrong assignment: `{$line}`, ".
+                        "`as` need to be list of aliases.", 10
+                    );
 
-                if (strpos($as, ',')) {
-                    $segments_as = explode('\\', $as);
-                    $as = implode('\\', array_slice($segments_as, 0, -1));
-                    $last_as = trim(array_slice($segments_as, -1)[0]);
-                    $multiple_as = explode(',', $last_as);
-                    if (count($multiple_as) !== count($multiple_from)) {
+                $lc_from = substr($from, strrpos($from, '/')+1);
+                $from = substr($from, 0, strlen($from)-strlen($lc_from)-1);
+                $lc_from = explode(',', $lc_from);
+
+                if (!strpos($as, '*')) {
+                    if (strpos($as, '\\') === false)
+                        $as = "\\{$as}";
+
+                    $lc_as = substr($as, strrpos($as, '\\')+1);
+                    $as = substr($as, 0, strlen($as)-strlen($lc_as)-1);
+                    $lc_as = explode(',', $lc_as);
+
+                    if (count($lc_as) !== count($lc_from))
                         throw new \Exception(
-                            "Expected the same amout of elements: ".
-                            "`{$line}` when using `AS`. (".
-                            implode(',', $multiple_from).") != (".
-                            implode(',', $multiple_as).")");
-                    }
-                } else {
-                    $multiple_as = $multiple_from;
+                            "Number of elements in doesn't match: `{$line}`", 20
+                        );
                 }
 
-                foreach ($multiple_from as $k => $file) {
-                    if (strpos($as, '*')) {
-                        $asf = str_replace('*', $multiple_as[$k], $as);
-                    } else {
-                        $asf = trim($as.'\\'.$multiple_as[$k], '\\');
-                    }
-                    $asf = $namespace.'\\'.$asf;
-                    \core\autoloader::add_alias(
-                        str_replace(['.', '/'], '\\', "{$from}\\{$file}"),
-                        $asf
-                    );
+                foreach ($lc_from as $lc_pos => $fclass)
+                {
+                    if (strpos($as, '*'))
+                        $asf = str_replace('*', $fclass, $as);
+                    else
+                        $asf = "{$as}\\{$lc_as[$lc_pos]}";
+
+                    $asf = "{namespace}\\{$asf}";
+                    $fromf = str_replace(['.', '/'], '\\', $from).'\\'.$fclass;
+                    self::alias($fromf, $asf);
                 }
                 continue;
             }
 
-            $as = $namespace.'\\'.$as;
-            \core\autoloader::add_alias(str_replace(['.', '/'], '\\', $from), $as);
+            $as = "{$namespace}\\{$as}";
+            $from = str_replace(['.', '/'], '\\', $from);
+            self::alias($from, $as);
         }
     }
 
     // Private
 
     /**
-     * Resolve class to filename, and add actual class to namespace
-     * if missing, e.g.: vendor/package => vendor/package/packag (class)
-     * @param  string $class
-     * @return array  [
-     *         $root,     // Root package name
-     *         $abs_path, // Class full absolute path
-     *         $rel_path, // Class relative path (inc. filename, path)
-     *         $class,    // Full resolved class name
-     *         $alias     // Short class name (to be aliased as)
-     * ]
+     * Alias particular class (to <= as)
+     * Allowed mysli\framework\core\* as core\*
+     * This will set for example
+     * mysli\framework\pkgm\pkgm <= mysli\framework\cli\pkgm
+     * @param  string $to
+     * @param  string $as
      */
-    private static function resolve_class($class) {
+    private static function alias($to, $as)
+    {
+        if ($to === $as)
+            return;
 
-        $segments = explode("\\", $class);
+        if (strpos($as, '*')) {
+            $as = preg_quote($as);
+            $as = str_replace('\\*', '(.*?)', $as);
+            $as = "/^{$as}$/";
+        }
 
-        if (isset(self::$packages[implode('.', array_slice($segments, 0, 3))]))
-        {
-            $rootc = 3;
-        }
-        elseif (isset(self::$packages[implode('.', array_slice($segments, 0, 2))]))
-        {
-            $rootc = 2;
-        }
-        else
-        {
+        if (isset(self::$aliases[$as]) && self::$aliases[$as] !== $to)
             throw new \Exception(
-                "Call not found: `{$class}`, perhaps package is not enabled."
+                "Alias is already set `{$as}`, for `{self::$aliases[$as]}`, ".
+                "cannot rewrite it for `{$to}`", 10
             );
-        }
 
-        // get root (vendor.sub.package)
-        $root = implode('.', array_slice($segments, 0, $rootc));
-
-        // get sub-path
-        if (count($segments) > $rootc+1) {
-            $spath = implode('/', array_slice($segments, $rootc, -1)) . '/';
-        } else {
-            $spath = '';
-        }
-
-        // get file
-        if (count($segments) === $rootc) {
-            $alias = implode('\\', $segments);
-        } else {
-            $alias = false;
-        }
-
-        $file = array_slice($segments, -1)[0];
-        $path = self::$packages[$root];
-        $phar = strpos($path, '.');
-
-        $rel_path = "{$spath}{$file}.php";
-        $abs_path = MYSLI_PKGPATH."/{$path}/src";
-        $path  = $phar ? 'phar://'.$abs_path : $abs_path;
-
-        return [$root, $abs_path, $rel_path, $class, $alias];
+        self::$aliases[$as] = $to;
     }
     /**
-     * Load actual class (and initialized it if required)
+     * Load particular class file, if file exists.
+     * Call __init, if available and was not called before.
      * @param  string $class
      * @return boolean
      */
-    private static function load_class($class) {
+    private static function init_class($class)
+    {
+        // Get pckage's name...
+        $segments = explode('\\', $class);
+        $rootc = pkg::has(implode('.', array_slice($segments, 0, 2))) ? 2 : 3;
+        $package = implode('.', array_slice($segments, 0, $rootc));
+        $release = pkg::get_release_by_name($package);
 
-        list($root, $abs_path, $rel_path, $class, $alias) = self::resolve_class($class);
-        $path = "{$abs_path}/{$rel_path}";
-
-
-        if (!file_exists($path)) {
+        if (!$release)
             return false;
-        }
 
-        if (!class_exists($class, false) && !trait_exists($class, false)) {
-            include($path);
-        }
+        // Get paths
+        $relpath = implode('/', array_slice($segments, $rootc)).'.php';
+        $is_phar = !strpos($release, '/');
+        $abspath = MYSLI_PKGPATH.'/'.$release;
+        if ($is_phar)
+            $abspath = "phar://{$abspath}.phar/src";
+        else
+            $abspath = "{$abspath}/src";
 
-        if (!class_exists($class, false) && !trait_exists($class, false)) {
+        $class_file = "{$abspath}/{$relpath}";
+
+        if (!file_exists($class_file))
+            throw new \Exception("Class file not found: `{$class_file}`", 10);
+        else
+            include($class_file);
+
+        if (!class_exists($class, false) && !trait_exists($class, false))
             throw new \Exception(
-                "Class: `{$class}` not found in: `{$path}`.", 1);
-        }
+                "File was loaded: `{$class_file}`, ".
+                "but class: `{$class}` was not found.", 20
+            );
 
-        if ($alias && !class_exists($alias, false)) {
-            class_alias($class, $alias);
-        }
-
-        if (!in_array($root, self::$initialized)) {
-            self::initialize($root, $abs_path);
-        }
+        if (!in_array($package, self::$initialized))
+            self::init($package, $abspath);
 
         return true;
     }
-
     /**
-     * Run init if this package is loader first time.
-     * @param  string  $package
-     * @return null
+     * Run __init for particular package
+     * @param  string $package
+     * @param  string $path
      */
-    private static function initialize($package, $path) {
-        // under no circumstance load __init twice
+    private static function init($package, $path)
+    {
         self::$initialized[] = $package;
 
-        $function = '\\'.str_replace('.', '\\', $package.'\\__init');
-        $path = $path."/__init.php";
+        $function = '\\'.str_replace('.', '\\', $package).'\\__init';
+        $path = $path.'/__init.php';
 
-        if (!function_exists($function)) {
-            if (file_exists($path)) {
-                include($path);
-            }
-        }
+        if (!function_exists($function) && file_exists($path))
+            include($path);
 
-        if (function_exists($function)) {
+        if (function_exists($function))
             call_user_func($function);
-        }
+        else
+            throw new \Exception(
+                "Init function `{$function}` not found in: `{$path}`.", 10);
     }
 }

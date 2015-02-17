@@ -39,21 +39,18 @@ function enable($pkgpath, $datpath) {
 
     // Writte boot file
     return (bool) file_put_contents(
-        $datpath.'/boot/core.json',
+        $datpath.'/boot/r.json',
         json_encode([
-            'core' => [
-                'package' => 'mysli.framework.core',
+            "boot" => [
+                'core' => 'mysli.framework.core',
+                'autoloader' => 'mysli.framework.core/autoloader:load',
+                'pkg' => 'mysli.framework.core/pkg'
             ],
-            'autoloader' => [
-                'package' => 'mysli.framework.core',
-                'file'    => 'autoloader',
-                'call'    => 'load'
+            "map" => [
+                'mysli.framework.core' => $selfrelease
+            ],
+            "pkg" => [
             ]
-        ])
-    ) && (bool) file_put_contents(
-        $datpath.'/boot/packages.json',
-        json_encode([
-            'mysli.framework.core' => $selfrelease
         ])
     );
 }
