@@ -104,7 +104,7 @@ function __init() {
     // Alis fatal function
     $func_fatal = '\mysli\installer\sh\installer\fatal';
 
-    // Enable core package...
+    // Run core package's setup
     print_line(null);
     print_line('* Now enabling core packages....');
     if (c\exe_setup($packages['core'], $pkgpath, $datpath, $func_fatal)) {
@@ -113,7 +113,7 @@ function __init() {
     $core = c\pkg_class($packages['core'], '__init', $pkgpath, $func_fatal);
     $core($datpath, $pkgpath);
 
-    // Enable pkgm package...
+    // Run pkgm's setup
     if (c\exe_setup($packages['pkgm'], $pkgpath, $datpath, $func_fatal)) {
         print_line("    Done: {$packages['pkgm']} (SETUP)");
     }
