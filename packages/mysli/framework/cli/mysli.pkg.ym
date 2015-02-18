@@ -7,5 +7,4 @@ authors:
 require:
     mysli.framework.core: 1
     mysli.framework.fs:   1
-    mysli.framework.pkgm: 1
     mysli.framework.type: 1
