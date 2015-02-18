@@ -68,5 +68,5 @@ function l($string) {
  * @return null
  */
 function __use($namespace, $use) {
-    return \core\autoloader::resolve_use($namespace, $use);
+    return \core\autoloader::ruse($namespace, $use);
 }

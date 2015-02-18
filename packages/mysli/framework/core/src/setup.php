@@ -46,10 +46,11 @@ function enable($pkgpath, $datpath) {
                 'autoloader' => 'mysli.framework.core/autoloader:load',
                 'pkg' => 'mysli.framework.core/pkg'
             ],
-            "map" => [
-                'mysli.framework.core' => $selfrelease
-            ],
             "pkg" => [
+                'mysli.framework.core' => [
+                    'package' => 'mysli.framework.core',
+                    'release' => $selfrelease
+                ]
             ]
         ])
     );

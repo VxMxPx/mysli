@@ -2,8 +2,6 @@
 
 namespace mysli\framework\core;
 
-use \core\pkg;
-
 class autoloader {
 
     private static $aliases     = [];
@@ -63,7 +61,7 @@ class autoloader {
     static function ruse($namespace, $use)
     {
         $segments = explode('\\', $namespace);
-        $self_package = pkg::has(implode('.', array_slice($segments, 0, 2))) ?
+        $self_package = \core\pkg::has(implode('.', array_slice($segments, 0, 2))) ?
             implode('.', array_slice($segments, 0, 2)) :
             implode('.', array_slice($segments, 0, 3));
 
@@ -141,9 +139,12 @@ class autoloader {
                     if (strpos($as, '*'))
                         $asf = str_replace('*', $fclass, $as);
                     else
-                        $asf = "{$as}\\{$lc_as[$lc_pos]}";
+                        if ($as)
+                            $asf = "{$as}\\{$lc_as[$lc_pos]}";
+                        else
+                            $asf = $lc_as[$lc_pos];
 
-                    $asf = "{namespace}\\{$asf}";
+                    $asf = "{$namespace}\\{$asf}";
                     $fromf = str_replace(['.', '/'], '\\', $from).'\\'.$fclass;
                     self::alias($fromf, $asf);
                 }
@@ -193,11 +194,15 @@ class autoloader {
      */
     private static function init_class($class)
     {
+        // Our work here is done
+        if (class_exists($class, false))
+            return true;
+
         // Get pckage's name...
         $segments = explode('\\', $class);
-        $rootc = pkg::has(implode('.', array_slice($segments, 0, 2))) ? 2 : 3;
+        $rootc = \core\pkg::has(implode('.', array_slice($segments, 0, 2))) ? 2 : 3;
         $package = implode('.', array_slice($segments, 0, $rootc));
-        $release = pkg::get_release_by_name($package);
+        $release = \core\pkg::get_release_by_name($package);
 
         if (!$release)
             return false;
@@ -214,7 +219,8 @@ class autoloader {
         $class_file = "{$abspath}/{$relpath}";
 
         if (!file_exists($class_file))
-            throw new \Exception("Class file not found: `{$class_file}`", 10);
+            return false;
+            // throw new \Exception("Class file not found: `{$class_file}`", 10);
         else
             include($class_file);
 
@@ -241,7 +247,10 @@ class autoloader {
         $function = '\\'.str_replace('.', '\\', $package).'\\__init';
         $path = $path.'/__init.php';
 
-        if (!function_exists($function) && file_exists($path))
+        if (!file_exists($path))
+            return;
+
+        if (!function_exists($function))
             include($path);
 
         if (function_exists($function))

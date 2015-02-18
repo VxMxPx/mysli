@@ -4,8 +4,8 @@ namespace mysli\framework\core;
 
 class pkg {
 
-    private $path = null;
-    private $r = [];
+    private static $path = null;
+    private static $r = [];
 
     /**
      * Init pkg
@@ -13,13 +13,13 @@ class pkg {
      */
     static function __init($path)
     {
-        if ($path)
+        if (self::$path)
             throw new \Exception("Already initialized.", 10);
 
         if (!file_exists($path))
-            throw new \Exception("File not found: `{$file}`", 20);
+            throw new \Exception("File not found: `{$path}`", 20);
 
-        self::$file = $file;
+        self::$path = $path;
         self::read();
     }
 
@@ -33,52 +33,39 @@ class pkg {
 
     /**
      * Add new package to the registry.
-     * @param  string  $release
+     * @param  string  $name
      * @param  array   $meta
      * @return boolean
      */
-    static function add($release, array $meta)
+    static function add($name, array $meta)
     {
-        $name = $meta['package'];
+        if (isset(self::$r['pkg'][$name]))
+            throw new \Exception("Package {$name} already on the list.", 10);
 
-        if (isset(self::$r['pkg'][$release]) || isset(self::$r['map'][$name]))
-            throw new \Exception("Package {$release} already on the list.", 10);
-
-        self::$r['map'][$name] = $release;
-        self::$r['pkg'][$release] = $meta;
+        self::$r['pkg'][$name] = $meta;
     }
     /**
      * Remove package from the list.
-     * @param  string $release
+     * @param  string $name
      * @return boolean
      */
-    static function remove($release)
+    static function remove($name)
     {
-        if (!isset(self::$r['pkg'][$release]))
+        if (!isset(self::$r['pkg'][$name]))
             throw new \Exception(
-                "Trying to remove a non-existant package: `{$release}`");
+                "Trying to remove a non-existant package: `{$name}`");
 
-        $name = self::$r['pkg'][$release]['package'];
-
-        unset(self::$r['pkg'][$release]);
-        unset(self::$r['map'][$name]);
+        unset(self::$r['pkg'][$name]);
     }
     /**
      * Update a package information.
-     * @param  string $release     old release
+     * @param  string $name
      * @param  array  $new_meta
-     * @param  string $new_release
      * @return boolean
      */
-    static function update($release, array $new_meta, $new_release=null)
+    static function update($name, array $new_meta)
     {
-        if ($new_release !== null && $release !== $new_release)
-        {
-            self::remove($release);
-            self::add($new_release, $new_meta);
-        }
-        else
-            self::$r['pkg'][$release] = $new_meta;
+        self::$r['pkg'][$name] = $new_meta;
     }
     /**
      * Check if particular package is on the list.
@@ -93,10 +80,19 @@ class pkg {
     {
         // Release
         if (strpos($name, '/') || strpos($name, '-r'))
-            return isset(self::$r['pkg'][$name]);
-
+        {
+            foreach (self::$r['pkg'] as $meta) {
+                if ($meta['release'] === $name)
+                    return true;
+            }
+        }
         // Name
-        return isset(self::$r['map'][$name]);
+        else
+        {
+            return isset(self::$r['pkg'][$name]);
+        }
+
+        return false;
     }
 
     /**
@@ -107,8 +103,8 @@ class pkg {
      */
     static function get_release_by_name($name)
     {
-        if (isset(self::$r['map'][$name]))
-            return self::$r['map'][$name];
+        if (isset(self::$r['pkg'][$name]))
+            return self::$r['pkg'][$name]['release'];
     }
     /**
      * Get name(mysli.framework.core)
@@ -118,8 +114,10 @@ class pkg {
      */
     static function get_name_by_release($release)
     {
-        if (isset(self::$r['pkg'][$release]))
-            return self::$r['pkg'][$release]['package'];
+        foreach (self::$r['pkg'] as $name => $meta) {
+            if ($meta['release'] === $release)
+                return $name;
+        }
     }
 
     /**
@@ -129,8 +127,8 @@ class pkg {
      */
     static function get_by_name($name)
     {
-        $release = self::get_release_by_name($name);
-        return self::get_by_release($release);
+        if ($name && isset(self::$r['pkg'][$name]))
+            return self::$r['pkg'][$name];
     }
     /**
      * Get package's meta by release
@@ -139,8 +137,7 @@ class pkg {
      */
     static function get_by_release($release)
     {
-        if (isset(self::$r['pkg'][$release]))
-            return self::$r['pkg'][$release];
+        return self::get_by_name(self::get_name_by_release($release));
     }
 
     /**
@@ -153,7 +150,7 @@ class pkg {
         if ($detailed)
             return self::$r['pkg'];
         else
-            return self::$r['map'];
+            return array_keys(self::$r['pkg']);
     }
 
     // R/W

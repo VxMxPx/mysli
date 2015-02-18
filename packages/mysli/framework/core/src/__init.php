@@ -45,26 +45,26 @@ function __init($datpath, $pkgpath)
     $bootr = json_decode(file_get_contents($boot_path), true);
 
     define('MYSLI_CORE_PKG',     $bootr['boot']['core']);
-    define('MYSLI_CORE_PKG_REL', $bootr['map'][MYSLI_CORE_PKG]);
+    define('MYSLI_CORE_PKG_REL', $bootr['pkg'][MYSLI_CORE_PKG]['release']);
 
-    __get_pkg($bootr['boot']['pkg'], $bootr['map']);
+    __get_pkg($bootr['boot']['pkg'], $bootr['pkg']);
     \core\pkg::__init($boot_path);
-    __get_autoloader($bootr['boot']['autoloader'], $bootr['map']);
+    __get_autoloader($bootr['boot']['autoloader'], $bootr['pkg']);
 }
 // Load: pkg
-function __get_pkg(array $pkg, array $packages)
+function __get_pkg($pkg, array $packages)
 {
-    list($package, $file) = explode('/', $autoloader, 2);
+    list($package, $file) = explode('/', $pkg, 2);
     $class = str_replace('.', '\\', $package);
     $class = $class.'\\'.str_replace('/', '\\', $file);
     __get_std_class($package, $packages, $file, $class);
     class_alias($class, 'core\\pkg');
 }
 // Load: autoloader
-function __get_autoloader(array $autoloader, array $packages)
+function __get_autoloader($autoloader, array $packages)
 {
     list($package, $call) = explode(':', $autoloader, 2);
-    list($package, $file) = explode('/', $autoloader, 2);
+    list($package, $file) = explode('/', $package, 2);
     $class = str_replace('.', '\\', $package);
     $class = $class.'\\'.str_replace('/', '\\', $file);
     __get_std_class($package, $packages, $file, $class);
@@ -78,7 +78,7 @@ function __get_std_class($package, $packages, $file, $class)
         throw new \Exception(
             "Package not available: `{$package}`", 1);
     else
-        $release = $packages[$package];
+        $release = $packages[$package]['release'];
 
     $is_phar = !strpos($release, '/');
     $path = ($is_phar?'phar://':'').MYSLI_PKGPATH.'/'.$release.
