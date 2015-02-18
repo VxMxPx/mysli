@@ -113,7 +113,7 @@ class pkgm {
      * @return array
      */
     static function list_enabled() {
-        return array_values(\core\pkg::get_list());
+        return \core\pkg::get_list();
     }
     /**
      * Get all disabled packages
@@ -200,19 +200,20 @@ class pkgm {
     /**
      * List dependees (the packages which require provided package,
      * i.e. are dependant on it)
-     * @param  string  $package
+     * @param  string  $release
      * @param  boolean $deep
      * @param  array   $listed internal helper
      * @return array
      */
-    static function list_dependees($package, $deep=false)
+    static function list_dependees($release, $deep=false)
     {
-        $meta = self::meta($package);
+        $meta = self::meta($release);
+        $name = $meta['package'];
 
         if (!$deep)
             return isset($meta['required_by']) ? $meta['required_by'] : [];
 
-        $dependees = [$package];
+        $dependees = [$name];
 
         foreach ($meta['required_by'] as $dependee)
         {
@@ -229,7 +230,7 @@ class pkgm {
      * List dependencies of package.
      * If you set $deep to true, it will resolve deeper relationships,
      * i.e. dependencies of dependencies
-     * @param  string  $package
+     * @param  string  $release
      * @param  boolean $deep
      * @param  string  $group packages of which group to list:
      * null (required), recommend, dev, ... (other special groups)
@@ -238,9 +239,9 @@ class pkgm {
      * @return array
      */
     static function list_dependencies(
-        $package, $deep=false, $group=null, array $proc=[])
+        $release, $deep=false, $group=null, array $proc=[])
     {
-        $meta = self::meta($package);
+        $meta = self::meta($release);
 
         $list = [
             'enabled'   => [],
@@ -289,7 +290,7 @@ class pkgm {
             return $list;
 
         // Prevent infinite loops
-        $hash = $package . ': ' . implode(', ', array_keys($meta[$group]));
+        $hash = $release . ': ' . implode(', ', array_keys($meta[$group]));
         if (in_array($hash, $proc))
         {
             $proc[count($proc)-1] = ' >> '.$proc[count($proc) - 1];
@@ -354,33 +355,34 @@ class pkgm {
     }
     /**
      * Get meta for particular package.
-     * @param  string  $package
+     * @param  string  $release
      * @param  boolean $force_read force package meta to be read from file
      * @return array
      */
-    static function meta($package, $force_read=false)
+    static function meta($release, $force_read=false)
     {
-        if (self::is_enabled($package) && !$force_read)
+        if (self::is_enabled($release) && !$force_read)
         {
-            return \core\pkg::get_by_release($package);
+            return \core\pkg::get_by_release($release);
         }
-        elseif (self::exists($package))
+        elseif (self::exists($release))
         {
-            $file = fs::pkgpath($package, 'mysli.pkg.ym');
+            $file = fs::pkgpath($release, 'mysli.pkg.ym');
 
             if (file::exists($file))
             {
                 $meta = ym::decode_file($file);
                 $meta['require'] = $meta['require'] ?: [];
+                $meta['release'] = $release;
                 return $meta;
             }
             else
                 throw new framework\exception\not_found(
-                    "Fild `mysli.pkg.ym` not found for: `{$package}`.", 1);
+                    "Fild `mysli.pkg.ym` not found for: `{$release}`.", 1);
         }
         else
             throw new framework\exception\not_found(
-                "The package doesn't exists: `{$package}`.", 2);
+                "The package doesn't exists: `{$release}`.", 2);
     }
     /**
      * Enable package (release). This will NOT run the setup.
@@ -409,17 +411,23 @@ class pkgm {
         // Go through required package, and add itself to the required list
         foreach ($meta['require'] as $dependency => $version)
         {
-            $dependency_release = \core\pkg::get_release_by_name($dependency);
-            $dmeta = \core\pkg::get_by_release($dependency_release);
+            $dmeta = \core\pkg::get_by_name($dependency);
 
             if (!$dmeta)
                 throw new exception\dependency(
                 "Dependency not satisfied: `{$dependency} : {$version}`", 4);
 
-            $dmeta['required_by'][] = $name;
-            \core\pkg::update($dependency_release, null, $dmeta);
+            if (!isset($dmeta['required_by']))
+                $dmeta['required_by'] = [];
+
+            if (!in_array($name, $dmeta['required_by']))
+            {
+                $dmeta['required_by'][] = $name;
+                \core\pkg::update($dependency, $dmeta);
+            }
         }
 
+        $meta['release']     = $release;
         $meta['enabled_by']  = $enabled_by;
         $meta['enabled_on']  = time();
         $meta['required_by'] = [];
@@ -429,7 +437,7 @@ class pkgm {
         // This happened sometimes, especially when replacing packages.
         if (!empty(\core\pkg::get_list()))
         {
-            foreach (\core\pkg::get_list(true) as $lpkg => $lmeta)
+            foreach (\core\pkg::get_list(true) as $lmeta)
             {
                 if (!isset($lmeta['require']))
                     continue;
@@ -439,14 +447,14 @@ class pkgm {
                     if ($depends_on && $depends_on === $name)
                     {
                         // Unlike event that package is already on the list.
-                        if (!in_array($lpkg, $meta['required_by']))
-                            $meta['required_by'][] = $lpkg;
+                        if (!in_array($lmeta['package'], $meta['required_by']))
+                            $meta['required_by'][] = $lmeta['package'];
                     }
                 }
             }
         }
 
-        \core\pkg::add($release, $meta);
+        \core\pkg::add($name, $meta);
         return \core\pkg::write();
     }
     /**
@@ -468,10 +476,9 @@ class pkgm {
         // Remove self from list of packages on which this package depends.
         foreach ($meta['require'] as $dependency => $version)
         {
-            $dependency_release = \core\pkg::get_release_by_name($dependency);
-            $rmeta = \core\pkg::get_by_name($dependency_release);
+            $rmeta = \core\pkg::get_by_name($dependency);
 
-            if (!$dmeta)
+            if (!$rmeta || !isset($rmeta['required_by']))
                 continue;
 
             while ($rmeta['required_by'] &&
@@ -481,10 +488,10 @@ class pkgm {
                 unset($rmeta['required_by'][$rkey]);
             }
 
-            \core\pkg::update($dependency_release, $rmeta);
+            \core\pkg::update($dependency, $rmeta);
         }
 
-        \core\pkg::remove($release);
+        \core\pkg::remove($name);
         return \core\pkg::write();
     }
 
