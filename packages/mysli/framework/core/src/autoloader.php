@@ -95,7 +95,8 @@ class autoloader {
                 // Set `as` to be `class`
                 if (strpos($line, '/'))
                 {
-                    $as = array_pop(explode('/', $line, 2));
+                    $lseg = explode('/', $line, 2);
+                    $as = array_pop($lseg);
                 }
                 else
                 {

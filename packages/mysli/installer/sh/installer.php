@@ -136,7 +136,7 @@ function __init() {
     }
 
     print_line('    All done!');
-    $packages['pkgm'] = substr($pkg, -5) === '.phar' ?
+    $packages['pkgm'] = substr($packages['pkgm'], -5) === '.phar' ?
         'phar://'.$packages['pkgm'] :
         $packages['pkgm'];
     include(realpath(c\dst($pkgpath, $packages['pkgm'], '/sh/pkgm.php')));
