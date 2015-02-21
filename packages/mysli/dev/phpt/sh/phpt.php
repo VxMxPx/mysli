@@ -70,7 +70,7 @@ function execute($args) {
         if (!isset($method)) {
             $method = null;
         }
-        $pkg = pkgm::name_from_path(fs::pkgpath($package));
+        $pkg = pkgm::release_from_path(fs::pkgpath($package));
     }
     $file = substr($package, strlen($pkg));
 

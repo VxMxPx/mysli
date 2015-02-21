@@ -48,6 +48,7 @@ class parser {
         'memory_limit'                   => '128M',
         'opcache.fast_shutdown'          => '0',
         'opcache.file_update_protection' => '0',
+        'xdebug.default_enable'          => '0',
     ];
 
     /**
@@ -352,10 +353,10 @@ class parser {
         $headers[] = '<?php';
         $headers[] = sprintf(
             'include("%s");',
-            fs::pkgpath(MYSLI_CORE, 'src/__init.php'));
+            fs::pkgpath(MYSLI_CORE_PKG_REL, 'src/__init.php'));
         $headers[] = sprintf(
             'call_user_func("%s", "%s", "%s");',
-            str_replace('/', '\\\\', MYSLI_CORE).'\\\\__init',
+            str_replace('.', '\\\\', MYSLI_CORE_PKG).'\\\\__init',
             fs::datpath(),
             fs::pkgpath());
         $headers[] = '?>';
