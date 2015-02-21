@@ -1,7 +1,6 @@
 --TEST--
 --FILE--
 <?php
-use mysli\util\datetime as dtime;
 use mysli\framework\cli\param as cparam;
 
 $params = new cparam('Params Test', []);
@@ -18,5 +17,4 @@ $params->parse();
 ?>
 --EXPECTF--
 Fatal error: Uncaught exception 'mysli\framework\exception\argument' with message 'Values for `min` (6) cannot be bigger than value for `max` (4)' in %s
-Stack trace:
 %a

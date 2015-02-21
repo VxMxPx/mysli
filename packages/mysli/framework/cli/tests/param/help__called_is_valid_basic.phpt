@@ -1,7 +1,6 @@
 --TEST--
 --FILE--
 <?php
-use mysli\util\datetime as dtime;
 use mysli\framework\cli\param as cparam;
 
 $params = new cparam('Params Test', ['-h']);
