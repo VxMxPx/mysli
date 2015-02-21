@@ -1,7 +1,7 @@
 --TEST--
 --FILE--
 <?php
-use mysli\util\datetime as dtime;
+use mysli\util\datetime\datetime as dtime;
 
 var_dump(dtime::now());
 

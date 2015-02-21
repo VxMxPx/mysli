@@ -1,7 +1,7 @@
 --TEST--
 --FILE--
 <?php
-use mysli\util\datetime as dtime;
+use mysli\util\datetime\datetime as dtime;
 
 $date = '2014-04-01 12:10:20';
 date_default_timezone_set('UTC');
