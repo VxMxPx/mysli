@@ -369,22 +369,18 @@ class arr {
      * key      : value
      * long_key : value
      * @param array   $array
-     * @param string  $separator used to separate key and value.
-     * @param string  $new_line new line character.
+     * @param integer $indent starting indentation.
      * @param integer $step in multi-dimensional array, how much to indent
      *                      the next level.
-     * @param integer $indent starting indentation.
+     * @param string  $separator used to separate key and value.
+     * @param string  $new_line new line character.
      * @param boolean $valuefy print bolean values as true/false,
      *                         and string values as "value"
      * @return string
      */
-    public static function readable(
-                            array $array,
-                            $indent=0,
-                            $step=2,
-                            $separator=' : ',
-                            $new_line="\n",
-                            $valuefy=false)
+    static function readable(
+        array $array, $indent=0, $step=2, $separator=' : ',
+        $new_line="\n", $valuefy=false)
     {
         tc::need_int($indent, 0);
         tc::need_int($step, 0, null, 1);
@@ -395,28 +391,92 @@ class arr {
         $out = '';
 
         // Get the longest key...
-        foreach ($array as $key => $val) {
-            if (str::length($key) > $long_key) {
+        foreach ($array as $key => $val)
+            if (str::length($key) > $long_key)
                 $long_key = str::length($key);
-            }
-        }
 
-        foreach ($array as $key => $value) {
+        foreach ($array as $key => $value)
+        {
             $out .= str_repeat(' ', $indent) . $key;
-            if (is_array($value)) {
+
+            if (is_array($value))
+            {
                 $out .= $new_line . self::readable(
-                    $value, $indent + $step, $step, $separator, $new_line);
-            } else {
-                if ($valuefy) {
-                    if (is_bool($value)) {
+                    $value, $indent + $step, $step, $separator,
+                    $new_line, $valuefy
+                );
+            }
+            else
+            {
+                if ($valuefy)
+                {
+                    if (is_bool($value))
                         $value = $value ? 'true' : 'false';
-                    } elseif (is_string($value)) {
+                    elseif (is_string($value))
                         $value = '"'.$value.'"';
-                    }
                 }
+
                 $out .= str_repeat(' ', $long_key - str::length($key)) .
                     $separator . $value;
             }
+
+            $out .= $new_line;
+        }
+
+        return rtrim($out);
+    }
+    /**
+     * The same as `readable` return an array as a nicely formatted string.
+     * This will ignore keys though, and return onlty list of values.
+     * Example:
+     * - value
+     * - value
+     *     - sub-value
+     *     - sub-value
+     * @param array   $array
+     * @param integer $indent starting indentation.
+     * @param integer $step in multi-dimensional array, how much to indent
+     *                      the next level.
+     * @param string  $marker used to mark a new line (e.g. -)
+     * @param string  $new_line new line character.
+     * @param boolean $valuefy print bolean values as true/false,
+     *                         and string values as "value"
+     * @return string
+     */
+    static function readable_list(
+        array $array, $indent=0, $step=2, $marker='- ',
+        $new_line="\n", $valuefy=false)
+    {
+        tc::need_int($indent, 0);
+        tc::need_int($step, 0, null, 1);
+        tc::need_str($marker, 2);
+        tc::need_str($new_line, 3);
+
+        $out = '';
+
+        foreach ($array as $value)
+        {
+            $out .= str_repeat(' ', $indent) . $marker;
+
+            if (is_array($value))
+            {
+                $out .= $new_line . self::readable_list(
+                    $value, $indent + $step, $step, $marker, $new_line, $valuefy
+                );
+            }
+            else
+            {
+                if ($valuefy)
+                {
+                    if (is_bool($value))
+                        $value = $value ? 'true' : 'false';
+                    elseif (is_string($value))
+                        $value = '"'.$value.'"';
+                }
+
+                $out .= $value;
+            }
+
             $out .= $new_line;
         }
 
