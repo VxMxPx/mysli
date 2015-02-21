@@ -91,6 +91,8 @@ function __init(array $args)
  */
 function enable($pkg, $rec=false, $dev=false)
 {
+    $pkg = resolve_by_name($pkg, pkgm::list_enabled()) or die();
+
     if (pkgm::is_enabled($pkg))
     {
         cout::warn("[!] Package is already enabled: {$pkg}");
@@ -115,7 +117,7 @@ function enable($pkg, $rec=false, $dev=false)
         if ($rec && !empty($rec_dependencies['missing']))
         {
             cout::line("\n* Following recommended dependencies are missing:");
-            cout::line(arr::readable($rec_dependencies['missing'], 4));
+            cout::line(arr::readable_list($rec_dependencies['missing'], 4));
         }
 
         $dependencies = array_merge(
@@ -129,7 +131,7 @@ function enable($pkg, $rec=false, $dev=false)
         if ($rec && !empty($dev_dependencies['missing']))
         {
             cout::line("\n* Following development dependencies are missing:");
-            cout::line(arr::readable($dev_dependencies['missing'], 4));
+            cout::line(arr::readable_list($dev_dependencies['missing'], 4));
         }
 
         $dependencies = array_merge(
@@ -143,7 +145,7 @@ function enable($pkg, $rec=false, $dev=false)
         cout::format(
             "+red [!] Cannot enable, ".
             "following packages/extensions are missing:\n\n%s\n",
-            [arr::readable($dependencies['missing'], 4)]
+            [arr::readable_list($dependencies['missing'], 4)]
         );
 
         return false;
@@ -153,17 +155,17 @@ function enable($pkg, $rec=false, $dev=false)
     {
         cout::line(
             "\n* Package `{$pkg}` require:\n" .
-            arr::readable($dependencies['disabled'], 4)
+            arr::readable_list($dependencies['disabled'], 4)
         );
 
-        if (!cin::confirm("[?] Continue and enable required packages?"))
+        if (!cin::confirm("\n[?] Continue and enable required packages?"))
         {
             cout::line('Terminated.');
             return false;
         }
 
-        foreach ($dependencies['disabled'] as $dependency => $version)
-            if (!enable_helper($dependency, $pkg))
+        foreach ($dependencies['disabled'] as $release)
+            if (!enable_helper($release, $pkg))
                 return false;
     }
 
@@ -173,13 +175,13 @@ function enable($pkg, $rec=false, $dev=false)
     if (!$rec && !empty($rec_dependencies['disabled']))
     {
         cout::line("\n* Recommended dependencies: ");
-        cout::line(arr::readable($rec_dependencies['disabled'], 4));
+        cout::line(arr::readable_list($rec_dependencies['disabled'], 4));
     }
     // Print recommendations...
     if (!$dev && !empty($dev_dependencies['disabled']))
     {
         cout::line("\n* Development dependencies: ");
-        cout::line(arr::readable($dev_dependencies['disabled'], 4));
+        cout::line(arr::readable_list($dev_dependencies['disabled'], 4));
     }
 }
 function enable_helper($package, $by)
@@ -190,12 +192,12 @@ function enable_helper($package, $by)
     {
         if (pkgm::enable($package, $by))
         {
-            cout::format("+green+right ENABLED");
+            cout::right(cout::success('ENABLED'));
             return true;
         }
         else
         {
-            cout::format("+red+right FAILED TO ENABLED");
+            cout::right(cout::error('FAILED TO ENABLE'));
             return false;
         }
     }
@@ -214,6 +216,8 @@ function enable_helper($package, $by)
  */
 function disable($pkg)
 {
+    $pkg = resolve_by_name($pkg, pkgm::list_disabled()) or die();
+
     // Can't disable something that isn't enabled
     if (!pkgm::is_enabled($pkg))
     {
@@ -230,7 +234,7 @@ function disable($pkg)
     {
         cout::line(
             "\n* Package `{$pkg}` is required by:\n" .
-            arr::readable($dependees, 4)
+            arr::readable_list($dependees, 4)
         );
 
         if (!cin::confirm('[?] Disable listed packages?'))
@@ -239,9 +243,19 @@ function disable($pkg)
             return false;
         }
 
-        foreach ($dependees as $dependee)
-            if (!disable_helper($dependee))
+        foreach ($dependees as $package)
+        {
+            $package = \core\pkg::get_release_by_name($package);
+
+            if (!$package)
+            {
+                cout::right(cout::warn('NOT ENABLED'));
+                continue;
+            }
+
+            if (!disable_helper($release))
                 return false;
+        }
     }
 
     // Finally, disable the actual package
@@ -271,6 +285,27 @@ function disable_helper($package)
     }
 }
 
+function resolve_by_name($pkg, array $list)
+{
+    if (strpos($pkg, '.') && !strpos($pkg, '-r'))
+    {
+        $pkgr = pkgm::find_by_release($pkg, '*', $list);
+
+        if (!$pkgr)
+        {
+            cout::warn(
+                "[!] Package not found: `{$pkg}`. Specify exact release perhaps. ".
+                "Use `--list` to see full list available packages."
+            );
+            return false;
+        }
+        else
+            $pkg = $pkgr;
+    }
+
+    return $pkg;
+}
+
 // Repair
 
 /**
@@ -280,30 +315,31 @@ function repair()
 {
     cout::line("\n* Scanning database for missing dependencies...");
 
-    foreach (pkgm::list_enabled() as $package)
+    foreach (pkgm::list_enabled() as $release => $package)
     {
-        cout::line("    Found `{$package}`", false);
-        $dependencies = pkgm::list_dependencies($package, true);
+        cout::line("    Found `{$release}`", false);
+        $dependencies = pkgm::list_dependencies($release, true);
 
         if (empty($dependencies['disabled']) &&
             empty($dependencies['missing']))
         {
-            cout::format('+right+green OK');
+            cout::right(cout::success('OK'));
         }
 
         if (!empty($dependencies['missing']))
         {
-            cout::format('+right+red FAILED');
+            cout::right(cout::error('FAILED'));
             cout::format(
                 "+red [!] Missing packages:\n%s\n",
-                [arr::readable($dependencies['missing'], 4)]
+                [arr::readable_list($dependencies['missing'], 4)]
             );
         }
 
         if (!empty($dependencies['disabled']))
         {
-            cout::format('+right+green ...');
-            foreach ($dependencies['disabled'] as $ddep => $vel)
+            cout::right(cout::success('...'));
+
+            foreach ($dependencies['disabled'] as $ddep)
             {
                 if (!pkgm::is_enabled($ddep))
                 {
@@ -325,18 +361,18 @@ function do_list($option)
 {
     switch ($option) {
         case 'enabled':
-            cout::line(arr::readable(pkgm::list_enabled(), 4));
+            cout::line("\n* Enabled packages:");
+            cout::line(arr::readable(pkgm::list_enabled(), 4));;
             break;
 
         case 'disabled':
+            cout::line("\n* Disabled packages:");
             cout::line(arr::readable(pkgm::list_disabled(), 4));
             break;
 
         case 'all':
-            cout::line("\n* Enabled packages:");
             do_list('enabled');
             cout::nl();
-            cout::line("\n* Disabled packages:");
             do_list('disabled');
             break;
 
@@ -354,6 +390,8 @@ function do_list($option)
  */
 function meta($package)
 {
+    $package = resolve_by_name($package, pkgm::list_all()) or die();
+
     if (!pkgm::exists($package))
         cout::warn('[!] No such package: `'.$package.'`');
     else
@@ -372,7 +410,8 @@ function csi_input(array $properties)
     cout::nl();
 
     // If type not in array, quit right away!
-    if (!in_array($properties['type'],
+    if (!in_array(
+        $properties['type'],
         ['input', 'password', 'textarea', 'radio', 'checkbox']))
     {
         return;
@@ -398,56 +437,11 @@ function csi_input(array $properties)
 
     switch ($properties['type'])
     {
-        case 'input':
-            return cin::line('> ', function ($input) {
-                return $input;
-            });
-
-        case 'password':
-            return cin::password('> ', function ($input) {
-                return $input;
-            });
-
-        case 'textarea':
-            return cin::multiline('> ', function ($input) {
-                return $input;
-            });
-
-        case 'radio':
-            $options = $properties['options'];
-            $keys = array_keys($options);
-            $element = 0;
-            cout::line(arr::readable(array_values($options)));
-            cout::line('Enter one of the numbers (e.g., 1).');
-            return cout::input('> ', function ($input) use ($options, $keys)
-            {
-                if (!isset($keys[$input]))
-                    return null;
-                else
-                    return $keys[$input];
-            });
-
-        case 'checkbox':
-            $options = $properties['options'];
-            $keys = array_keys($options);
-            $element = 0;
-            cout::line(arr::readable(array_values($options)));
-            cout::line('Enter one or more numbers (e.g., 1, 2, 3).');
-            return cin::line('> ', function ($input) use ($options, $keys)
-            {
-                $input = str::explode_trim(',', $input);
-                $real = [];
-
-                foreach ($input as $val)
-                {
-                    if (!isset($keys[$val]))
-                        return null;
-                    else
-                        $real[] = $keys[$val];
-                }
-
-                return $real;
-            });
+        case 'input':    return cin::line('> ');
+        case 'password': return cin::password('> ');
+        case 'textarea': return cin::multiline('> ');
+        case 'radio':    return cin::radio('> ', $properties['options']);
+        case 'checkbox': return cin::checkbox('> ', $properties['options']);
     }
 }
 /**

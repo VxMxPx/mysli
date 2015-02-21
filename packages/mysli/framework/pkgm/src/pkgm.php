@@ -80,6 +80,22 @@ class pkgm {
         return str_replace('/', '\\', fs::ds($pkg_name, $file));
     }
     /**
+     * Get package's name from release. E.g.:
+     * mysli.framework.core-r150223.1 => mysli.framework.core
+     * @param  string $release
+     * @return string
+     */
+    static function name_from_release($release)
+    {
+        if (strpos($release, '-r'))
+            return explode('-r', $release)[0];
+        elseif (strpos($release, '/'))
+            return str_replace('/', '.', $release);
+        else
+            throw new exception\package(
+                "Invalid release specefied: `{$release}`");
+    }
+    /**
      * Check weather package (release) exists (is available) in fs.
      * $release = mysli.framework.core-r150215.1 || mysli/framework/core
      * @param  string  $release
@@ -112,8 +128,14 @@ class pkgm {
      * Get all enabled packages
      * @return array
      */
-    static function list_enabled() {
-        return \core\pkg::get_list();
+    static function list_enabled()
+    {
+        $list = [];
+
+        foreach(\core\pkg::get_list(true) as $pkg)
+            $list[$pkg['release']] = $pkg['package'];
+
+        return $list;
     }
     /**
      * Get all disabled packages
@@ -127,7 +149,8 @@ class pkgm {
         {
             if (substr($vendor, -5) === '.phar')
             {
-                $disabled[] = substr($vendor, 0, -5);
+                $name = self::name_from_release(substr($vendor, 0, -5));
+                $disabled[substr($vendor, 0, -5)] = $name;
                 continue;
             }
 
@@ -135,13 +158,14 @@ class pkgm {
             {
                 $root = "{$vendor}/{$sub}";
 
-                if (!dir::exists($root))
+                if (!dir::exists(fs::pkgpath($root)))
                     continue;
+
 
                 if (file::exists(fs::pkgpath($root, 'mysli.pkg.ym')))
                 {
                     if (!self::is_enabled($root))
-                        $disabled[] = $root;
+                        $disabled[$root] = self::name_from_release($root);
 
                     continue;
                 }
@@ -152,7 +176,8 @@ class pkgm {
                         fs::pkgpath($root, $package, 'mysli.pkg.ym')))
                     {
                         if (!self::is_enabled("{$root}/{$package}"))
-                            $disabled[] = "{$root}/{$package}";
+                            $disabled["{$root}/{$package}"] =
+                                self::name_from_release("{$root}/{$package}");
                     }
                 }
             }
@@ -189,7 +214,7 @@ class pkgm {
                 if (empty($meta['required_by']) && $meta['enabled_by'])
                 {
                     unset($enabled[$package]);
-                    $obsolete[] = $package;
+                    $obsolete[$package] = $meta['package'];
                     $chg = true;
                 }
             }
@@ -213,7 +238,7 @@ class pkgm {
         if (!$deep)
             return isset($meta['required_by']) ? $meta['required_by'] : [];
 
-        $dependees = [$name];
+        $dependees[$name] = [$release];
 
         foreach ($meta['required_by'] as $dependee)
         {
@@ -263,9 +288,9 @@ class pkgm {
                 $extension = substr($dependency, 14);
 
                 if (extension_loaded($extension))
-                    $list['enabled'][$dependency] = $dependency;
+                    $list['enabled'][] = $dependency;
                 else
-                    $list['missing'][$dependency] = $dependency;
+                    $list['missing'][] = $dependency;
 
                 continue;
             }
@@ -275,14 +300,14 @@ class pkgm {
 
             if (!$rdependency)
             {
-                $list['missing'][$dependency] = $rdependency;
+                $list['missing'][] = $dependency;
             }
             else
             {
                 if (self::is_enabled($rdependency))
-                    $list['enabled'][$dependency] = $rdependency;
+                    $list['enabled'][] = $rdependency;
                 else
-                    $list['disabled'][$dependency] = $rdependency;
+                    $list['disabled'][] = $rdependency;
             }
         }
 
@@ -302,18 +327,13 @@ class pkgm {
         }
         $proc[] = $hash;
 
-        foreach ($list['disabled'] as $dependency => $rdependency)
+        foreach ($list['disabled'] as $dependency)
         {
-            $nlist = self::list_dependencies($rdependency, true, null, $proc);
-            $list['enabled']  = array_merge(
-                $nlist['enabled'], $list['enabled']
-            );
-            $list['disabled'] = array_merge(
-                $nlist['disabled'], $list['disabled']
-            );
-            $list['missing']  = array_merge(
-                $nlist['missing'], $list['missing']
-            );
+            $nlist = self::list_dependencies($dependency, true, null, $proc);
+
+            $list['enabled']  = array_merge($nlist['enabled'], $list['enabled']);
+            $list['disabled'] = array_merge($nlist['disabled'], $list['disabled']);
+            $list['missing']  = array_merge($nlist['missing'], $list['missing']);
         }
 
         return $list;
@@ -335,20 +355,22 @@ class pkgm {
             $release = "r*.{$release}";
 
         $release = preg_quote($release);
+        $rpackage = preg_quote($package);
 
         if (strpos($release, '\\*'))
             $release = str_replace('\\*', '.*?', $release);
 
-        $regex = "/^{$package}-{$release}$/";
+        $regex = "/^{$rpackage}\\-{$release}$/";
 
-        foreach ($source as $pkg)
+        foreach ($source as $pkg => $_)
             if (preg_match($regex, $pkg))
                 return $pkg;
 
-        // Take care of source packages
+        // If we came to here, check source packages (vendor/package).
+
         $package = str_replace('.', '/', $package);
 
-        if (in_array($package, $source))
+        if (isset($source[$package]))
             return $package;
         else
             return false;
