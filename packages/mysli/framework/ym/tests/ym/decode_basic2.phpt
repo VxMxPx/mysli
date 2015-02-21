@@ -2,7 +2,7 @@
 Complex nesting.
 --FILE--
 <?php
-use mysli\framework\ym as ym;
+use \mysli\framework\ym\ym;
 
 print_r(ym::decode(<<<EOT
 level1a : 1a

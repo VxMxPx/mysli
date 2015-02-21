@@ -2,7 +2,7 @@
 Various types.
 --FILE--
 <?php
-use mysli\framework\ym as ym;
+use \mysli\framework\ym\ym;
 
 var_dump(ym::decode(<<<EOT
 s1: I'm string!
