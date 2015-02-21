@@ -82,8 +82,15 @@ class fs {
      */
     static function pkgpath() {
         $arguments = func_get_args();
+        if (isset($arguments[0]) && strpos($arguments[0], '.'))
+        {
+            $arguments[0] .= '.phar';
+            $is_phar = true;
+        }
+        else
+            $is_phar = false;
         $arguments = implode(DIRECTORY_SEPARATOR, $arguments);
-        return self::ds(MYSLI_PKGPATH, $arguments);
+        return ($is_phar?'phar://':'').self::ds(MYSLI_PKGPATH, $arguments);
     }
     /**
      * Retrun temporary path.
