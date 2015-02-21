@@ -80,15 +80,19 @@ class fs {
      * to build full path from them.
      * @return string
      */
-    static function pkgpath() {
+    static function pkgpath()
+    {
         $arguments = func_get_args();
-        if (isset($arguments[0]) && strpos($arguments[0], '.'))
+
+        if (isset($arguments[0]) && strpos($arguments[0], '.') &&
+            strpos($arguments[0], '-r'))
         {
             $arguments[0] .= '.phar';
             $is_phar = true;
         }
         else
             $is_phar = false;
+
         $arguments = implode(DIRECTORY_SEPARATOR, $arguments);
         return ($is_phar?'phar://':'').self::ds(MYSLI_PKGPATH, $arguments);
     }
