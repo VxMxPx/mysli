@@ -41,11 +41,14 @@ function enable($pkgpath, $datpath) {
     return (bool) file_put_contents(
         $datpath.'/boot/r.json',
         json_encode([
+            // List of packages required for system to boot
             "boot" => [
-                'core' => 'mysli.framework.core',
+                'core'       => 'mysli.framework.core',
                 'autoloader' => 'mysli.framework.core/autoloader:load',
-                'pkg' => 'mysli.framework.core/pkg'
+                'pkg'        => 'mysli.framework.core/pkg',
+                'pkgm'       => null
             ],
+            // List of all packages currently enabled
             "pkg" => [
                 'mysli.framework.core' => [
                     'package' => 'mysli.framework.core',

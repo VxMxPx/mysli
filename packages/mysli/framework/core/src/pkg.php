@@ -153,6 +153,32 @@ class pkg {
             return array_keys(self::$r['pkg']);
     }
 
+    /**
+     * Check weather particular package is on the boot list, which mean
+     * the package is essential for system to work.
+     * @param  string  $package (name)
+     * @return boolean
+     */
+    static function is_boot($package)
+    {
+        foreach (self::$r['boot'] as $name)
+            if ($package === explode('/', $name, 2)[0])
+                return true;
+
+        return false;
+    }
+
+    /**
+     * Set/overwrite a boot package.
+     * Make a mistake here, and the system will be useless.
+     * @param string $key
+     * @param string $vale
+     */
+    static function set_boot($key, $vale)
+    {
+        self::$r['boot'][$key] = $vale;
+    }
+
     // R/W
 
     static function read() {
