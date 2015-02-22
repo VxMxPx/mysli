@@ -91,7 +91,7 @@ function __init(array $args)
  */
 function enable($pkg, $rec=false, $dev=false)
 {
-    $pkg = resolve_by_name($pkg, pkgm::list_enabled()) or die();
+    $pkg = resolve_by_name($pkg, pkgm::list_disabled()) or die();
 
     if (pkgm::is_enabled($pkg))
     {
@@ -216,12 +216,18 @@ function enable_helper($package, $by)
  */
 function disable($pkg)
 {
-    $pkg = resolve_by_name($pkg, pkgm::list_disabled()) or die();
+    $pkg = resolve_by_name($pkg, pkgm::list_enabled()) or die();
 
     // Can't disable something that isn't enabled
     if (!pkgm::is_enabled($pkg))
     {
         cout::warn("[!] Package not enabled: `{$pkg}`.");
+        return false;
+    }
+
+    if (\core\pkg::is_boot(\core\pkg::get_name_by_release($pkg)))
+    {
+        cout::warn("[!] Cannot disable `{$pkg}` (Essential for system to boot)");
         return false;
     }
 
@@ -232,12 +238,24 @@ function disable($pkg)
     // If we have dependees, then disable them all first!
     if (!empty($dependees))
     {
+        foreach ($dependees as $dependee)
+        {
+            if (\core\pkg::is_boot($dependee))
+            {
+                cout::warn(
+                    "[!] Cannot disable: `{$pkg}`, essential system package ".
+                    "`{$dependee}` depends on it."
+                );
+                return false;
+            }
+        }
+
         cout::line(
             "\n* Package `{$pkg}` is required by:\n" .
             arr::readable_list($dependees, 4)
         );
 
-        if (!cin::confirm('[?] Disable listed packages?'))
+        if (!cin::confirm("\n[?] Disable listed packages?"))
         {
             cout::plain('Terminated.');
             return false;

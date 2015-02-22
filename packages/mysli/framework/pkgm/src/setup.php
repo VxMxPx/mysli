@@ -44,6 +44,10 @@ function enable()
     foreach ($std_list as $qname => $qrelease)
         pkgm::disable($qrelease) + pkgm::enable($qrelease);
 
+    // Finally add self to the list of boot packages
+    \core\pkg::set_boot('pkgm', 'mysli.framework.pkgm');
+    \core\pkg::write();
+
     // Came so far?
     return true;
 }

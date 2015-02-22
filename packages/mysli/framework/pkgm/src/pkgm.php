@@ -238,17 +238,19 @@ class pkgm {
         if (!$deep)
             return isset($meta['required_by']) ? $meta['required_by'] : [];
 
-        $dependees[$name] = [$release];
+        $dependees[] = $name;
 
         foreach ($meta['required_by'] as $dependee)
         {
             $dependees[] = $dependee;
             $dependees = array_merge(
-                self::list_dependees($dependee, true),
+                self::list_dependees(
+                    \core\pkg::get_release_by_name($dependee), true),
                 $dependees
             );
         }
 
+        // dump($dependees);
         return array_values(array_unique($dependees));
     }
     /**
