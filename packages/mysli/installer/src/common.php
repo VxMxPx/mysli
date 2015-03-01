@@ -133,14 +133,11 @@ function relative_to_absolute($path, $relative_to) {
  * @param  ...    path segments
  * @return string
  */
-function dst() {
+function dst()
+{
     $path = func_get_args();
     $path = implode(DIRECTORY_SEPARATOR, $path);
 
-    if ($path) {
-        return preg_replace(
-            '/(?<![:\/])[\/\\\\]+/', DIRECTORY_SEPARATOR, $path);
-    } else {
-        return null;
-    }
+    if ($path)
+        return preg_replace('/(?<![:\/])[\/\\\\]+/', DIRECTORY_SEPARATOR, $path);
 }
