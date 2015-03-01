@@ -4,10 +4,9 @@ namespace mysli\framework\pkgm\setup;
 
 function enable()
 {
-    $selfrelease = __FILE__;
-
-    if (substr($selfrelease, -5) === '.phar')
-        $selfrelease = basename($selfrelease);
+    $selfrelease = __DIR__;
+    if (substr($selfrelease, 0, 7) === 'phar://')
+        $selfrelease = substr( basename(dirname($selfrelease)), 0, -5);
     else
         $selfrelease = 'mysli/framework/pkgm';
 
@@ -58,16 +57,17 @@ function enable()
  * @param  string $pkgpath
  * @return string full package's name or null
  */
-function __discover_package($name, $pkgpath) {
+function __discover_package($name, $pkgpath)
+{
     $regex = '/^'.preg_quote($name).'-r.*?\\.phar$/';
-    foreach (scandir($pkgpath) as $file) {
-        if (preg_match($regex, $file)) {
-            return $file;
-        }
-    }
+
+    foreach (scandir($pkgpath) as $file)
+        if (preg_match($regex, $file))
+            return substr($file, 0, -5);
+
     // Perhaps we have source?
     $name = str_replace('.', '/', $name);
-    if (file_exists("{$pkgpath}/{$name}/mysli.pkg.ym")) {
+    if (file_exists("{$pkgpath}/{$name}/mysli.pkg.ym"))
         return $name;
-    }
+
 }
