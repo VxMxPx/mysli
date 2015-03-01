@@ -6,8 +6,8 @@ __use(__namespace__, '
     mysli.web.assets
     mysli.framework.pkgm
     mysli.framework.fs/fs,file,dir
-    mysli.framework.cli/param,output,input  AS  param,cout,cin
-    mysli.framework.exception/*             AS framework\exception\*
+    mysli.framework.cli/param,output,input AS param,cout,cin
+    mysli.framework.exception/*            AS framework\exception\*
 ');
 
 /**
@@ -15,7 +15,8 @@ __use(__namespace__, '
  * @param  array $args
  * @return null
  */
-function __init(array $args) {
+function __init(array $args)
+{
     $param = new param('Mysli Package Creator', $args);
     $param->command = 'pkgc';
     $param->add('--stub/-s', [
@@ -35,13 +36,18 @@ function __init(array $args) {
     ]);
 
     $param->parse();
-    if (!$param->is_valid()) {
+
+    if (!$param->is_valid())
+    {
         cout::line($param->messages());
-    } else {
+    }
+    else
+    {
         $v = $param->values();
-        if (!$v['package']) {
+
+        if (!$v['package'])
             $v['package'] = pkgm::name_from_path(getcwd());
-        }
+
         create($v['package'], $v['stub'], $v['yes']);
     }
 }
@@ -51,29 +57,35 @@ function __init(array $args) {
  * @param  string $stub
  * @return null
  */
-function create($package, $stub, $yes) {
+function create($package, $stub, $yes)
+{
     $path = fs::pkgpath($package);
 
     // Check if we have a valid package
-    if (!$package) {
+    if (!$package)
+    {
         cout::error("[!] Please specify a valid package name.");
         return false;
-    } elseif (!file::exists($path)) {
+    }
+    elseif (!file::exists($path))
+    {
         cout::error("[!] Package not found: `{$package}`.");
         return;
-    } else cout::line("\n* New release of `{$package}`");
+    }
+    else
+        cout::line("\n* New release of `{$package}`");
 
     // Get packag's meta, version and release
     $meta = pkgm::meta($package, true);
-    $api_version = ! $yes ?
-                        ask_for_version((int) $meta['version']) :
-                        (int) $meta['version'];
-    $release =     ! $yes ?
-                        ask_for_release(gmdate('ymd')) :
-                        gmdate('ymd');
-    $pre_repease = ! $yes ?
-                        ask_for_pre_release('') :
-                        '';
+    $api_version = ! $yes
+                        ? ask_for_version((int) $meta['version'])
+                        : (int) $meta['version'];
+    $release =     ! $yes
+                        ? ask_for_release(gmdate('ymd'))
+                        : gmdate('ymd');
+    $pre_repease = ! $yes
+                        ? ask_for_pre_release('')
+                        : '';
 
     // Create filenames
     $pkg_filename = str_replace('/', '.', $package);
@@ -88,53 +100,73 @@ function create($package, $stub, $yes) {
     clean_files([$pkg_fullpath]);
 
     // Resolve stub path
-    if ($stub) {
-        if (file::exists(fs::ds($path, $stub))) {
+    if ($stub)
+    {
+        if (file::exists(fs::ds($path, $stub)))
+        {
             $stubc = file::read(fs::ds($path, $stub));
             cout::line("    Stub file found: `{$stub}`");
-        } else {
+        }
+        else
+        {
             cout::err("    [!] Stub file not found: `{$stub}`");
             return false;
         }
-    } else {
-        $stubc = false;
     }
+    else
+        $stubc = false;
 
     // Create PHAR archive
-    $phar = create_phar($pkg_fullpath, "{$pkg_filename}.phar", $stubc) or exit;
+    $phar = create_phar($pkg_fullpath, "{$pkg_filename}.phar", $stubc) or exit();
 
     cout::line("    Adding files:");
     $ignore = generate_ignore_list($meta);
-    if ($stub) {
+
+    if ($stub)
         $ignore[] = $stub;
-    }
-    fs::map($path, function ($apath, $rpath, $is_dir) use ($phar, $ignore) {
+
+    fs::map($path, function ($apath, $rpath, $is_dir) use ($phar, $ignore)
+    {
         cout::line("        File: `{$rpath}`", false);
-        if (substr(file::name($rpath, true), 0, 1) === '.') {
+
+        if (substr(file::name($rpath, true), 0, 1) === '.')
+        {
             cout::format('+yellow+right SKIP');
             return fs::map_continue;
         }
-        if ($is_dir) {
-            if (in_array($rpath.'/', $ignore)) {
+
+        if ($is_dir)
+        {
+            if (in_array($rpath.'/', $ignore))
+            {
                 cout::format('+yellow+right IGNORED');
                 return fs::map_continue;
-            } else {
+            }
+            else
+            {
                 $phar->addEmptyDir($rpath);
                 cout::format('+green+right DIR');
             }
-        } else {
-            if (in_array($rpath, $ignore)) {
+        }
+        else
+        {
+            if (in_array($rpath, $ignore))
+            {
                 cout::format('+yellow+right IGNORED');
                 return;
-            } else {
-                if (substr($rpath, -4) === '.php') {
-                    $phar->addFromString(
-                        $rpath, php_strip_whitespace($apath));
-                    cout::format('+green+right COMPRESSED');
-                } else {
+            }
+            else
+            {
+                // if (substr($rpath, -4) === '.php')
+                // {
+                //     $phar->addFromString($rpath, php_strip_whitespace($apath));
+                //     cout::format('+green+right COMPRESSED');
+                // }
+                // else
+                // {
                     $phar->addFile($apath, $rpath);
                     cout::format('+green+right FILE');
-                }
+                // }
             }
         }
     });
@@ -148,62 +180,87 @@ function create($package, $stub, $yes) {
  * @param  integer $default
  * @return integer
  */
-function ask_for_version($default) {
+function ask_for_version($default)
+{
     return (int) cin::line(
         "[?] Enter a new api version [{$default}]: ",
-        function ($input) use ($default) {
-            if ($input) {
-                if (preg_match('/^\d+$/', $input)) {
+        function ($input) use ($default)
+        {
+            if ($input)
+            {
+                if (preg_match('/^\d+$/', $input))
+                {
                     return $input;
-                } else {
+                }
+                else
+                {
                     cout::warn("[!] Version must be a valid number.");
                     return;
                 }
             }
+
             return $default;
-        });
+        }
+    );
 }
 /**
  * Get release from user.
  * @param  integer $default
  * @return integer
  */
-function ask_for_release($default) {
+function ask_for_release($default)
+{
     $default = gmdate('ymd');
+
     return (int) cin::line(
         "[?] Release number [{$default}]: ",
-        function ($input) use ($default) {
-            if ($input) {
-                if (preg_match('/^\d{6}$/', $input)) {
+        function ($input) use ($default)
+        {
+            if ($input)
+            {
+                if (preg_match('/^\d{6}$/', $input))
+                {
                     return $input;
-                } else {
+                }
+                else
+                {
                     cout::warn(
                         '[!] A valid release must be an six digit number.');
                     return;
                 }
             }
+
             return $default;
-        });
+        }
+    );
 }
 /**
  * Get pre-release from user.
  * @param  string $default
  * @return string
  */
-function ask_for_pre_release($default) {
+function ask_for_pre_release($default)
+{
     return cin::line(
         "[?] Enter pre-release version (alpha, beta, rc, ...) [{$default}]: ",
-        function ($input) use ($default) {
-            if ($input) {
-                if ($input && preg_match('/^[0-9A-Z]+$/i', $input)) {
+        function ($input) use ($default)
+        {
+            if ($input)
+            {
+                if ($input && preg_match('/^[0-9A-Z]+$/i', $input))
+                {
                     return $input;
-                } else {
+                }
+                else
+                {
                     cout::warn(
                         '[!] Pre-release consist only of alpha-numeric '.
-                        '[0-9a-z] characters.');
+                        '[0-9a-z] characters.'
+                    );
                     return;
                 }
             }
+
             return $default;
         });
 }
@@ -211,16 +268,20 @@ function ask_for_pre_release($default) {
  * Check if any temporary file already exists and remove it
  * @param  array  $files
  */
-function clean_files(array $files) {
+function clean_files(array $files)
+{
     cout::line('    Removing existing files...');
-    foreach ($files as $file) {
-        if (file::exists($file)) {
+
+    foreach ($files as $file)
+    {
+        if (file::exists($file))
+        {
             cout::line("    Found: `".file::name($file, true)."`", false);
-            if (file::remove($file)) {
+
+            if (file::remove($file))
                 cout::format('+green+right OK');
-            } else {
+            else
                 cout::format('+red+right FAILED');
-            }
         }
     }
 }
@@ -231,18 +292,23 @@ function clean_files(array $files) {
  * @param  string $stub
  * @return boolean
  */
-function create_phar($path, $filename, $stub=null) {
+function create_phar($path, $filename, $stub=null)
+{
     cout::line("\n* Creating package: {$filename}");
-    if (!$stub) {
+
+    if (!$stub)
         $stub = '<?php die(\'204 No Content.\'); __HALT_COMPILER(); ?>';
-    }
-    try {
+
+    try
+    {
         cout::line("    File {$filename}", false);
         $phar = new \Phar($path, 0, $filename);
         $phar->setStub($stub);
         cout::format('+green+right OK');
         return $phar;
-    } catch (\Exception $e) {
+    }
+    catch (\Exception $e)
+    {
         cout::format('+red+right FAILED');
         cout::line('    [!] '.$e->getMessage());
         return false;
@@ -255,17 +321,22 @@ function create_phar($path, $filename, $stub=null) {
  * @param  integer $new
  * @return boolean
  */
-function increase_version($filename, $old, $new) {
+function increase_version($filename, $old, $new)
+{
     // Increase version in mysli.pkg.ym file
-    if ((int) $old === (int) $new) {
+    if ((int) $old === (int) $new)
         return true;
-    }
+
     cout::line("    Writing a new version", false);
-    try {
+
+    try
+    {
         write_version("phar://{$filename}/mysli.pkg.ym", $old, $new);
         cout::format('+green+right OK');
         return true;
-    } catch (\Exception $e) {
+    }
+    catch (\Exception $e)
+    {
         cout::format('+red+right FAILED');
         cout::line('    [!] '.$e->getMessage());
         return false;
@@ -275,7 +346,8 @@ function increase_version($filename, $old, $new) {
  * Print phar's signature
  * @param  \Phar  $phar
  */
-function print_signature(\Phar $phar) {
+function print_signature(\Phar $phar)
+{
     $sig = $phar->getSignature();
     cout::line("    Signature {$sig['hash_type']}/{$sig['hash']}");
 }
@@ -285,7 +357,8 @@ function print_signature(\Phar $phar) {
  * @param  array $meta
  * @return array
  */
-function generate_ignore_list($meta) {
+function generate_ignore_list($meta)
+{
     $ignore = [];
 
     // Big License
@@ -293,48 +366,52 @@ function generate_ignore_list($meta) {
     $ignore[] = 'tests/';
 
     // Find any internal ignores
-    if (isset($meta['pkgc'])) {
-        if (isset($meta['pkgc']['ignore']) &&
-            is_array($meta['pkgc']['ignore']))
-        {
+    if (isset($meta['pkgc']))
+        if (isset($meta['pkgc']['ignore']) && is_array($meta['pkgc']['ignore']))
             $ignore = array_merge($ignore, $meta['pkgc']['ignore']);
-        }
-    }
+
     // Check for i18n
-    if (isset($meta['i18n']) && isset($meta['i18n']['source'])) {
+    if (isset($meta['i18n']) && isset($meta['i18n']['source']))
         $ignore[] = rtrim($meta['i18n']['source'], '\\/').'/';
-    } else {
+    else
         $ignore[] = 'i18n/';
-    }
 
     // Check for tplp
-    if (isset($meta['tplp']) && isset($meta['tplp']['source'])) {
+    if (isset($meta['tplp']) && isset($meta['tplp']['source']))
         $ignore[] = rtrim($meta['tplp']['source'], '\\/').'/';
-    } else {
+    else
         $ignore[] = 'tplp/';
-    }
 
     // Assets
     list($as_src, $as_dest, $as_map) = assets::get_default_paths(
-        $meta['package']
+        str_replace('.', '/', $meta['package'])
     );
+
     $ignore[] = $as_src.'/';
     $map = false;
+
     try {
         $map = assets::get_map($meta['package'], $as_src, $as_map);
-    } catch (\Exception $e) {
+    }
+    catch (\Exception $e) {
         // Pass
     }
-    if (is_array($map) && isset($map['files']) && is_array($map['files'])) {
+
+    if (is_array($map) && isset($map['files']) && is_array($map['files']))
+    {
         $extlist = is_array($map['settings']) &&
             is_array($map['settings']['ext']) ? $map['settings']['ext'] : [];
 
-        foreach ($map['files'] as $file) {
-            if (!is_array($file)) { continue; }
+        foreach ($map['files'] as $file)
+        {
+            if (!is_array($file))
+                continue;
+
             if (isset($file['compress']) && $file['compress'] &&
                 isset($file['include']) && is_array($file['include']))
             {
-                foreach ($file['include'] as $include) {
+                foreach ($file['include'] as $include)
+                {
                     $include = assets::parse_extention($include, $extlist);
                     $ignore[] = fs::ds($as_dest, $include);
                 }
@@ -350,10 +427,11 @@ function generate_ignore_list($meta) {
  * @param  string $old
  * @param  string $new
  */
-function write_version($file, $old, $new) {
-    if (!file::exists($file)) {
+function write_version($file, $old, $new)
+{
+    if (!file::exists($file))
         throw new framework\exception\not_found("File not found: `{$file}`");
-    }
+
     $r = 0;
     $meta = file::read($file);
     $meta = preg_replace(
@@ -362,11 +440,11 @@ function write_version($file, $old, $new) {
         $meta, -1, $r
     );
 
-    if ($r != 1) {
+    if ($r != 1)
         throw new framework\exception\data(
             "Could not change version in meta file ({$old} => {$new}), ".
-            "replacement result is: `{$r}`, expected: `1`.");
-    }
+            "replacement result is: `{$r}`, expected: `1`."
+        );
 
     file::write($file, $meta);
 }
