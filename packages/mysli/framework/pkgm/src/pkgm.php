@@ -9,7 +9,8 @@ __use(__namespace__, '
     mysli.framework.exception/* AS framework\exception\*
 ');
 
-class pkgm {
+class pkgm
+{
     /**
      * Get package release from path - this must be full absolute path.
      * $path  = /home/user/project/packages/mysli.framework.core-r150223.1.phar
@@ -149,8 +150,12 @@ class pkgm {
         {
             if (substr($vendor, -5) === '.phar')
             {
-                $name = self::name_from_release(substr($vendor, 0, -5));
-                $disabled[substr($vendor, 0, -5)] = $name;
+                if (!self::is_enabled(substr($vendor, 0, -5)))
+                {
+                    $name = self::name_from_release(substr($vendor, 0, -5));
+                    $disabled[substr($vendor, 0, -5)] = $name;
+                }
+
                 continue;
             }
 
@@ -526,14 +531,14 @@ class pkgm {
      * @param  string $package
      * @return array
      */
-    private static function discover_scripts($package) {
+    private static function discover_scripts($package)
+    {
         $files = [];
-        if (dir::exists(fs::pkgpath($package, 'sh'))) {
+
+        if (dir::exists(fs::pkgpath($package, 'sh')))
             foreach (fs::ls(fs::pkgpath($package, 'sh'), '/\\.php$/') as $file)
-            {
                 $files[] = substr($file, 0, -4);
-            }
-        }
+
         return $files;
     }
 }
