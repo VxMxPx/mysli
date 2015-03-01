@@ -7,14 +7,16 @@ use mysli\installer\common as c;
 /**
  * Execute.
  */
-function __init() {
+function __init()
+{
     // Get parameters...
     $short = 'p:d:r:hy';
     $long  = ['pkgpath:', 'datpath:', 'rewrite:', 'help'];
     $options = getopt($short, $long);
 
     // Do we have request for help?
-    if (get_parameter($options, 'h', 'help', 'not') !== 'not') {
+    if (get_parameter($options, 'h', 'help', 'not') !== 'not')
+    {
         print(intro());
         exit(0);
     }
@@ -25,65 +27,84 @@ function __init() {
         'cli'    => 'mysli.framework.cli',
         'pkgm'   => 'mysli.framework.pkgm',
     ];
+
     $is_yes  = !get_parameter($options, 'y', false, true); // Need to invert it
     $pkgpath =  get_parameter($options, 'p', 'pkgpath', '<a:packages>');
     $datpath =  get_parameter($options, 'd', 'datpath', '{pkgpath}/../private');
     $rewrite =  get_parameter($options, 'r', 'rewrite', '');
     $rewrite =  explode(',', $rewrite);
-    foreach ($rewrite as $rw_item) {
+
+    foreach ($rewrite as $rw_item)
+    {
         $rw_item = explode(':', $rw_item);
-        if (!isset($rw_item[1])) continue;
+
+        if (!isset($rw_item[1]))
+            continue;
+
         $role = trim($rw_item[0]);
         $pac  = trim($rw_item[1]);
-        if (!isset($packages[$role])) continue;
+
+        if (!isset($packages[$role]))
+            continue;
+
         $packages[$role] = $pac;
     }
+
     // Absolute full path is needed;
     // If relative path was provided, it needs to be resolved.
-    if (substr($pkgpath, 0, 3) === '<a:') {
+    if (substr($pkgpath, 0, 3) === '<a:')
+    {
         $pkgpath = c\find_folder(__DIR__, substr($pkgpath, 3, -1));
-        if (!$pkgpath) {
+
+        if (!$pkgpath)
             fatal('Packages path is invalid.');
-        }
-    } else {
+
+    }
+    else
+    {
         $pkgpath = c\relative_to_absolute($pkgpath, __DIR__.DIRECTORY_SEPARATOR);
-        if ($pkgpath[1]) {
+
+        if ($pkgpath[1])
             fatal('Packages path is invalid: ' . implode('', $pkgpath));
-        }
+
         $pkgpath = rtrim($pkgpath[0], DIRECTORY_SEPARATOR);
     }
 
-    if (substr($datpath, 0, 10) === '{pkgpath}/') {
+    if (substr($datpath, 0, 10) === '{pkgpath}/')
+    {
         $datpath_rel = $pkgpath;
         $datpath = substr($datpath, 10);
-    } else {
-        $datpath_rel = __DIR__;
     }
+    else
+        $datpath_rel = __DIR__;
+
     $datpath = c\relative_to_absolute($datpath, $datpath_rel.DIRECTORY_SEPARATOR);
     $datpath = $datpath[1] ? implode('', $datpath) : $datpath[0];
 
     // Validate data...
-    if (!file_exists($pkgpath)) {
+    if (!file_exists($pkgpath))
         fatal('Cannot continue, packages path is not valid: ' . $pkgpath);
-    }
 
     $missing = [];
-    foreach ($packages as $role => &$pac) {
-        if (substr($pac, -5) === '.phar' || strpos($pac, '/')) {
-            if (!file_exists(c\dst($pkgpath, $pac))) {
+
+    foreach ($packages as $role => &$pac)
+    {
+        if (substr($pac, -5) === '.phar' || strpos($pac, '/'))
+            if (!file_exists(c\dst($pkgpath, $pac)))
                 $missing[] = $pac;
-            } else continue;
-        }
-        if (! ($rpac = c\find_package($pkgpath, $pac)) ) {
+            else
+                continue;
+
+        if (! ($rpac = c\find_package($pkgpath, $pac)) )
             $missing[$pac] = c\dst($pkgpath, $pac);
-        } else {
+        else
             $pac = $rpac;
-        }
+
     }
 
-    if (!empty($missing)) {
+    if (!empty($missing))
         fatal("Packages not found:\n" . nice_array($missing, 4));
-    }
+
 
     // Ask if all seems ok...
     print_line(null);
@@ -94,9 +115,11 @@ function __init() {
     print_line('* List of packages to enable:');
     print_line(nice_array($packages, 4));
 
-    if (!$is_yes) {
+    if (!$is_yes)
+    {
         fwrite(STDOUT, '[?] Proceed? [Y/n] ');
         $answer = fread(STDIN, 1);
+
         if (!in_array(strtolower(trim($answer)), ['y', '']))
             fatal('You selected `no`! See you latter....');
     }
@@ -107,39 +130,41 @@ function __init() {
     // Run core package's setup
     print_line(null);
     print_line('* Now enabling core packages....');
-    if (c\exe_setup($packages['core'], $pkgpath, $datpath, $func_fatal)) {
+
+    if (c\exe_setup($packages['core'], $pkgpath, $datpath, $func_fatal))
         print_line("    Done: {$packages['core']} (SETUP)");
-    }
+
     $core = c\pkg_class($packages['core'], '__init', $pkgpath, $func_fatal);
     $core($datpath, $pkgpath);
 
     // Run pkgm's setup
-    if (c\exe_setup($packages['pkgm'], $pkgpath, $datpath, $func_fatal)) {
+    if (c\exe_setup($packages['pkgm'], $pkgpath, $datpath, $func_fatal))
         print_line("    Done: {$packages['pkgm']} (SETUP)");
-    }
+
     $pkgm = c\pkg_class($packages['pkgm'], 'pkgm', $pkgpath, $func_fatal);
 
-    // if (!$pkgm::enable($packages['core'], 'installer')) {
-    //     fatal("Failed: {$packages['core']}");
-    // } else {
-    //     print_line("    Done: {$packages['core']}");
-    // }
-
     // Enable cli package...
-    if (c\exe_setup($packages['cli'], $pkgpath, $datpath, $func_fatal)) {
+    if (c\exe_setup($packages['cli'], $pkgpath, $datpath, $func_fatal))
         print_line("    Done: {$packages['cli']} (SETUP)");
-    }
-    if (!$pkgm::enable($packages['cli'], 'installer')) {
+
+    if (substr($packages['cli'], -5) === '.phar')
+        $packages['cli'] = substr($packages['cli'], 0, -5);
+
+    if (!$pkgm::enable($packages['cli'], 'installer'))
         fatal("Failed to enable: {$packages['cli']}");
-    } else {
+    else
         print_line("    Done: {$packages['cli']}");
-    }
 
     print_line('    All done!');
-    $packages['pkgm'] = substr($packages['pkgm'], -5) === '.phar' ?
-        'phar://'.$packages['pkgm'] :
-        $packages['pkgm'];
-    include(realpath(c\dst($pkgpath, $packages['pkgm'], '/sh/pkgm.php')));
+
+    $is_phar = substr($packages['pkgm'], -5) === '.phar'
+        ? 'phar://'.$packages['pkgm']
+        : $packages['pkgm'];
+
+    include(
+        ($is_phar ? 'phar://' : '').
+        c\dst($pkgpath, $packages['pkgm'], '/sh/pkgm.php')
+    );
     call_user_func(substr($pkgm, 0, strrpos($pkgm, '\\')).'\\sh\\pkgm\\repair');
 }
 
@@ -147,7 +172,8 @@ function __init() {
 * Get intro help message.
 * @return string
 */
-function intro() {
+function intro()
+{
     return <<<EOI
 
 Mysli Installer
@@ -175,14 +201,16 @@ EOI;
  * Print a line.
  * @param  string $line
  */
-function print_line($line) {
+function print_line($line)
+{
     fwrite(STDOUT, $line . PHP_EOL);
 }
 /**
  * Print line and exit(1)
  * @param  string $line
  */
-function fatal($line) {
+function fatal($line)
+{
     print_line('[!] '.$line);
     exit(1);
 }
@@ -194,7 +222,8 @@ function fatal($line) {
  * @param  mixed  $default
  * @return mixed
  */
-function get_parameter(array $data, $short, $long, $default) {
+function get_parameter(array $data, $short, $long, $default)
+{
     if (!is_array($data))               return $default;
     if ($short && isset($data[$short])) return $data[$short];
     if ($long  && isset($data[$long]))  return $data[$long];
@@ -206,20 +235,21 @@ function get_parameter(array $data, $short, $long, $default) {
  * @param  integer $indent
  * @return string
  */
-function nice_array(array $input, $indent=0) {
+function nice_array(array $input, $indent=0)
+{
     $lkey = 0;
     $out  = '';
+
     // Get the longes key...
-    foreach ($input as $key => $val) {
-        if (strlen($key) > $lkey) {
+    foreach ($input as $key => $val)
+        if (strlen($key) > $lkey)
             $lkey = strlen($key);
-        }
-    }
-    foreach ($input as $key => $value) {
+
+    foreach ($input as $key => $value)
         $out .=
             str_repeat(' ', $indent) .
             $key . str_repeat(' ', $lkey - strlen($key)) .
             ' : ' . $value . "\n";
-    }
+
     return $out;
 }
