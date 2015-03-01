@@ -157,9 +157,7 @@ function __init()
 
     print_line('    All done!');
 
-    $is_phar = substr($packages['pkgm'], -5) === '.phar'
-        ? 'phar://'.$packages['pkgm']
-        : $packages['pkgm'];
+    $is_phar = (substr($packages['pkgm'], -5) === '.phar');
 
     include(
         ($is_phar ? 'phar://' : '').
