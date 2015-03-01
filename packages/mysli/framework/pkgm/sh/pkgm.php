@@ -192,12 +192,12 @@ function enable_helper($package, $by)
     {
         if (pkgm::enable($package, $by))
         {
-            cout::right(cout::success('ENABLED'));
+            cout::success(cout::right('ENABLED'));
             return true;
         }
         else
         {
-            cout::right(cout::error('FAILED TO ENABLE'));
+            cout::error(cout::right('FAILED TO ENABLE'));
             return false;
         }
     }
@@ -263,11 +263,11 @@ function disable($pkg)
 
         foreach ($dependees as $package)
         {
-            $package = \core\pkg::get_release_by_name($package);
+            $release = \core\pkg::get_release_by_name($package);
 
-            if (!$package)
+            if (!$release)
             {
-                cout::right(cout::warn('NOT ENABLED'));
+                cout::warn(cout::right('NOT ENABLED'));
                 continue;
             }
 
@@ -341,12 +341,12 @@ function repair()
         if (empty($dependencies['disabled']) &&
             empty($dependencies['missing']))
         {
-            cout::right(cout::success('OK'));
+            cout::success(cout::right('OK'));
         }
 
         if (!empty($dependencies['missing']))
         {
-            cout::right(cout::error('FAILED'));
+            cout::error(cout::right('FAILED'));
             cout::format(
                 "+red [!] Missing packages:\n%s\n",
                 [arr::readable_list($dependencies['missing'], 4)]
@@ -355,7 +355,7 @@ function repair()
 
         if (!empty($dependencies['disabled']))
         {
-            cout::right(cout::success('...'));
+            cout::success(cout::right('...'));
 
             foreach ($dependencies['disabled'] as $ddep)
             {
