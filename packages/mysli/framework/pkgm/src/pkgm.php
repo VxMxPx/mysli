@@ -336,12 +336,19 @@ class pkgm
 
         foreach ($list['disabled'] as $dependency)
         {
+            // Group goes only one level. If we grab -dev dependencies,
+            // we need not to grab -dev dependencies of thos dependencies
             $nlist = self::list_dependencies($dependency, true, null, $proc);
 
             $list['enabled']  = array_merge($nlist['enabled'], $list['enabled']);
             $list['disabled'] = array_merge($nlist['disabled'], $list['disabled']);
             $list['missing']  = array_merge($nlist['missing'], $list['missing']);
         }
+
+        // Eliminate duplicated entries
+        $list['enabled']  = array_unique($list['enabled']);
+        $list['disabled'] = array_unique($list['disabled']);
+        $list['missing']  = array_unique($list['missing']);
 
         return $list;
     }
