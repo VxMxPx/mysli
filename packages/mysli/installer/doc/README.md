@@ -22,10 +22,10 @@ screen.
 
 You can use `-h` to see list of available options.
 
-`-p, --pkgpath <name>` Packages's path. The default is: `<a:packages>`
+`-p, --pkgpath <name>` Packages's path. The default is: `*packages`
 This will try to automatically discover packages path. If you want to enter 
 costume path, you can enter a relative path (example: ../../packages) or 
-a full absolute path. You can also use `<a:folder_name>` to find folder 
+a full absolute path. You can also use `*folder_name` to find folder 
 automatically relative to the current location.
 
 `-d, --datpath <name>` Data / private path (where configuration and databases

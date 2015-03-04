@@ -29,7 +29,7 @@ function __init()
     ];
 
     $is_yes  = !get_parameter($options, 'y', false, true); // Need to invert it
-    $pkgpath =  get_parameter($options, 'p', 'pkgpath', '<a:packages>');
+    $pkgpath =  get_parameter($options, 'p', 'pkgpath', '*packages');
     $datpath =  get_parameter($options, 'd', 'datpath', '{pkgpath}/../private');
     $rewrite =  get_parameter($options, 'r', 'rewrite', '');
     $rewrite =  explode(',', $rewrite);
@@ -52,13 +52,12 @@ function __init()
 
     // Absolute full path is needed;
     // If relative path was provided, it needs to be resolved.
-    if (substr($pkgpath, 0, 3) === '<a:')
+    if (substr($pkgpath, 0, 1) === '*')
     {
-        $pkgpath = c\find_folder(__DIR__, substr($pkgpath, 3, -1));
+        $pkgpath = c\find_folder(__DIR__, substr($pkgpath, 1));
 
         if (!$pkgpath)
             fatal('Packages path is invalid.');
-
     }
     else
     {
@@ -89,22 +88,12 @@ function __init()
 
     foreach ($packages as $role => &$pac)
     {
-        if (substr($pac, -5) === '.phar' || strpos($pac, '/'))
-            if (!file_exists(c\dst($pkgpath, $pac)))
-                $missing[] = $pac;
-            else
-                continue;
-
-        if (! ($rpac = c\find_package($pkgpath, $pac)) )
+        if (!c\pkgroot($pkgpath, $pac))
             $missing[$pac] = c\dst($pkgpath, $pac);
-        else
-            $pac = $rpac;
-
     }
 
     if (!empty($missing))
         fatal("Packages not found:\n" . nice_array($missing, 4));
-
 
     // Ask if all seems ok...
     print_line(null);
@@ -147,9 +136,6 @@ function __init()
     if (c\exe_setup($packages['cli'], $pkgpath, $datpath, $func_fatal))
         print_line("    Done: {$packages['cli']} (SETUP)");
 
-    if (substr($packages['cli'], -5) === '.phar')
-        $packages['cli'] = substr($packages['cli'], 0, -5);
-
     if (!$pkgm::enable($packages['cli'], 'installer'))
         fatal("Failed to enable: {$packages['cli']}");
     else
@@ -157,12 +143,7 @@ function __init()
 
     print_line('    All done!');
 
-    $is_phar = (substr($packages['pkgm'], -5) === '.phar');
-
-    include(
-        ($is_phar ? 'phar://' : '').
-        c\dst($pkgpath, $packages['pkgm'], '/sh/pkgm.php')
-    );
+    include c\pkgroot($pkgpath, $packages['pkgm']).'/sh/pkgm.php';
     call_user_func(substr($pkgm, 0, strrpos($pkgm, '\\')).'\\sh\\pkgm\\repair');
 }
 
