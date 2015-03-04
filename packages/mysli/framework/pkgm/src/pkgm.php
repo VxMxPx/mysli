@@ -12,60 +12,21 @@ __use(__namespace__, '
 class pkgm
 {
     /**
-     * Get package release from path - this must be full absolute path.
-     * $path  = /home/user/project/packages/mysli.framework.core-r150223.1.phar
-     * return   mysli.framework.core-r150223.1
-     * @param  string $path
-     * @return mixed  string (package name) or false if not found
-     */
-    static function release_from_path($path)
-    {
-        $path = str_replace('\\', '/', $path);
-
-        if (substr($path, 0, strlen(fs::pkgpath())) !== fs::pkgpath())
-            return false;
-
-        $package = substr($path, strlen(fs::pkgpath()));
-
-        // Phar version
-        if (substr(explode('/', $package, 2)[0], -5) === '.phar')
-            return substr(explode('/', $package, 2)[0], 0, -5);
-
-        // Dev version
-        $package = explode('/', $package);
-
-        if (count($package) >= 3)
-        {
-            if (self::exists(implode('/', array_slice($package, 0, 3))))
-                return implode('/', array_slice($package, 0, 3));
-            elseif (self::exists(implode('/', array_slice($package, 0, 2))))
-                return implode('/', array_slice($package, 0, 2));
-        }
-        elseif (count($package) === 2)
-        {
-            $package = implode('/', $package);
-            if (self::exists($package))
-                return $package;
-        }
-
-        return false;
-    }
-    /**
      * Get package namespace from path - this must be full absolute path.
      * $path = /www/dir/packages/vendor/meta/package/src/sub/file.php
      * return  vendor\meta\package\sub\file
      * @param  string $path
      * @return mixed  string (package name) or false if not found
      */
-    static function namespace_from_path($path)
+    static function path_to_namespace($path)
     {
         // this will give us: vendor/meta/package
-        if (!($pkg_name = self::release_from_path($path)))
+        if (!($pkg_name = \core\pkg::by_path($path)))
             return false;
 
         // Phar
-        if (strpos($pkg_name, '-r'))
-            return str_replace('.', '\\', explode('-r', $pkg_name, 2)[0]);
+        if (strpos($pkg_name, '.'))
+            return str_replace('.', '\\', $pkg_name)[0];
 
         // Dev
         $file = substr($path, strpos($path, $pkg_name) + strlen($pkg_name));
@@ -81,68 +42,35 @@ class pkgm
         return str_replace('/', '\\', fs::ds($pkg_name, $file));
     }
     /**
-     * Get package's name from release. E.g.:
-     * mysli.framework.core-r150223.1 => mysli.framework.core
-     * @param  string $release
-     * @return string
-     */
-    static function name_from_release($release)
-    {
-        if (strpos($release, '-r'))
-            return explode('-r', $release)[0];
-        elseif (strpos($release, '/'))
-            return str_replace('/', '.', $release);
-        else
-            throw new exception\package(
-                "Invalid release specefied: `{$release}`");
-    }
-    /**
-     * Check weather package (release) exists (is available) in fs.
-     * $release = mysli.framework.core-r150215.1 || mysli/framework/core
-     * @param  string  $release
-     * @return boolean
-     */
-    static function exists($release)
-    {
-        if (strpos($release, '-r'))
-            return file::exists(fs::pkgpath($release)); // Phar
-        else
-            return file::exists(fs::pkgpath($release, 'mysli.pkg.ym')); // Dev
-    }
-    /**
-     * Check weather package (release) is enabled.
-     * $release = mysli.framework.core-r150215.1 || mysli/framework/core
-     * @param  string  $release
-     * @return boolean
-     */
-    static function is_enabled($release) {
-        return \core\pkg::has($release);
-    }
-    /**
-     * Get all (enabled + disabled) packages
+     * List both enabled and disabled packages
+     * @param boolean $detailed
      * @return array
      */
-    static function list_all() {
-        return array_merge(self::list_enabled(), self::list_disabled());
+    static function lst_all($detailed=false)
+    {
+        return array_merge(
+            self::lst_enabled($detailed),
+            self::lst_disabled($detailed)
+        );
     }
     /**
-     * Get all enabled packages
+     * Get list of enabled packages
+     * @param  boolean $detailed
      * @return array
      */
-    static function list_enabled()
+    static function lst_enabled($detailed=false)
     {
-        $list = [];
+        $packages = \core\pkg::dump();
 
-        foreach(\core\pkg::get_list(true) as $pkg)
-            $list[$pkg['release']] = $pkg['package'];
-
-        return $list;
+        if ($detailed) return $packages['pkg'];
+        else           return array_keys($packages['pkg']);
     }
     /**
      * Get all disabled packages
+     * @param boolean $detailed
      * @return array
      */
-    static function list_disabled()
+    static function lst_disabled($detailed=false)
     {
         $disabled = [];
 
@@ -150,10 +78,10 @@ class pkgm
         {
             if (substr($vendor, -5) === '.phar')
             {
-                if (!self::is_enabled(substr($vendor, 0, -5)))
+                if (!\core\pkg::is_enabled(substr($vendor, 0, -5)))
                 {
-                    $name = self::name_from_release(substr($vendor, 0, -5));
-                    $disabled[substr($vendor, 0, -5)] = $name;
+                    $name = substr($vendor, 0, -5);
+                    $disabled[$name] = \core\pkg::meta($name);
                 }
 
                 continue;
@@ -169,8 +97,11 @@ class pkgm
 
                 if (file::exists(fs::pkgpath($root, 'mysli.pkg.ym')))
                 {
-                    if (!self::is_enabled($root))
-                        $disabled[$root] = self::name_from_release($root);
+                    if (!\core\pkg::is_enabled($root))
+                    {
+                        $name = str_replace('/', '.', $root);
+                        $disabled[$name] = \core\pkg::meta($name);
+                    }
 
                     continue;
                 }
@@ -180,21 +111,21 @@ class pkgm
                     if (file::exists(
                         fs::pkgpath($root, $package, 'mysli.pkg.ym')))
                     {
-                        if (!self::is_enabled("{$root}/{$package}"))
-                            $disabled["{$root}/{$package}"] =
-                                self::name_from_release("{$root}/{$package}");
+                        $name = str_replace('/', ',', $root).".{$package}";
+                        if (!\core\pkg::is_enabled($name))
+                            $disabled[$name] = \core\pkg::meta($name);
                     }
                 }
             }
         }
 
-        return $disabled;
+        return ($detailed) ? array_keys($disabled) : $disabled;
     }
     /**
      * List obsolete packages
      * @return array
      */
-    static function list_obsolete()
+    static function lst_obsolete()
     {
         $enabled = \core\get_list(true);
         $obsolete = [];
@@ -230,27 +161,25 @@ class pkgm
     /**
      * List dependees (the packages which require provided package,
      * i.e. are dependant on it)
-     * @param  string  $release
+     * @param  string  $package
      * @param  boolean $deep
      * @param  array   $listed internal helper
      * @return array
      */
-    static function list_dependees($release, $deep=false)
+    static function lst_dependees($package, $deep=false)
     {
-        $meta = self::meta($release);
-        $name = $meta['package'];
+        $meta = self::meta($package);
 
         if (!$deep)
             return isset($meta['required_by']) ? $meta['required_by'] : [];
 
-        $dependees[] = $name;
+        $dependees[] = $package;
 
         foreach ($meta['required_by'] as $dependee)
         {
             $dependees[] = $dependee;
             $dependees = array_merge(
-                self::list_dependees(
-                    \core\pkg::get_release_by_name($dependee), true),
+                self::lst_dependees($dependee, true),
                 $dependees
             );
         }
@@ -262,7 +191,7 @@ class pkgm
      * List dependencies of package.
      * If you set $deep to true, it will resolve deeper relationships,
      * i.e. dependencies of dependencies
-     * @param  string  $release
+     * @param  string  $package
      * @param  boolean $deep
      * @param  string  $group packages of which group to list:
      * null (required), recommend, dev, ... (other special groups)
@@ -270,10 +199,10 @@ class pkgm
      * if cross dependency situation occurs (a require b and b require a).
      * @return array
      */
-    static function list_dependencies(
-        $release, $deep=false, $group=null, array $proc=[])
+    static function lst_dependencies(
+        $package, $deep=false, $group=null, array $proc=[])
     {
-        $meta = self::meta($release);
+        $meta = self::meta($package);
 
         $list = [
             'enabled'   => [],
@@ -287,7 +216,7 @@ class pkgm
         if (!isset($meta[$group]))
             return $list;
 
-        foreach ($meta[$group] as $dependency => $rrelease)
+        foreach ($meta[$group] as $dependency => $required_version)
         {
             // Extension?
             if (substr($dependency, 0, 14) === 'php.extension.')
@@ -303,18 +232,16 @@ class pkgm
             }
 
             // Normal package
-            $rdependency = self::find_by_release($dependency, $rrelease);
-
-            if (!$rdependency)
+            if (!\core\pkg::exists($dependency))
             {
                 $list['missing'][] = $dependency;
             }
             else
             {
-                if (self::is_enabled($rdependency))
-                    $list['enabled'][] = $rdependency;
+                if (\core\pkg::is_enabled($dependency))
+                    $list['enabled'][] = $dependency;
                 else
-                    $list['disabled'][] = $rdependency;
+                    $list['disabled'][] = $dependency;
             }
         }
 
@@ -322,7 +249,7 @@ class pkgm
             return $list;
 
         // Prevent infinite loops
-        $hash = $release . ': ' . implode(', ', array_keys($meta[$group]));
+        $hash = $package . ': ' . implode(', ', array_keys($meta[$group]));
         if (in_array($hash, $proc))
         {
             $proc[count($proc)-1] = ' >> '.$proc[count($proc) - 1];
@@ -338,7 +265,7 @@ class pkgm
         {
             // Group goes only one level. If we grab -dev dependencies,
             // we need not to grab -dev dependencies of thos dependencies
-            $nlist = self::list_dependencies($dependency, true, null, $proc);
+            $nlist = self::lst_dependencies($dependency, true, null, $proc);
 
             $list['enabled']  = array_merge($nlist['enabled'], $list['enabled']);
             $list['disabled'] = array_merge($nlist['disabled'], $list['disabled']);
@@ -353,134 +280,128 @@ class pkgm
         return $list;
     }
     /**
-     * Find package by release (regex) and return full name of it.
+     * Check if apropriate version of package exists.
      * @param  string $package
      * @param  string $release
-     * @param  array  $source  list of sourced where to look for a package,
-     *                         if not provided self::list_all() will be used
-     * @return string full.package.name.and-release.phar | null if not found
+     * @return string full.package.name or null if not found
      */
-    static function find_by_release($package, $release='*', array $source=null)
+    static function has_version($package, $release='*')
     {
-        if (!$source)
-            $source = self::list_all();
+        if (!\core\pkg::exists($package))
+            return null;
+
+        $meta = \core\pkg::meta($package);
 
         if (substr($release, 0, 1) !== 'r')
             $release = "r*.{$release}";
 
         $release = preg_quote($release);
-        $rpackage = preg_quote($package);
 
         if (strpos($release, '\\*'))
             $release = str_replace('\\*', '.*?', $release);
 
-        $regex = "/^{$rpackage}\\-{$release}$/";
+        $srelease = isset($meta['release']) ? $meta['release'] : 'source';
 
-        foreach ($source as $pkg => $_)
-            if (preg_match($regex, $pkg))
-                return $pkg;
-
-        // If we came to here, check source packages (vendor/package).
-
-        $package = str_replace('.', '/', $package);
-
-        if (isset($source[$package]))
-            return $package;
-        else
-            return false;
+        return preg_match($release, $srelease);
     }
     /**
-     * Get meta for particular package.
-     * @param  string  $release
-     * @param  boolean $force_read force package meta to be read from file
+     * Get package's meta by name
+     * @param  string  $name
+     * @param  boolean $source -- read meta from package itself
+     *                         (rathet than from list of enabled packages)
      * @return array
      */
-    static function meta($release, $force_read=false)
+    static function meta($name, $source=false)
     {
-        if (self::is_enabled($release) && !$force_read)
+        if (\core\pkg::is_enabled($name) && !$source)
         {
-            return \core\pkg::get_by_release($release);
+            return \core\pkg::dump()['pkg'][$name];
         }
-        elseif (self::exists($release))
+        elseif (\core\pkg::exists($name))
         {
-            $file = fs::pkgpath($release, 'mysli.pkg.ym');
+            $file = fs::pkgreal($name, 'mysli.pkg.ym');
 
             if (file::exists($file))
             {
                 $meta = ym::decode_file($file);
                 $meta['require'] = $meta['require'] ?: [];
-                $meta['release'] = $release;
+                if (!isset($meta['release']))
+                    $meta['release'] = 'source';
                 return $meta;
             }
             else
                 throw new framework\exception\not_found(
-                    "Fild `mysli.pkg.ym` not found for: `{$release}`.", 1);
+                    "File `mysli.pkg.ym` not found for: `{$name}`.", 1
+                );
         }
         else
             throw new framework\exception\not_found(
-                "The package doesn't exists: `{$release}`.", 2);
+                "The package doesn't exists: `{$name}`.", 2
+            );
     }
     /**
-     * Enable package (release). This will NOT run the setup.
+     * Enable package. This will NOT run the setup.
      * @param  string $package
-     * @param  string $enabled_by if provided, this package will become
-     * obsolete when $enabled_by will be disabled (if nothing else)
-     * depends on it.
+     * @param  string $enabled_by if provided, this package will become obsolete,
+     *                            when $enabled_by will be disabled,
+     *                            if nothing else depends on it.
      * @return boolean
      */
-    static function enable($release, $enabled_by=null)
+    static function enable($package, $enabled_by=null)
     {
         // Cannot enable if already enabled
-        if (self::is_enabled($release))
+        if (\core\pkg::is_enabled($package))
             throw new exception\package(
-                "The package is already enabled: `{$release}`.", 1);
+                "The package is already enabled: `{$package}`.", 1
+            );
 
         // Cannot enable if don't exists
-        if (!self::exists($release))
+        if (!\core\pkg::exists($package))
             throw new framework\exception\not_found(
-                "The package doesn't exists: `{$release}`.", 2);
+                "The package doesn't exists: `{$package}`.", 2
+            );
 
         // Get meta and name
-        $meta = self::meta($release);
-        $name = $meta['package'];
+        $meta = self::meta($package);
 
         // Go through required package, and add itself to the required list
-        foreach ($meta['require'] as $dependency => $version)
+        foreach ($meta['require'] as $dependency => $need_version)
         {
-            $dmeta = \core\pkg::get_by_name($dependency);
+            $dmeta = self::meta($dependency);
 
             if (!$dmeta)
                 throw new exception\dependency(
-                "Dependency not satisfied: `{$dependency} : {$version}`", 4);
+                    "Dependency not satisfied: `{$dependency} : ".
+                    "{$need_version}`", 4
+                );
 
             if (!isset($dmeta['required_by']))
                 $dmeta['required_by'] = [];
 
-            if (!in_array($name, $dmeta['required_by']))
+            if (!in_array($package, $dmeta['required_by']))
             {
-                $dmeta['required_by'][] = $name;
+                $dmeta['required_by'][] = $package;
                 \core\pkg::update($dependency, $dmeta);
             }
         }
 
-        $meta['release']     = $release;
         $meta['enabled_by']  = $enabled_by;
         $meta['enabled_on']  = time();
         $meta['required_by'] = [];
-        $meta['sh'] = self::discover_scripts($release);
+        $meta['sh'] = self::discover_scripts($package);
 
         // Does any of the enabled packages require this package?
         // This happened sometimes, especially when replacing packages.
-        if (!empty(\core\pkg::get_list()))
+        if (!empty(self::lst_enabled()))
         {
-            foreach (\core\pkg::get_list(true) as $lmeta)
+            foreach (self::lst_enabled(true) as $lmeta)
             {
                 if (!isset($lmeta['require']))
                     continue;
 
                 foreach ($lmeta['require'] as $depends_on => $version)
                 {
-                    if ($depends_on && $depends_on === $name)
+                    if ($depends_on && $depends_on === $package)
                     {
                         // Unlike event that package is already on the list.
                         if (!in_array($lmeta['package'], $meta['required_by']))
@@ -490,44 +411,44 @@ class pkgm
             }
         }
 
-        \core\pkg::add($name, $meta);
+        \core\pkg::add($package, $meta);
         return \core\pkg::write();
     }
     /**
-     * Disable package (release). This will NOT run the setup.
+     * Disable package. This will NOT run the setup.
      * @param  string $package
      * @return boolean
      */
-    static function disable($release)
+    static function disable($package)
     {
         // If not enabled, won't disable
-        if (!self::is_enabled($release))
+        if (!\core\pkg::is_enabled($package))
             throw new exception\package(
-                "The package is not enabled: `{$release}`.", 1);
+                "The package is not enabled: `{$package}`.", 1
+            );
 
         // Get meta & name
-        $meta = self::meta($release);
-        $name = $meta['package'];
+        $meta = self::meta($package);
 
         // Remove self from list of packages on which this package depends.
         foreach ($meta['require'] as $dependency => $version)
         {
-            $rmeta = \core\pkg::get_by_name($dependency);
+            $rmeta = self::meta($dependency);
 
             if (!$rmeta || !isset($rmeta['required_by']))
                 continue;
 
             while ($rmeta['required_by'] &&
-                in_array($name, $rmeta['required_by']))
+                in_array($package, $rmeta['required_by']))
             {
-                $rkey = array_search($name, $rmeta['required_by']);
+                $rkey = array_search($package, $rmeta['required_by']);
                 unset($rmeta['required_by'][$rkey]);
             }
 
             \core\pkg::update($dependency, $rmeta);
         }
 
-        \core\pkg::remove($name);
+        \core\pkg::remove($package);
         return \core\pkg::write();
     }
 
@@ -542,8 +463,8 @@ class pkgm
     {
         $files = [];
 
-        if (dir::exists(fs::pkgpath($package, 'sh')))
-            foreach (fs::ls(fs::pkgpath($package, 'sh'), '/\\.php$/') as $file)
+        if (dir::exists(fs::pkgreal($package, 'sh')))
+            foreach (fs::ls(fs::pkgreal($package, 'sh'), '/\\.php$/') as $file)
                 $files[] = substr($file, 0, -4);
 
         return $files;

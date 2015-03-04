@@ -91,26 +91,24 @@ function __init(array $args)
  */
 function enable($pkg, $rec=false, $dev=false)
 {
-    $pkg = resolve_by_name($pkg, pkgm::list_disabled()) or die();
-
-    if (pkgm::is_enabled($pkg))
+    if (\core\pkg::is_enabled($pkg))
     {
         cout::warn("[!] Package is already enabled: {$pkg}");
         return false;
     }
 
-    if (!pkgm::exists($pkg))
+    if (!\core\pkg::exists($pkg))
     {
         cout::warn("[!] Package not found: {$pkg}");
         return false;
     }
 
     // Regular dependencies
-    $dependencies     = pkgm::list_dependencies($pkg, true);
+    $dependencies     = pkgm::lst_dependencies($pkg, true);
     // Recommended
-    $rec_dependencies = pkgm::list_dependencies($pkg, true, 'recommend');
+    $rec_dependencies = pkgm::lst_dependencies($pkg, true, 'recommend');
     // Development
-    $dev_dependencies = pkgm::list_dependencies($pkg, true, 'dev');
+    $dev_dependencies = pkgm::lst_dependencies($pkg, true, 'dev');
 
     if ($rec)
     {
@@ -216,23 +214,21 @@ function enable_helper($package, $by)
  */
 function disable($pkg)
 {
-    $pkg = resolve_by_name($pkg, pkgm::list_enabled()) or die();
-
     // Can't disable something that isn't enabled
-    if (!pkgm::is_enabled($pkg))
+    if (!\core\pkg::is_enabled($pkg))
     {
         cout::warn("[!] Package not enabled: `{$pkg}`.");
         return false;
     }
 
-    if (\core\pkg::is_boot(\core\pkg::get_name_by_release($pkg)))
+    if (\core\pkg::is_boot($pkg))
     {
         cout::warn("[!] Cannot disable `{$pkg}` (Essential for system to boot)");
         return false;
     }
 
     // Get package dependees!
-    $dependees = pkgm::list_dependees($pkg, true);
+    $dependees = pkgm::lst_dependees($pkg, true);
     array_pop($dependees); // remove self
 
     // If we have dependees, then disable them all first!
@@ -263,15 +259,13 @@ function disable($pkg)
 
         foreach ($dependees as $package)
         {
-            $release = \core\pkg::get_release_by_name($package);
-
-            if (!$release)
+            if (!$package)
             {
                 cout::warn(cout::right('NOT ENABLED'));
                 continue;
             }
 
-            if (!disable_helper($release))
+            if (!disable_helper($package))
                 return false;
         }
     }
@@ -303,27 +297,6 @@ function disable_helper($package)
     }
 }
 
-function resolve_by_name($pkg, array $list)
-{
-    if (strpos($pkg, '.') && !strpos($pkg, '-r'))
-    {
-        $pkgr = pkgm::find_by_release($pkg, '*', $list);
-
-        if (!$pkgr)
-        {
-            cout::warn(
-                "[!] Package not found: `{$pkg}`. Specify exact release perhaps. ".
-                "Use `--list` to see full list available packages."
-            );
-            return false;
-        }
-        else
-            $pkg = $pkgr;
-    }
-
-    return $pkg;
-}
-
 // Repair
 
 /**
@@ -333,10 +306,10 @@ function repair()
 {
     cout::line("\n* Scanning database for missing dependencies...");
 
-    foreach (pkgm::list_enabled() as $release => $package)
+    foreach (pkgm::lst_enabled(true) as $release => $meta)
     {
         cout::line("    Found `{$release}`", false);
-        $dependencies = pkgm::list_dependencies($release, true);
+        $dependencies = pkgm::lst_dependencies($release, true);
 
         if (empty($dependencies['disabled']) &&
             empty($dependencies['missing']))
@@ -359,10 +332,10 @@ function repair()
 
             foreach ($dependencies['disabled'] as $ddep)
             {
-                if (!pkgm::is_enabled($ddep))
+                if (!\core\pkg::is_enabled($ddep))
                 {
                     cout::line('        ', false);
-                    enable_helper($ddep, $package);
+                    enable_helper($ddep, $release);
                 }
             }
         }
@@ -380,12 +353,12 @@ function do_list($option)
     switch ($option) {
         case 'enabled':
             cout::line("\n* Enabled packages:");
-            cout::line(arr::readable(pkgm::list_enabled(), 4));;
+            cout::line(arr::readable(pkgm::lst_enabled(), 4));;
             break;
 
         case 'disabled':
             cout::line("\n* Disabled packages:");
-            cout::line(arr::readable(pkgm::list_disabled(), 4));
+            cout::line(arr::readable(pkgm::lst_disabled(), 4));
             break;
 
         case 'all':
@@ -408,9 +381,9 @@ function do_list($option)
  */
 function meta($package)
 {
-    $package = resolve_by_name($package, pkgm::list_all()) or die();
+    $package = resolve_by_name($package, pkgm::lst_all()) or die();
 
-    if (!pkgm::exists($package))
+    if (!\core\pkg::exists($package))
         cout::warn('[!] No such package: `'.$package.'`');
     else
         cout::line(arr::readable(pkgm::meta($package)));
@@ -571,8 +544,8 @@ function csi_process($csi)
  */
 function run_setup($pkg, $action)
 {
-    $setup_file = fs::pkgpath($pkg, 'src/setup.php');
-    $setup_fnc  = str_replace('/', '\\', $pkg) . '\\setup\\' . $action;
+    $setup_file = fs::pkgreal($pkg, 'src/setup.php');
+    $setup_fnc  = str_replace('.', '\\', $pkg) . '\\setup\\' . $action;
 
     if (!function_exists($setup_fnc))
     {
