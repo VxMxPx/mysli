@@ -4,6 +4,7 @@ namespace mysli\dev\pkgc\sh\pkgc;
 
 __use(__namespace__, '
     mysli.web.assets
+    mysli.framework.ym
     mysli.framework.pkgm
     mysli.framework.fs/fs,file,dir
     mysli.framework.cli/param,output,input AS param,cout,cin
@@ -46,7 +47,7 @@ function __init(array $args)
         $v = $param->values();
 
         if (!$v['package'])
-            $v['package'] = pkgm::name_from_path(getcwd());
+            $v['package'] = pkgm::name_by_path(getcwd());
 
         create($v['package'], $v['stub'], $v['yes']);
     }
@@ -59,7 +60,8 @@ function __init(array $args)
  */
 function create($package, $stub, $yes)
 {
-    $path = fs::pkgpath($package);
+    // Require source path!
+    $path = fs::pkgpath(str_replace('.', '/', $package));
 
     // Check if we have a valid package
     if (!$package)
@@ -80,17 +82,17 @@ function create($package, $stub, $yes)
     $api_version = ! $yes
                         ? ask_for_version((int) $meta['version'])
                         : (int) $meta['version'];
-    $release =     ! $yes
+    $release     = ! $yes
                         ? ask_for_release(gmdate('ymd'))
                         : gmdate('ymd');
-    $pre_repease = ! $yes
+    $pre_release = ! $yes
                         ? ask_for_pre_release('')
                         : '';
 
     // Create filenames
     $pkg_filename = str_replace('/', '.', $package);
-    $pkg_filename .= "-r{$release}.{$api_version}";
-    $pkg_filename .= $pre_repease ? "-{$pre_repease}" : '';
+    // $pkg_filename .= "-r{$release}.{$api_version}";
+    // $pkg_filename .= $pre_release ? "-{$pre_release}" : '';
     $pkg_fullpath = fs::tmppath('pkgc', $pkg_filename.'.phar');
 
     // Intro, let the user know which release we're creating
@@ -171,7 +173,13 @@ function create($package, $stub, $yes)
         }
     });
 
-    increase_version($pkg_fullpath, $meta['version'], $api_version);
+    write_meta(
+        "phar://".$pkg_fullpath.'/mysli.pkg.ym',
+        $meta,
+        $api_version,
+        $release,
+        $pre_release
+    );
     print_signature($phar);
 }
 
@@ -317,30 +325,26 @@ function create_phar($path, $filename, $stub=null)
 /**
  * Increase version if necessary.
  * @param  string  $filename
- * @param  integer $old
- * @param  integer $new
+ * @param  string  $api_version
+ * @param  string  $release
+ * @param  string  $pre_release
  * @return boolean
  */
-function increase_version($filename, $old, $new)
+function write_meta($filename, $api_version, $release, $pre_release)
 {
-    // Increase version in mysli.pkg.ym file
-    if ((int) $old === (int) $new)
-        return true;
+    cout::line("    Writing a new meta", false);
 
-    cout::line("    Writing a new version", false);
-
-    try
+    if (!file::exists($filename))
     {
-        write_version("phar://{$filename}/mysli.pkg.ym", $old, $new);
-        cout::format('+green+right OK');
-        return true;
-    }
-    catch (\Exception $e)
-    {
-        cout::format('+red+right FAILED');
-        cout::line('    [!] '.$e->getMessage());
+        cout::format("    [!] Failed! File not found: `{$filename}`.");
         return false;
     }
+
+    $meta = ym::decode_file($filename);
+    $meta['version'] = $api_version;
+    $meta['release'] = "r{$release}".($pre_release?"-{$pre_release}":'');
+
+    return ym::encode_file($filename, $meta);
 }
 /**
  * Print phar's signature
@@ -383,14 +387,13 @@ function generate_ignore_list($meta)
         $ignore[] = 'tplp/';
 
     // Assets
-    list($as_src, $as_dest, $as_map) = assets::get_default_paths(
-        str_replace('.', '/', $meta['package'])
-    );
+    list($as_src, $as_dest, $as_map) = assets::get_default_paths($meta['package']);
 
     $ignore[] = $as_src.'/';
     $map = false;
 
-    try {
+    try
+    {
         $map = assets::get_map($meta['package'], $as_src, $as_map);
     }
     catch (\Exception $e) {
@@ -399,8 +402,9 @@ function generate_ignore_list($meta)
 
     if (is_array($map) && isset($map['files']) && is_array($map['files']))
     {
-        $extlist = is_array($map['settings']) &&
-            is_array($map['settings']['ext']) ? $map['settings']['ext'] : [];
+        $extlist = is_array($map['settings']) && is_array($map['settings']['ext'])
+            ? $map['settings']['ext']
+            : [];
 
         foreach ($map['files'] as $file)
         {
@@ -421,31 +425,3 @@ function generate_ignore_list($meta)
 
     return $ignore;
 }
-/**
- * Write new version to meta file.
- * @param  string $file
- * @param  string $old
- * @param  string $new
- */
-function write_version($file, $old, $new)
-{
-    if (!file::exists($file))
-        throw new framework\exception\not_found("File not found: `{$file}`");
-
-    $r = 0;
-    $meta = file::read($file);
-    $meta = preg_replace(
-        '/^(version[\t\ ]*?\:[\t\ ]*?)('.preg_quote($old).')$/m',
-        '${1}'.$new,
-        $meta, -1, $r
-    );
-
-    if ($r != 1)
-        throw new framework\exception\data(
-            "Could not change version in meta file ({$old} => {$new}), ".
-            "replacement result is: `{$r}`, expected: `1`."
-        );
-
-    file::write($file, $meta);
-}
-
