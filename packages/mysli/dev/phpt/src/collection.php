@@ -7,8 +7,8 @@ __use(__namespace__, '
     mysli.framework.exception/*  AS  framework\exception\*
 ');
 
-class collection implements \Countable, \Iterator {
-
+class collection implements \Countable, \Iterator
+{
     private $position = 0;
     private $tests    = [];
 
@@ -19,19 +19,25 @@ class collection implements \Countable, \Iterator {
      * /home/me/path/*.phpt | /home/me/path/*_basic.phpt ...
      * @param string $path
      */
-    function __construct($path) {
+    function __construct($path)
+    {
         $dir   = dirname($path);
         $file = file::name($path);
-        if (!dir::exists($dir)) {
+
+        if (!dir::exists($dir))
             throw new framework\exception\not_found(
-                "Directory not found: `{$dir}`", 1);
-        }
-        if (strpos($file, '*') !== false) {
+                "Directory not found: `{$dir}`", 1
+            );
+
+        if (strpos($file, '*') !== false)
+        {
             $file = preg_quote($file);
             $file = str_replace("\\*", '.*?', $file);
             $file = "/{$file}/";
             $regex = true;
-        } else $regex = false;
+        }
+        else
+            $regex = false;
 
         $this->mk_tests($dir, $file, $regex);
     }
@@ -39,102 +45,126 @@ class collection implements \Countable, \Iterator {
      * Get those tests which were executed successfully.
      * @return array
      */
-    function success() {
+    function success()
+    {
         $r = [];
+
         foreach ($this->tests as $t)
             $t->executed() && $t->succeed() && ($r[] = $t);
+
         return $r;
     }
     /**
      * Get those tests which failed.
      * @return array
      */
-    function failed() {
+    function failed()
+    {
         $r = [];
+
         foreach ($this->tests as $t)
             $t->executed() && $t->failed() && ($r[] = $t);
+
         return $r;
     }
     /**
      * Get skipped tests.
      * @return array
      */
-    function skipped() {
+    function skipped()
+    {
         $r = [];
+
         foreach ($this->tests as $t)
             $t->executed() && $t->skipped() && ($r[] = $t);
+
         return $r;
     }
     /**
      * Get those tests which were actually executed.
      * @return array
      */
-    function executed() {
+    function executed()
+    {
         $r = [];
+
         foreach ($this->tests as $t)
             $t->executed() && ($r[] = $t);
+
         return $r;
     }
     /**
      * Get those tests which were NOT executed.
      * @return array
      */
-    function not_executed() {
+    function not_executed()
+    {
         $r = [];
+
         foreach ($this->tests as $t)
             !$t->executed() && ($r[] = $t);
+
         return $r;
     }
     /**
      * Get sum of run time of all tests.
      * @return float
      */
-    function run_time() {
+    function run_time()
+    {
         $s = 0.0;
+
         foreach ($this->tests as $t)
             $t->executed() && ($s += $t->run_time());
+
         return $s;
     }
     /**
      * Countable: get number of tests.
      * @return integer
      */
-    function count() {
+    function count()
+    {
         return count($this->tests);
     }
     /**
      * Rewind the Iterator to the first element.
      * @return null
      */
-    function rewind() {
+    function rewind()
+    {
         $this->position = 0;
     }
     /**
      * Return the current element.
      * @return mixed string (test filename) | object (phpt\test_case)
      */
-    function current() {
+    function current()
+    {
         return $this->tests[$this->position];
     }
     /**
      * Return the current key.
      * @return string test filename
      */
-    function key() {
+    function key()
+    {
         return $this->current()->filename();
     }
     /**
      * Move forward to the next element.
      * @return null
      */
-    function next() {
+    function next()
+    {
         ++$this->position;
     }
     /**
      * Check if current position is valid.
      * @return boolean
      */
-    function valid() {
+    function valid()
+    {
         return isset($this->tests[$this->position]);
     }
 
@@ -145,22 +175,25 @@ class collection implements \Countable, \Iterator {
      * @param  string $regex
      * @return null
      */
-    private function mk_tests($dir, $filep, $regex) {
-        foreach (fs::ls($dir) as $file) {
-            if (dir::exists(fs::ds($dir, $file))) {
+    private function mk_tests($dir, $filep, $regex)
+    {
+        foreach (fs::ls($dir) as $file)
+        {
+            if (dir::exists(fs::ds($dir, $file)))
+            {
                 $this->mk_tests(fs::ds($dir, $file), $filep, $regex);
                 continue;
             }
-            if ($regex) {
-                if (!preg_match($filep, $file)) {
+
+            if ($regex)
+                if (!preg_match($filep, $file))
                     continue;
-                }
-            } elseif ($file != $filep) {
+            elseif ($file != $filep)
                 continue;
-            }
-            if (substr($file, -5) !== '.phpt') {
+
+            if (substr($file, -5) !== '.phpt')
                 continue;
-            }
+
             $this->tests[] = new test_case(fs::ds($dir, $file));
         }
     }

@@ -7,7 +7,8 @@ __use(__namespace__, '
     mysli.framework.exception/*  AS  framework\exception\*
 ');
 
-class test_case {
+class test_case
+{
     // false = not executed, -1 = skipped, 0 = failed, 1 = success
     private $status   = false;
     private $run_time = 0.0;
@@ -25,11 +26,13 @@ class test_case {
      * Create new test case.
      * @param string $filename
      */
-    function __construct($filename) {
-        if (!file::exists($filename)) {
+    function __construct($filename)
+    {
+        if (!file::exists($filename))
             throw new framework\exception\not_found(
-                "File not found: `{$filename}`");
-        }
+                "File not found: `{$filename}`"
+            );
+
         $this->filename = $filename;
         $this->dir_temp = fs::tmppath('phpt');
         $this->filename_temp = md5($this->filename);
@@ -38,7 +41,8 @@ class test_case {
      * Execute this test.
      * @return integer (status)
      */
-    function execute() {
+    function execute()
+    {
         $st = microtime(true);
 
         // remove old files if any exists
@@ -51,71 +55,98 @@ class test_case {
         $this->parsed = parser::process($this->filename);
 
         // get PHP location
-        if (!$this->parsed['cgi']) {
+        if (!$this->parsed['cgi'])
             $php = exec('which php')     ?: '/usr/bin/env php';
-        } else {
+        else
             $php = exec('which php-cgi') ?: '/usr/bin/env php-cgi';
-        }
+
         $dir = dirname($this->filename);
 
         // see if we have input file
-        if (isset($this->parsed['inputf'])) {
-            $inputf = fs::ds(
-                "{$this->dir_temp}/{$this->filename_temp}.input");
+        if (isset($this->parsed['inputf']))
+        {
+            $inputf = fs::ds("{$this->dir_temp}/{$this->filename_temp}.input");
             file::write($inputf, $this->parsed['inputf']);
             $this->files[] = $inputf;
             $in = "< \"{$inputf}\"";
-        } else $in = '';
+        }
+        else
+            $in = '';
 
         // check if skipif is set
-        if (isset($this->parsed['skipif'])) {
-            $skipif = fs::ds(
-                "{$this->dir_temp}/{$this->filename_temp}.skipif.php");
+        if (isset($this->parsed['skipif']))
+        {
+            $skipif = fs::ds("{$this->dir_temp}/{$this->filename_temp}.skipif.php");
             file::write($skipif, $this->parsed['skipif']);
             $this->files[] = $skipif;
-            $command = implode(' ', [
-                $php, $this->parsed['inip'], '-f "' . $skipif . '"',
-                $this->parsed['args'], '2>&1', $in]);
+            $command = implode(
+                ' ',
+                [
+                    $php,
+                    $this->parsed['inip'],
+                    '-f "'.$skipif.'"',
+                    $this->parsed['args'],
+                    '2>&1',
+                    $in
+                ]
+            );
             $r = engine::run($command, $this->parsed['env'], $dir);
-            if(trim($r)) {
+
+            if(trim($r))
+            {
                 $this->skipif_message = $r;
                 $this->status = -1;
                 return -1;
             }
         }
-        // virtuals?
-        if (isset($this->parsed['virtual'])) {
-            foreach ($this->parsed['virtual'] as $virtual) {
+
+        // virtual?
+        if (isset($this->parsed['virtual']))
+        {
+            foreach ($this->parsed['virtual'] as $virtual)
+            {
                 $filename = fs::ds($this->dir_temp,$virtual['file']);
                 file::write($filename, $virtual['contents']);
                 $this->files[] = $filename;
             }
         }
+
         // test file
-        $testf = fs::ds(
-            "{$this->dir_temp}/{$this->filename_temp}.php");
-        file::write($testf,
-                    $this->parsed['load'].$this->parsed['import'].
-                    $this->parsed['test']);
+        $testf = fs::ds("{$this->dir_temp}/{$this->filename_temp}.php");
+        file::write(
+            $testf,
+            $this->parsed['load'].$this->parsed['import'].
+            $this->parsed['test']
+        );
         $this->files[] = $testf;
 
         // assemble command
-        $command = implode(' ', [
-            $php, $this->parsed['inip'], '-f "' . $testf . '"',
-            $this->parsed['args'], '2>&1', $in]);
+        $command = implode(
+            ' ',
+            [
+                $php,
+                $this->parsed['inip'],
+                '-f "'.$testf.'"',
+                $this->parsed['args'],
+                '2>&1',
+                $in
+            ]
+        );
 
         // run the command
         $r = engine::run($command, $this->parsed['env'], $dir);
-        if ($this->parsed['file_type'] === 'fileeof') {
+
+        if ($this->parsed['file_type'] === 'fileeof')
             $r = preg_replace("/[\r\n]+$/", '', $r);
-        }
+
         $r = trim($r);
         $this->output = $r;
 
         $c = $this->compare(
             $this->parsed['expect'],
             $this->output,
-            ($this->parsed['expect_type'] === 'expectregex'));
+            ($this->parsed['expect_type'] === 'expectregex')
+        );
         $this->status = $c ? 1 : 0;
 
         $et = microtime(true);
@@ -127,79 +158,93 @@ class test_case {
      * Get diff for this test.
      * @return array
      */
-    function diff() {
-        if (empty($this->diff) && ($this->status === 0)) {
+    function diff()
+    {
+        if (empty($this->diff) && ($this->status === 0))
+        {
             $this->diff = diff::generate(
                 $this->parsed['expect'],
                 $this->parsed['expect_raw'],
                 $this->output,
-                ($this->parsed['expect_type'] === 'expectregex'));
+                ($this->parsed['expect_type'] === 'expectregex')
+            );
         }
+
         return $this->diff;
     }
     /**
      * Remove temp files.
      * @return null
      */
-    function cleanup() {
-        foreach ($this->files as $file) {
+    function cleanup()
+    {
+        foreach ($this->files as $file)
             file::remove($file);
-        }
+
         $this->files = [];
     }
     /**
      * Was this test executed.
      * @return boolean
      */
-    function executed() {
+    function executed()
+    {
         return $this->status !== false;
     }
     /**
      * Was this test skipped.
      * @return boolean
      */
-    function skipped() {
+    function skipped()
+    {
         return $this->status === -1;
     }
     /**
      * Message (why was it skipped)
      * @return string
      */
-    function skipped_message() {
+    function skipped_message()
+    {
         return $this->skipif_message;
     }
     /**
      * Was this test successful.
      * @return boolean
      */
-    function succeed() {
+    function succeed()
+    {
         return $this->status === 1;
     }
     /**
      * Weather this test failed.
      * @return boolean
      */
-    function failed() {
+    function failed()
+    {
         return $this->status === 0;
     }
     /**
      * Return test run time
      * @return float
      */
-    function run_time() {
+    function run_time()
+    {
         return $this->run_time;
     }
     /**
      * Get filename.
      * @return string
      */
-    function filename() {
-        if (!$this->rel_filename) {
+    function filename()
+    {
+        if (!$this->rel_filename)
+        {
             $dir = [];
             $last = '';
             $dirname = $this->filename;
 
-            do {
+            do
+            {
                 $dirname = dirname($dirname);
                 $last = basename($dirname);
                 array_unshift($dir, $last);
@@ -207,13 +252,18 @@ class test_case {
 
             $file = file::name($this->filename);
 
-            if (count($dir) > 0) {
+            if (count($dir) > 0)
+            {
                 $this->rel_filename = fs::ds(
-                    implode('/', array_slice($dir, 1)), $file);
-            } else {
+                    implode('/', array_slice($dir, 1)), $file
+                );
+            }
+            else
+            {
                 $this->rel_filename = $file;
             }
         }
+
         return $this->rel_filename;
     }
 
@@ -224,11 +274,11 @@ class test_case {
      * @param  boolean $regex
      * @return boolean
      */
-    private function compare($expect, $out, $regex=false) {
-        if ($regex) {
+    private function compare($expect, $out, $regex=false)
+    {
+        if ($regex)
             return preg_match("/^{$expect}\$/s", $out);
-        } else {
+        else
             return strcmp($out, $expect) === 0;
-        }
     }
 }

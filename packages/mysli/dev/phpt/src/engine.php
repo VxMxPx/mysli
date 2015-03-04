@@ -14,7 +14,8 @@
 */
 namespace mysli\dev\phpt;
 
-class engine {
+class engine
+{
     /**
      * Execute PHP command
      * @param  string $command
@@ -23,36 +24,37 @@ class engine {
      * @param  string $stdin
      * @return string
      */
-    static function run($command, array $env, $cwd, $stdin=null) {
-
+    static function run($command, array $env, $cwd, $stdin=null)
+    {
         $data = '';
 
-        foreach ($_SERVER as $k => $v) {
-            if (!array_key_exists($k, $env) && !is_array($v)) {
+        foreach ($_SERVER as $k => $v)
+            if (!array_key_exists($k, $env) && !is_array($v))
                 $env[$k] = $v;
-            }
-        }
 
-        $proc = proc_open($command, [
+        $proc = proc_open(
+            $command, [
                 0 => array('pipe', 'r'),
                 1 => array('pipe', 'w'),
                 2 => array('pipe', 'w')
-            ], $pipes, $cwd, $env,
-            array('suppress_errors' => true));
+            ],
+            $pipes, $cwd, $env,
+            array('suppress_errors' => true)
+        );
 
-        if (!$proc) {
+        if (!$proc)
             return false;
-        }
 
-        if (!is_null($stdin)) {
+        if (!is_null($stdin))
             fwrite($pipes[0], $stdin);
-        }
+
         fclose($pipes[0]);
         unset($pipes[0]);
 
         $timeout = 60;
 
-        while (true) {
+        while (true)
+        {
             // hide errors from interrupted syscalls
             $r = $pipes;
             $w = null;
@@ -60,30 +62,36 @@ class engine {
 
             $n = @stream_select($r, $w, $e, $timeout);
 
-            if ($n === false) {
+            if ($n === false)
+            {
                 break;
-            } elseif ($n === 0) {
+            }
+            elseif ($n === 0)
+            {
                 // timed out
                 $data .= "\nERROR: process timed out!\n";
                 proc_terminate($proc, 9);
                 return $data;
-            } elseif ($n > 0) {
+            }
+            elseif ($n > 0)
+            {
                 $line = fread($pipes[1], 8192);
-                if (strlen($line) == 0) {
-                    /* EOF */
+
+                /* EOF */
+                if (strlen($line) == 0)
                     break;
-                }
+
                 $data .= $line;
             }
         }
 
         $stat = proc_get_status($proc);
 
-        if ($stat['signaled']) {
+        if ($stat['signaled'])
             $data .= "\nTermsig=" . $stat['stopsig'];
-        }
 
         $code = proc_close($proc);
+
         return $data;
     }
 }

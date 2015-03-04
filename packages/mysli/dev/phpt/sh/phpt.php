@@ -14,13 +14,14 @@ __use(__namespace__, '
  * @param  array $args
  * @return null
  */
-function __init(array $args) {
+function __init(array $args)
+{
     $param = new param('Mysli PHPT Wrapper', $args);
     $param->command = 'phpt';
     $param->add('-t/--test', [
         'help'    => 'Run test(s). Package(+:method) to be run '.
-                     '(vendor/package or vendor/package:method or '.
-                     'vendor/package/class:method)',
+                     '(vendor.package or vendor.package:method or '.
+                     'vendor.package/class:method)',
         'type'    => 'bool',
         'default' => false
     ]);
@@ -30,8 +31,7 @@ function __init(array $args) {
         'default' => false
     ]);
     $param->add('-a/--add', [
-        'help'    => 'Scan package/file for methods and create '.
-                     'test(s) if needed.',
+        'help'    => 'Scan package/file for methods and create test(s) if needed.',
         'type'    => 'bool',
         'default' => false
     ]);
@@ -43,51 +43,58 @@ function __init(array $args) {
     ]);
 
     $param->parse();
-    if (!$param->is_valid()) {
+
+    if (!$param->is_valid())
         cout::line($param->messages());
-    } else {
+    else
         execute($param->values());
-    }
 }
 /**
  * Handle action.
  * @param  array  $args
  * @return null
  */
-function execute($args) {
-    if (!$args['package']) {
-        $package = pkgm::name_from_path(getcwd());
-        $pkg = $package;
-        $method = null;
-    } else {
-        $package = $args['package'];
-        if (substr($package, 0, 2) === './') {
-            $package = pkgm::name_from_path(getcwd()).substr($package, 1);
-        }
-        if (strpos($package, ':')) {
-            list($package, $method) = explode(':', $package, 2);
-        }
-        if (!isset($method)) {
-            $method = null;
-        }
-        $pkg = pkgm::release_from_path(fs::pkgpath($package));
-    }
-    $file = substr($package, strlen($pkg));
+function execute($args)
+{
+    $method = null;
+    $file = null;
 
-    if (!$pkg) {
-        cout::warn("Not a valid package: `{$package}`");
+    if (!$args['package'])
+    {
+        // Package not provided, should be acquired from current directory
+        $package = pkgm::name_by_path(getcwd());
+    }
+    else
+    {
+        $package = $args['package'];
+
+        if (substr($package, 0, 2) === './')
+            $package = pkgm::name_by_path(getcwd()).substr($package, 1);
+
+        if (strpos($package, ':'))
+            list($package, $method) = explode(':', $package, 2);
+
+        if (strpos($package, '/'))
+            list($package, $file) = explode('/', $package, 2);
+    }
+
+    if (!$package)
+    {
+        cout::warn("[!] Not a valid package: `{$package}`");
         return;
     }
-    if ($args['watch']) {
-        watch($pkg, $file, $method, $args['add'], $args['test']);
+
+    if ($args['watch'])
+    {
+        watch($package, $file, $method, $args['add'], $args['test']);
         return;
     }
-    if ($args['add']) {
-        add_test($pkg, $file, true);
-    }
-    if ($args['test']) {
-        run_test($pkg, $file, $method);
-    }
+
+    if ($args['add'])
+        add_test($package, $file, true);
+
+    if ($args['test'])
+        run_test($package, $file, $method);
 }
 /**
  * Watch files for changes and re-run/re-add tests when changes occurs.
@@ -98,62 +105,79 @@ function execute($args) {
  * @param  boolean $do_test
  * @param  integer $sleep
  */
-function watch($pkg, $file, $method, $do_add, $do_test, $sleep=2) {
+function watch($pkg, $file, $method, $do_add, $do_test, $sleep=2)
+{
     // Add files path
     $sfp = [
-        fs::pkgpath("{$pkg}/src"),
+        fs::pkgpath($pkg, 'src'),
         ($file
             ? "/".preg_quote(trim($file,'/\\'))."\\.php/"
-            : '/.*?\\.php/')];
+            : '/.*?\\.php/'
+        )
+    ];
+
     // Test files path
     $tfp = [
-        fs::pkgpath(fs::ds($pkg, 'tests', $file)),
+        fs::pkgpath($pkg, 'tests', $file),
         ($method
             ? "/".preg_quote(trim($method,'/\\'))."[a-z0-9_]*?\\.[a-z]+/"
-            : '/.*?\\.[a-z]+/')];
+            : '/.*?\\.[a-z]+/'
+        )
+    ];
 
     $diff          = false;
     $last_src_hash = null;
     $last_tst_hash = null;
 
-    while (true) {
-
-        if (!dir::exists($sfp[0])) {
+    while (true)
+    {
+        if (!dir::exists($sfp[0]))
+        {
             cout::warn("Not a valid directory: `{$sfp[0]}`");
-        } else {
-            $src_files = file::find($sfp[0], $sfp[1]);
+        }
+        else
+        {
+            $src_files      = file::find($sfp[0], $sfp[1]);
             $src_files_hash = file::signature($src_files);
-            $src_hash  = md5(implode('', $src_files_hash));
+            $src_hash       = md5(implode('', $src_files_hash));
 
-            if ($src_hash !== $last_src_hash) {
-                if ($do_add) {
-                    foreach ($src_files_hash as $id => $sig) {
-                        $src_file = substr(
-                            $src_files[$id], strlen($sfp[0])+1, -4);
+            if ($src_hash !== $last_src_hash)
+            {
+                if ($do_add)
+                {
+                    foreach ($src_files_hash as $id => $sig)
+                        $src_file = substr($src_files[$id], strlen($sfp[0])+1, -4);
                         add_test($pkg, $file);
-                    }
                 }
+
                 $diff = true;
                 $last_src_hash = $src_hash;
             }
         }
 
-        if ($do_test) {
-            if (!$diff || !$last_tst_hash) {
-                if (!dir::exists($tfp[0])) {
+        if ($do_test)
+        {
+            if (!$diff || !$last_tst_hash)
+            {
+                if (!dir::exists($tfp[0]))
+                {
                     cout::warn("Not a valid directory: `{$tfp[0]}`");
-                } else {
-                    $tst_files = file::find($tfp[0], $tfp[1]);
+                }
+                else
+                {
+                    $tst_files      = file::find($tfp[0], $tfp[1]);
                     $tst_files_hash = file::signature($tst_files);
-                    $tst_hash = md5(implode('', $tst_files_hash));
-                    if ($tst_hash !== $last_tst_hash) {
+                    $tst_hash       = md5(implode('', $tst_files_hash));
+
+                    if ($tst_hash !== $last_tst_hash)
+                    {
                         $last_tst_hash = $tst_hash;
                         run_test($pkg, $file, $method);
                     }
                 }
-            } else {
-                run_test($pkg, $file, $method);
             }
+            else
+                run_test($pkg, $file, $method);
         }
 
         $diff = false;
@@ -166,16 +190,22 @@ function watch($pkg, $file, $method, $do_add, $do_test, $sleep=2) {
  * @param string  $file
  * @param boolean $ask
  */
-function add_test($pkg, $file, $ask=true) {
-    if ($file === '/' || !$file) {
-        $root = fs::pkgpath($pkg,'/src');
-        foreach (file::find($root, '/\\.php$/', true) as $file) {
+function add_test($pkg, $file, $ask=true)
+{
+    if ($file === '/' || !$file)
+    {
+        $root = fs::pkgpath($pkg,'src');
+
+        foreach (file::find($root, '/\\.php$/', true) as $file)
+        {
             $file = substr($file, strlen($root), -4);
-            if ($file === 'setup') {
+
+            if ($file === 'setup')
                 continue;
-            }
+
             add_test($pkg, $file, $ask);
         }
+
         return;
     }
 
@@ -183,57 +213,71 @@ function add_test($pkg, $file, $ask=true) {
     $path = fs::pkgpath($pkg, 'tests', $file);
     $abs_file = fs::pkgpath($pkg, 'src', $file.'.php');
 
-    if (!file_exists($abs_file)) {
+    if (!file_exists($abs_file))
+    {
         cout::warn("File not found: `{$abs_file}`");
         return;
     }
 
     // Get methods
-    try {
+    try
+    {
         $tests = generator::get_methods($abs_file);
-    } catch (\Exception $e) {
+    }
+    catch (\Exception $e)
+    {
         cout::warn("[Failed] ".$e->getMessage());
         return;
     }
 
-    if (!isset($tests['methods']) || empty($tests['methods'])) {
+    if (!isset($tests['methods']) || empty($tests['methods']))
+    {
         cout::info("No methods found: `{$abs_file}`");
         return;
     }
 
     // Get existing files
-    if (!dir::exists($path)) {
+    if (!dir::exists($path))
+    {
         cout::warn("Directory not found: `{$spath}`");
+
         $create_dir = $ask
             ? cin::confirm("Create it now?")
             : true;
-        if (!$create_dir) {
-            if (cin::confirm("Ignore it in future?")) {
+
+        if (!$create_dir)
+        {
+            if (cin::confirm("Ignore it in future?"))
+            {
                 dir::create($path);
                 file::write(fs::ds($path, 'ignore'), '');
-            } else {
-                cout::info('Terminated');
             }
+            else
+                cout::info('Terminated');
+
             return;
-        } else {
-            if (!dir::create($path)) {
+        }
+        else
+        {
+            if (!dir::create($path))
+            {
                 cout::error("Failed to create: `{$spath}`");
                 return;
             }
         }
     }
 
-    if (file::exists(fs::ds($path, 'ignore'))) {
+    if (file::exists(fs::ds($path, 'ignore')))
         return;
-    }
 
     $files = file::find($path, '/\\.(phpt|ignore|delete)$/', true);
 
     // Delete
     $do_delete = []; // list of files for which deletion was confirmed
     $found     = [];
-    foreach ($files as $tf) {
 
+    foreach ($files as $tf)
+    {
         $ts     = str_replace('\\', '/', $tf);
         $ext    = file::extension($tf);
         $method = substr($tf, 0, -(strlen($ext)+1));
@@ -243,54 +287,58 @@ function add_test($pkg, $file, $ask=true) {
         $prefix = substr(
             $tf,
             strrpos($tf, 'tests/')+6,
-            -(strlen("{$method}_{$method_type}.{$ext}")+1));
+            -(strlen("{$method}_{$method_type}.{$ext}")+1)
+        );
 
-        if ($ext === 'ignore' || $ext === 'delete') {
+        if ($ext === 'ignore' || $ext === 'delete')
+        {
             cout::info("Method: `{$method}` is set to: `{$ext}`");
             $found[] = $method;
             continue;
         }
 
-        if (!isset($tests['methods'][$method])) {
+        if (!isset($tests['methods'][$method]))
+        {
             cout::info("Method `{$method}` doesn't exists anymore.");
+
             $set_deleted = ($ask || in_array($method, $do_delete))
                 ? cin::confirm("Set tests to delete?")
                 : true;
 
-            if ($set_deleted) {
+            if ($set_deleted)
+            {
                 $do_delete[] = $method;
 
-                if (!file::rename($tf, "{$method}_{$method_type}.delete")) {
-                    cout::warn("Couldn't rename: `{$method}_".
-                               "{$method_type}.{$ext}` to `{$method}_".
-                               "{$method_type}.delete`");
-                }
+                if (!file::rename($tf, "{$method}_{$method_type}.delete"))
+                    cout::warn(
+                        "Couldn't rename: `{$method}_{$method_type}.{$ext}` ".
+                        "to `{$method}_{$method_type}.delete`"
+                    );
             }
-        } else {
-            $found[] = $method;
         }
+        else
+            $found[] = $method;
     }
 
     // Create
-    if (!empty($tests)) {
-        foreach ($tests['methods'] as $method => $opt) {
-            if ($opt['visibility'] !== 'public') {
+    if (!empty($tests))
+    {
+        foreach ($tests['methods'] as $method => $opt)
+        {
+            if ($opt['visibility'] !== 'public')
                 continue;
-            }
 
-            if (in_array($method, $found)) {
+            if (in_array($method, $found))
                 continue;
-            }
 
             cout::info("Test for `{$method}` doesn't exists.");
 
-            if (isset($opt['description'])) {
+            if (isset($opt['description']))
                 $o = ['description' => $opt['description']];
-            }
 
             $o['file'] = "<?php\n".
-                         "use {$tests['namespace']}\\".
-                         "{$tests['class']};\n?>";
+                "use {$tests['namespace']}\\".
+                "{$tests['class']};\n?>";
 
             $o['skipif'] = '<?php die("Write test..."); ?>';
             $t = generator::make($o);
@@ -302,23 +350,23 @@ function add_test($pkg, $file, $ask=true) {
                     [0], true)
                 : [0];
 
-            if (!in_array(4, $tc) && (in_array(0, $tc) || in_array(1, $tc))) {
+            if (!in_array(4, $tc) && (in_array(0, $tc) || in_array(1, $tc)))
                 file::write(fs::ds($path, $method.'_basic.phpt'), $t);
-            }
-            if (!in_array(4, $tc) && (in_array(0, $tc) || in_array(2, $tc))) {
+
+            if (!in_array(4, $tc) && (in_array(0, $tc) || in_array(2, $tc)))
                 file::write(fs::ds($path, $method.'_error.phpt'), $t);
-            }
-            if (!in_array(4, $tc) && (in_array(0, $tc) || in_array(3, $tc))) {
+
+            if (!in_array(4, $tc) && (in_array(0, $tc) || in_array(3, $tc)))
                 file::write(fs::ds($path, $method.'_variation.phpt'), $t);
-            }
-            if (in_array(4, $tc)) {
+
+            if (in_array(4, $tc))
                 cout::info("No tests will be created.");
-            }
-            if (in_array(5, $tc)) {
+
+            if (in_array(5, $tc))
                 file::write(
                     fs::ds($path, $method.'_all.ignore'),
-                    "Auto Generated on: " . time());
-            }
+                    "Auto Generated on: " . time()
+                );
         }
     }
 }
@@ -328,47 +376,57 @@ function add_test($pkg, $file, $ask=true) {
  * @param  string $file
  * @param  string $method
  */
-function run_test($pkg, $file, $method) {
-
+function run_test($pkg, $file, $method)
+{
     $spath = fs::ds($pkg, 'tests', $file);
-    $path = fs::pkgpath($pkg, 'tests', $file);
+    $path  = fs::pkgpath($pkg, 'tests', $file);
 
-    if (!dir::exists($path)) {
+    if (!dir::exists($path))
+    {
         cout::warn("No tests available for: `{$pkg}` in `{$spath}`");
         return;
     }
 
-    if ($method) {
+    if ($method)
         $method = "{$method}*phpt";
-    } else {
+    else
         $method = '*.phpt';
-    }
 
     $tests = new collection(fs::ds($path, $method));
 
-    if (!count($tests)) {
+    if (!count($tests))
+    {
         cout::warn("No tests found for: `{$pkg}` in `{$spath}:{$method}`");
         return;
     }
 
-    foreach ($tests as $test) {
-        try {
+    foreach ($tests as $test)
+    {
+        try
+        {
             $test->execute();
             $test->cleanup();
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e)
+        {
             cout::warn('Failed with message: ' . $e->getMessage());
-            cout::warn('Will skipp: `' . $test->filename() . '`');
+            cout::warn('Will skip: `' . $test->filename() . '`');
             continue;
         }
 
         cout::line("TEST [{$test->filename()}]", false);
 
-        if ($test->succeed()) {
+        if ($test->succeed())
+        {
             cout::format('+right+green%s', ['OK']);
-        } elseif ($test->skipped()) {
+        }
+        elseif ($test->skipped())
+        {
             cout::format('+right+yellow%s', ['SKIPPED']);
             cout::info($test->skipped_message());
-        } else {
+        }
+        else
+        {
             cout::format('+right+red%s', ['FAILED']);
             diff_out($test->diff());
         }
@@ -387,23 +445,27 @@ function run_test($pkg, $file, $method) {
         (!$failed ? '+green SUCCEED: %s-green  | '  : 'SUCCEED: %s | ').
         ($skipped ? '+yellow SKIPPED: %s-yellow  | ': 'SKIPPED: %s | ').
         "TOTAL TIME: %s",
-        [$total, $failed, $success, $skipped, $run_time]);
+        [$total, $failed, $success, $skipped, $run_time]
+    );
 }
 /**
  * Output diff.
  * @param  array  $diff
  * @return null
  */
-function diff_out(array $diff) {
+function diff_out(array $diff)
+{
     $last = -1;
-    foreach ($diff as $k => $diff_line) {
+
+    foreach ($diff as $k => $diff_line)
+    {
         list($line, $symbol, $lbefore, $value, $lafter) = $diff_line;
 
-        if ($last !== $line) {
+        if ($last !== $line)
             cout::info(
                 '~' . str_pad($line, 3, '0', STR_PAD_LEFT) .
-                ' ' . $lbefore);
-        }
+                ' ' . $lbefore
+            );
 
         $last = $line+1;
 
@@ -411,13 +473,13 @@ function diff_out(array $diff) {
             '+'.($symbol==='+'?'green':'red').'%s%s %s', [
                 $symbol,
                 str_pad($line+1, 3, '0', STR_PAD_LEFT),
-                $value]);
+                $value
+            ]
+        );
 
-        if (isset($diff[$k+1])) {
-            if (($diff[$k+1][0]+1) === ($line+2)) {
+        if (isset($diff[$k+1]))
+            if (($diff[$k+1][0]+1) === ($line+2))
                 continue;
-            }
-        }
 
         cout::info('~'.str_pad($line+2, 3, '0', STR_PAD_LEFT).' '.$lafter);
     }
