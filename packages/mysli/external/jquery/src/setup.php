@@ -8,8 +8,9 @@ __use(__namespace__, '
     mysli.web.assets
 ');
 
-function enable() {
-    $c = config::select('mysli/external/jquery');
+function enable()
+{
+    $c = config::select('mysli.external.jquery');
     $c->merge([
         // Base URL from which jQuery will be loaded (if not local)
         'remote_url'  => 'http://code.jquery.com/jquery-{version}.js',
@@ -23,10 +24,12 @@ function enable() {
         // Weather dev. version should be used.
         'development' => false
     ]);
-    return dir::create(assets::get_public_path('mysli/external/jquery'))
+
+    return dir::create(assets::get_public_path('mysli.external.jquery'))
         && $c->save();
 }
-function disable() {
-    return dir::remove(assets::get_public_path('mysli/external/jquery'))
-        && config::select('mysli/external/jquery')->destroy();
+function disable()
+{
+    return dir::remove(assets::get_public_path('mysli.external.jquery'))
+        && config::select('mysli.external.jquery')->destroy();
 }

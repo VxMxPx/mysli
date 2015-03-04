@@ -11,7 +11,8 @@ __use(__namespace__, '
     mysli.web.assets
 ');
 
-class jquery {
+class jquery
+{
     /**
      * Get jQuery link. This will fetch file if not there already
      * (and if `local` is set to true);
@@ -19,31 +20,36 @@ class jquery {
      * @param  boolean $dev true|false|null (read from config)
      * @return string
      */
-    static function get_link($version=null, $dev=null) {
+    static function get_link($version=null, $dev=null)
+    {
+        $c = config::select('mysli.external.jquery');
 
-        $c = config::select('mysli/external/jquery');
-
-        if ($dev === null) {
+        if ($dev === null)
             $dev = $c->get('development', false);
-        }
 
-        if ($version === null) {
+        if ($version === null)
             $version = self::get_version($dev);
-        } else {
+        else
             $version .= ($dev ? '' : '.min');
-        }
 
-        if ($c->get('local')) {
+        if ($c->get('local'))
+        {
             $remote_url = $c->get('remote_url');
-            if (!self::has_local($version)) {
+
+            if (!self::has_local($version))
+            {
                 $dest = self::get_path($version);
-                if (!self::fetch_library($version, $dev, $dest, $remote_url)) {
+
+                if (!self::fetch_library($version, $dev, $dest, $remote_url))
                     throw new framework\exception\fs('Failed to fetch jQuery.');
-                }
             }
-            $url = assets::get_public_url('mysli/external/jquery');
+
+            $url = assets::get_public_url('mysli.external.jquery');
+
             return $url."/jquery-{$version}.js";
-        } else {
+        }
+        else
+        {
             return str_replace('{version}', $version, $c->get('remote_url'));
         }
     }
@@ -53,10 +59,12 @@ class jquery {
      * @param  string  $version costume version...
      * @return string
      */
-    static function get_path($version) {
+    static function get_path($version)
+    {
         return fs::ds(
-                    assets::get_public_path('mysli/external/jquery'),
-                    "/jquery-{$version}.js");
+            assets::get_public_path('mysli.external.jquery'),
+            "/jquery-{$version}.js"
+        );
     }
     /**
      * Check if local version of file exists.
@@ -64,7 +72,8 @@ class jquery {
      * @param  boolean  $dev true|false
      * @return boolean
      */
-    static function has_local($version) {
+    static function has_local($version)
+    {
         $file = self::get_path($version);
         return file::exists($file);
     }
@@ -73,9 +82,11 @@ class jquery {
      * @param  boolean $dev true|false
      * @return string
      */
-    static function get_version($dev) {
-        $c = config::select('mysli/external/jquery');
+    static function get_version($dev)
+    {
+        $c = config::select('mysli.external.jquery');
         $version = $c->get($dev ? 'dev_version' : 'version');
+
         return $dev ? $version : $version.($dev?'':'.min');
     }
     /**
@@ -89,18 +100,16 @@ class jquery {
     private static function fetch_library(
         $version, $dev, $destination, $remote_url)
     {
-
-        if (!pkgm::is_enabled('mysli/util/curl')) {
+        if (!pkgm::is_enabled('mysli.util.curl'))
             throw new framework\exception\not_found(
                 'You need to enable `mysli/framework/curl` '.
-                'to fetch jQuery and save it locally.');
-        }
+                'to fetch jQuery and save it locally.'
+            );
 
         $url = str_replace('{version}', $version, $remote_url);
         $jquery = curl::get($url);
 
-        if ($jquery) {
+        if ($jquery)
             return file::write($destination, $jquery);
-        }
     }
 }
