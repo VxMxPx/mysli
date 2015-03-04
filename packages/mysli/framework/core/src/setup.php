@@ -8,13 +8,6 @@ function enable($pkgpath, $datpath)
     $datpath = rtrim($datpath, '\\/');
     $tmppath = $datpath.'/temp';
 
-    // Get self release
-    $selfrelease = __DIR__;
-    if (substr($selfrelease, 0, 7) === 'phar://')
-        $selfrelease = substr( basename(dirname($selfrelease)), 0, -5);
-    else
-        $selfrelease = 'mysli/framework/core';
-
     // Create DATA directory
     if (!is_dir($datpath))
         if (!mkdir($datpath, 0777, true))
@@ -44,8 +37,7 @@ function enable($pkgpath, $datpath)
             // List of all packages currently enabled
             "pkg" => [
                 'mysli.framework.core' => [
-                    'package' => 'mysli.framework.core',
-                    'release' => $selfrelease
+                    'package' => 'mysli.framework.core'
                 ]
             ]
         ])

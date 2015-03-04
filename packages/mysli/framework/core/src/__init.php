@@ -44,52 +44,59 @@ function __init($datpath, $pkgpath)
 
     $bootr = json_decode(file_get_contents($boot_path), true);
 
-    define('MYSLI_CORE_PKG',     $bootr['boot']['core']);
-    define('MYSLI_CORE_PKG_REL', $bootr['pkg'][MYSLI_CORE_PKG]['release']);
+    define('MYSLI_CORE', $bootr['boot']['core']);
 
-    __get_pkg($bootr['boot']['pkg'], $bootr['pkg']);
+    __get_pkg($bootr['boot']['pkg']);
     \core\pkg::__init($boot_path);
-    __get_autoloader($bootr['boot']['autoloader'], $bootr['pkg']);
+    __get_autoloader($bootr['boot']['autoloader']);
 }
 // Load: pkg
-function __get_pkg($pkg, array $packages)
+function __get_pkg($pkg)
 {
     list($package, $file) = explode('/', $pkg, 2);
     $class = str_replace('.', '\\', $package);
     $class = $class.'\\'.str_replace('/', '\\', $file);
-    __get_std_class($package, $packages, $file, $class);
+    __get_std_class($package, $file, $class);
     class_alias($class, 'core\\pkg');
 }
 // Load: autoloader
-function __get_autoloader($autoloader, array $packages)
+function __get_autoloader($autoloader)
 {
     list($package, $call) = explode(':', $autoloader, 2);
     list($package, $file) = explode('/', $package, 2);
     $class = str_replace('.', '\\', $package);
     $class = $class.'\\'.str_replace('/', '\\', $file);
-    __get_std_class($package, $packages, $file, $class);
+    __get_std_class($package, $file, $class);
     class_alias($class, 'core\\autoloader');
     spl_autoload_register(['core\\autoloader', $call]);
 }
 // Standard loader for class
-function __get_std_class($package, $packages, $file, $class)
+function __get_std_class($package, $file, $class)
 {
-    if (!isset($packages[$package]))
+    // Source?
+    if (file_exists(MYSLI_PKGPATH."/".str_replace('.', '/', $package)."/src/{$file}.php"))
+        $source = MYSLI_PKGPATH."/".str_replace('.', '/', $package)."/src/{$file}.php";
+    else
+        $source = false;
+
+    // Phar?
+    if (file_exists('phar://'.MYSLI_PKGPATH."/{$package}.phar/src/{$file}.php"))
+        $phar = 'phar://'.MYSLI_PKGPATH."/{$package}.phar/src/{$file}.php";
+    else
+        $phar = false;
+
+    if ($phar && !$source)
+        include $phar;
+    elseif ($source && !$phar)
+        include $source;
+    elseif ($source && $phar)
         throw new \Exception(
-            "Package not available: `{$package}`", 1);
+            "Source and `.pkg` exists in packages directory for: `{$package}`. ".
+            "Please either remove source or `.phar` file.", 10
+        );
     else
-        $release = $packages[$package]['release'];
-
-    $is_phar = !strpos($release, '/');
-    $path = ($is_phar?'phar://':'').MYSLI_PKGPATH.'/'.$release.
-            ($is_phar?'.phar':'').'/src/'.$file.'.php';
-
-    if (!file_exists($path))
-        throw new \Exception("File not found: `{$path}`", 2);
-    else
-        include $path;
+        throw new \Exception("Package not found: `{$package}`.", 20);
 
     if (!class_exists($class, false))
-        throw new \Exception(
-            "Class: `{$class}` not found in `{$path}`.", 3);
+        throw new \Exception("Class: `{$class}` not found for `{$package}`.", 30);
 }

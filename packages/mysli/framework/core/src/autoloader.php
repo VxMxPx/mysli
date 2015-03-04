@@ -60,10 +60,7 @@ class autoloader {
      */
     static function ruse($namespace, $use)
     {
-        $segments = explode('\\', $namespace);
-        $self_package = \core\pkg::has(implode('.', array_slice($segments, 0, 2))) ?
-            implode('.', array_slice($segments, 0, 2)) :
-            implode('.', array_slice($segments, 0, 3));
+        $bpackage = \core\pkg::by_namespace($namespace);
 
         foreach (explode("\n", $use) as $lineno => $line)
         {
@@ -78,7 +75,7 @@ class autoloader {
 
             // ./pkg => self.vendor.package/pkg
             if (substr($line, 0, 2) === './')
-                $line = $self_package.'/'.substr($line, 2);
+                $line = $bpackage.'/'.substr($line, 2);
 
             // Contain ' as '?
             if (strpos($line, ' as '))
@@ -200,30 +197,26 @@ class autoloader {
             return true;
 
         // Get pckage's name...
-        $segments = explode('\\', $class);
-        $rootc = \core\pkg::has(implode('.', array_slice($segments, 0, 2))) ? 2 : 3;
-        $package = implode('.', array_slice($segments, 0, $rootc));
-        $release = \core\pkg::get_release_by_name($package);
-
-        if (!$release)
-            return false;
+        $package = \core\pkg::by_namespace($class);
+        $is_phar = \core\pkg::exists_as($package) === \core\pkg::phar;
 
         // Get paths
-        $relpath = implode('/', array_slice($segments, $rootc)).'.php';
-        $is_phar = !strpos($release, '/');
-        $abspath = MYSLI_PKGPATH.'/'.$release;
         if ($is_phar)
-            $abspath = "phar://{$abspath}.phar/src";
+            $abspath = 'phar://'.MYSLI_PKGPATH."/{$package}.phar/src";
         else
-            $abspath = "{$abspath}/src";
+            $abspath = MYSLI_PKGPATH.'/'.str_replace('.', '/', $package).'/src';
+
+        // Get paths
+        $segments = explode('\\', $class);
+        $rootc    = substr_count($package, '.')+1;
+        $relpath  = implode('/', array_slice($segments, $rootc)).'.php';
 
         $class_file = "{$abspath}/{$relpath}";
 
         if (!file_exists($class_file))
             return false;
-            // throw new \Exception("Class file not found: `{$class_file}`", 10);
         else
-            include($class_file);
+            include $class_file;
 
         if (!class_exists($class, false) && !trait_exists($class, false))
             throw new \Exception(
