@@ -1,1 +1,0 @@
-Mysli.Dash.Init=function(){"use strict"}();
