@@ -6,22 +6,27 @@ __use(__namespace__, '
     ./output  AS  cout
 ');
 
-class util {
-
+class util
+{
     /**
      * Detect terminal width.
      * @return integer
      */
-    static function terminal_width() {
-
-        if (!is_cli()) {
+    static function terminal_width()
+    {
+        if (!is_cli())
+        {
             return 80;
-        } elseif (!self::is_win()) {
+        }
+        elseif (!self::is_win())
+        {
             return self::execute('tput cols');
             // $result = self::popen('resize');
             // preg_match("/COLUMNS=([0-9]+)/", $result, $matches);
             // return $matches[1];
-        } else {
+        }
+        else
+        {
             $result = self::popen('mode');
             preg_match('/^ *Columns\: *([0-9]+)$/m', $result, $matches);
             return $matches[1];
@@ -31,7 +36,8 @@ class util {
      * Check if we're in windows environment
      * @return boolean
      */
-    static function is_win() {
+    static function is_win()
+    {
         return strtoupper(substr(PHP_OS, 0, 3) === 'WIN');
     }
     /**
@@ -40,7 +46,8 @@ class util {
      * @param  string $mode
      * @return string
      */
-    static function popen($command, $mode='r') {
+    static function popen($command, $mode='r')
+    {
         $fp = popen($command, $mode);
         $result = stream_get_contents($fp);
         pclose($fp);
@@ -53,7 +60,8 @@ class util {
      * @param  array  $params
      * @return string
      */
-    static function execute($command, array $params = []) {
+    static function execute($command, array $params = [])
+    {
         return exec(vsprintf($command, $params));
     }
     /**
@@ -64,23 +72,33 @@ class util {
      * rather than exec).
      * @return integer pid
      */
-    static function fork_command($commands, $print=true) {
+    static function fork_command($commands, $print=true)
+    {
         $pid = pcntl_fork();
-        if ($pid === -1) {
+
+        if ($pid === -1)
+        {
             cout::format('+red Cannot fork the process...');
             exit(1);
-        } else if ($pid === 0) {
+        }
+        elseif ($pid === 0)
+        {
             // We are the child, execute command and quit!
-            if (!is_array($commands)) $commands = [$commands];
-            foreach ($commands as $command) {
-                if ($print) {
+            if (!is_array($commands))
+                $commands = [$commands];
+
+            foreach ($commands as $command)
+            {
+                if ($print)
                     system($command);
-                } else {
+                else
                     exec($command);
-                }
             }
+
             exit(1);
-        } else {
+        }
+        else
+        {
             return $pid;
         }
     }

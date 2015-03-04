@@ -8,7 +8,7 @@ __use(__namespace__, '
 
 function enable()
 {
-    $dot = file::read(__DIR__ . '/../data/dot.tpl');
+    $dot = file::read(__DIR__.'/../data/dot.tpl');
 
     $dot = str_replace(
         '{{PKGPATH}}',
@@ -24,7 +24,7 @@ function enable()
     else
         return false;
 }
-
-function disable() {
+function disable()
+{
     return file::remove(fs::datpath('dot'));
 }

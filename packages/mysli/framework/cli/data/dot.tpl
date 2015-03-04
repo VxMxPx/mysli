@@ -33,22 +33,22 @@ if (!file_exists($boot_file))
 else
     $boot_r = json_decode(file_get_contents($boot_file), true);
 
-$core_name = $boot_r['boot']['core'];
-if (!isset($boot_r['pkg'][$core_name]))
-    throw new \Exception("Core package not found: `{$core_name}`");
+$core = $boot_r['boot']['core'];
+$core_source = $pkgpath.'/'.str_replace('.', '/', $core).'/src/__init.php';
+$core_phar   = "phar://{$pkgpath}/{$core}.phar/src/__init.php";
 
-$core_release = $boot_r['pkg'][$core_name]['release'];
-$is_phar = strpos($core_release, '.');
-$core_path = ($is_phar?'phar://':'')."{$pkgpath}/{$core_release}".
-             ($is_phar?'.phar':'').'/src/__init.php';
-
-if (!file_exists($core_path))
-    throw new \Exception("Core `__init` file not found: `{$core_path}`");
+if (file_exists($core_source) && file_exists($core_phar))
+    throw new \Exception(
+        "Core package (`{$core}`) exists as a source and `phar`.");
+elseif (file_exists($core_phar))
+    include $core_phar;
+elseif (file_exists($core_source))
+    include $core_source;
 else
-    include $core_path;
+    throw new \Exception("Core `__init` file not found for: `{$core}`");
 
 call_user_func_array(
-    str_replace('.', '\\', $core_name) . '\\__init',
+    str_replace('.', '\\', $core) . '\\__init',
     [$datpath, $pkgpath]
 );
 

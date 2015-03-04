@@ -7,7 +7,8 @@ __use(__namespace__, '
     mysli.framework.type/arr
 ');
 
-class cli {
+class cli
+{
     /**
      * Execute command
      * @param  array $arguments
@@ -59,7 +60,6 @@ class cli {
             foreach ($package['sh'] as $script)
                 $scripts[$script] = [
                     'package'     => $package['package'],
-                    'release'     => $package['release'],
                     'description' => $package['description']
                 ];
         }
@@ -86,8 +86,7 @@ class cli {
 
         if (!function_exists($namespace.'\__init'))
         {
-            $file = fs::pkgpath(
-                $scripts[$script]['release'], 'sh', $script.'.php');
+            $file = fs::pkgreal($scripts[$script]['package'], 'sh', $script.'.php');
 
             if (file::exists($file))
             {
