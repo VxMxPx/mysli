@@ -77,24 +77,57 @@ class fs {
     /**
      * Retrun packages path.
      * @param string ... Accept multiple parameters,
-     * to build full path from them.
+     *                   to build full path from them.
      * @return string
      */
-    static function pkgpath()
+    static function pkgpath() {
+        $arguments = func_get_args();
+        $arguments = implode(DIRECTORY_SEPARATOR, $arguments);
+        return self::ds(MYSLI_PKGPATH, $arguments);
+    }
+    /**
+     * Retrun packages real path.
+     * This will take .phar packages into consideration, and return
+     * phar://... in case of them.
+     * @param string $package
+     * @param string ... Accept multiple parameters,
+     *                   to build full path from them.
+     * @return string
+     */
+    static function pkgreal($package)
     {
         $arguments = func_get_args();
+        $arguments = array_slice($arguments, 1);
+        $arguments = implode('/', $arguments);
 
-        if (isset($arguments[0]) && strpos($arguments[0], '.') &&
-            strpos($arguments[0], '-r'))
-        {
-            $arguments[0] .= '.phar';
-            $is_phar = true;
-        }
+        $is_phar = \core\pkg::exists_as($package) === \core\pkg::phar;
+
+        if ($is_phar)
+            return self::pkgpath('phar://'.$package.'.phar/', $arguments);
         else
-            $is_phar = false;
+            return self::pkgpath(str_replace('.', '/', $package), $arguments);
+    }
+    /**
+     * Return package's root from __DIR__ or package's name
+     * @param  string ... Accept multiple parameters,
+     *                    to build full path from them.
+     * @return string
+     */
+    static function pkgroot()
+    {
+        $arguments = func_get_args();
+        $dir = rtrim(str_replace('\\', '/', array_shift($arguments)), '/');
 
-        $arguments = implode(DIRECTORY_SEPARATOR, $arguments);
-        return ($is_phar?'phar://':'').self::ds(MYSLI_PKGPATH, $arguments);
+        do
+        {
+            if (file::exists($dir.'/mysli.pkg.ym'))
+                break;
+            else
+                $dir = substr($dir, 0, strrpos($dir, '/'));
+
+        } while(strlen($dir) > 1);
+
+        return self::ds($dir, implode('/', $arguments));
     }
     /**
      * Retrun temporary path.
