@@ -4,7 +4,7 @@
 <html>
 <head>
     <title>{page|ucfirst} :: Mysli Web Ui :: Developer</title>
-    {'mysli/web/ui/css-min/ui.css'|assets/tags}
+    {'mysli.web.ui/css-min/ui.css'|assets/tags}
     {{{
     <style type="text/css">
         body {
@@ -16,7 +16,7 @@
 </head>
 <body id="mysli-web-ui-developer" class="mysli-ui">
     {|jquery/tag}
-    {'mysli/web/ui/ui.js'|assets/tags}
+    {'mysli.web.ui/ui.js'|assets/tags}
     <script>
         {script}
     </script>

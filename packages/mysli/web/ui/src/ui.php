@@ -10,35 +10,50 @@ __use(__namespace__, '
     mysli.web.request
 ');
 
-class ui {
+class ui
+{
+    static function developer()
+    {
+        $template = tplp::select('mysli.web.ui');
 
-    static function developer() {
-
-        $template = tplp::select('mysli/web/ui');
-
-        if ($html = request::get('html')) {
-            if (!$template->has($html)) {
+        if ($html = request::get('html'))
+        {
+            if (!$template->has($html))
+            {
                 response::set_status(404);
                 output::add("Template not found: `{$html}`");
-            } else {
+            }
+            else
+            {
                 response::set_status(200);
                 output::add($template->render($html));
             }
-        } elseif ($js = request::get('js')) {
-            if ($js != preg_replace('/[^a-z]/i', '', $js)) {
+        }
+        elseif ($js = request::get('js'))
+        {
+            if ($js != preg_replace('/[^a-z]/i', '', $js))
+            {
                 response::set_status(400);
                 output::add("Bad request: `{$js}`");
-            } else {
-                $file = fs::pkgpath('mysli/web/ui/tplp/scripts/', $js.'.js');
-                if (!file::exists($file)) {
+            }
+            else
+            {
+                $file = fs::pkgroot(__DIR__, 'tplp/scripts', $js.'.js');
+
+                if (!file::exists($file))
+                {
                     response::set_status(404);
                     output::add("File not found: `{$js}`");
-                } else {
+                }
+                else
+                {
                     response::set_status(200);
                     output::add(file::read($file));
                 }
             }
-        } else {
+        }
+        else
+        {
             response::set_status(200);
             $script = request::get('script', 'index');
             output::add(
@@ -53,10 +68,11 @@ class ui {
         }
     }
 
-    private static function get_script($script) {
-        $file = fs::pkgpath('mysli/web/ui/tplp/scripts/', $script.'.js');
-        if (file::exists($file)) {
+    private static function get_script($script)
+    {
+        $file = fs::pkgroot(__DIR__, 'tplp/scripts', $script.'.js');
+
+        if (file::exists($file))
             return file::read($file);
-        }
     }
 }

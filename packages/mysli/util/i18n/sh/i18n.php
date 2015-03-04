@@ -48,7 +48,7 @@ function __init($args) {
 }
 
 function build($package, $directory='i18n') {
-    if (!dir::exists(fs::pkgpath($package, $directory))) {
+    if (!dir::exists(fs::pkgroot($package, $directory))) {
         cout::error('I18n: Not found: `'.fs::ds($package, $directory).'`');
         return;
     }
@@ -59,7 +59,7 @@ function build($package, $directory='i18n') {
     }
 }
 function watch($package, $directory='i18n') {
-    if (!dir::exists(fs::pkgpath($package, $directory))) {
+    if (!dir::exists(fs::pkgroot($package, $directory))) {
         cout::error('I18n: Not found: `'.fs::ds($package, $directory).'`');
         return;
     } else {
@@ -67,7 +67,7 @@ function watch($package, $directory='i18n') {
         cout::info("Press CTRL+C to quit.");
     }
 
-    $dir = fs::pkgpath($package, $directory);
+    $dir = fs::pkgroot($package, $directory);
     $last_signature = implode('', dir::signature($dir));
     while (true) {
         $new_signature = implode('', dir::signature($dir));

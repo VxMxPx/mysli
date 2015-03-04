@@ -9,51 +9,54 @@ __use(__namespace__, '
     mysli.web.assets
 ');
 
-class util {
-
+class util
+{
     private static $web_dir = 'assets';
 
     /**
-     * {'mysli/cms/blog/js/main.js'|assets/tags}
+     * {'mysli.cms.blog/js/main.js'|assets/tags}
      * @param  string $id
      * @return string
      */
-    static function tags($id, $type=null) {
+    static function tags($id, $type=null)
+    {
         list($package, $file) = self::resolve_id($id);
         return implode("\n", assets::get_tags($package, $file, $type));
     }
     /**
-     * {'mysli/cms/blog/js/main.js'|assets/links}
+     * {'mysli.cms.blog/js/main.js'|assets/links}
      * @param  string $id
      * @return array
      */
-    static function links($id, $type=null) {
+    static function links($id, $type=null)
+    {
         list($package, $file) = self::resolve_id($id);
         return assets::get_links($package, $file, $type);
     }
 
     /**
-     * Resolve id, e.g.: vendor/package/path/file => [vendor/package, path/file]
+     * Resolve id, e.g.: vendor.package/path/file => [vendor.package, path/file]
      * @param  string $id
      * @return string
      */
-    private static function resolve_id($id) {
+    private static function resolve_id($id)
+    {
+        $seg = explode('/', $id, 2);
+        return [$seg[0], isset($seg[1]) ? $seg[1] : null];
+        // $wp1 = web::path(self::$web_dir, implode('_', array_slice($seg, 0, 3)));
+        // $wp2 = web::path(self::$web_dir, implode('_', array_slice($seg, 0, 2)));
 
-        $seg = explode('/', $id);
-        $wp1 = web::path(self::$web_dir, implode('_', array_slice($seg, 0, 3)));
-        $wp2 = web::path(self::$web_dir, implode('_', array_slice($seg, 0, 2)));
+        // // Get package name
+        // if (file::exists($wp1)) {
+        //     $package = implode('/', array_slice($seg, 0, 3));
+        //     $file = implode('/', array_slice($seg, 3));
+        // } elseif (file::exists($wp2)) {
+        //     $package = implode('/', array_slice($seg, 0, 2));
+        //     $file = implode('/', array_slice($seg, 2));
+        // } else {
+        //     throw new framework\exception\not_found("File not found: `{$id}`");
+        // }
 
-        // Get package name
-        if (file::exists($wp1)) {
-            $package = implode('/', array_slice($seg, 0, 3));
-            $file = implode('/', array_slice($seg, 3));
-        } elseif (file::exists($wp2)) {
-            $package = implode('/', array_slice($seg, 0, 2));
-            $file = implode('/', array_slice($seg, 2));
-        } else {
-            throw new framework\exception\not_found("File not found: `{$id}`");
-        }
-
-        return [$package, ($file ?: null)];
+        // return [$package, ($file ?: null)];
     }
 }

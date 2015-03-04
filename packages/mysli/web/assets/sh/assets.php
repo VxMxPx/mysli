@@ -298,7 +298,7 @@ function observe_or_build(
     );
 
     // Check weather assets path is valid
-    $assets_path = fs::pkgpath($package, $assets);
+    $assets_path = fs::pkgroot($package, $assets);
     if (!dir::exists($assets_path)) {
         cout::yellow("[!] Assets path is invalid: `{$assets_path}`");
         return false;
@@ -320,7 +320,7 @@ function observe_or_build(
     }
 
     // Set destinatination path
-    $dest_path = fs::pkgpath($package, $dest);
+    $dest_path = fs::pkgroot($package, $dest);
     if (!dir::exists($dest_path)) {
         if (!cinput::confirm(
             "\n[?] Destination directory (`{$dest}`) not found. ".
@@ -360,12 +360,12 @@ function observe_or_build(
     $observable_files = observable_files($assets_path, $file, $map['files']);
 
     // Map signature
-    $map_sig  = file::signature(fs::pkgpath($package, $assets, $map_fn));
+    $map_sig  = file::signature(fs::pkgroot($package, $assets, $map_fn));
     $map_rsig = null;
 
     do {
         // Get new map signature
-        $map_rsig = file::signature(fs::pkgpath($package, $assets, $map_fn));
+        $map_rsig = file::signature(fs::pkgroot($package, $assets, $map_fn));
 
         // Reload map...
         if ($map_sig !== $map_rsig) {

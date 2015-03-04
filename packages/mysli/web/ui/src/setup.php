@@ -8,16 +8,16 @@ __use(__namespace__, '
     mysli.framework.event
 ');
 
-function enable() {
-    return assets::publish('mysli/web/ui');
+function enable()
+{
+    return assets::publish(__DIR__);
 }
-
-function disable() {
-    tplp::remove_cache('mysli/web/ui');
-
+function disable()
+{
     event::unregister(
-        'mysli/web/web:route<*><mwu-developer*>',
-        'mysli\\web\\ui::developer');
+        'mysli.web.web:route<*><mwu-developer*>',
+        'mysli\\web\\ui::developer'
+    );
 
-    return assets::destroy('mysli/web/ui');
+    return assets::destroy('mysli.web.ui');
 }

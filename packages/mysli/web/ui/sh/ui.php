@@ -9,7 +9,8 @@ __use(__namespace__, '
 ');
 
 
-function __init(array $args=[]) {
+function __init(array $args=[])
+{
     $params = new cparam('Mysli Web UI', $args);
     $params->command = 'ui';
     $params->add('--enable/-e', [
@@ -23,32 +24,40 @@ function __init(array $args=[]) {
     ]);
 
     $params->parse();
-    if (!$params->is_valid()) {
+
+    if (!$params->is_valid())
+    {
         cout::line($params->messages());
         return;
     }
 
     $values = $params->values();
-    if ($values['enable']) {
+
+    if ($values['enable'])
         enable_dev();
-    } elseif ($values['disable']) {
+    elseif ($values['disable'])
         disable_dev();
-    } else {
+    else
         cout::line("Enter --help for help");
-    }
 }
 
-function enable_dev() {
-    event::register('mysli/web/web:route<*><mwu-developer*>',
-                    'mysli\\web\\ui::developer');
+function enable_dev()
+{
+    event::register(
+        'mysli.web.web:route<*><mwu-developer*>',
+        'mysli\\web\\ui::developer'
+    );
     cout::success(
         'Enabled. Use: '.
-        'http://localhost:8000/mwu-developer to access developer mode.');
+        'http://localhost:8000/mwu-developer to access developer mode.'
+    );
 }
-function disable_dev() {
-    tplp::remove_cache('mysli/web/ui');
+function disable_dev()
+{
+    tplp::remove_cache('mysli.web.ui');
     event::unregister(
-        'mysli/web/web:route<*>mwu-developer*>',
-        'mysli\\web\\ui::developer');
+        'mysli.web.web:route<*>mwu-developer*>',
+        'mysli\\web\\ui::developer'
+    );
     cout::success('Disabled.');
 }

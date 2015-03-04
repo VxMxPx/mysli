@@ -6,11 +6,13 @@ __use(__namespace__,
     'mysli.util.config'
 );
 
-function enable() {
-    $c = config::select('mysli/web/assets');
+function enable()
+{
+    $c = config::select('mysli.web.assets');
     $c->merge(['debug' => false]);
     return $c->save();
 }
-function disable() {
-    return config::select('mysli/web/assets')->destroy();
+function disable()
+{
+    return config::select('mysli.web.assets')->destroy();
 }
