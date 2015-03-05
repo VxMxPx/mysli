@@ -70,7 +70,7 @@ class parser {
         $parsed = self::parse($fullpath, $uses);
 
         // Generate namespace
-        $namespace = pkgm::namespace_from_path($fullpath) ?:
+        $namespace = pkgm::path_to_namespace($fullpath) ?:
                      "tplp\\generic\\" . substr($file, 0, strrpos($file, '.'));
 
         // Process uses
