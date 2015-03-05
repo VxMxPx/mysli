@@ -398,15 +398,13 @@ function do_list($option)
  */
 function meta($package)
 {
-    $package = resolve_by_name($package, pkgm::lst_all()) or die();
-
-    if (!\core\pkg::exists($package))
+    if (\core\pkg::exists($package))
     {
-        cout::warn('[!] No such package: `'.$package.'`');
+        cout::line(arr::readable(pkgm::meta($package)));
     }
     else
     {
-        cout::line(arr::readable(pkgm::meta($package)));
+        cout::warn('[!] No such package: `'.$package.'`');
     }
 }
 

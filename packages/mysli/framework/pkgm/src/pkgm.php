@@ -185,7 +185,7 @@ class pkgm
 
         if (!$deep)
         {
-            return isset($meta['required_by']) ? $meta['required_by'] : [];
+            return $meta['required_by'];
         }
 
         $dependees[] = $package;
@@ -228,7 +228,7 @@ class pkgm
         // Resolve group
         $group = $group ? "require-{$group}" : 'require';
 
-        if (!isset($meta[$group]))
+        if (!isset($meta[$group]) || !$meta[$group])
         {
             return $list;
         }
@@ -357,8 +357,16 @@ class pkgm
             if (file::exists($file))
             {
                 $meta = ym::decode_file($file);
-                $meta['require'] = isset($meta['require']) ? $meta['require'] : [];
 
+                // Set proper defaults
+                if (!isset($meta['require']) || !is_array($meta['require']))
+                {
+                    $meta['require'] = [];
+                }
+                if (!isset($meta['required_by']) || !is_array($meta['required_by']))
+                {
+                    $meta['required_by'] = [];
+                }
                 if (!isset($meta['release']))
                 {
                     $meta['release'] = 'source';
@@ -420,11 +428,6 @@ class pkgm
                     "Dependency not satisfied: `{$dependency} : ".
                     "{$need_version}`", 4
                 );
-            }
-
-            if (!isset($dmeta['required_by']))
-            {
-                $dmeta['required_by'] = [];
             }
 
             if (!in_array($package, $dmeta['required_by']))
@@ -490,7 +493,7 @@ class pkgm
         {
             $rmeta = self::meta($dependency);
 
-            if (!$rmeta || !isset($rmeta['required_by']))
+            if (!$rmeta || empty($rmeta['required_by']))
             {
                 continue;
             }
