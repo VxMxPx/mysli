@@ -405,10 +405,18 @@ class arr {
 
             if (is_array($value))
             {
-                $out .= $new_line . self::readable(
-                    $value, $indent + $step, $step, $separator,
-                    $new_line, $valuefy
-                );
+                if (!empty($value))
+                {
+                    $out .= $new_line . self::readable(
+                        $value, $indent + $step, $step, $separator,
+                        $new_line, $valuefy
+                    );
+                }
+                else
+                {
+                    $out .= str_repeat(' ', $long_key - str::length($key)) .
+                        $separator . '[]';
+                }
             }
             else
             {
