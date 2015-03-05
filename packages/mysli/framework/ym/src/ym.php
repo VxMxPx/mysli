@@ -147,21 +147,41 @@ class ym
 
             if (is_array($value))
             {
-                $output .= "{$key} : \n";
-                $output .= self::encode($value, ++$lvl);
+                if (is_integer($key))
+                {
+                    $output .= "-";
+                }
+                else
+                {
+                    $output .= "{$key}:";
+                }
+
+                if (empty($value))
+                {
+                    $output .= " []\n";
+                }
+                else
+                {
+                    $output .= "\n".self::encode($value, $lvl+1);
+                }
+
                 continue;
             }
 
-            if     ($value === true)  $value = 'Yes';
+            // Convert value
+            if     (is_numeric($value) && is_string($value)) $value = '"'.$value.'"';
+            elseif (in_array(strtolower($value), ['yes', 'true'])) $value = '"Yes"';
+            elseif (in_array(strtolower($value), ['no', 'false'])) $value = '"No"';
+            elseif ($value === true)  $value = 'Yes';
             elseif ($value === false) $value = 'No';
 
-            if (is_numeric($key))
+            if (is_integer($key))
             {
                 $output .= "- {$value}\n";
             }
             else
             {
-                $output .= "{$key} : {$value}\n";
+                $output .= "{$key}: {$value}\n";
             }
         }
 
@@ -208,6 +228,10 @@ class ym
                 $value = strpos($value, '.')
                     ? (float) $value
                     : (int) $value;
+            }
+            elseif ($value === '[]')
+            {
+                $value = [];
             }
             elseif (in_array(strtolower($value), ['yes', 'true']))
             {

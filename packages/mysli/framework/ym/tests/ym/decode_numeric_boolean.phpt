@@ -9,7 +9,9 @@ s1: I'm string!
 s2: "I'm also a string"
 s3: "113700"
 i1: 42
+i2: -42
 f1: 11.23
+f2: -11.23
 b1: Yes
 b2: No
 b3: True
@@ -29,7 +31,7 @@ EOT
 
 ?>
 --EXPECT--
-array(12) {
+array(14) {
   ["s1"]=>
   string(11) "I'm string!"
   ["s2"]=>
@@ -38,8 +40,12 @@ array(12) {
   string(6) "113700"
   ["i1"]=>
   int(42)
+  ["i2"]=>
+  int(-42)
   ["f1"]=>
   float(11.23)
+  ["f2"]=>
+  float(-11.23)
   ["b1"]=>
   bool(true)
   ["b2"]=>

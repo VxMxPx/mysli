@@ -1,5 +1,5 @@
 --TEST--
-Spacing
+Has in key.
 --FILE--
 <?php
 use \mysli\framework\ym\ym;
