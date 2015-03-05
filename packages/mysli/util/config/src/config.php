@@ -31,7 +31,9 @@ class config
 
         // If we have file, then load contents...
         if (file::exists($this->filename))
+        {
             $this->data = json::decode_file($this->filename, true);
+        }
     }
     /**
      * Get config element, by: sub/key/main
@@ -47,19 +49,25 @@ class config
             $values = [];
 
             foreach ($key as $val)
+            {
                 $values[] = $this->get($val, $default);
+            }
 
             return $values;
         }
 
         if (arr::get($this->cache, $key))
+        {
             return $this->cache[$key];
+        }
 
         $value = arr_path::get($this->data, $key, $default);
 
         // We cache only when we assume it's not default value...
         if ($value !== $default)
+        {
             $this->cache[$key] = $value;
+        }
 
         // Return value in any case...
         return $value;
@@ -112,9 +120,13 @@ class config
         unset(self::$registry[$this->package]);
 
         if (file::exists($this->filename))
+        {
             return file::remove($this->filename);
+        }
         else
+        {
             return true;
+        }
     }
 
     /**
@@ -129,14 +141,20 @@ class config
         $package = self::ns_to_pkg($package);
 
         if (!arr::get(self::$registry, $package))
+        {
             self::$registry[$package] = new self($package);
+        }
 
         $config = self::$registry[$package];
 
         if ($key)
+        {
             return $config->get($key, $default);
+        }
         else
+        {
             return $config;
+        }
     }
 
     /**
@@ -152,15 +170,23 @@ class config
             $in = explode('\\', $in);
 
             if (pkgm::exists($pkg = implode('.', array_slice($in, 0, 3))))
+            {
                 return $pkg;
+            }
             elseif (pkgm::exists($pkg = implode('.', array_slice($in, 0, 2))))
+            {
                 return $pkg;
+            }
             else
+            {
                 throw new framework\exception\not_found(
                     "No package for namespace: `{$in}`."
                 );
+            }
         }
         else
+        {
             return str_replace('/', '.', $in);
+        }
     }
 }

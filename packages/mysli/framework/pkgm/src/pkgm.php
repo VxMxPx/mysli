@@ -6,7 +6,7 @@ __use(__namespace__, '
     mysli.framework.fs/fs,dir,file
     mysli.framework.json
     mysli.framework.ym
-    mysli.framework.exception/* AS framework\exception\*
+    mysli.framework.exception/* -> framework\exception\*
 ');
 
 class pkgm
@@ -22,22 +22,32 @@ class pkgm
     {
         // this will give us: vendor/meta/package
         if (!($pkg_name = \core\pkg::by_path($path)))
+        {
             return false;
+        }
 
         // Phar
         if (strpos($pkg_name, '.'))
+        {
             return str_replace('.', '\\', $pkg_name)[0];
+        }
 
         // Dev
         $file = substr($path, strpos($path, $pkg_name) + strlen($pkg_name));
 
         if (substr($file, 1, 3) === 'src')
+        {
             $file = substr($file, 5);
+        }
 
         if ($file)
+        {
             $file = substr($file, 0, strpos($file, '.'));
+        }
         else
+        {
             $file = substr($pkg_name, strrpos($pkg_name, '/'));
+        }
 
         return str_replace('/', '\\', fs::ds($pkg_name, $file));
     }
@@ -81,7 +91,7 @@ class pkgm
                 if (!\core\pkg::is_enabled(substr($vendor, 0, -5)))
                 {
                     $name = substr($vendor, 0, -5);
-                    $disabled[$name] = \core\pkg::meta($name);
+                    $disabled[$name] = $detailed ? self::meta($name) : null;
                 }
 
                 continue;
@@ -92,15 +102,16 @@ class pkgm
                 $root = "{$vendor}/{$sub}";
 
                 if (!dir::exists(fs::pkgpath($root)))
+                {
                     continue;
-
+                }
 
                 if (file::exists(fs::pkgpath($root, 'mysli.pkg.ym')))
                 {
                     if (!\core\pkg::is_enabled($root))
                     {
                         $name = str_replace('/', '.', $root);
-                        $disabled[$name] = \core\pkg::meta($name);
+                        $disabled[$name] = $detailed ? self::meta($name) : null;
                     }
 
                     continue;
@@ -111,15 +122,17 @@ class pkgm
                     if (file::exists(
                         fs::pkgpath($root, $package, 'mysli.pkg.ym')))
                     {
-                        $name = str_replace('/', ',', $root).".{$package}";
+                        $name = str_replace('/', '.', $root).".{$package}";
                         if (!\core\pkg::is_enabled($name))
-                            $disabled[$name] = \core\pkg::meta($name);
+                        {
+                            $disabled[$name] = $detailed ? self::meta($name) : null;
+                        }
                     }
                 }
             }
         }
 
-        return ($detailed) ? array_keys($disabled) : $disabled;
+        return ($detailed) ? $disabled : array_keys($disabled);
     }
     /**
      * List obsolete packages
@@ -171,7 +184,9 @@ class pkgm
         $meta = self::meta($package);
 
         if (!$deep)
+        {
             return isset($meta['required_by']) ? $meta['required_by'] : [];
+        }
 
         $dependees[] = $package;
 
@@ -214,7 +229,9 @@ class pkgm
         $group = $group ? "require-{$group}" : 'require';
 
         if (!isset($meta[$group]))
+        {
             return $list;
+        }
 
         foreach ($meta[$group] as $dependency => $required_version)
         {
@@ -224,9 +241,13 @@ class pkgm
                 $extension = substr($dependency, 14);
 
                 if (extension_loaded($extension))
+                {
                     $list['enabled'][] = $dependency;
+                }
                 else
+                {
                     $list['missing'][] = $dependency;
+                }
 
                 continue;
             }
@@ -239,14 +260,20 @@ class pkgm
             else
             {
                 if (\core\pkg::is_enabled($dependency))
+                {
                     $list['enabled'][] = $dependency;
+                }
                 else
+                {
                     $list['disabled'][] = $dependency;
+                }
             }
         }
 
         if (!$deep)
+        {
             return $list;
+        }
 
         // Prevent infinite loops
         $hash = $package . ': ' . implode(', ', array_keys($meta[$group]));
@@ -288,17 +315,23 @@ class pkgm
     static function has_version($package, $release='*')
     {
         if (!\core\pkg::exists($package))
+        {
             return null;
+        }
 
-        $meta = \core\pkg::meta($package);
+        $meta = self::meta($package);
 
         if (substr($release, 0, 1) !== 'r')
+        {
             $release = "r*.{$release}";
+        }
 
         $release = preg_quote($release);
 
         if (strpos($release, '\\*'))
+        {
             $release = str_replace('\\*', '.*?', $release);
+        }
 
         $srelease = isset($meta['release']) ? $meta['release'] : 'source';
 
@@ -324,20 +357,28 @@ class pkgm
             if (file::exists($file))
             {
                 $meta = ym::decode_file($file);
-                $meta['require'] = $meta['require'] ?: [];
+                $meta['require'] = isset($meta['require']) ? $meta['require'] : [];
+
                 if (!isset($meta['release']))
+                {
                     $meta['release'] = 'source';
+                }
+
                 return $meta;
             }
             else
+            {
                 throw new framework\exception\not_found(
-                    "File `mysli.pkg.ym` not found for: `{$name}`.", 1
+                    "File `mysli.pkg.ym` not found (`{$file}`) for: `{$name}`.", 1
                 );
+            }
         }
         else
+        {
             throw new framework\exception\not_found(
                 "The package doesn't exists: `{$name}`.", 2
             );
+        }
     }
     /**
      * Enable package. This will NOT run the setup.
@@ -351,15 +392,19 @@ class pkgm
     {
         // Cannot enable if already enabled
         if (\core\pkg::is_enabled($package))
+        {
             throw new exception\package(
                 "The package is already enabled: `{$package}`.", 1
             );
+        }
 
         // Cannot enable if don't exists
         if (!\core\pkg::exists($package))
+        {
             throw new framework\exception\not_found(
                 "The package doesn't exists: `{$package}`.", 2
             );
+        }
 
         // Get meta and name
         $meta = self::meta($package);
@@ -370,13 +415,17 @@ class pkgm
             $dmeta = self::meta($dependency);
 
             if (!$dmeta)
+            {
                 throw new exception\dependency(
                     "Dependency not satisfied: `{$dependency} : ".
                     "{$need_version}`", 4
                 );
+            }
 
             if (!isset($dmeta['required_by']))
+            {
                 $dmeta['required_by'] = [];
+            }
 
             if (!in_array($package, $dmeta['required_by']))
             {
@@ -397,7 +446,9 @@ class pkgm
             foreach (self::lst_enabled(true) as $lmeta)
             {
                 if (!isset($lmeta['require']))
+                {
                     continue;
+                }
 
                 foreach ($lmeta['require'] as $depends_on => $version)
                 {
@@ -405,7 +456,9 @@ class pkgm
                     {
                         // Unlike event that package is already on the list.
                         if (!in_array($lmeta['package'], $meta['required_by']))
+                        {
                             $meta['required_by'][] = $lmeta['package'];
+                        }
                     }
                 }
             }
@@ -423,9 +476,11 @@ class pkgm
     {
         // If not enabled, won't disable
         if (!\core\pkg::is_enabled($package))
+        {
             throw new exception\package(
                 "The package is not enabled: `{$package}`.", 1
             );
+        }
 
         // Get meta & name
         $meta = self::meta($package);
@@ -436,7 +491,9 @@ class pkgm
             $rmeta = self::meta($dependency);
 
             if (!$rmeta || !isset($rmeta['required_by']))
+            {
                 continue;
+            }
 
             while ($rmeta['required_by'] &&
                 in_array($package, $rmeta['required_by']))
@@ -464,8 +521,12 @@ class pkgm
         $files = [];
 
         if (dir::exists(fs::pkgreal($package, 'sh')))
+        {
             foreach (fs::ls(fs::pkgreal($package, 'sh'), '/\\.php$/') as $file)
+            {
                 $files[] = substr($file, 0, -4);
+            }
+        }
 
         return $files;
     }

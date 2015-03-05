@@ -3,7 +3,7 @@
 namespace mysli\framework\cli\sh\interactive;
 
 __use(__namespace__, '
-    ./output,input  AS  cout,cin
+    ./output,input -> cout,cin
 ');
 
 function __init()
@@ -12,7 +12,9 @@ function __init()
     cin::line('>> ', function ($stdin)
     {
         if (in_array(strtolower($stdin), ['exit', 'q']))
+        {
             return true;
+        }
 
         if (in_array($stdin, ['help', 'h', '?']))
         {

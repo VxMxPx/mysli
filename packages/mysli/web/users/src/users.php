@@ -3,7 +3,7 @@
 namespace mysli\web\users;
 
 __use(__namespace__, '
-    mysli.framework.exception/*  AS  framework\exception\*
+    mysli.framework.exception/* -> framework\exception\*
     mysli.framework.json
     mysli.framework.fs/fs,file
 ');

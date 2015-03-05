@@ -7,7 +7,7 @@ __use(__namespace__, '
     mysli.framework.json
     mysli.framework.type/str
     mysli.framework.fs/fs,file
-    mysli.framework.exception/* AS framework\exception\*
+    mysli.framework.exception/* -> framework\exception\*
 ');
 
 class parser {

@@ -2,8 +2,8 @@
 
 namespace mysli\framework\core;
 
-class autoloader {
-
+class autoloader
+{
     private static $aliases     = [];
     private static $initialized = ['mysli.framework.core'];
 
@@ -29,12 +29,16 @@ class autoloader {
         }
 
         if (self::init_class($class))
+        {
             return true;
+        }
 
         foreach (self::$aliases as $pattern => $required)
         {
             if (substr($pattern, 0, 1) !== '/')
+            {
                 continue;
+            }
 
             if (preg_match($pattern, $class, $match))
             {
@@ -67,20 +71,26 @@ class autoloader {
             $line = trim(strtolower($line));
 
             if (empty($line))
+            {
                 continue;
+            }
 
             // Comment
             if (substr($line, 0, 1) === '#')
+            {
                 continue;
+            }
 
             // ./pkg => self.vendor.package/pkg
             if (substr($line, 0, 2) === './')
+            {
                 $line = $bpackage.'/'.substr($line, 2);
+            }
 
             // Contain ' as '?
-            if (strpos($line, ' as '))
+            if (strpos($line, '->'))
             {
-                list($from, $as) = explode(' as ', $line, 2);
+                list($from, $as) = explode('->', $line, 2);
                 $from = trim($from);
                 $as   = trim($as);
             }
@@ -109,38 +119,53 @@ class autoloader {
             if (strpos($from, ','))
             {
                 if (!strpos($as, ','))
+                {
                     throw new \Exception(
                         "Wrong assignment: `{$line}`, ".
                         "`as` need to be list of aliases.", 10
                     );
+                }
 
                 $lc_from = substr($from, strrpos($from, '/')+1);
                 $from = substr($from, 0, strlen($from)-strlen($lc_from)-1);
                 $lc_from = explode(',', $lc_from);
 
-                if (!strpos($as, '*')) {
+                if (!strpos($as, '*'))
+                {
                     if (strpos($as, '\\') === false)
+                    {
                         $as = "\\{$as}";
+                    }
 
                     $lc_as = substr($as, strrpos($as, '\\')+1);
                     $as = substr($as, 0, strlen($as)-strlen($lc_as)-1);
                     $lc_as = explode(',', $lc_as);
 
                     if (count($lc_as) !== count($lc_from))
+                    {
                         throw new \Exception(
                             "Number of elements in doesn't match: `{$line}`", 20
                         );
+                    }
                 }
 
                 foreach ($lc_from as $lc_pos => $fclass)
                 {
                     if (strpos($as, '*'))
+                    {
                         $asf = str_replace('*', $fclass, $as);
+                    }
                     else
+                    {
                         if ($as)
+                        {
                             $asf = "{$as}\\{$lc_as[$lc_pos]}";
+                        }
                         else
+                        {
                             $asf = $lc_as[$lc_pos];
+                        }
+                    }
 
                     $asf = "{$namespace}\\{$asf}";
                     $fromf = str_replace(['.', '/'], '\\', $from).'\\'.$fclass;
@@ -159,7 +184,7 @@ class autoloader {
 
     /**
      * Alias particular class (to <= as)
-     * Allowed mysli\framework\core\* as core\*
+     * Allowed mysli.framework.core/* -> core\*
      * This will set for example
      * mysli\framework\pkgm\pkgm <= mysli\framework\cli\pkgm
      * @param  string $to
@@ -168,19 +193,24 @@ class autoloader {
     private static function alias($to, $as)
     {
         if ($to === $as)
+        {
             return;
+        }
 
-        if (strpos($as, '*')) {
+        if (strpos($as, '*'))
+        {
             $as = preg_quote($as);
             $as = str_replace('\\*', '(.*?)', $as);
             $as = "/^{$as}$/";
         }
 
         if (isset(self::$aliases[$as]) && self::$aliases[$as] !== $to)
+        {
             throw new \Exception(
                 "Alias is already set `{$as}`, for `{self::$aliases[$as]}`, ".
                 "cannot rewrite it for `{$to}`", 10
             );
+        }
 
         self::$aliases[$as] = $to;
     }
@@ -194,7 +224,9 @@ class autoloader {
     {
         // Our work here is done
         if (class_exists($class, false))
+        {
             return true;
+        }
 
         // Get pckage's name...
         $package = \core\pkg::by_namespace($class);
@@ -202,9 +234,13 @@ class autoloader {
 
         // Get paths
         if ($is_phar)
+        {
             $abspath = 'phar://'.MYSLI_PKGPATH."/{$package}.phar/src";
+        }
         else
+        {
             $abspath = MYSLI_PKGPATH.'/'.str_replace('.', '/', $package).'/src';
+        }
 
         // Get paths
         $segments = explode('\\', $class);
@@ -214,18 +250,26 @@ class autoloader {
         $class_file = "{$abspath}/{$relpath}";
 
         if (!file_exists($class_file))
+        {
             return false;
+        }
         else
+        {
             include $class_file;
+        }
 
         if (!class_exists($class, false) && !trait_exists($class, false))
+        {
             throw new \Exception(
                 "File was loaded: `{$class_file}`, ".
                 "but class: `{$class}` was not found.", 20
             );
+        }
 
         if (!in_array($package, self::$initialized))
+        {
             self::init($package, $abspath);
+        }
 
         return true;
     }
@@ -242,15 +286,23 @@ class autoloader {
         $path = $path.'/__init.php';
 
         if (!file_exists($path))
+        {
             return;
+        }
 
         if (!function_exists($function))
+        {
             include($path);
+        }
 
         if (function_exists($function))
+        {
             call_user_func($function);
+        }
         else
+        {
             throw new \Exception(
                 "Init function `{$function}` not found in: `{$path}`.", 10);
+        }
     }
 }

@@ -3,7 +3,7 @@
 namespace mysli\framework\fs;
 
 __use(__namespace__, '
-    mysli.framework.exception/*  AS  framework\exception\*
+    mysli.framework.exception/* -> framework\exception\*
 ');
 
 class file {
@@ -90,10 +90,17 @@ class file {
      * @param  boolean $empty
      * @return boolean
      */
-    static function create($filename, $empty=false) {
-        if (file::exists($filename)) {
-            if (!$empty) { return false; }
-            if (file_put_contents($filename, '') === false) {
+    static function create($filename, $empty=false)
+    {
+        if (file::exists($filename))
+        {
+            if (!$empty)
+            {
+                return false;
+            }
+
+            if (file_put_contents($filename, '') === false)
+            {
                 throw new framework\exception\fs(
                     "Couldn't remove file's contents: `{$filename}`.", 1);
             }

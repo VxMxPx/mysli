@@ -17,10 +17,14 @@ class pkg
     static function __init($path)
     {
         if (self::$path)
+        {
             throw new \Exception("Already initialized.", 10);
+        }
 
         if (!file_exists($path))
+        {
             throw new \Exception("File not found: `{$path}`", 20);
+        }
 
         self::$path = $path;
         self::read();
@@ -43,9 +47,13 @@ class pkg
         $s = explode('\\', $namespace);
 
         if (self::exists(implode('.', array_slice($s, 0, 3))))
+        {
             return implode('.', array_slice($s, 0, 3));
+        }
         elseif (self::exists(implode('.', array_slice($s, 0, 2))))
+        {
             return implode('.', array_slice($s, 0, 2));
+        }
     }
     /**
      * Get package's name from path - this must be full absolute path.
@@ -56,15 +64,17 @@ class pkg
      */
     static function by_path($path)
     {
-        $path = rtrim(str_replace('\\', '/', array_shift($arguments)), '/');
-
+        // $path = rtrim(str_replace('\\', '/', array_shift($arguments)), '/');
         do
         {
             if (file_exists($path.'/mysli.pkg.ym'))
+            {
                 break;
+            }
             else
+            {
                 $path = substr($path, 0, strrpos($path, '/'));
-
+            }
         } while(strlen($path) > 1);
 
         $package = substr($path, strlen(MYSLI_PKGPATH));
@@ -74,9 +84,13 @@ class pkg
         $package = trim($package, '/');
 
         if (strpos($package, '/'))
+        {
             return str_replace('/', '.', $package);
+        }
         else
+        {
             return $package;
+        }
     }
     /**
      * Check if package exists (is available in file-system)
@@ -111,7 +125,9 @@ class pkg
     static function add($name, array $meta)
     {
         if (isset(self::$r['pkg'][$name]))
+        {
             throw new \Exception("Package {$name} already on the list.", 10);
+        }
 
         self::$r['pkg'][$name] = $meta;
     }
@@ -123,8 +139,10 @@ class pkg
     static function remove($name)
     {
         if (!isset(self::$r['pkg'][$name]))
+        {
             throw new \Exception(
                 "Trying to remove a non-existant package: `{$name}`");
+        }
 
         unset(self::$r['pkg'][$name]);
     }
@@ -165,8 +183,12 @@ class pkg
     static function is_boot($package)
     {
         foreach (self::$r['boot'] as $name)
+        {
             if ($package === explode('/', $name, 2)[0])
+            {
                 return true;
+            }
+        }
 
         return false;
     }

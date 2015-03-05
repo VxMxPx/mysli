@@ -3,7 +3,7 @@
 namespace mysli\web\assets;
 
 __use(__namespace__, '
-    mysli.framework.exception/* as framework\exception\*
+    mysli.framework.exception/* -> framework\exception\*
     mysli.framework.fs/fs,file,dir
     mysli.framework.type/arr
     mysli.framework.pkgm
@@ -48,9 +48,13 @@ class assets {
         $ext = file::extension($file);
 
         if (arr::key_in($exts, $ext))
+        {
             return substr($file, 0, -(strlen($ext))) . $exts[$ext];
+        }
         else
+        {
             return $file;
+        }
     }
     /**
      * Read assets file for particular package.
@@ -67,24 +71,34 @@ class assets {
             $filename = fs::pkgreal($package, $assets, $map);
 
             if (!file::exists($filename))
+            {
                 throw new framework\exception\not_found(
                     "Map file not found: {$filename}.", 1
                 );
+            }
 
             if (substr($map, -3) === '.ym')
+            {
                 $map = ym::decode_file($filename);
+            }
             elseif (substr($map, -5) === '.json')
+            {
                 $map = json::decode_file($filename);
+            }
             else
+            {
                 throw new framework\exception\argument(
                     "Invalid file type: `{$map}`", 1
                 );
+            }
 
             // Valid map?
             if (!is_array($map) || !isset($map['files']))
+            {
                 throw new framework\exception\data(
                     'Invalid map format `files` section is required.'
                 );
+            }
 
             // Default settings
             $map_default = ym::decode_file(
@@ -106,18 +120,24 @@ class assets {
     static function publish($package, $dist=null)
     {
         if (!$dist)
+        {
             list($_, $dist, $_ ) = self::get_default_paths($package);
+        }
 
         $dist  = fs::pkgroot($package, $dist);
         $webpath = self::get_public_path($package);
 
         if (!dir::exists($dist))
+        {
             throw new framework\exception\not_found(
                 "Cannot publish -- folder not found: `{$dist}`", 1
             );
+        }
 
         if (!dir::exists($webpath))
+        {
             dir::create($webpath);
+        }
 
         return dir::copy($dist, $webpath);
     }
@@ -130,10 +150,8 @@ class assets {
     {
         $path = self::get_public_path($package);
 
-        if (dir::exists($path))
-            return dir::remove($path);
-        else
-            return false;
+        if (dir::exists($path)) return dir::remove($path);
+        else                    return false;
     }
     /**
      * Get links for particular file/package
@@ -148,9 +166,11 @@ class assets {
         $id = self::get_id($package);
 
         if (!file::exists(self::get_public_path($package)))
+        {
             throw new framework\exception\not_found(
                 "Public folder not found: `{$id}`", 1
             );
+        }
 
         list($source, $_, $map) = self::get_default_paths($package);
 
@@ -161,7 +181,9 @@ class assets {
         foreach ($map['files'] as $main => $props)
         {
             if ($file && $file !== $main)
+            {
                 continue;
+            }
 
             if (!$debug)
             {
@@ -202,13 +224,19 @@ class assets {
         foreach ($links as $link)
         {
             if (substr($link, -3) === '.js')
+            {
                 $tags[] = '<script src="'.$link.'"></script>';
+            }
             elseif (substr($link, -4) === '.css')
+            {
                 $tags[] = '<link rel="stylesheet" type="text/css" href="'.$link.'">';
+            }
             else
+            {
                 throw new framework\exception\argument(
                     "Unknown file extension: `{$link}`"
                 );
+            }
         }
 
         return $tags;
@@ -238,13 +266,19 @@ class assets {
         if (isset($meta['assets']))
         {
             if (isset($meta['assets']['source']))
+            {
                 $source = $meta['assets']['source'];
+            }
 
             if (isset($meta['assets']['destination']))
+            {
                 $dest = $meta['assets']['destination'];
+            }
 
             if (isset($meta['assets']['map']))
+            {
                 $map = $meta['assets']['map'];
+            }
         }
 
         return [$source, $dest, $map];

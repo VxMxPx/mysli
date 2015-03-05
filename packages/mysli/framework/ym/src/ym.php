@@ -5,7 +5,7 @@ namespace mysli\framework\ym;
 __use(__namespace__, '
     mysli.framework.type/str
     mysli.framework.fs/file
-    mysli.framework.exception/*  as  framework\exception\*
+    mysli.framework.exception/* -> framework\exception\*
 ');
 
 class ym
@@ -37,7 +37,9 @@ class ym
     {
         // Empty string
         if (!trim($string))
+        {
             return [];
+        }
 
         $list   = [];
         $stack  = [&$list];
@@ -50,11 +52,15 @@ class ym
         {
             // An empty line
             if (!trim($line))
+            {
                 continue;
+            }
 
             // Comment
             if (substr(trim($line), 0, 1) === '#')
+            {
                 continue;
+            }
 
             // Get current indentation level
             $level = $indent ? self::get_level($line, $indent) : 0;
@@ -150,9 +156,13 @@ class ym
             elseif ($value === false) $value = 'No';
 
             if (is_numeric($key))
+            {
                 $output .= "- {$value}\n";
+            }
             else
+            {
                 $output .= "{$key} : {$value}\n";
+            }
         }
 
         return $output;
@@ -172,11 +182,15 @@ class ym
         if (!isset($segments[1]))
         {
             if (!$li)
+            {
                 throw new framework\exception\data(
                     "Missing colon (:) or dash (-).", 1
                 );
+            }
             else
+            {
                 $value = $segments[0];
+            }
         }
         else
         {
@@ -190,15 +204,23 @@ class ym
         if ($value)
         {
             if (is_numeric($value))
+            {
                 $value = strpos($value, '.')
                     ? (float) $value
                     : (int) $value;
+            }
             elseif (in_array(strtolower($value), ['yes', 'true']))
+            {
                 $value = true;
+            }
             elseif (in_array(strtolower($value), ['no', 'false']))
+            {
                 $value = false;
+            }
             else
+            {
                 $value = trim($value, '"');
+            }
         }
         else
         {
@@ -234,7 +256,9 @@ class ym
     private static function detect_indent($string)
     {
         if (preg_match('/(^[ \t]+)/m', $string, $matches))
+        {
             return $matches[1];
+        }
     }
     /**
      * Return -$padding, $current, +$padding lines for exceptions, e.g.:
@@ -257,9 +281,13 @@ class ym
             if (isset($lines[$position]))
             {
                 if ($position === $current)
+                {
                     $result .= ">>";
+                }
                 else
+                {
                     $result .= "  ";
+                }
 
                 $result .= ($position+1).". {$lines[$position]}\n";
             }

@@ -13,14 +13,20 @@ function __init($datpath, $pkgpath)
     $tmppath = rtrim($datpath,'\\/').DIRECTORY_SEPARATOR.'temp';
 
     if (defined('MYSLI_PKGPATH') || defined('MYSLI_DATPATH'))
+    {
         throw new \Exception(
             "MYSLI_PKGPATH or MYSLI_DATPATH is already defined.", 1);
+    }
 
     if (!$datpath || !is_dir($datpath))
+    {
         throw new \Exception("Invalid datpath: `{$datpath}`.", 2);
+    }
 
     if (!$tmppath || !is_dir($tmppath))
+    {
         throw new \Exception("Invalid tmppath: `{$tmppath}`.", 3);
+    }
 
     $abs = substr(__DIR__, 0, 7) === 'phar://' ? substr(__DIR__, 7) : __DIR__;
 
@@ -40,11 +46,13 @@ function __init($datpath, $pkgpath)
     $boot_path = $datpath.'/boot/r.json';
 
     if (!file_exists($boot_path))
+    {
         throw new \Exception("File not found: `{$boot_path}`", 5);
+    }
 
     $bootr = json_decode(file_get_contents($boot_path), true);
 
-    define('MYSLI_CORE', $bootr['boot']['core']);
+    define('CORE_PKG', $bootr['boot']['core']);
 
     __get_pkg($bootr['boot']['pkg']);
     \core\pkg::__init($boot_path);
@@ -75,28 +83,46 @@ function __get_std_class($package, $file, $class)
 {
     // Source?
     if (file_exists(MYSLI_PKGPATH."/".str_replace('.', '/', $package)."/src/{$file}.php"))
+    {
         $source = MYSLI_PKGPATH."/".str_replace('.', '/', $package)."/src/{$file}.php";
+    }
     else
+    {
         $source = false;
+    }
 
     // Phar?
     if (file_exists('phar://'.MYSLI_PKGPATH."/{$package}.phar/src/{$file}.php"))
+    {
         $phar = 'phar://'.MYSLI_PKGPATH."/{$package}.phar/src/{$file}.php";
+    }
     else
+    {
         $phar = false;
+    }
 
     if ($phar && !$source)
+    {
         include $phar;
+    }
     elseif ($source && !$phar)
+    {
         include $source;
+    }
     elseif ($source && $phar)
+    {
         throw new \Exception(
             "Source and `.pkg` exists in packages directory for: `{$package}`. ".
             "Please either remove source or `.phar` file.", 10
         );
+    }
     else
+    {
         throw new \Exception("Package not found: `{$package}`.", 20);
+    }
 
     if (!class_exists($class, false))
+    {
         throw new \Exception("Class: `{$class}` not found for `{$package}`.", 30);
+    }
 }

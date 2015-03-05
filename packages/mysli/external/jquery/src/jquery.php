@@ -5,7 +5,7 @@ namespace mysli\external\jquery;
 __use(__namespace__, '
     mysli.framework.fs/fs,file
     mysli.framework.pkgm
-    mysli.framework.exception/*  AS  framework\exception\*
+    mysli.framework.exception/* -> framework\exception\*
     mysli.util.curl
     mysli.util.config
     mysli.web.assets
@@ -25,12 +25,18 @@ class jquery
         $c = config::select('mysli.external.jquery');
 
         if ($dev === null)
+        {
             $dev = $c->get('development', false);
+        }
 
         if ($version === null)
+        {
             $version = self::get_version($dev);
+        }
         else
+        {
             $version .= ($dev ? '' : '.min');
+        }
 
         if ($c->get('local'))
         {
@@ -41,7 +47,9 @@ class jquery
                 $dest = self::get_path($version);
 
                 if (!self::fetch_library($version, $dev, $dest, $remote_url))
+                {
                     throw new framework\exception\fs('Failed to fetch jQuery.');
+                }
             }
 
             $url = assets::get_public_url('mysli.external.jquery');
@@ -101,15 +109,19 @@ class jquery
         $version, $dev, $destination, $remote_url)
     {
         if (!pkgm::is_enabled('mysli.util.curl'))
+        {
             throw new framework\exception\not_found(
                 'You need to enable `mysli/framework/curl` '.
                 'to fetch jQuery and save it locally.'
             );
+        }
 
         $url = str_replace('{version}', $version, $remote_url);
         $jquery = curl::get($url);
 
         if ($jquery)
+        {
             return file::write($destination, $jquery);
+        }
     }
 }

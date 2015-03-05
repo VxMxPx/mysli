@@ -3,7 +3,7 @@
 namespace mysli\framework\cli;
 
 __use(__namespace__, '
-    mysli.framework.exception/*  AS  framework\exception\*
+    mysli.framework.exception/* -> framework\exception\*
     mysli.framework.type/str,arr
 ');
 

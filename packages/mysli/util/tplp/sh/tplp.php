@@ -6,7 +6,7 @@ __use(__namespace__, '
     ./util,parser
     mysli.framework.fs/fs,file,dir
     mysli.framework.type/arr,str
-    mysli.framework.cli/output,input,param,util as cout,cinput,cparam,cutil
+    mysli.framework.cli/output,input,param,util -> cout,cinput,cparam,cutil
 ');
 
 /**

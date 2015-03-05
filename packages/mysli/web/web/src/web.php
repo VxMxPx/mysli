@@ -38,7 +38,9 @@ class web
     static function output(&$output)
     {
         if (response::get_status() === 0)
+        {
             response::set_status(200);
+        }
 
         response::apply_headers();
 
@@ -53,10 +55,14 @@ class web
     static function path()
     {
         if (!defined('MYSLI_PUBPATH'))
+        {
             $pubpath = realpath(
                 fs::datpath(config::select('mysli.web.web', 'relative_path')));
+        }
         else
+        {
             $pubpath = MYSLI_PUBPATH;
+        }
 
         $arguments = func_get_args();
         $arguments = implode(DIRECTORY_SEPARATOR, $arguments);
@@ -75,10 +81,14 @@ class web
         $url = config::select('mysli.web.web', 'url');
 
         if (!$url)
+        {
             $url = (request::is_ssl() ? 'https://' : 'http://').request::host();
+        }
 
         if ($uri)
+        {
             $url .= '/'.$uri;
+        }
 
         // Remove doube // and return
         return rtrim(preg_replace('#([^:])/+#', '\1/', $url), '/');

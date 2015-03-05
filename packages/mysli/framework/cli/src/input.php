@@ -66,10 +66,16 @@ class input
                 $stdin .= $stdin_t . "\n";
 
                 if ($stdin_t === '')
+                {
                     $enter_key++;
+                }
                 else
+                {
                     if ($enter_key > 0)
+                    {
                         $enter_key--;
+                    }
+                }
 
             } while ($enter_key < 1);
 
@@ -112,13 +118,19 @@ class input
                 $input = str::to_lower($input);
 
                 if (empty($input))
+                {
                     return $default;
+                }
 
                 if ($input === 'y')
+                {
                     return true;
+                }
 
                 if ($input === 'n')
+                {
                     return false;
+                }
             }
         );
     }
@@ -152,7 +164,9 @@ class input
             function($input) use ($checked, $map)
             {
                 if (empty(trim($input)))
+                {
                     return $checked;
+                }
 
                 $answers = [];
 
@@ -165,7 +179,9 @@ class input
                         return;
                     }
                     else
+                    {
                         $answers[] = $map[$answer];
+                    }
                 }
 
                 return $answers;
@@ -201,7 +217,9 @@ class input
             function($input) use ($selected, $map)
             {
                 if (empty(trim($input)))
+                {
                     return $selected;
+                }
 
                 $answers = [];
 
@@ -214,7 +232,9 @@ class input
                         return;
                     }
                     else
+                    {
                         $answers[] = $map[$answer];
+                    }
                 }
 
                 return $answers;

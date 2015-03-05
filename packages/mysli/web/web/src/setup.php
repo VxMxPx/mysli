@@ -22,7 +22,9 @@ function enable($csi=null)
             function (&$field)
             {
                 if (substr($field['value'], 0, 2) === '..')
+                {
                     $field['value'] = fs::datpath($field['value']);
+                }
 
                 return true;
             }
@@ -30,12 +32,16 @@ function enable($csi=null)
     }
 
     if ($csi->status() !== 'success')
+    {
         return $csi;
+    }
 
     $pubpath = $csi->get('relative_path');
 
     if (!dir::create($pubpath))
+    {
         return false;
+    }
 
     $pubpath = realpath($pubpath);
 
@@ -46,7 +52,9 @@ function enable($csi=null)
     ]);
 
     if (!$c->save())
+    {
         return false;
+    }
 
     $index_contents = file::read(
         fs::pkgroot(__DIR__, 'data/index.html')
@@ -68,7 +76,9 @@ function enable($csi=null)
     );
 
     if (!file::write(fs::ds($pubpath, 'index.php'), $index_contents))
+    {
         return false;
+    }
 
 
     event::register('mysli.web.web/index:start', 'mysli\\web\\web::route');

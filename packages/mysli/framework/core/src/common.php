@@ -36,9 +36,13 @@ function dump_rr()
     foreach ($arguments as $variable)
     {
         if (is_bool($variable))
+        {
             $bool = $variable ? 'true' : 'false';
+        }
         else
+        {
             $bool = false;
+        }
 
         $result .= (!is_cli()) ? "\n<pre>\n" : "\n";
         $result .= '' . gettype($variable);

@@ -19,12 +19,16 @@ class cli
         if (isset($arguments[1]))
         {
             if ($arguments[1] === '--help')
+            {
                 self::list_scripts();
+            }
 
             self::execute($arguments[1], array_slice($arguments, 2));
         }
         else
+        {
             self::list_scripts();
+        }
     }
     /**
      * List all available scripts.
@@ -35,7 +39,9 @@ class cli
         $commands = [];
 
         foreach (self::discover_scripts() as $script => $data)
+        {
             $commands[$script] = $data['description'];
+        }
 
         output::nl();
         output::line('* Mysli Cli');
@@ -55,13 +61,19 @@ class cli
         foreach (\core\pkg::dump()['pkg'] as $package)
         {
             if (empty($package['sh']))
+            {
                 continue;
+            }
 
             foreach ($package['sh'] as $script)
+            {
                 $scripts[$script] = [
                     'package'     => $package['package'],
-                    'description' => $package['description']
+                    'description' => isset($package['description'])
+                        ? $package['description']
+                        : ''
                 ];
+            }
         }
 
         return $scripts;
@@ -100,10 +112,14 @@ class cli
         }
 
         if (function_exists($namespace.'\__init'))
+        {
             call_user_func_array($namespace.'\__init', [$arguments]);
+        }
         else
+        {
             output::format(
                 '+yellow Method `__init` not found for `%s`.', [$script]
             );
+        }
     }
 }

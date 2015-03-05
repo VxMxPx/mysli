@@ -3,7 +3,7 @@
 namespace mysli\util\datetime;
 
 __use(__namespace__, '
-    mysli.framework.exception/* as framework\exception\*
+    mysli.framework.exception/* -> framework\exception\*
 ');
 
 class datetime {

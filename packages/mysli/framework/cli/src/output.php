@@ -4,7 +4,7 @@ namespace mysli\framework\cli;
 
 __use(__namespace__, '
     mysli.framework.type/str
-    ./util  AS  cutil
+    ./util -> cutil
 ');
 
 class output {

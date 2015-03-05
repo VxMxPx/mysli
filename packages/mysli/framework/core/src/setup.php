@@ -10,18 +10,30 @@ function enable($pkgpath, $datpath)
 
     // Create DATA directory
     if (!is_dir($datpath))
+    {
         if (!mkdir($datpath, 0777, true))
+        {
             throw new \Exception('Cannot create `data` directory!', 2);
+        }
+    }
 
     // Create boot directory
     if (!is_dir($datpath . '/boot'))
+    {
         if (!mkdir($datpath . '/boot'))
+        {
             throw new \Exception('Cannot create `boot` directory.', 3);
+        }
+    }
 
     // Crete TEMP directory
     if (!is_dir($tmppath))
+    {
         if (!mkdir($tmppath))
+        {
             throw new \Exception('Cannot create `temp` directory.', 4);
+        }
+    }
 
     // Writte boot file
     return (bool) file_put_contents(

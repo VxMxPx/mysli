@@ -3,7 +3,7 @@
 namespace mysli\framework\type;
 
 __use(__namespace__, '
-    mysli.framework.exception/*  AS  framework\exception\*
+    mysli.framework.exception/* -> framework\exception\*
 ');
 
 class arr {
@@ -392,8 +392,12 @@ class arr {
 
         // Get the longest key...
         foreach ($array as $key => $val)
+        {
             if (str::length($key) > $long_key)
+            {
                 $long_key = str::length($key);
+            }
+        }
 
         foreach ($array as $key => $value)
         {
@@ -411,9 +415,13 @@ class arr {
                 if ($valuefy)
                 {
                     if (is_bool($value))
+                    {
                         $value = $value ? 'true' : 'false';
+                    }
                     elseif (is_string($value))
+                    {
                         $value = '"'.$value.'"';
+                    }
                 }
 
                 $out .= str_repeat(' ', $long_key - str::length($key)) .
@@ -469,9 +477,13 @@ class arr {
                 if ($valuefy)
                 {
                     if (is_bool($value))
+                    {
                         $value = $value ? 'true' : 'false';
+                    }
                     elseif (is_string($value))
+                    {
                         $value = '"'.$value.'"';
+                    }
                 }
 
                 $out .= $value;

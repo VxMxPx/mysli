@@ -17,7 +17,9 @@ function exe_setup($pkg, $pkgpath, $datpath, callable $errout)
     $setupfile = dst($pkgpath, 'src/setup.php');
 
     if (file_exists($setupfile) && !function_exists($ns.'\\setup\\enable'))
+    {
         include $setupfile;
+    }
 
     if (function_exists($ns.'\\setup\\enable'))
     {
@@ -51,7 +53,9 @@ function pkg_class($pkg, $class, $pkgpath, callable $errout)
     }
 
     if (!function_exists("{$ns}\\{$class}") && !class_exists("{$ns}\\{$class}"))
+    {
         include $classfile;
+    }
 
     if (!function_exists("{$ns}\\{$class}") && !class_exists("{$ns}\\{$class}"))
     {
@@ -74,7 +78,9 @@ function pkg_class($pkg, $class, $pkgpath, callable $errout)
 function find_folder($path, $name)
 {
     if (substr($path, 0, 7) === 'phar://')
+    {
         $path = substr($path, 7);
+    }
 
     $relative = $path;
 
@@ -84,8 +90,9 @@ function find_folder($path, $name)
         $path = $relative.DIRECTORY_SEPARATOR.$name;
 
         if (file_exists($path) && is_dir($path))
+        {
             return $path;
-
+        }
     } while (strlen($relative) > strpos($path, DIRECTORY_SEPARATOR));
 
     return false;
@@ -102,16 +109,24 @@ function pkgroot($path, $package)
     $phar   = "phar://{$path}/{$package}.phar/mysli.pkg.ym";
 
     if (file_exists($source) && file_exists($phar))
+    {
         throw new \Exception(
             "Both `source` and `phar` version of package ".
             "is in file-system for: `{$package}`"
         );
+    }
     elseif (file_exists($phar))
+    {
         return dirname($phar);
+    }
     elseif (file_exists($source))
+    {
         return dirname($source);
+    }
     else
+    {
         return false;
+    }
 }
 /**
  * Resolve relative path (to be absolute).
@@ -128,7 +143,9 @@ function relative_to_absolute($path, $relative_to)
 {
     // We're dealing with absolute path
     if (substr($path, 1, 1) !== ':' && substr($path, 0, 1) !== '/')
+    {
         $path = rtrim($relative_to, '\\/').DIRECTORY_SEPARATOR.ltrim($path, '\\/');
+    }
 
     $existing = $path;
     $cut_off  = '';
@@ -136,10 +153,14 @@ function relative_to_absolute($path, $relative_to)
     do
     {
         if (is_dir($existing))
+        {
             break;
+        }
 
         if ($existing === dirname($existing))
+        {
             break;
+        }
 
         $cut_off .= $cut_off . DIRECTORY_SEPARATOR . basename($existing);
         $existing = dirname($existing);
@@ -159,5 +180,7 @@ function dst()
     $path = implode(DIRECTORY_SEPARATOR, $path);
 
     if ($path)
+    {
         return preg_replace('/(?<![:\/])[\/\\\\]+/', DIRECTORY_SEPARATOR, $path);
+    }
 }

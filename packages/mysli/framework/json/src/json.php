@@ -5,7 +5,7 @@ namespace mysli\framework\json;
 __use(__namespace__, '
     mysli.framework.fs/fs,file
     mysli.framework.type/arr
-    mysli.framework.exception/*  AS  framework\exception\*
+    mysli.framework.exception/* -> framework\exception\*
 ');
 
 class json {

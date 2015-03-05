@@ -6,7 +6,7 @@ __use(__namespace__, '
     ./i18n
     mysli.framework.pkgm
     mysli.framework.fs/fs,dir
-    mysli.framework.cli/param,output as param,cout
+    mysli.framework.cli/param,output -> param,cout
 ');
 
 function __init($args) {

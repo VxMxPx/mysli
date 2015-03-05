@@ -39,13 +39,17 @@ function __init()
         $rw_item = explode(':', $rw_item);
 
         if (!isset($rw_item[1]))
+        {
             continue;
+        }
 
         $role = trim($rw_item[0]);
         $pac  = trim($rw_item[1]);
 
         if (!isset($packages[$role]))
+        {
             continue;
+        }
 
         $packages[$role] = $pac;
     }
@@ -57,14 +61,18 @@ function __init()
         $pkgpath = c\find_folder(__DIR__, substr($pkgpath, 1));
 
         if (!$pkgpath)
+        {
             fatal('Packages path is invalid.');
+        }
     }
     else
     {
         $pkgpath = c\relative_to_absolute($pkgpath, __DIR__.DIRECTORY_SEPARATOR);
 
         if ($pkgpath[1])
+        {
             fatal('Packages path is invalid: ' . implode('', $pkgpath));
+        }
 
         $pkgpath = rtrim($pkgpath[0], DIRECTORY_SEPARATOR);
     }
@@ -75,25 +83,33 @@ function __init()
         $datpath = substr($datpath, 10);
     }
     else
+    {
         $datpath_rel = __DIR__;
+    }
 
     $datpath = c\relative_to_absolute($datpath, $datpath_rel.DIRECTORY_SEPARATOR);
     $datpath = $datpath[1] ? implode('', $datpath) : $datpath[0];
 
     // Validate data...
     if (!file_exists($pkgpath))
+    {
         fatal('Cannot continue, packages path is not valid: ' . $pkgpath);
+    }
 
     $missing = [];
 
     foreach ($packages as $role => &$pac)
     {
         if (!c\pkgroot($pkgpath, $pac))
+        {
             $missing[$pac] = c\dst($pkgpath, $pac);
+        }
     }
 
     if (!empty($missing))
+    {
         fatal("Packages not found:\n" . nice_array($missing, 4));
+    }
 
     // Ask if all seems ok...
     print_line(null);
@@ -110,7 +126,9 @@ function __init()
         $answer = fread(STDIN, 1);
 
         if (!in_array(strtolower(trim($answer)), ['y', '']))
+        {
             fatal('You selected `no`! See you latter....');
+        }
     }
 
     // Alis fatal function
@@ -121,25 +139,35 @@ function __init()
     print_line('* Now enabling core packages....');
 
     if (c\exe_setup($packages['core'], $pkgpath, $datpath, $func_fatal))
+    {
         print_line("    Done: {$packages['core']} (SETUP)");
+    }
 
     $core = c\pkg_class($packages['core'], '__init', $pkgpath, $func_fatal);
     $core($datpath, $pkgpath);
 
     // Run pkgm's setup
     if (c\exe_setup($packages['pkgm'], $pkgpath, $datpath, $func_fatal))
+    {
         print_line("    Done: {$packages['pkgm']} (SETUP)");
+    }
 
     $pkgm = c\pkg_class($packages['pkgm'], 'pkgm', $pkgpath, $func_fatal);
 
     // Enable cli package...
     if (c\exe_setup($packages['cli'], $pkgpath, $datpath, $func_fatal))
+    {
         print_line("    Done: {$packages['cli']} (SETUP)");
+    }
 
     if (!$pkgm::enable($packages['cli'], 'installer'))
+    {
         fatal("Failed to enable: {$packages['cli']}");
+    }
     else
+    {
         print_line("    Done: {$packages['cli']}");
+    }
 
     print_line('    All done!');
 
@@ -221,14 +249,20 @@ function nice_array(array $input, $indent=0)
 
     // Get the longes key...
     foreach ($input as $key => $val)
+    {
         if (strlen($key) > $lkey)
+        {
             $lkey = strlen($key);
+        }
+    }
 
     foreach ($input as $key => $value)
+    {
         $out .=
             str_repeat(' ', $indent) .
             $key . str_repeat(' ', $lkey - strlen($key)) .
             ' : ' . $value . "\n";
+    }
 
     return $out;
 }

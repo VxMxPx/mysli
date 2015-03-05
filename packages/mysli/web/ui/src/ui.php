@@ -73,6 +73,8 @@ class ui
         $file = fs::pkgroot(__DIR__, 'tplp/scripts', $script.'.js');
 
         if (file::exists($file))
+        {
             return file::read($file);
+        }
     }
 }

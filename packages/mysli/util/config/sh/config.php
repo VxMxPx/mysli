@@ -7,7 +7,7 @@ __use(__namespace__, '
     mysli.framework.fs
     mysli.framework.pkgm
     mysli.framework.type/arr
-    mysli.framework.cli/param,output  as  cparam,cout
+    mysli.framework.cli/param,output -> cparam,cout
 ');
 
 /**

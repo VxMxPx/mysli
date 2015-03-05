@@ -3,7 +3,7 @@
 namespace mysli\web\assets\tplp;
 
 __use(__namespace__, '
-    mysli.framework.exception/* as framework\exception\*
+    mysli.framework.exception/* -> framework\exception\*
     mysli.framework.fs/file
     mysli.web.web
     mysli.web.assets

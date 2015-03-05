@@ -22,7 +22,9 @@ function enable()
         return true;
     }
     else
+    {
         return false;
+    }
 }
 function disable()
 {

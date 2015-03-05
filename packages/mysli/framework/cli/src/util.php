@@ -3,7 +3,7 @@
 namespace mysli\framework\cli;
 
 __use(__namespace__, '
-    ./output  AS  cout
+    ./output -> cout
 ');
 
 class util
@@ -85,14 +85,20 @@ class util
         {
             // We are the child, execute command and quit!
             if (!is_array($commands))
+            {
                 $commands = [$commands];
+            }
 
             foreach ($commands as $command)
             {
                 if ($print)
+                {
                     system($command);
+                }
                 else
+                {
                     exec($command);
+                }
             }
 
             exit(1);

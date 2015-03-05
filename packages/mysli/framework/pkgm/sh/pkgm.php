@@ -4,7 +4,7 @@ namespace mysli\framework\pkgm\sh\pkgm;
 
 __use(__namespace__, '
     ./pkgm
-    mysli.framework.cli/param,output,input  AS  param,cout,cin
+    mysli.framework.cli/param,output,input -> param,cout,cin
     mysli.framework.type/arr,str
     mysli.framework.fs
 ');
@@ -67,18 +67,28 @@ function __init(array $args)
     $val = $param->values();
 
     if ($val['enable'])
+    {
         enable($val['package'], $val['rec'], $val['dev']);
+    }
     elseif ($val['disable'])
+    {
         disable($val['package']);
+    }
     elseif ($val['repair'])
+    {
         repair();
+    }
     elseif ($val['list'])
+    {
         do_list($val['list']);
+    }
     elseif ($val['meta'])
+    {
         meta($val['package']);
-    else
+    }
+    else{
         cout::warn('Invalid command, use --help to see available commands.');
-
+    }
 }
 
 // Enable
@@ -163,8 +173,12 @@ function enable($pkg, $rec=false, $dev=false)
         }
 
         foreach ($dependencies['disabled'] as $release)
+        {
             if (!enable_helper($release, $pkg))
+            {
                 return false;
+            }
+        }
     }
 
     enable_helper($pkg, 'installer');
@@ -266,7 +280,9 @@ function disable($pkg)
             }
 
             if (!disable_helper($package))
+            {
                 return false;
+            }
         }
     }
 
@@ -350,15 +366,16 @@ function repair()
  */
 function do_list($option)
 {
-    switch ($option) {
+    switch ($option)
+    {
         case 'enabled':
             cout::line("\n* Enabled packages:");
-            cout::line(arr::readable(pkgm::lst_enabled(), 4));;
+            cout::line(arr::readable_list(pkgm::lst_enabled(), 2));;
             break;
 
         case 'disabled':
             cout::line("\n* Disabled packages:");
-            cout::line(arr::readable(pkgm::lst_disabled(), 4));
+            cout::line(arr::readable_list(pkgm::lst_disabled(), 2));
             break;
 
         case 'all':
@@ -384,9 +401,13 @@ function meta($package)
     $package = resolve_by_name($package, pkgm::lst_all()) or die();
 
     if (!\core\pkg::exists($package))
+    {
         cout::warn('[!] No such package: `'.$package.'`');
+    }
     else
+    {
         cout::line(arr::readable(pkgm::meta($package)));
+    }
 }
 
 // CSI Handling
@@ -410,15 +431,21 @@ function csi_input(array $properties)
 
     $question = '';
     if ($properties['label'])
+    {
         $question .= $properties['label'];
+    }
 
     // Add default if exists
     if ($properties['default'])
     {
         if (!empty($properties['options']))
+        {
             $default = $properties['options'][$properties['default']];
+        }
         else
+        {
             $default = $properties['default'];
+        }
 
         $question .= ' [' . $default . ']';
     }
@@ -449,8 +476,12 @@ function csi_process($csi)
                 $fields = [];
 
                 foreach ($csi->get_fields() as $fid => $properties)
+                {
                     if (!isset($properties['status']) === null)
+                    {
                         $fields[$fid] = $properties;
+                    }
+                }
 
                 break;
 
@@ -464,7 +495,9 @@ function csi_process($csi)
                     if ($properties['messages'])
                     {
                         if (!is_array($properties['messages']))
+                        {
                             $properties['messages'] = [$properties['messages']];
+                        }
 
                         cout::warn(implode("\n", $properties['messages']));
                         $fields[$fid] = $properties;
@@ -480,18 +513,25 @@ function csi_process($csi)
 
         // No fields, nothing to do!
         if (empty($fields))
+        {
             return true;
+        }
 
         // Run through fields, and output them!
         foreach ($fields as $fid => $properties)
         {
             if ($properties['type'] === 'hidden')
+            {
                 continue;
+            }
 
             if ($properties['type'] === 'paragraph')
+            {
                 cout::line($properties['label']);
+            }
 
-            do {
+            do
+            {
                 $value = csi_input($properties);
 
                 $properties['value'] = ($value === '' && $properties['default']) ?
@@ -520,7 +560,9 @@ function csi_process($csi)
                     }
                 }
                 else
+                {
                     $status = true;
+                }
 
                 // Set either value from the input
                 // or the default if exists.
@@ -550,13 +592,19 @@ function run_setup($pkg, $action)
     if (!function_exists($setup_fnc))
     {
         if (!file_exists($setup_file))
+        {
             return true;
+        }
         else
+        {
             include($setup_file);
+        }
     }
 
     if (!function_exists($setup_fnc))
+    {
         return true;
+    }
 
     return (call_setup_function($setup_fnc) !== false);
 }
@@ -570,20 +618,26 @@ function run_setup($pkg, $action)
 function call_setup_function($call, array $values=null)
 {
     if (!function_exists($call))
+    {
         return true;
+    }
 
     $csi = null;
 
-    do {
+    do
+    {
         $csi = call_user_func($call, $csi);
 
         if (is_object($csi))
         {
             $class = get_class($csi);
+
             if (substr($class, -4) === '\\csi')
             {
                 if ($values)
+                {
                     $csi->set_multiple($values);
+                }
 
                 $csi_result = csi_process($csi);
                 continue;

@@ -3,7 +3,7 @@
 namespace mysli\framework\fs;
 
 __use(__namespace__, '
-    mysli.framework.exception/*  AS  framework\exception\*
+    mysli.framework.exception/* -> framework\exception\*
 ');
 
 class dir {

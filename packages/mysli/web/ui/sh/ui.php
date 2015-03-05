@@ -5,7 +5,7 @@ namespace mysli\web\ui\sh\ui;
 __use(__namespace__, '
     mysli.util.tplp
     mysli.framework.event
-    mysli.framework.cli/output,param  AS  cout,cparam
+    mysli.framework.cli/output,param  -> cout,cparam
 ');
 
 
@@ -34,11 +34,17 @@ function __init(array $args=[])
     $values = $params->values();
 
     if ($values['enable'])
+    {
         enable_dev();
+    }
     elseif ($values['disable'])
+    {
         disable_dev();
+    }
     else
+    {
         cout::line("Enter --help for help");
+    }
 }
 
 function enable_dev()

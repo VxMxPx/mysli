@@ -3,7 +3,7 @@
 namespace mysli\framework\fs;
 
 __use(__namespace__, '
-    mysli.framework.exception/*  AS  framework\exception\*
+    mysli.framework.exception/* -> framework\exception\*
 ');
 
 class fs {
@@ -103,9 +103,13 @@ class fs {
         $is_phar = \core\pkg::exists_as($package) === \core\pkg::phar;
 
         if ($is_phar)
-            return self::pkgpath('phar://'.$package.'.phar/', $arguments);
+        {
+            return 'phar://'.self::pkgpath($package.'.phar/', $arguments);
+        }
         else
+        {
             return self::pkgpath(str_replace('.', '/', $package), $arguments);
+        }
     }
     /**
      * Return package's root from __DIR__ or package's name
@@ -121,10 +125,13 @@ class fs {
         do
         {
             if (file::exists($dir.'/mysli.pkg.ym'))
+            {
                 break;
+            }
             else
+            {
                 $dir = substr($dir, 0, strrpos($dir, '/'));
-
+            }
         } while(strlen($dir) > 1);
 
         return self::ds($dir, implode('/', $arguments));
