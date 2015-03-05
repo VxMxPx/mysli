@@ -4,7 +4,7 @@ namespace mysli\dev\phpt;
 
 __use(__namespace__, '
     mysli.framework.fs/fs,file
-    mysli.framework.exception/*  AS  framework\exception\*
+    mysli.framework.exception/* -> framework\exception\*
 ');
 
 class generator
@@ -19,9 +19,11 @@ class generator
         $methods = [];
 
         if (!file::exists($file))
+        {
             throw new framework\exception\not_found(
                 "File not found: {$file}", 1
             );
+        }
 
         $contents = file::read($file);
 
@@ -34,9 +36,11 @@ class generator
         $namespace = isset($namespace[1]) ? $namespace[1] : false;
 
         if (!$namespace)
+        {
             throw new framework\exception\data(
                 "Missing namespace: `{$file}`", 1
             );
+        }
 
         // get class
         preg_match(
@@ -46,9 +50,11 @@ class generator
         $class = isset($class[1]) ? $class[1] : false;
 
         if (!$class)
+        {
             throw new framework\exception\data(
                 "Missing class: `{$file}`", 2
             );
+        }
 
         // Get functions
         preg_match_all(
@@ -61,7 +67,9 @@ class generator
         foreach ($methods_raw as $method)
         {
             if (!in_array('function', $method))
+            {
                 continue;
+            }
 
             $method = explode('function ', $method[0], 2);
             $meta   = trim($method[0]);
@@ -82,11 +90,16 @@ class generator
                 {
                     $static = true;
                     $meta = $meta[0];
-                } else
+                }
+                else
+                {
                     $meta = $meta[0];
+                }
 
                 if (in_array(trim($meta), ['public', 'protected', 'private']))
+                {
                     $visibility = trim($meta);
+                }
             }
 
             $methods[$name] = [
@@ -110,12 +123,18 @@ class generator
                 : false;
 
             if (!$function)
+            {
                 continue;
+            }
             else
+            {
                 $function = explode(' ', $function, 2)[1];
+            }
 
             if (isset($methods[$function]))
+            {
                 $methods[$function]['description'] = self::get_doc_description($docblock[1]);
+            }
 
         }
 
@@ -137,25 +156,35 @@ class generator
         // --TEST--
         $output .= "--TEST--\n";
         if (isset($options['test']))
+        {
             $output .= "{$options['test']}\n";
+        }
 
         // --DESCRIPTION--
         if (isset($options['description']))
+        {
             $output .= "--DESCRIPTION--\n{$options['description']}\n";
+        }
 
         // --SKIPIF--
         if (isset($options['skipif']))
+        {
             $output .= "--SKIPIF--\n{$options['skipif']}\n";
+        }
 
         // --FILE--
         $output .= "--FILE--\n";
         if (isset($options['file']))
+        {
             $output .= "{$options['file']}\n";
+        }
 
         // --EXPECT--
         $output .= "--EXPECT--\n";
         if (isset($options['expect']))
+        {
             $output .= "{$options['expect']}\n";
+        }
 
         // Output
         return $output;
@@ -173,7 +202,9 @@ class generator
         $docs = '';
 
         foreach ($docblock as $docblock_line)
+        {
             $docs .= trim($docblock_line, " \\t*");
+        }
 
         return $docs;
     }

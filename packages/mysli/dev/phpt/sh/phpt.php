@@ -4,9 +4,8 @@ namespace mysli\dev\phpt\sh\phpt;
 
 __use(__namespace__, '
     ./collection,generator
-    mysli.framework.pkgm
     mysli.framework.fs/fs,file,dir
-    mysli.framework.cli/param,output,input  AS  param,cout,cin
+    mysli.framework.cli/param,output,input -> param,cout,cin
 ');
 
 /**
@@ -45,9 +44,13 @@ function __init(array $args)
     $param->parse();
 
     if (!$param->is_valid())
+    {
         cout::line($param->messages());
+    }
     else
+    {
         execute($param->values());
+    }
 }
 /**
  * Handle action.
@@ -62,25 +65,31 @@ function execute($args)
     if (!$args['package'])
     {
         // Package not provided, should be acquired from current directory
-        $package = pkgm::name_by_path(getcwd());
+        $package = \core\pkg::by_path(getcwd());
     }
     else
     {
         $package = $args['package'];
 
         if (substr($package, 0, 2) === './')
-            $package = pkgm::name_by_path(getcwd()).substr($package, 1);
+        {
+            $package = \core\pkg::by_path(getcwd()).substr($package, 1);
+        }
 
         if (strpos($package, ':'))
+        {
             list($package, $method) = explode(':', $package, 2);
+        }
 
         if (strpos($package, '/'))
+        {
             list($package, $file) = explode('/', $package, 2);
+        }
     }
 
     if (!$package)
     {
-        cout::warn("[!] Not a valid package: `{$package}`");
+        cout::warn("[!] Not a valid package provided.");
         return;
     }
 
@@ -91,10 +100,14 @@ function execute($args)
     }
 
     if ($args['add'])
+    {
         add_test($package, $file, true);
+    }
 
     if ($args['test'])
+    {
         run_test($package, $file, $method);
+    }
 }
 /**
  * Watch files for changes and re-run/re-add tests when changes occurs.
@@ -146,8 +159,10 @@ function watch($pkg, $file, $method, $do_add, $do_test, $sleep=2)
                 if ($do_add)
                 {
                     foreach ($src_files_hash as $id => $sig)
+                    {
                         $src_file = substr($src_files[$id], strlen($sfp[0])+1, -4);
                         add_test($pkg, $file);
+                    }
                 }
 
                 $diff = true;
@@ -177,7 +192,9 @@ function watch($pkg, $file, $method, $do_add, $do_test, $sleep=2)
                 }
             }
             else
+            {
                 run_test($pkg, $file, $method);
+            }
         }
 
         $diff = false;
@@ -201,7 +218,9 @@ function add_test($pkg, $file, $ask=true)
             $file = substr($file, strlen($root), -4);
 
             if ($file === 'setup')
+            {
                 continue;
+            }
 
             add_test($pkg, $file, $ask);
         }
@@ -253,7 +272,9 @@ function add_test($pkg, $file, $ask=true)
                 file::write(fs::ds($path, 'ignore'), '');
             }
             else
+            {
                 cout::info('Terminated');
+            }
 
             return;
         }
@@ -268,7 +289,9 @@ function add_test($pkg, $file, $ask=true)
     }
 
     if (file::exists(fs::ds($path, 'ignore')))
+    {
         return;
+    }
 
     $files = file::find($path, '/\\.(phpt|ignore|delete)$/', true);
 
@@ -310,14 +333,18 @@ function add_test($pkg, $file, $ask=true)
                 $do_delete[] = $method;
 
                 if (!file::rename($tf, "{$method}_{$method_type}.delete"))
+                {
                     cout::warn(
                         "Couldn't rename: `{$method}_{$method_type}.{$ext}` ".
                         "to `{$method}_{$method_type}.delete`"
                     );
+                }
             }
         }
         else
+        {
             $found[] = $method;
+        }
     }
 
     // Create
@@ -326,15 +353,21 @@ function add_test($pkg, $file, $ask=true)
         foreach ($tests['methods'] as $method => $opt)
         {
             if ($opt['visibility'] !== 'public')
+            {
                 continue;
+            }
 
             if (in_array($method, $found))
+            {
                 continue;
+            }
 
             cout::info("Test for `{$method}` doesn't exists.");
 
             if (isset($opt['description']))
+            {
                 $o = ['description' => $opt['description']];
+            }
 
             $o['file'] = "<?php\n".
                 "use {$tests['namespace']}\\".
@@ -351,22 +384,32 @@ function add_test($pkg, $file, $ask=true)
                 : [0];
 
             if (!in_array(4, $tc) && (in_array(0, $tc) || in_array(1, $tc)))
+            {
                 file::write(fs::ds($path, $method.'_basic.phpt'), $t);
+            }
 
             if (!in_array(4, $tc) && (in_array(0, $tc) || in_array(2, $tc)))
+            {
                 file::write(fs::ds($path, $method.'_error.phpt'), $t);
+            }
 
             if (!in_array(4, $tc) && (in_array(0, $tc) || in_array(3, $tc)))
+            {
                 file::write(fs::ds($path, $method.'_variation.phpt'), $t);
+            }
 
             if (in_array(4, $tc))
+            {
                 cout::info("No tests will be created.");
+            }
 
             if (in_array(5, $tc))
+            {
                 file::write(
                     fs::ds($path, $method.'_all.ignore'),
                     "Auto Generated on: " . time()
                 );
+            }
         }
     }
 }
@@ -378,8 +421,8 @@ function add_test($pkg, $file, $ask=true)
  */
 function run_test($pkg, $file, $method)
 {
-    $spath = fs::ds($pkg, 'tests', $file);
-    $path  = fs::pkgpath($pkg, 'tests', $file);
+    $spath = fs::ds(str_replace('.', '/', $pkg), 'tests', $file);
+    $path  = fs::pkgpath(str_replace('.', '/', $pkg), 'tests', $file);
 
     if (!dir::exists($path))
     {
@@ -388,15 +431,19 @@ function run_test($pkg, $file, $method)
     }
 
     if ($method)
+    {
         $method = "{$method}*phpt";
+    }
     else
+    {
         $method = '*.phpt';
+    }
 
     $tests = new collection(fs::ds($path, $method));
 
     if (!count($tests))
     {
-        cout::warn("No tests found for: `{$pkg}` in `{$spath}:{$method}`");
+        cout::warn("No tests found for: `{$pkg}` in `{$spath}{$method}`");
         return;
     }
 
@@ -462,10 +509,12 @@ function diff_out(array $diff)
         list($line, $symbol, $lbefore, $value, $lafter) = $diff_line;
 
         if ($last !== $line)
+        {
             cout::info(
                 '~' . str_pad($line, 3, '0', STR_PAD_LEFT) .
                 ' ' . $lbefore
             );
+        }
 
         $last = $line+1;
 
@@ -478,8 +527,12 @@ function diff_out(array $diff)
         );
 
         if (isset($diff[$k+1]))
+        {
             if (($diff[$k+1][0]+1) === ($line+2))
+            {
                 continue;
+            }
+        }
 
         cout::info('~'.str_pad($line+2, 3, '0', STR_PAD_LEFT).' '.$lafter);
     }

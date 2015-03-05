@@ -4,7 +4,7 @@ namespace mysli\dev\phpt;
 
 __use(__namespace__, '
     mysli.framework.fs/fs,file,dir
-    mysli.framework.exception/*  AS  framework\exception\*
+    mysli.framework.exception/* -> framework\exception\*
 ');
 
 class collection implements \Countable, \Iterator
@@ -22,22 +22,26 @@ class collection implements \Countable, \Iterator
     function __construct($path)
     {
         $dir   = dirname($path);
-        $file = file::name($path);
+        $file = file::name($path, true);
 
         if (!dir::exists($dir))
+        {
             throw new framework\exception\not_found(
                 "Directory not found: `{$dir}`", 1
             );
+        }
 
         if (strpos($file, '*') !== false)
         {
             $file = preg_quote($file);
             $file = str_replace("\\*", '.*?', $file);
-            $file = "/{$file}/";
+            $file = "/^{$file}$/";
             $regex = true;
         }
         else
+        {
             $regex = false;
+        }
 
         $this->mk_tests($dir, $file, $regex);
     }
@@ -50,7 +54,9 @@ class collection implements \Countable, \Iterator
         $r = [];
 
         foreach ($this->tests as $t)
+        {
             $t->executed() && $t->succeed() && ($r[] = $t);
+        }
 
         return $r;
     }
@@ -63,7 +69,9 @@ class collection implements \Countable, \Iterator
         $r = [];
 
         foreach ($this->tests as $t)
+        {
             $t->executed() && $t->failed() && ($r[] = $t);
+        }
 
         return $r;
     }
@@ -76,7 +84,9 @@ class collection implements \Countable, \Iterator
         $r = [];
 
         foreach ($this->tests as $t)
+        {
             $t->executed() && $t->skipped() && ($r[] = $t);
+        }
 
         return $r;
     }
@@ -89,7 +99,9 @@ class collection implements \Countable, \Iterator
         $r = [];
 
         foreach ($this->tests as $t)
+        {
             $t->executed() && ($r[] = $t);
+        }
 
         return $r;
     }
@@ -102,7 +114,9 @@ class collection implements \Countable, \Iterator
         $r = [];
 
         foreach ($this->tests as $t)
+        {
             !$t->executed() && ($r[] = $t);
+        }
 
         return $r;
     }
@@ -115,7 +129,9 @@ class collection implements \Countable, \Iterator
         $s = 0.0;
 
         foreach ($this->tests as $t)
+        {
             $t->executed() && ($s += $t->run_time());
+        }
 
         return $s;
     }
@@ -186,13 +202,21 @@ class collection implements \Countable, \Iterator
             }
 
             if ($regex)
+            {
                 if (!preg_match($filep, $file))
+                {
                     continue;
+                }
+            }
             elseif ($file != $filep)
+            {
                 continue;
+            }
 
             if (substr($file, -5) !== '.phpt')
+            {
                 continue;
+            }
 
             $this->tests[] = new test_case(fs::ds($dir, $file));
         }

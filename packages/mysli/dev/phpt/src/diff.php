@@ -43,9 +43,13 @@ class diff
     private static function compare_line($l1, $l2, $regex)
     {
         if ($regex)
+        {
             return preg_match('/^'. $l1 . '$/s', $l2);
+        }
         else
+        {
             return !strcmp($l1, $l2);
+        }
     }
     /**
      * @param  array   $ar1
@@ -83,7 +87,9 @@ class diff
                     $ar1, $ar2, $regex, $ofs1, $idx2, $cnt1, $cnt2, $st);
 
                 if ($eq > $eq1)
+                {
                     $eq1 = $eq;
+                }
             }
 
             $eq2 = 0;
@@ -95,13 +101,19 @@ class diff
                     $ar1, $ar2, $regex, $idx1, $ofs2, $cnt1, $cnt2, $st);
 
                 if ($eq > $eq2)
+                {
                     $eq2 = $eq;
+                }
             }
 
             if ($eq1 > $eq2)
+            {
                 $equal += $eq1;
+            }
             elseif ($eq2 > 0)
+            {
                 $equal += $eq2;
+            }
         }
 
         return $equal;

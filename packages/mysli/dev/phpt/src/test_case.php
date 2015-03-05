@@ -4,7 +4,7 @@ namespace mysli\dev\phpt;
 
 __use(__namespace__, '
     mysli.framework.fs/fs,file
-    mysli.framework.exception/*  AS  framework\exception\*
+    mysli.framework.exception/* -> framework\exception\*
 ');
 
 class test_case
@@ -29,9 +29,11 @@ class test_case
     function __construct($filename)
     {
         if (!file::exists($filename))
+        {
             throw new framework\exception\not_found(
                 "File not found: `{$filename}`"
             );
+        }
 
         $this->filename = $filename;
         $this->dir_temp = fs::tmppath('phpt');
@@ -56,9 +58,13 @@ class test_case
 
         // get PHP location
         if (!$this->parsed['cgi'])
+        {
             $php = exec('which php')     ?: '/usr/bin/env php';
+        }
         else
+        {
             $php = exec('which php-cgi') ?: '/usr/bin/env php-cgi';
+        }
 
         $dir = dirname($this->filename);
 
@@ -71,7 +77,9 @@ class test_case
             $in = "< \"{$inputf}\"";
         }
         else
+        {
             $in = '';
+        }
 
         // check if skipif is set
         if (isset($this->parsed['skipif']))
@@ -137,7 +145,9 @@ class test_case
         $r = engine::run($command, $this->parsed['env'], $dir);
 
         if ($this->parsed['file_type'] === 'fileeof')
+        {
             $r = preg_replace("/[\r\n]+$/", '', $r);
+        }
 
         $r = trim($r);
         $this->output = $r;
@@ -179,7 +189,9 @@ class test_case
     function cleanup()
     {
         foreach ($this->files as $file)
+        {
             file::remove($file);
+        }
 
         $this->files = [];
     }
@@ -277,8 +289,12 @@ class test_case
     private function compare($expect, $out, $regex=false)
     {
         if ($regex)
+        {
             return preg_match("/^{$expect}\$/s", $out);
+        }
         else
+        {
             return strcmp($out, $expect) === 0;
+        }
     }
 }

@@ -17,7 +17,7 @@ namespace mysli\dev\phpt;
 __use(__namespace__, '
     mysli.framework.fs/fs,file
     mysli.framework.type/str,arr
-    mysli.framework.exception/*  AS  framework\exception\*
+    mysli.framework.exception/* -> framework\exception\*
 ');
 
 class parser
@@ -76,7 +76,9 @@ class parser
         foreach ($phptr as $matches)
         {
             if (!isset($matches[1]))
+            {
                 continue;
+            }
 
             if ($matches[1] === 'VIRTUAL')
             {
@@ -86,13 +88,17 @@ class parser
                 ];
             }
             else
+            {
                 $phpt[strtolower($matches[1])] = trim($matches[3]);
+            }
         }
 
         if (!arr::key_in($phpt, 'test'))
+        {
             throw new framework\exception\data(
                 "Field `--TEST--` is missing in file", 10
             );
+        }
 
         if (!($file = self::get_first_key($phpt,
             ['file', 'fileeof', 'file_external'])))
@@ -121,7 +127,9 @@ class parser
         $phpt['expect']      = trim($phpt[$expect]);
 
         if ($expect !== 'expect')
+        {
             unset($phpt[$expect]);
+        }
 
         unset($phpt['file']);
 
@@ -175,7 +183,9 @@ class parser
             $env['QUERY_STRING'] = trim($phpt['get']);
         }
         else
+        {
             $env['QUERY_STRING'] = '';
+        }
 
         if (isset($phpt['cookie']))
         {
@@ -183,7 +193,9 @@ class parser
             $env['HTTP_COOKIE'] = trim($phpt['cookie']);
         }
         else
+        {
             $env['HTTP_COOKIE'] = '';
+        }
 
         // Inputs
         if (isset($phpt['post']))
@@ -235,7 +247,9 @@ class parser
                 }
 
                 if ($started)
+                {
                     $phpt['request'] .= "\n";
+                }
 
                 $started = true;
                 $phpt['request'] .= $line;
@@ -245,9 +259,11 @@ class parser
             $env['REQUEST_METHOD'] = isset($phpt['put']) ? 'PUT' : 'POST';
 
             if (empty($phpt['request']))
+            {
                 throw new framework\exception\data(
                     "Invalid `{$env['REQUEST_METHOD']}` request.", 1
                 );
+            }
         }
 
         // Special env settings
@@ -258,7 +274,9 @@ class parser
                 $e = explode('=', trim($e), 2);
 
                 if (!empty($e[0]) && isset($e[1]))
+                {
                     $env[$e[0]] = $e[1];
+                }
             }
         }
 
@@ -268,16 +286,20 @@ class parser
         if (isset($phpt['ini']))
         {
             if (strpos($phpt['ini'], '{PWD}') !== false)
+            {
                 $phpt['ini'] = str_replace(
                     '{PWD}', dirname($phpt_file), $phpt['ini']
                 );
+            }
 
             $phpt['ini'] = self::ini_to_array(
                 preg_split( "/[\n\r]+/", $phpt['ini'])
             );
         }
         else
+        {
             $phpt['ini'] = [];
+        }
 
         $phpt['ini'] = array_merge(self::$ini_overwrites, $phpt['ini']);
         $phpt['inip'] = self::ini_to_params($phpt['ini']);
@@ -313,10 +335,14 @@ class parser
                     $file_content = trim($file_content);
 
                     if (substr($file_content, 0, 5) === '<?php')
+                    {
                         $file_content = substr($file_content, 5);
+                    }
 
                     if (substr($file_content, -2) === '?>')
+                    {
                         $file_content = substr($file_content, 0, -2);
+                    }
 
                     $phpt['import'] .= "{$file_content}\n";
                 }
@@ -324,7 +350,9 @@ class parser
             $phpt['import'] .= "?>";
         }
         else
+        {
             $phpt['import'] = '';
+        }
 
         return $phpt;
     }
@@ -353,7 +381,9 @@ class parser
 
                 // unbalanced tag, ignore it.
                 if ($end === false)
+                {
                     $end = $start = $length;
+                }
             }
             else
                 // no more %r sections
@@ -367,7 +397,9 @@ class parser
 
             // add the re unquoted.
             if ($end > $start)
+            {
                 $temp = $temp.'('.substr($expect, $start+2, ($end - $start-2)).')';
+            }
 
             $start_offset = $end + 2;
         }
@@ -423,7 +455,7 @@ class parser
         $headers[] = '<?php';
         $headers[] = sprintf(
             'include("%s");',
-            fs::pkgroot(CORE_PKG, 'src/__init.php')
+            fs::pkgreal(CORE_PKG, 'src/__init.php')
         );
         $headers[] = sprintf(
             'call_user_func("%s", "%s", "%s");',
@@ -444,8 +476,12 @@ class parser
     private static function get_first_key(array $array, array $keys)
     {
         foreach ($keys as $key)
+        {
             if (array_key_exists($key, $array))
+            {
                 return $key;
+            }
+        }
 
         return false;
     }
@@ -469,12 +505,16 @@ class parser
                 if ($name == 'extension')
                 {
                     if (!isset($output[$name]))
+                    {
                         $output[$name] = array();
+                    }
 
                     $output[$name][] = $value;
                 }
                 else
+                {
                     $output[$name] = $value;
+                }
             }
         }
 
@@ -489,7 +529,7 @@ class parser
     {
         $output = '';
 
-        foreach($ini as $name => $value)
+        foreach ($ini as $name => $value)
         {
             if (is_array($value))
             {
@@ -513,7 +553,9 @@ class parser
                     }
                 }
                 else
+                {
                     $value = addslashes($value);
+                }
 
                 $output .= " -d \"$name=$value\"";
             }
@@ -532,10 +574,14 @@ class parser
         $filename = fs::ds($path, $file);
 
         if (!file::exists($filename))
+        {
             throw new framework\exception\not_found(
                 "External file not found: `{$filename}`", 3
             );
+        }
         else
+        {
             return trim(file::read($filename));
+        }
     }
 }

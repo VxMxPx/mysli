@@ -29,8 +29,12 @@ class engine
         $data = '';
 
         foreach ($_SERVER as $k => $v)
+        {
             if (!array_key_exists($k, $env) && !is_array($v))
+            {
                 $env[$k] = $v;
+            }
+        }
 
         $proc = proc_open(
             $command, [
@@ -43,10 +47,14 @@ class engine
         );
 
         if (!$proc)
+        {
             return false;
+        }
 
         if (!is_null($stdin))
+        {
             fwrite($pipes[0], $stdin);
+        }
 
         fclose($pipes[0]);
         unset($pipes[0]);
@@ -79,7 +87,9 @@ class engine
 
                 /* EOF */
                 if (strlen($line) == 0)
+                {
                     break;
+                }
 
                 $data .= $line;
             }
@@ -88,7 +98,9 @@ class engine
         $stat = proc_get_status($proc);
 
         if ($stat['signaled'])
+        {
             $data .= "\nTermsig=" . $stat['stopsig'];
+        }
 
         $code = proc_close($proc);
 
