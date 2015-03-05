@@ -7,8 +7,8 @@ __use(__namespace__, '
     mysli.framework.ym
     mysli.framework.pkgm
     mysli.framework.fs/fs,file,dir
-    mysli.framework.cli/param,output,input AS param,cout,cin
-    mysli.framework.exception/*            AS framework\exception\*
+    mysli.framework.cli/param,output,input -> param,cout,cin
+    mysli.framework.exception/*            -> framework\exception\*
 ');
 
 /**
@@ -47,7 +47,9 @@ function __init(array $args)
         $v = $param->values();
 
         if (!$v['package'])
+        {
             $v['package'] = pkgm::name_by_path(getcwd());
+        }
 
         create($v['package'], $v['stub'], $v['yes']);
     }
@@ -75,7 +77,9 @@ function create($package, $stub, $yes)
         return;
     }
     else
+    {
         cout::line("\n* New release of `{$package}`");
+    }
 
     // Get packag's meta, version and release
     $meta = pkgm::meta($package, true);
@@ -116,7 +120,9 @@ function create($package, $stub, $yes)
         }
     }
     else
+    {
         $stubc = false;
+    }
 
     // Create PHAR archive
     $phar = create_phar($pkg_fullpath, "{$pkg_filename}.phar", $stubc) or exit();
@@ -125,7 +131,9 @@ function create($package, $stub, $yes)
     $ignore = generate_ignore_list($meta);
 
     if ($stub)
+    {
         $ignore[] = $stub;
+    }
 
     fs::map($path, function ($apath, $rpath, $is_dir) use ($phar, $ignore)
     {
@@ -175,7 +183,6 @@ function create($package, $stub, $yes)
 
     write_meta(
         "phar://".$pkg_fullpath.'/mysli.pkg.ym',
-        $meta,
         $api_version,
         $release,
         $pre_release
@@ -287,9 +294,13 @@ function clean_files(array $files)
             cout::line("    Found: `".file::name($file, true)."`", false);
 
             if (file::remove($file))
+            {
                 cout::format('+green+right OK');
+            }
             else
+            {
                 cout::format('+red+right FAILED');
+            }
         }
     }
 }
@@ -305,7 +316,9 @@ function create_phar($path, $filename, $stub=null)
     cout::line("\n* Creating package: {$filename}");
 
     if (!$stub)
+    {
         $stub = '<?php die(\'204 No Content.\'); __HALT_COMPILER(); ?>';
+    }
 
     try
     {
@@ -371,20 +384,32 @@ function generate_ignore_list($meta)
 
     // Find any internal ignores
     if (isset($meta['pkgc']))
+    {
         if (isset($meta['pkgc']['ignore']) && is_array($meta['pkgc']['ignore']))
+        {
             $ignore = array_merge($ignore, $meta['pkgc']['ignore']);
+        }
+    }
 
     // Check for i18n
     if (isset($meta['i18n']) && isset($meta['i18n']['source']))
+    {
         $ignore[] = rtrim($meta['i18n']['source'], '\\/').'/';
+    }
     else
+    {
         $ignore[] = 'i18n/';
+    }
 
     // Check for tplp
     if (isset($meta['tplp']) && isset($meta['tplp']['source']))
+    {
         $ignore[] = rtrim($meta['tplp']['source'], '\\/').'/';
+    }
     else
+    {
         $ignore[] = 'tplp/';
+    }
 
     // Assets
     list($as_src, $as_dest, $as_map) = assets::get_default_paths($meta['package']);
@@ -409,7 +434,9 @@ function generate_ignore_list($meta)
         foreach ($map['files'] as $file)
         {
             if (!is_array($file))
+            {
                 continue;
+            }
 
             if (isset($file['compress']) && $file['compress'] &&
                 isset($file['include']) && is_array($file['include']))

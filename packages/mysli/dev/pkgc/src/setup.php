@@ -13,7 +13,11 @@ function enable()
 function disable()
 {
     if (dir::exists(fs::tmppath('pkgc')))
+    {
         return dir::remove(fs::tmppath('pkgc'));
+    }
     else
+    {
         return true;
+    }
 }
