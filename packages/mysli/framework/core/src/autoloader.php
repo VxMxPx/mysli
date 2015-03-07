@@ -199,7 +199,7 @@ class autoloader
 
         if (strpos($as, '*'))
         {
-            $as = preg_quote($as);
+            $as = preg_quote($as, '/');
             $as = str_replace('\\*', '(.*?)', $as);
             $as = "/^{$as}$/";
         }
