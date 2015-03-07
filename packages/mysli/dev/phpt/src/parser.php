@@ -364,7 +364,7 @@ class parser
      */
     private static function process_expectf($expect)
     {
-        // do preg_quote, but miss out any %r delimited sections
+        // do preg quote, but miss out any %r delimited sections
         $temp   = "";
         $r      = "%r";
         $length = strlen($expect);
@@ -391,8 +391,7 @@ class parser
 
             // quote a non re portion of the string
             $temp = $temp.preg_quote(
-                substr($expect, $start_offset, ($start - $start_offset)),
-                '/'
+                substr($expect, $start_offset, ($start - $start_offset)), '/'
             );
 
             // add the re unquoted.

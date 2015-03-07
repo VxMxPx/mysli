@@ -33,7 +33,7 @@ class collection implements \Countable, \Iterator
 
         if (strpos($file, '*') !== false)
         {
-            $file = preg_quote($file);
+            $file = preg_quote($file, '/');
             $file = str_replace("\\*", '.*?', $file);
             $file = "/^{$file}$/";
             $regex = true;

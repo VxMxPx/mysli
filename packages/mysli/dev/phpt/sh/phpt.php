@@ -124,7 +124,7 @@ function watch($pkg, $file, $method, $do_add, $do_test, $sleep=2)
     $sfp = [
         fs::pkgpath($pkg, 'src'),
         ($file
-            ? "/".preg_quote(trim($file,'/\\'))."\\.php/"
+            ? "/".preg_quote(trim($file,'/\\'), '/')."\\.php/"
             : '/.*?\\.php/'
         )
     ];
@@ -133,7 +133,7 @@ function watch($pkg, $file, $method, $do_add, $do_test, $sleep=2)
     $tfp = [
         fs::pkgpath($pkg, 'tests', $file),
         ($method
-            ? "/".preg_quote(trim($method,'/\\'))."[a-z0-9_]*?\\.[a-z]+/"
+            ? "/".preg_quote(trim($method,'/\\'), '/')."[a-z0-9_]*?\\.[a-z]+/"
             : '/.*?\\.[a-z]+/'
         )
     ];
