@@ -108,7 +108,7 @@ class parser
         if ($module)
         {
             if (preg_match(
-                '/^::module '.preg_quote($module).'$\s(.*?)\s^::\/module$/ms',
+                '/^::module '.preg_quote($module, '/').'$\s(.*?)\s^::\/module$/ms',
                 $template, $match))
             {
                 $template = $match[1];
