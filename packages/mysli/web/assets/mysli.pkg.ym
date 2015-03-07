@@ -6,6 +6,7 @@ authors:
     - Marko Gajšt (Developer) <m@gaj.st>
 require:
     mysli.framework.exception: 1
+    mysli.framework.event:     1
     mysli.framework.type:      1
     mysli.framework.json:      1
     mysli.framework.pkgm:      1
