@@ -60,7 +60,6 @@ function enable_dev()
 }
 function disable_dev()
 {
-    tplp::remove_cache('mysli.web.ui');
     event::unregister(
         'mysli.web.web:route<*>mwu-developer*>',
         'mysli\\web\\ui::developer'

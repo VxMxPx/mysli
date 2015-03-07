@@ -10,7 +10,12 @@ __use(__namespace__, '
 
 function enable()
 {
-    return assets::publish(__DIR__);
+    event::unregister(
+        'mysli.web.web:route<*><mwu-developer*>',
+        'mysli\\web\\ui::developer'
+    );
+
+    return assets::publish('mysli.web.ui');
 }
 function disable()
 {

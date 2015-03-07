@@ -1,5 +1,5 @@
-::use mysli/web/assets
-::use mysli/external/jquery
+::use mysli.web.assets
+::use mysli.external.jquery
 <!DOCTYPE html>
 <html>
 <head>

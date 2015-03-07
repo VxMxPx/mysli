@@ -12,5 +12,3 @@ require:
     mysli.web.response:    1
     mysli.web.request:     1
     mysli.external.jquery: 1
-tplp:
-    destination: _dist/tplp

@@ -10,6 +10,8 @@ __use(__namespace__, '
     mysli.web.request
 ');
 
+const scrdir = '_dist/assets/common/scripts';
+
 class ui
 {
     static function developer()
@@ -38,7 +40,7 @@ class ui
             }
             else
             {
-                $file = fs::pkgroot(__DIR__, 'tplp/scripts', $js.'.js');
+                $file = fs::pkgroot(__DIR__, scrdir, $js.'.js');
 
                 if (!file::exists($file))
                 {
@@ -70,7 +72,7 @@ class ui
 
     private static function get_script($script)
     {
-        $file = fs::pkgroot(__DIR__, 'tplp/scripts', $script.'.js');
+        $file = fs::pkgroot(__DIR__, scrdir, $script.'.js');
 
         if (file::exists($file))
         {
