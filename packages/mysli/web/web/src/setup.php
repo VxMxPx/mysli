@@ -81,16 +81,16 @@ function enable($csi=null)
     }
 
 
-    event::register('mysli.web.web/index:start', 'mysli\\web\\web::route');
-    event::register('mysli.web.web/index:done',  'mysli\\web\\web::output');
+    event::register('mysli.web.web/index:start', 'mysli\web\web::route');
+    event::register('mysli.web.web/index:done',  'mysli\web\web::output');
 
     return true;
 }
 function disable()
 {
     $c = config::select('mysli.web.web');
-    event::unregister('mysli.web.web/index:start', 'mysli\\web\\web::route');
-    event::unregister('mysli.web.web/index:done',  'mysli\\web\\web::output');
+    event::unregister('mysli.web.web/index:start', 'mysli\web\web::route');
+    event::unregister('mysli.web.web/index:done',  'mysli\web\web::output');
 
     return dir::remove(web::path())
         && $c->destroy();
