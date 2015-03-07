@@ -169,14 +169,14 @@ class autoloader
 
                     $asf = "{$namespace}\\{$asf}";
                     $fromf = str_replace(['.', '/'], '\\', $from).'\\'.$fclass;
-                    self::alias($fromf, $asf);
+                    self::register_alias($fromf, $asf);
                 }
                 continue;
             }
 
             $as = "{$namespace}\\{$as}";
             $from = str_replace(['.', '/'], '\\', $from);
-            self::alias($from, $as);
+            self::register_alias($from, $as);
         }
     }
 
@@ -190,7 +190,7 @@ class autoloader
      * @param  string $to
      * @param  string $as
      */
-    private static function alias($to, $as)
+    private static function register_alias($to, $as)
     {
         if ($to === $as)
         {
@@ -232,6 +232,17 @@ class autoloader
         $package = \core\pkg::by_namespace($class);
         $is_phar = \core\pkg::exists_as($package) === \core\pkg::phar;
 
+        // Resolve short namespaces (e.g. mysli\web\web => mysli\web\web\web)
+        if (substr_count($package, '.') == substr_count($class, '\\'))
+        {
+            $alias  = $class;
+            $class .= substr($class, strrpos($class, '\\'));
+        }
+        else
+        {
+            $alias = false;
+        }
+
         // Get paths
         if ($is_phar)
         {
@@ -269,6 +280,12 @@ class autoloader
         if (!in_array($package, self::$initialized))
         {
             self::init($package, $abspath);
+        }
+
+        if ($alias)
+        {
+            self::register_alias($class, $alias);
+            class_alias($class, $alias);
         }
 
         return true;
