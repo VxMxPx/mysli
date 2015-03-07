@@ -412,7 +412,7 @@ function generate_ignore_list($meta)
     }
 
     // Assets
-    list($as_src, $as_dest, $as_map) = assets::get_default_paths($meta['package']);
+    list($as_src, $as_dest, $as_map) = assets::get_paths($meta['package']);
 
     $ignore[] = $as_src.'/';
     $map = false;
