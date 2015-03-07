@@ -10,4 +10,3 @@ require:
     mysli.framework.json:      1
     mysli.framework.type:      1
     mysli.framework.exception: 1
-    mysli.util.config:         1

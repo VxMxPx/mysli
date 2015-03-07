@@ -4,7 +4,7 @@
 
 Tplp (Template Parser) package is a simple template parser.
 All templates are parsed and saved as a regular PHP, hence resources usage
-is on minimum (it's run only once for each package you enable).
+is on minimum (it's run only once for each package when you build it).
 
 ## Usage
 
@@ -25,44 +25,41 @@ vendor/
             list.tplp.html
 ```
 
-When your package is enabled you can use method `create_cache`, which will parse
-all files in `templates` folder of your package, and saved them as a regular PHP.
-When your package is disabled, use method `remove_cache`, to remove previously
-created PHP files.
-
-Examples:
-
-```php
-__use(__namespace__, 'mysli/util/tplp');
-```
-
-In your setup.php:
-
-```php
-function enable() {
-    tplp::create_cache();
-    // If you've put your .tplp.html files to different director than _tplp_,
-    // then you can specify it when creating cache:
-    // tplp::create_cache('different_templates_directory');
-}
-function disable() {
-    tplp::remove_cache();
-}
-```
-
 ... other:
 
 ```php
-__use(__namespace__, 'mysli/util/tplp');
+__use(__namespace__, '
+    mysli.util.tplp
+');
 
-$template = tplp::select('vendor/package');
+$template = tplp::select('vendor.package');
 
 // Set translator (if you use it)
-$template->set_translator(i18n::select('vendor/package'));
+$template->set_translator(i18n::select('vendor.package'));
 
 // Process PHP with variables and return HTML
 $template->render('template_name', $variables); // => HTML
 ```
+
+You'll have to use command line to parse templates:
+```
+./dot tplp vendor.package
+```
+
+Please see `./dot tplp -h` for list of all commands and help.
+
+You can define costume source and destionation path for your templates. 
+Add the following section to your `mysli.pkg.ym` file:
+
+```yaml
+tplp:
+    source:      tplp
+    destination: _dist/tplp
+```
+
+You can exclude files from parsing by prefixing them with underline e.g.: 
+`_layout.tplp`. You should exclude layouts and modules -- those will be parsed 
+as they're imported by other file.
 
 ## Template Syntax
 
@@ -658,14 +655,14 @@ Some package will offer utility to be used in templates,
 which can be included and used with:
 
 ```
-::use vendor/package
+::use vendor.package
 {var|package/method:parameter}
 ```
 
 ... or if you want to alias is:
 
 ```
-::use vendor/package as pkg
+::use vendor.package -> pkg
 {var|pkg/method:param}
 ```
 
@@ -874,29 +871,6 @@ modules.tplp
     <p>Hello world!</p>
 </div>
 ```
-
-## Config
-
-| Key    | Default | Description                                         |
-|--------|---------|-----------------------------------------------------|
-| debug  | false   | If true, templates will be rebuild on each request. |
-
-
-## Paths
-
-You can define costume source and destionation path for your templates
-(and hence prebuild them). Add the following section to your `mysli.pkg.ym` file:
-
-```yaml
-tplp:
-    source      : tplp
-    destination : _dist/tplp
-```
-
-... if you'll build your templates from command line, you can exclude files
-from parsing by prefixing them with underline e.g.: `_layout.tplp`. You should
-exclude layouts and modules -- those will be parsed
-as they're included by other file.
 
 ## License
 

@@ -1,6 +1,6 @@
 --TEST--
 --VIRTUAL (test.tplp)--
-::use mysli/cms/blog as mblog
+::use mysli.cms.blog -> mblog
 <div>
     {variable}
 </div>

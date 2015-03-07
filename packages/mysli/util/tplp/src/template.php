@@ -3,13 +3,13 @@
 namespace mysli\util\tplp;
 
 __use(__namespace__, '
-    mysli.util.config
+    ./tplp
     mysli.framework.fs/fs,file
     mysli.framework.exception/* -> framework\exception\*
 ');
 
-class template {
-
+class template
+{
     private $package;
     private $translator;
     private $variables = [];
@@ -20,35 +20,45 @@ class template {
     /**
      * @param string $package
      */
-    function __construct($package) {
+    function __construct($package)
+    {
         $this->package = $package;
-        list($this->source, $this->dest) = util::get_default_paths($package);
+        list($this->source, $this->dest) = tplp::get_paths($package);
     }
     /**
      * Set translator for template
      * @param object $translator
      */
-    function set_translator($translator) {
+    function set_translator($translator)
+    {
         $this->translator = $translator;
-        $this->set_function('translator_service', function () {
-            return call_user_func_array(
-                        [$this->translator, 'translate'], func_get_args());
-        });
+        $this->set_function(
+            'translator_service',
+            function ()
+            {
+                return call_user_func_array(
+                    [$this->translator, 'translate'], func_get_args()
+                );
+            }
+        );
     }
     /**
      * Set local function for template
      * @param string   $name
      * @param callable $call
      */
-    function set_function($name, $call) {
+    function set_function($name, $call)
+    {
         $this->variables["tplp_func_{$name}"] = $call;
     }
     /**
      * Unset local function by name
      * @param  string $name
      */
-    function unset_function($name) {
-        if (isset($this->variables["tplp_func_{$name}"])) {
+    function unset_function($name)
+    {
+        if (isset($this->variables["tplp_func_{$name}"]))
+        {
             unset($this->variables["tplp_func_{$name}"]);
         }
     }
@@ -57,20 +67,26 @@ class template {
      * @param string $name
      * @param mixed  $value
      */
-    function set_variable($name, $value) {
-        if (substr($name, 0, 5) === 'tplp_') {
+    function set_variable($name, $value)
+    {
+        if (substr($name, 0, 5) === 'tplp_')
+        {
             throw new framework\exception\argument(
                 "Invalid variable name `{$name}`, ".
-                "a variable cannot start with: `tplp_`", 1);
+                "a variable cannot start with: `tplp_`", 1
+            );
         }
+
         $this->variables[$name] = $value;
     }
     /**
      * Unset a local variable
      * @param  string $name
      */
-    function unset_variable($name) {
-        if (isset($this->variables[$name])) {
+    function unset_variable($name)
+    {
+        if (isset($this->variables[$name]))
+        {
             unset($this->variables[$name]);
         }
     }
@@ -80,19 +96,27 @@ class template {
      * @param  array  $variables
      * @return string
      */
-    function render($file, array $variables=[]) {
+    function render($file, array $variables=[])
+    {
+        $file = fs::ds($this->dest, $file.'.php');
 
-        $file = $this->create_and_get_file($file);
+        if (!file::exists($file))
+        {
+            throw new framework\exception\not_found(
+                "Template file not found: `{$file}`");
+        }
 
         // Assign variables...
         $variables = array_merge($this->variables, $variables);
-        foreach($variables as $_tplpvar => $_tplpval) {
+
+        foreach($variables as $_tplpvar => $_tplpval)
+        {
             $$_tplpvar = $_tplpval;
         }
 
         ob_start();
-            include($file);
-            $result = ob_get_contents();
+        include($file);
+        $result = ob_get_contents();
         ob_end_clean();
 
         return $result;
@@ -103,35 +127,9 @@ class template {
      * @param  string  $file
      * @return boolean
      */
-    function has($file) {
+    function has($file)
+    {
         $source_file = fs::ds($this->source, $file.'.tplp');
         return file::exists($source_file);
-    }
-
-    /**
-     * Get parsed template absolute path, if exists,
-     * otherwise parse it and then return the path
-     * @param  string $file
-     * @return string
-     */
-    private function create_and_get_file($file) {
-
-        $cache_file = fs::ds($this->dest, $file.'.php');
-
-        if (!file::exists($cache_file) ||
-            config::select('mysli/util/tplp', 'debug'))
-        {
-            if (!$this->has($file)) {
-                throw new framework\exception\not_found(
-                    "File `{$file}.tplp` not found in `" .
-                    $this->source . '`', 1);
-            }
-
-            $parsed = parser::file("{$file}.tplp", $this->source);
-            file::create_recursive($cache_file, true);
-            file::write($cache_file, $parsed);
-        }
-
-        return $cache_file;
     }
 }
