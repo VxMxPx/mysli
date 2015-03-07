@@ -7,7 +7,7 @@ authors:
 require:
     mysli.framework.ym:        1
     mysli.framework.pkgm:      1
+    mysli.framework.event:     1
     mysli.framework.cli:       1
     mysli.framework.fs:        1
     mysli.framework.exception: 1
-    mysli.web.assets:          1

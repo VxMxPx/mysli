@@ -3,9 +3,9 @@
 namespace mysli\dev\pkgc\sh\pkgc;
 
 __use(__namespace__, '
-    mysli.web.assets
     mysli.framework.ym
     mysli.framework.pkgm
+    mysli.framework.event
     mysli.framework.fs/fs,file,dir
     mysli.framework.cli/param,output,input -> param,cout,cin
     mysli.framework.exception/*            -> framework\exception\*
@@ -22,18 +22,25 @@ function __init(array $args)
     $param->command = 'pkgc';
     $param->add('--stub/-s', [
         'type'    => 'str',
-        'help'    => 'Specify a costume stub file (relative to the package root)'
+        'help'    => 'Specify a costume stub file, relative to the package root, '.
+                     'e.g.: src/stub.php'
     ]);
-    $param->add('-y/--yes', [
-        'help'    => 'Answer to all questions with yes.',
+    $param->add('--whitespace/-w', [
         'type'    => 'bool',
-        'default' => false
+        'default' => false,
+        'help'    => 'Do not remove whitespace from PHP files, '.
+                     'result in larger PHAR, but easier to debug.'
+    ]);
+    $param->add('--yes/-y', [
+        'type'    => 'bool',
+        'default' => false,
+        'help'    => 'Answer to all questions with yes.'
     ]);
     $param->add('PACKAGE', [
-        'help'     => 'Package name. If not provided, current '.
-                      'directory will be used.',
         'required' => false,
-        'default'  => null
+        'default'  => null,
+        'help'     => 'Package name. If not provided, current '.
+                      'directory will be used.'
     ]);
 
     $param->parse();
@@ -51,16 +58,18 @@ function __init(array $args)
             $v['package'] = pkgm::name_by_path(getcwd());
         }
 
-        create($v['package'], $v['stub'], $v['yes']);
+        create($v['package'], $v['stub'], $v['whitespace'], $v['yes']);
     }
 }
 /**
  * Handle action.
- * @param  array  $package
- * @param  string $stub
+ * @param  array   $package
+ * @param  string  $stub
+ * @param  boolean $whitespace
+ * @param  boolean $yes
  * @return null
  */
-function create($package, $stub, $yes)
+function create($package, $stub, $whitespace, $yes)
 {
     // Require source path!
     $path = fs::pkgpath(str_replace('.', '/', $package));
@@ -130,12 +139,16 @@ function create($package, $stub, $yes)
     cout::line("    Adding files:");
     $ignore = generate_ignore_list($meta);
 
+    event::trigger('mysli.dev.pkgc/ignore_list', [$package, &$ignore]);
+
+    // handle_assets($package);
+
     if ($stub)
     {
         $ignore[] = $stub;
     }
 
-    fs::map($path, function ($apath, $rpath, $is_dir) use ($phar, $ignore)
+    fs::map($path, function ($apath, $rpath, $is_dir) use ($phar, $ignore, $whitespace)
     {
         cout::line("        File: `{$rpath}`", false);
 
@@ -167,26 +180,34 @@ function create($package, $stub, $yes)
             }
             else
             {
-                // if (substr($rpath, -4) === '.php')
-                // {
-                //     $phar->addFromString($rpath, php_strip_whitespace($apath));
-                //     cout::format('+green+right COMPRESSED');
-                // }
-                // else
-                // {
+                if (substr($rpath, -4) === '.php' && !$whitespace)
+                {
+                    $phar->addFromString($rpath, php_strip_whitespace($apath));
+                    cout::format('+green+right COMPRESSED');
+                }
+                else
+                {
                     $phar->addFile($apath, $rpath);
                     cout::format('+green+right FILE');
-                // }
+                }
             }
         }
     });
 
+    // Write new api_version and release to phar file
     write_meta(
         "phar://".$pkg_fullpath.'/mysli.pkg.ym',
         $api_version,
         $release,
         $pre_release
     );
+
+    event::trigger('mysli.dev.pkgc/done', [$package, &$phar]);
+
+    // Re-inser asset's map
+    // add_assets_map("phar://".$pkg_fullpath, $meta);
+
+    // Finally print phar's signature
     print_signature($phar);
 }
 
@@ -370,11 +391,10 @@ function print_signature(\Phar $phar)
 }
 /**
  * Get list of files and directories to be ignored.
- * @global assets
  * @param  array $meta
  * @return array
  */
-function generate_ignore_list($meta)
+function generate_ignore_list(array $meta)
 {
     $ignore = [];
 
@@ -382,71 +402,11 @@ function generate_ignore_list($meta)
     $ignore[] = 'doc/COPYING';
     $ignore[] = 'tests/';
 
-    // Find any internal ignores
     if (isset($meta['pkgc']))
     {
         if (isset($meta['pkgc']['ignore']) && is_array($meta['pkgc']['ignore']))
         {
             $ignore = array_merge($ignore, $meta['pkgc']['ignore']);
-        }
-    }
-
-    // Check for i18n
-    if (isset($meta['i18n']) && isset($meta['i18n']['source']))
-    {
-        $ignore[] = rtrim($meta['i18n']['source'], '\\/').'/';
-    }
-    else
-    {
-        $ignore[] = 'i18n/';
-    }
-
-    // Check for tplp
-    if (isset($meta['tplp']) && isset($meta['tplp']['source']))
-    {
-        $ignore[] = rtrim($meta['tplp']['source'], '\\/').'/';
-    }
-    else
-    {
-        $ignore[] = 'tplp/';
-    }
-
-    // Assets
-    list($as_src, $as_dest, $as_map) = assets::get_paths($meta['package']);
-
-    $ignore[] = $as_src.'/';
-    $map = false;
-
-    try
-    {
-        $map = assets::get_map($meta['package'], $as_src, $as_map);
-    }
-    catch (\Exception $e) {
-        // Pass
-    }
-
-    if (is_array($map) && isset($map['files']) && is_array($map['files']))
-    {
-        $extlist = is_array($map['settings']) && is_array($map['settings']['ext'])
-            ? $map['settings']['ext']
-            : [];
-
-        foreach ($map['files'] as $file)
-        {
-            if (!is_array($file))
-            {
-                continue;
-            }
-
-            if (isset($file['compress']) && $file['compress'] &&
-                isset($file['include']) && is_array($file['include']))
-            {
-                foreach ($file['include'] as $include)
-                {
-                    $include = assets::parse_extention($include, $extlist);
-                    $ignore[] = fs::ds($as_dest, $include);
-                }
-            }
         }
     }
 
