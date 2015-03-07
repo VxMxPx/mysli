@@ -326,7 +326,7 @@ class pkgm
             $release = "r*.{$release}";
         }
 
-        $release = preg_quote($release);
+        $release = '/'.preg_quote($release, '/').'/';
 
         if (strpos($release, '\\*'))
         {
