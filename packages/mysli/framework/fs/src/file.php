@@ -6,8 +6,8 @@ __use(__namespace__, '
     mysli.framework.exception/* -> framework\exception\*
 ');
 
-class file {
-
+class file
+{
     const prepend = 0;
     const append = 1;
     const replace = 2;
@@ -17,11 +17,15 @@ class file {
      * @param  string $filename
      * @return string
      */
-    static function extension($filename) {
+    static function extension($filename)
+    {
         $file = basename($filename);
-        if (strpos($file, '.') === false) {
+
+        if (strpos($file, '.') === false)
+        {
             return '';
         }
+
         $extension = explode('.', strrev($file), 2);
         return strrev($extension[0]);
     }
@@ -31,15 +35,21 @@ class file {
      * @param  boolean $extension
      * @return string
      */
-    static function name($filename, $extension=false) {
+    static function name($filename, $extension=false)
+    {
         $filename = basename($filename);
-        if (!$extension) {
+
+        if (!$extension)
+        {
             $file_ext = self::extension($filename);
             $file_ext = strlen($file_ext);
-            if ($file_ext > 0) {
+
+            if ($file_ext > 0)
+            {
                 return substr($filename, 0, ($file_ext + 1) * -1);
             }
         }
+
         return $filename;
     }
     /**
@@ -47,7 +57,8 @@ class file {
      * @param  string $filename
      * @return string
      */
-    static function path($filename) {
+    static function path($filename)
+    {
         return dirname($filename);
     }
     /**
@@ -55,11 +66,15 @@ class file {
      * @param  string $filename
      * @return integer
      */
-    static function size($filename) {
-        if (!self::exists($filename)) {
+    static function size($filename)
+    {
+        if (!self::exists($filename))
+        {
             throw new framework\exception\not_found(
-                "File not found: `{$filename}`.", 1);
+                "File not found: `{$filename}`.", 1
+            );
         }
+
         return filesize($filename);
     }
     /**
@@ -67,7 +82,8 @@ class file {
      * @param  string $filename
      * @return boolean
      */
-    static function exists($filename) {
+    static function exists($filename)
+    {
         return file_exists($filename);
     }
     /**
@@ -75,12 +91,17 @@ class file {
      * @param  string $filename
      * @return string
      */
-    static function read($filename) {
-        if (self::exists($filename)) {
+    static function read($filename)
+    {
+        if (self::exists($filename))
+        {
             return file_get_contents($filename);
-        } else {
+        }
+        else
+        {
             throw new framework\exception\not_found(
-                "File not found: `{$filename}`.", 1);
+                "File not found: `{$filename}`.", 1
+            );
         }
     }
     /**
@@ -115,10 +136,12 @@ class file {
      * @param  boolean $empty
      * @return boolean
      */
-    static function create_recursive($filename, $empty=false) {
+    static function create_recursive($filename, $empty=false)
+    {
         $dir = dirname($filename);
 
-        if (!dir::exists($dir)) {
+        if (!dir::exists($dir))
+        {
             dir::create($dir, 0777, true);
         }
 
@@ -135,60 +158,87 @@ class file {
     static function write(
         $filename, $content, $method=self::replace, $lock=false, $create=true)
     {
-        if (!self::exists($filename) && $create) {
+        if (!self::exists($filename) && $create)
+        {
             self::create($filename);
         }
 
-        if (!self::exists($filename)) {
+        if (!self::exists($filename))
+        {
             throw new framework\exception\not_found(
                 "File doesn't exists: `{$filename}`.", 1);
         }
 
-        if ($method === self::prepend) {
+        if ($method === self::prepend)
+        {
             $handle = fopen($filename, 'r+t');
-            if ($handle === false) {
+
+            if ($handle === false)
+            {
                 throw new framework\exception\fs(
                     "Couldn't open file: `{$filename}`", 1);
             }
-            if ($lock) {
-                if (!flock($handle, LOCK_EX)) {
+
+            if ($lock)
+            {
+                if (!flock($handle, LOCK_EX))
+                {
                     throw new framework\exception\fs(
                         "Couldn't lock the file: `{$filename}`.", 2);
                 }
             }
+
             $content_length = strlen($content);
             $sum_length = filesize($filename) + $content_length;
             $content_old = fread($handle, $content_length);
             rewind($handle);
             $i = 1;
-            while (ftell($handle) < $sum_length) {
+
+            while (ftell($handle) < $sum_length)
+            {
                 fwrite($handle, $content);
                 $content = $content_old;
                 $content_old = fread($handle, $content_length);
                 fseek($handle, $i * $content_length);
                 $i++;
             }
+
             fflush($handle);
-            if ($lock) {
+
+            if ($lock)
+            {
                 flock($handle, LOCK_UN);
             }
+
             fclose($handle);
             return $i;
-        } else {
-            if ($method === self::append) {
+        }
+        else
+        {
+            if ($method === self::append)
+            {
                 $flags = FILE_APPEND;
-            } else {
+            }
+            else
+            {
                 $flags = 0;
             }
-            if ($lock) {
+
+            if ($lock)
+            {
                 $flags = $flags|LOCK_EX;
             }
+
             $r = file_put_contents($filename, $content, $flags);
-            if ($r === false) {
+
+            if ($r === false)
+            {
                 throw new framework\exception\fs(
                     "Couldn't write content to the file: ".
-                    "`{$filename}`.", 3);
+                    "`{$filename}`.", 3
+                );
             }
+
             return $r;
         }
     }
@@ -197,12 +247,17 @@ class file {
      * @param  mixed $file string or array to remove more than one file
      * @return integer number of removed files
      */
-    static function remove($file) {
-        if (is_array($file)) {
+    static function remove($file)
+    {
+        if (is_array($file))
+        {
             $i = 0;
-            foreach ($file as $f) {
+
+            foreach ($file as $f)
+            {
                 $i = $i + self::remove($f);
             }
+
             return $i;
         }
 
@@ -215,18 +270,23 @@ class file {
      * @param  boolean $overwrite if destination exists, overwrite it
      * @return boolean
      */
-    static function copy($source, $destination, $overwrite=true) {
-
-        if (dir::exists($destination)) {
+    static function copy($source, $destination, $overwrite=true)
+    {
+        if (dir::exists($destination))
+        {
             $destination = fs::ds($destination, '/', self::name($source));
-        } else {
-            if (!dir::exists(dirname($destination))) {
+        }
+        else
+        {
+            if (!dir::exists(dirname($destination)))
+            {
                 throw new framework\exception\not_found(
                     "Destination directory not found: `{$destination}`.");
             }
         }
 
-        if (file::exists($destination) && !$overwrite) {
+        if (file::exists($destination) && !$overwrite)
+        {
             throw new framework\exception\argument(
                 "Destination file exists: `{$destination}`.");
         }
@@ -240,18 +300,23 @@ class file {
      * @param  boolean $overwrite if destination exists, overwrite it
      * @return boolean
      */
-    static function move($source, $destination, $overwrite=true) {
-
-        if (dir::exists($destination)) {
+    static function move($source, $destination, $overwrite=true)
+    {
+        if (dir::exists($destination))
+        {
             $destination = fs::ds($destination, '/', self::name($source));
-        } else {
-            if (!dir::exists(dirname($destination))) {
+        }
+        else
+        {
+            if (!dir::exists(dirname($destination)))
+            {
                 throw new framework\exception\not_found(
                     "Destination directory not found: `{$destination}`.");
             }
         }
 
-        if (file::exists($destination) && !$overwrite) {
+        if (file::exists($destination) && !$overwrite)
+        {
             throw new framework\exception\argument(
                 "Destination file exists: `{$destination}`.");
         }
@@ -264,16 +329,20 @@ class file {
      * @param  string  $destination absolute path,
      * @return boolean
      */
-    static function rename($source, $destination) {
+    static function rename($source, $destination)
+    {
         if (strpos($destination, '/') === false &&
             strpos($destination, '\\') === false)
         {
             $destination = fs::ds(dirname($source), $destination);
         }
-        if (dirname($source) !== dirname($destination)) {
+
+        if (dirname($source) !== dirname($destination))
+        {
             throw new framework\exception\argument(
                 "Destination and source directories must be the same.", 1);
         }
+
         if (basename($source) === basename($destination)) {
             throw new framework\exception\argument(
                 "Destination and source filenames must be different.", 2);
@@ -286,10 +355,14 @@ class file {
      * @param  string  $directory
      * @param  string  $filter regular expression filter, e.g. /.*\.jpg/i
      * @param  boolean $deep include sub-directories
+     * @param  integer $cutoff relative path (cut off root directory segment)
+     *                         will require whole segment to match.
      * @return array
      */
-    static function find($directory, $filter=null, $deep=true) {
-        if (!dir::exists($directory)) {
+    static function find($directory, $filter=null, $deep=true, $cutoff=false)
+    {
+        if (!dir::exists($directory))
+        {
             throw new framework\exception\argument(
                 "Not a valid directory: `{$directory}`.", 1);
         }
@@ -297,29 +370,51 @@ class file {
         $collection = array_diff(scandir($directory), ['.','..']);
         $matched    = [];
 
-        if ($filter && substr($filter, 0, 1) !== '/') {
+        if ($filter && substr($filter, 0, 1) !== '/')
+        {
             throw new framework\exception\argument(
                 "Invalid filter formar: `{$filter}` ".
-                "expected regular expression.", 1);
+                "expected regular expression.", 1
+            );
         }
 
-        if (empty($collection)) {
+        if (empty($collection))
+        {
             return [];
         }
 
-        foreach ($collection as $file) {
-            if (dir::exists(fs::ds($directory, $file))) {
-                if (!$deep) { continue; }
+        if ($cutoff === true)
+        {
+            $cutoff = strlen($directory)+1;
+        }
+
+        foreach ($collection as $file)
+        {
+            if (dir::exists(fs::ds($directory, $file)))
+            {
+                if (!$deep) {
+                    continue;
+                }
+
                 $matched_sub = self::find(
-                    fs::ds($directory, $file), $filter, $deep);
+                    fs::ds($directory, $file), $filter, $deep, $cutoff
+                );
                 $matched = array_merge($matched_sub, $matched);
                 continue;
             }
-            if ($filter && !preg_match($filter, $file)) {
+
+            if ($cutoff)
+            {
+                $file = fs::ds($directory, $file);
+                $file = $cutoff ? substr($file, $cutoff) : $file;
+            }
+
+            if ($filter && !preg_match($filter, $file))
+            {
                 continue;
             }
 
-            $matched[] = fs::ds($directory, $file);
+            $matched[] = $file;
         }
 
         return $matched;
@@ -330,16 +425,22 @@ class file {
      * collection of files, e.g. ['/abs/path/file.1', '/abs/path/file.2']
      * @return mixed string | array, depends on the input
      */
-    static function signature($filename) {
-        if (is_array($filename)) {
+    static function signature($filename)
+    {
+        if (is_array($filename))
+        {
             $collection = [];
-            foreach ($filename as $file) {
+
+            foreach ($filename as $file)
+            {
                 $collection[$file] = self::signature($file);
             }
+
             return $collection;
         }
 
-        if (!file_exists($filename)) {
+        if (!file_exists($filename))
+        {
             throw new framework\exception\argument(
                 "File not found: `{$filename}`.", 1);
         }
