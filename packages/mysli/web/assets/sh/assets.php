@@ -175,6 +175,22 @@ function assets_merge(array $map, $t_file, $assets, $dest, array $changes)
             continue;
         }
 
+        if (!isset($props['compress']))
+        {
+            $props['compress'] = true;
+        }
+
+        if (!isset($props['merge']))
+        {
+            $props['merge'] = true;
+        }
+
+        if (!isset($props['include']))
+        {
+            cout::error("No files to include for: `{$main}`");
+            continue;
+        }
+
         // All processed files...
         $merged = '';
 
@@ -194,7 +210,7 @@ function assets_merge(array $map, $t_file, $assets, $dest, array $changes)
                 continue;
             }
 
-            if (!arr::key_in($changes, $file))
+            if (!arr::key_in($changes, $file) && $props['merge'])
             {
                 // Still needs to be appened...
                 $merged .= "\n\n" . file::read($dest_file);
@@ -241,13 +257,20 @@ function assets_merge(array $map, $t_file, $assets, $dest, array $changes)
             );
 
             // Add content to the merged content
-            $merged .= "\n\n" . file::read($dest_file);
+            if ($props['merge'])
+            {
+                $merged .= "\n\n" . file::read($dest_file);
+            }
         }
 
         // Some file were processed
-        if ($merged)
+        cout::line("    > `{$main}`");
+        if (!$props['merge'])
         {
-            cout::line("    > `{$main}`");
+            cout::format('        Done');
+        }
+        elseif ($merged)
+        {
             $dest_main = fs::ds($dest, $main);
             $main_ext = file::extension($main);
             file::create_recursive($dest_main);
@@ -264,15 +287,17 @@ function assets_merge(array $map, $t_file, $assets, $dest, array $changes)
 
             cout::format('        Saving+right+green OK');
 
-            if ($props['compress'] &&
-                arr::key_in($sett['compress'], $main_ext))
+            if ($props['compress'] && arr::key_in($sett['compress'], $main_ext))
             {
                 cout::line("        Compressing");
-
                 cutil::execute(
                     parse_command($sett['compress'][$main_ext], $dest_main, $dest_main)
                 );
             }
+        }
+        else
+        {
+            cout::format('        Nothing to do...');
         }
     }
 }
@@ -475,7 +500,6 @@ function observe_or_build(
             {
                 cout::line("\n* What changed: \n".arr::readable($changes, 4));
                 cout::line("\n* Rebuilding assets:");
-                $signature = $rsignature;
 
                 assets_merge($map, $file, $assets_path, $dest_path, $changes);
 
@@ -492,6 +516,8 @@ function observe_or_build(
                     }
                 }
             }
+
+            $signature = $rsignature;
         }
 
         $loop and sleep($interval);
