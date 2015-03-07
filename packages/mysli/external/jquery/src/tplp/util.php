@@ -3,7 +3,7 @@
 namespace mysli\external\jquery\tplp;
 
 __use(__namespace__, '
-    ./jquery AS root\jquery
+    ./jquery -> root\jquery
 ');
 
 class util
