@@ -13,8 +13,8 @@ __use(__namespace__, '
     mysli.web.web
 ');
 
-class assets {
-
+class assets
+{
     private static $web_dir = 'assets';
     private static $cache = [];
 
@@ -26,7 +26,7 @@ class assets {
      */
     static function get_public_path($package)
     {
-        return web::path(self::$web_dir, self::get_id($package));
+        return web::path(self::$web_dir, $package);
     }
     /**
      * Get full absolute public url for particular package.
@@ -36,7 +36,7 @@ class assets {
      */
     static function get_public_url($package)
     {
-        return web::url(self::$web_dir.'/'.self::get_id($package));
+        return web::url(self::$web_dir.'/'.$package);
     }
     /**
      * Get parsed ext, e.g.: stly => css
@@ -121,10 +121,10 @@ class assets {
     {
         if (!$dist)
         {
-            list($_, $dist, $_ ) = self::get_default_paths($package);
+            list($_, $dist, $_ ) = self::get_paths($package);
         }
 
-        $dist  = fs::pkgroot($package, $dist);
+        $dist  = fs::pkgreal($package, $dist);
         $webpath = self::get_public_path($package);
 
         if (!dir::exists($dist))
@@ -163,16 +163,14 @@ class assets {
      */
     static function get_links($package, $file=null, $filter=null)
     {
-        $id = self::get_id($package);
-
         if (!file::exists(self::get_public_path($package)))
         {
             throw new framework\exception\not_found(
-                "Public folder not found: `{$id}`", 1
+                "Public folder not found: `{$package}`", 1
             );
         }
 
-        list($source, $_, $map) = self::get_default_paths($package);
+        list($source, $_, $map) = self::get_paths($package);
 
         $map = self::get_map($package, $source, $map);
         $debug = config::select('mysli.web.assets', 'debug', false);
@@ -187,7 +185,7 @@ class assets {
 
             if (!$debug)
             {
-                $links[] = web::url(self::$web_dir."/{$id}/{$main}");
+                $links[] = web::url(self::$web_dir."/{$package}/{$main}");
             }
             else
             {
@@ -200,7 +198,7 @@ class assets {
                     if (!$filter ||
                         substr($asset, -(strlen($filter))) === $filter)
                     {
-                        $links[] = web::url(self::$web_dir."/{$id}/{$asset}");
+                        $links[] = web::url(self::$web_dir."/{$package}/{$asset}");
                     }
                 }
             }
@@ -242,20 +240,11 @@ class assets {
         return $tags;
     }
     /**
-     * Get ID for particular package
-     * @param  string $package
-     * @return string
-     */
-    static function get_id($package)
-    {
-        return str_replace('/', '.', $package);
-    }
-    /**
      * Get default paths, define in mysli.pkg.ym
      * @param  string $package
      * @return array  [source, dest, map]
      */
-    static function get_default_paths($package)
+    static function get_paths($package)
     {
         $meta = pkgm::meta($package);
 

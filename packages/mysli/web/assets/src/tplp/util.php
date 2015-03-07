@@ -3,10 +3,8 @@
 namespace mysli\web\assets\tplp;
 
 __use(__namespace__, '
+    ./assets
     mysli.framework.exception/* -> framework\exception\*
-    mysli.framework.fs/file
-    mysli.web.web
-    mysli.web.assets
 ');
 
 class util
@@ -43,20 +41,5 @@ class util
     {
         $seg = explode('/', $id, 2);
         return [$seg[0], isset($seg[1]) ? $seg[1] : null];
-        // $wp1 = web::path(self::$web_dir, implode('_', array_slice($seg, 0, 3)));
-        // $wp2 = web::path(self::$web_dir, implode('_', array_slice($seg, 0, 2)));
-
-        // // Get package name
-        // if (file::exists($wp1)) {
-        //     $package = implode('/', array_slice($seg, 0, 3));
-        //     $file = implode('/', array_slice($seg, 3));
-        // } elseif (file::exists($wp2)) {
-        //     $package = implode('/', array_slice($seg, 0, 2));
-        //     $file = implode('/', array_slice($seg, 2));
-        // } else {
-        //     throw new framework\exception\not_found("File not found: `{$id}`");
-        // }
-
-        // return [$package, ($file ?: null)];
     }
 }

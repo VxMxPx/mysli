@@ -2,8 +2,7 @@
 
 ## Introduction
 
-Help you to merge and compress assets thought command line and to
-load them in templates.
+Merge and compress assets thought command line and load them in templates.
 
 ## Usage
 
@@ -107,14 +106,14 @@ assets:
 ### Templates
 
 If you're using `tplp` then you can request _assets_
-with `use mysli/web/assets`. After that you can print css or javascript tags
+with `use mysli.web.assets`. After that you can print css or javascript tags
 anywhere in your template with:
 
 ```
 // CSS
-{'vendor/package/css/main.css'|assets/tags}
+{'vendor.package/css/main.css'|assets/tags}
 // JS
-{'vendor/package/js/main.js'|assets/tags}
+{'vendor.package/js/main.js'|assets/tags}
 ```
 
 ## Config
