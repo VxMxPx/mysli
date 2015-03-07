@@ -16,6 +16,7 @@ before:
     - cp -R {source_dir}/common {dest_dir}/common
 
 files:
+    # Styles
     css-min/ui.css:
         compress: Yes
         include :
@@ -33,6 +34,15 @@ files:
             - css/titlebar.styl
             - css/overlay.styl
             - css/navigation.styl
+    # Dev Scripts, Needs to be copied to _dist, but not processed in any way
+    dev:
+        compress: No
+        merge: No
+        include:
+            - common/scripts/index.js
+            - common/scripts/buttons.js
+            - common/scripts/tabs.js
+    # Main UI Scripts
     ui.js:
         compress: Yes
         include :

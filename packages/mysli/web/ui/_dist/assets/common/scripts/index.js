@@ -12,7 +12,8 @@
                     usermeta = new ui.titlebar({style: 'flat'}),
                     navigation = new ui.navigation({
                         introduction: "Introduction",
-                        buttons: "Buttons"
+                        buttons: "Buttons",
+                        tabs: "Tabs"
                     });
 
                 panel.front.set_style('alt');
