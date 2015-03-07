@@ -205,7 +205,7 @@ class str {
         tc::need_str($input, 2);
         tc::need_int($limit, 1);
 
-        $char_escaped = preg_quote($char);
+        $char_escaped = preg_quote($char, '/');
         $regex = "([{$char_escaped}]{{$limit},})";
         $input = preg_replace($regex, str_repeat($char, $limit), $input);
 
@@ -328,14 +328,14 @@ class str {
         $a = 'a-z';
         $A = 'A-Z';
         $n = '0-9';
-        $s = preg_quote(' ');
+        $s = preg_quote(' ', '/');
 
         if ($mask) {
             if (strpos($mask, 'a') !== false) { $filter .= $a; }
             if (strpos($mask, 'A') !== false) { $filter .= $A; }
             if (strpos($mask, '1') !== false) { $filter .= $n; }
             if (strpos($mask, 's') !== false) { $filter .= $s; }
-            if ($custom !== null)  { $filter .= preg_quote($custom); }
+            if ($custom !== null)  { $filter .= preg_quote($custom, '/'); }
         }
 
         if (!$filter) {
