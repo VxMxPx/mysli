@@ -3,23 +3,21 @@
 namespace mysli\util\i18n\sh\i18n;
 
 __use(__namespace__, '
-    ./i18n
-    mysli.framework.pkgm
-    mysli.framework.fs/fs,dir
+    ./parser,i18n
+    mysli.framework.json
+    mysli.framework.fs/fs,file,dir
     mysli.framework.cli/param,output -> param,cout
 ');
 
-function __init($args) {
+function __init($args)
+{
     $param = new param('Mysli Util I18n', $args);
     $param->command = 'i18n';
+
     $param->add('-w/--watch', [
         'help'    => 'Rebuild cache if changes occurs.',
         'type'    => 'bool',
         'default' => false
-    ]);
-    $param->add('-d/--directory', [
-        'help'    => 'Costume translations directory.',
-        'default' => 'i18n'
     ]);
     $param->add('PACKAGE', [
         'help'     => 'Package name, if not provided, '.
@@ -28,54 +26,109 @@ function __init($args) {
     ]);
 
     $param->parse();
-    if (!$param->is_valid()) {
+
+    if (!$param->is_valid())
+    {
         cout::line($param->messages());
         return;
     }
+
     $values = $param->values();
-    if (!$values['package']) {
-        $values['package'] = pkgm::name_from_path(getcwd());
-    }
-    if (!$values['package']) {
-        cout::warn("Not a valid package, use `-h` for help");
-        return;
-    }
-    if ($values['watch']) {
-        watch($values['package'], $values['directory']);
-    } else {
-        build($values['package'], $values['directory']);
-    }
-}
 
-function build($package, $directory='i18n') {
-    if (!dir::exists(fs::pkgroot($package, $directory))) {
-        cout::error('I18n: Not found: `'.fs::ds($package, $directory).'`');
-        return;
-    }
-    if (i18n::create_cache($package, $directory)) {
-        cout::format('I18n: %s +right+green OK', [$package]);
-    } else {
-        cout::format('I18n: %s +right+red FAILED', [$package]);
-    }
-}
-function watch($package, $directory='i18n') {
-    if (!dir::exists(fs::pkgroot($package, $directory))) {
-        cout::error('I18n: Not found: `'.fs::ds($package, $directory).'`');
-        return;
-    } else {
-        cout::info("I18n: Found {$directory} for {$package}, observing");
-        cout::info("Press CTRL+C to quit.");
+    if (!$values['package'])
+    {
+        if (!($values['package'] = \core\pkg::by_path(getcwd())))
+        {
+            cout::warn('Please provide a valid package name.');
+            return;
+        }
     }
 
-    $dir = fs::pkgroot($package, $directory);
+    list($source, $destination) = i18n::get_paths($package);
+    build($values['package'], $source, $destination, $values['watch'] ? 3 : 0);
+}
+/**
+ * Process i18n for particular package.
+ * @param string $package
+ * @param string $source
+ * @param string $destination
+ * @return boolean
+ */
+function process($package, $source, $destination)
+{
+    if (!file::exists($$source))
+    {
+        throw new framework\exception\not_found(
+            "Cannot process languages. Source directory doesn't exists: ".
+            "`{$$source}`.", 1
+        );
+    }
+
+    if (!dir::exists(dirname($destination)))
+    {
+        dir::create($destination);
+    }
+
+    $collection = [];
+
+    foreach (scandir($dir) as $file)
+    {
+        if (substr($file, -3) !== '.mt')
+        {
+            continue;
+        }
+
+        $collection[substr($file, 0, -3)] = parser::parse(
+            file_get_contents(fs::ds($$source, $file))
+        );
+    }
+
+    return json::encode_file($destination, $collection);
+}
+/**
+ * Build i18n for particular package.
+ * @param string  $package
+ * @param string  $source
+ * @param string  $destination
+ * @param integer $sleep
+ */
+function build($package, $source, $destination, $sleep=0)
+{
+    if (!dir::exists(fs::pkgreal($package, $source)))
+    {
+        cout::error('Not found: `'.fs::pkgreal($package, $source).'`');
+        return;
+    }
+
+    $dir = fs::pkgreal($package, $source);
     $last_signature = implode('', dir::signature($dir));
-    while (true) {
+
+    while (true)
+    {
         $new_signature = implode('', dir::signature($dir));
-        if ($last_signature != $new_signature) {
+
+        if ($last_signature != $new_signature)
+        {
             $last_signature = $new_signature;
             cout::line('I18n: Changes detected, rebuilding...');
-            build($package, $directory);
+
+            if (process($package, $source, $destination))
+            {
+                cout::format('i18n: %s +right+green OK', [$package]);
+            }
+            else
+            {
+                cout::format('i18n: %s +right+red FAILED', [$package]);
+            }
         }
-        sleep(3);
+
+        if ($sleep)
+        {
+            sleep($sleep);
+        }
+        else
+        {
+            break;
+        }
     }
 }

@@ -26,32 +26,28 @@ vendor/
             ru.mt
 ```
 
-When your package is enabled you can use method `create_cache`, which will parse
-all files in `i18n` folder of your package, and saved them as regular JSON.
-When your package is disabled, use method `remove_cache`, to remove previously
-created JSON file.
+You'll have to use command line to parse language:
 
-Examples:
+```
+./dot i18n vendor.package
+```
 
-In your setup.php:
+This will create a new file `_dist/i18n.json` with parsed values for your languages.
+Please see `./dot i18n -h` for list of all commands and help.
 
-```php
-__use(__namespace__, 'mysli/util/i18n');
-function enable() {
-    i18n::create_cache('vendor/package');
-    // If you've put your .mt files to different director than i18n,
-    // you can specify it when creating cache:
-    i18n::create_cache('vendor/package', 'different_i18n_directory');
-}
-function disable() {
-    i18n::remove_cache('vendor/package');
-}
+If you'd like to change default paths, add a new segment in `mysli.pkg.ym`, 
+with following content:
+
+```yaml
+i18n:
+    source:      i18n
+    destination: _dest
 ```
 
 General usage:
 
 ```php
-$translator = i18n::select('vendor/package');
+$translator = i18n::select('vendor.package');
 $translator->translate("hello");
 ```
 
@@ -59,7 +55,7 @@ $translator->translate("hello");
 project, but you can change them individually:
 
 ```php
-$translator = i18n::select('vendor/package');
+$translator = i18n::select('vendor.package');
 $translator->primary('ru');
 $privet = $translator->translate("hello");
 ```

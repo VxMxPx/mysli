@@ -4,11 +4,14 @@ namespace mysli\util\i18n;
 
 __use(__namespace__, '
     mysli.framework.json
+    mysli.framework.pkgm
     mysli.framework.fs/file,fs
-    mysli.framework.exception/* -> framework\exception\*
+    mysli.framework.type/arr_path -> arrp
+    mysli.framework.exception/*   -> framework\exception\*
 ');
 
-class i18n {
+class i18n
+{
     // created instances of translator
     private static $cache = [];
     // default languages
@@ -19,45 +22,9 @@ class i18n {
      * @param string $primary
      * @param string $secondary
      */
-    static function set_default_language($primary, $secondary) {
+    static function set_default_language($primary, $secondary)
+    {
         self::$default_languages = [$primary, $secondary];
-    }
-    /**
-     * Create cache for current package.
-     * @return boolean
-     */
-    static function create_cache($package, $folder='i18n') {
-        $dir = fs::pkgpath($package, $folder);
-        if (!file::exists($dir)) {
-            throw new framework\exception\not_found(
-                "Cannot create cache. Directory doesn't exists: `{$dir}`.", 1);
-        }
-
-        $collection = [];
-
-        $files = scandir($dir);
-        foreach ($files as $file) {
-            if (substr($file, -3) !== '.mt') {
-                continue;
-            }
-            $collection[substr($file, 0, -3)] = parser::parse(
-                file_get_contents(fs::ds($dir, $file))
-            );
-        }
-
-        // file to which parsed languages will be saved
-        $file = self::package_to_filename($package);
-        return json::encode_file($file, $collection);
-    }
-    /**
-     * Remove cache for current package.
-     * @return boolean
-     */
-    static function remove_cache($package) {
-        $file = self::package_to_filename($package);
-        if (file::exists($file)) {
-            return unlink($file);
-        } else return true;
     }
     /**
      * Return translator object.
@@ -66,37 +33,49 @@ class i18n {
      * @param  mixed  $param
      * @return mysli\util\i18n\translator or string if $translate is present
      */
-    static function select($package, $translate=null, $variable=[]) {
+    static function select($package, $translate=null, $variable=[])
+    {
         // Get translator + dictionary if not set yet
-        if (!isset(self::$cache[$package])) {
-            $cache_filename = self::package_to_filename($package);
+        if (!isset(self::$cache[$package]))
+        {
+            list($_, $dest) = self::get_paths($package);
 
-            if (file::exists($cache_filename)) {
-                $dictionary = json::decode_file($cache_filename, true);
-            } else {
+            if (file::exists($dest))
+            {
+                $dictionary = json::decode_file($dest, true);
+            }
+            else
+            {
                 $dictionary = [];
             }
 
-            self::$cache[$package] = new translator($dictionary,
-                                            self::$default_languages[0],
-                                            self::$default_languages[1]);
+            self::$cache[$package] = new translator(
+                $dictionary, self::$default_languages[0], self::$default_languages[1]
+            );
         }
 
         $translator = self::$cache[$package];
 
         // If we have $translate we'll return translation otherwise translator
         return $translate
-                    ? $translator->translate($translate, $variable)
-                    : $translator;
+            ? $translator->translate($translate, $variable)
+            : $translator;
     }
-
     /**
-     * Convert package name, to full name for package's dictionary.
+     * Get full source and destionation path for particular package.
      * @param  string $package
-     * @return string
+     * @return array  [$source, $destination]
      */
-    private static function package_to_filename($package) {
-        return fs::datpath('mysli/util/i18n/',
-                           str_replace('/', '.', $package).'.json');
+    static function get_paths($package)
+    {
+        $meta = pkgm::meta($package);
+        $source = arrp::get($meta, 'i18n/source', 'i18n');
+        $destination = arrp::get($meta, 'i18n/destination', '_dist');
+        $destination .= '/i18n.json';
+
+        $source = fs::pkgreal($package, $source);
+        $destination = fs::pkgreal($package, $destination);
+
+        return [$source, $destination];
     }
 }

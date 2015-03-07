@@ -6,13 +6,15 @@ __use(__namespace__, '
     mysli.framework.type/str,arr
 ');
 
-class parser {
+class parser
+{
     /**
      * Convert Mysli Translation (mt) to array.
      * @param string $translation
      * @return array
      */
-    public static function parse($translation) {
+    public static function parse($translation)
+    {
         $mt = $translation;
 
         $matches;
@@ -37,27 +39,46 @@ class parser {
             PREG_SET_ORDER
         );
 
-        foreach ($matches as $match) {
+        foreach ($matches as $match)
+        {
             // Assign key and value
             $key   = trim($match[1], '@');
             $value = trim($match[3]);
 
             $options = trim($match[2], '[]');
-            if ($options === '') $options = [];
-            else $options = str::split_trim($options, ',');
 
-            if (in_array('nl', $options)) {
+            if ($options === '')
+            {
+                $options = [];
+            }
+            else
+            {
+                $options = str::split_trim($options, ',');
+            }
+
+            if (in_array('nl', $options))
+            {
                 $options = arr::delete_by_value($options, 'nl', false);
-            } else {
+            }
+            else
+            {
                 // Eliminate new-lines
                 $value = str_replace("\n", ' ', $value);
             }
 
-            if (empty($options)) {
+            if (empty($options))
+            {
                 $collection[$key]['value'] = $value;
-            } else {
-                foreach ($options as $option) {
-                    if ($option === '') continue;
+            }
+            else
+            {
+                foreach ($options as $option)
+                {
+                    if ($option === '')
+                    {
+                        continue;
+                    }
+
                     $collection[$key][$option]['value'] = $value;
                 }
             }
