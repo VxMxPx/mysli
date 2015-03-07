@@ -35,17 +35,21 @@ class tplp
     }
     /**
      * Get full source and destionation path for particular package.
-     * @param  string $package
-     * @return array  [$source, $destination]
+     * @param  string  $package
+     * @param  boolean $absolute return full absolute paths
+     * @return array   [$source, $destination]
      */
-    static function get_paths($package)
+    static function get_paths($package, $absolute=true)
     {
         $meta = pkgm::meta($package);
         $source = arrp::get($meta, 'tplp/source', 'tplp');
         $destination = arrp::get($meta, 'tplp/destination', '_dist/tplp');
 
-        $source = fs::pkgreal($package, $source);
-        $destination = fs::pkgreal($package, $destination);
+        if ($absolute)
+        {
+            $source = fs::pkgreal($package, $source);
+            $destination = fs::pkgreal($package, $destination);
+        }
 
         return [$source, $destination];
     }

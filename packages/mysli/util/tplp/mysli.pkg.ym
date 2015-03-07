@@ -7,6 +7,7 @@ authors:
 require:
     mysli.framework.fs:        1
     mysli.framework.pkgm:      1
+    mysli.framework.event:     1
     mysli.framework.json:      1
     mysli.framework.type:      1
     mysli.framework.exception: 1

@@ -129,7 +129,7 @@ class template
      */
     function has($file)
     {
-        $source_file = fs::ds($this->source, $file.'.tplp');
+        $source_file = fs::ds($this->dest, $file.'.php');
         return file::exists($source_file);
     }
 }
