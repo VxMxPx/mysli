@@ -1,15 +1,3 @@
-settings:
-    require:
-        coffee:
-            command : {id} --version
-            expect  : CoffeeScript version 1.8.*
-            level   : warn
-            message : "CoffeeScript compiler might not work. Missing `{id}` (npm install -g coffee-script). Expected version `{expect}` got `{result}`."
-    process:
-        coffee : coffee -c -o {dest_dir} {source}
-    ext:
-        coffee : js
-
 before:
     - rm -rf {dest_dir}
     - mkdir {dest_dir}
@@ -48,22 +36,18 @@ files:
         include :
             # Util
             - js/namespace.js
-            - js/constants.js
-            - js/util.coffee
-            - js/arr.coffee
-            # Common
-            - js/event.coffee
+            - js/_.js
+            # Extend
+            - js/_extend_common.js
+            - js/_event.js
             # Elements
-            - js/widget.coffee
-            - js/container.coffee
-            - js/button.coffee
-            - js/box.coffee
-            - js/panel.coffee
-            - js/panel_container.coffee
-            - js/panel_side.coffee
-            - js/html.coffee
-            - js/titlebar.coffee
-            - js/label.coffee
-            - js/title.coffee
-            - js/overlay.coffee
-            - js/navigation.coffee
+            - js/button.js
+            - js/box.js
+            - js/panel.js
+            - js/panel_container.js
+            - js/panel_side.js
+            - js/html.js
+            - js/titlebar.js
+            - js/title.js
+            - js/overlay.js
+            - js/navigation.js

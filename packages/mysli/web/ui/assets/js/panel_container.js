@@ -29,6 +29,7 @@ mysli.web.ui.panel_container = (function () {
     };
 
     panel_container.prototype = {
+
         constructor : panel_container,
 
         /**
@@ -148,15 +149,16 @@ mysli.web.ui.panel_container = (function () {
             });
         },
 
+
         /**
-         * Add a new panel to the collection.
-         * @param {Object} panel
-         * @param {Mixed}  after_id
+         * Push panel after particular panel of different ID.
+         * @param  {String} panel
+         * @param  {String} after_id
          */
-        add: function (panel, after_id) {
+        push_after: function (panel, after_id) {
             var index;
 
-            if (panel instanceof mysli.web.ui.panel) {
+            if (!(panel instanceof mysli.web.ui.panel)) {
                 throw new Error('An object must be instance of `mysli.web.ui.panel`');
             }
 
@@ -204,6 +206,14 @@ mysli.web.ui.panel_container = (function () {
             if (panel.expandable()) {
                 this.expandable_count++;
             }
+        },
+
+        /**
+         * Add a new panel to the collection.
+         * @param {Object} panel
+         */
+        push: function (panel) {
+            return this.push_after(panel, false, cellid);
         },
 
         /**
