@@ -82,21 +82,15 @@ function __get_autoloader($autoloader)
 function __get_std_class($package, $file, $class)
 {
     // Source?
-    if (file_exists(MYSLI_PKGPATH."/".str_replace('.', '/', $package)."/src/{$file}.php"))
-    {
-        $source = MYSLI_PKGPATH."/".str_replace('.', '/', $package)."/src/{$file}.php";
-    }
-    else
+    $source = MYSLI_PKGPATH."/".str_replace('.', '/', $package)."/src/{$file}.php";
+    if (!file_exists($source))
     {
         $source = false;
     }
 
     // Phar?
-    if (file_exists('phar://'.MYSLI_PKGPATH."/{$package}.phar/src/{$file}.php"))
-    {
-        $phar = 'phar://'.MYSLI_PKGPATH."/{$package}.phar/src/{$file}.php";
-    }
-    else
+    $phar = 'phar://'.MYSLI_PKGPATH."/{$package}.phar/src/{$file}.php";
+    if (!file_exists($phar))
     {
         $phar = false;
     }
