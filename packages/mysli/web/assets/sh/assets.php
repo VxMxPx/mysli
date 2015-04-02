@@ -193,6 +193,8 @@ function assets_merge(array $map, $t_file, $assets, $dest, array $changes)
 
         // All processed files...
         $merged = '';
+        // Number of files that were actually modified ...
+        $modified = 0;
 
         foreach ($props['include'] as $file)
         {
@@ -210,14 +212,14 @@ function assets_merge(array $map, $t_file, $assets, $dest, array $changes)
                 continue;
             }
 
-            if (!arr::key_in($changes, $file) && $props['merge'])
+            if (!arr::key_in($changes, $file))
             {
-                // Still needs to be appened...
-                $merged .= "\n\n" . file::read($dest_file);
-            }
-            else
-            {
-                cout::line('    Processing: ' . $file);
+                // Still needs to be appened, but doesn't count as change...
+                if ($props['merge'])
+                {
+                    $merged .= "\n\n" . file::read($dest_file);
+                }
+                continue;
             }
 
             if (!file::exists($src_file))
@@ -238,7 +240,8 @@ function assets_merge(array $map, $t_file, $assets, $dest, array $changes)
             if (!dir::exists(dirname($dest_file)))
             {
                 cout::line(
-                    "[i] Directory will be created: `".dirname($dest_file)."`",
+                    "[i] Directory will be created: `".
+                    substr(dirname($dest_file), strlen($dest)+1)."`",
                     false
                 );
 
@@ -252,6 +255,7 @@ function assets_merge(array $map, $t_file, $assets, $dest, array $changes)
                 }
             }
 
+            cout::line('    Processing: ' . $file);
             cutil::execute(
                 parse_command($sett['process'][$file_ext], $src_file, $dest_file)
             );
@@ -260,6 +264,7 @@ function assets_merge(array $map, $t_file, $assets, $dest, array $changes)
             if ($props['merge'])
             {
                 $merged .= "\n\n" . file::read($dest_file);
+                $modified++;
             }
         }
 
@@ -269,7 +274,7 @@ function assets_merge(array $map, $t_file, $assets, $dest, array $changes)
         {
             cout::format('        Done');
         }
-        elseif ($merged)
+        elseif ($modified)
         {
             $dest_main = fs::ds($dest, $main);
             $main_ext = file::extension($main);
