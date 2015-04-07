@@ -7,8 +7,9 @@ __use(__namespace__, '
     mysli.framework.fs/fs,dir
 ');
 
-function enable() {
-    $c = config::select('mysli/util/curl');
+function enable()
+{
+    $c = config::select('mysli.util.curl');
     $c->merge([
         // Weather to acquire an agent from user...
         'user_agent' => true,
@@ -27,12 +28,14 @@ function enable() {
             CURLOPT_MAXREDIRS      => 8
         ]
     ]);
-    return dir::create(fs::datpath('mysli/util/curl'))
-        && $c->save();
+
+    return dir::create(fs::datpath('mysli/util/curl')) &&
+        $c->save();
 }
 
-function disable() {
-    $c = config::select('mysli/util/curl');
-    return dir::remove(fs::datpath('mysli/util/curl'))
-        && $c->destroy();
+function disable()
+{
+    $c = config::select('mysli.util.curl');
+    return dir::remove(fs::datpath('mysli/util/curl')) &&
+        $c->destroy();
 }

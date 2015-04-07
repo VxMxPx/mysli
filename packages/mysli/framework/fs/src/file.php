@@ -123,7 +123,8 @@ class file
             if (file_put_contents($filename, '') === false)
             {
                 throw new framework\exception\fs(
-                    "Couldn't remove file's contents: `{$filename}`.", 1);
+                    "Couldn't remove file's contents: `{$filename}`.", 1
+                );
             }
         }
 
@@ -166,7 +167,8 @@ class file
         if (!self::exists($filename))
         {
             throw new framework\exception\not_found(
-                "File doesn't exists: `{$filename}`.", 1);
+                "File doesn't exists: `{$filename}`.", 1
+            );
         }
 
         if ($method === self::prepend)
@@ -176,7 +178,8 @@ class file
             if ($handle === false)
             {
                 throw new framework\exception\fs(
-                    "Couldn't open file: `{$filename}`", 1);
+                    "Couldn't open file: `{$filename}`", 1
+                );
             }
 
             if ($lock)
@@ -184,7 +187,8 @@ class file
                 if (!flock($handle, LOCK_EX))
                 {
                     throw new framework\exception\fs(
-                        "Couldn't lock the file: `{$filename}`.", 2);
+                        "Couldn't lock the file: `{$filename}`.", 2
+                    );
                 }
             }
 
@@ -234,8 +238,7 @@ class file
             if ($r === false)
             {
                 throw new framework\exception\fs(
-                    "Couldn't write content to the file: ".
-                    "`{$filename}`.", 3
+                    "Couldn't write content to the file: `{$filename}`.", 3
                 );
             }
 
@@ -281,14 +284,16 @@ class file
             if (!dir::exists(dirname($destination)))
             {
                 throw new framework\exception\not_found(
-                    "Destination directory not found: `{$destination}`.");
+                    "Destination directory not found: `{$destination}`."
+                );
             }
         }
 
         if (file::exists($destination) && !$overwrite)
         {
             throw new framework\exception\argument(
-                "Destination file exists: `{$destination}`.");
+                "Destination file exists: `{$destination}`."
+            );
         }
 
         return copy($source, $destination);
@@ -311,14 +316,16 @@ class file
             if (!dir::exists(dirname($destination)))
             {
                 throw new framework\exception\not_found(
-                    "Destination directory not found: `{$destination}`.");
+                    "Destination directory not found: `{$destination}`."
+                );
             }
         }
 
         if (file::exists($destination) && !$overwrite)
         {
             throw new framework\exception\argument(
-                "Destination file exists: `{$destination}`.");
+                "Destination file exists: `{$destination}`."
+            );
         }
 
         return move($source, $destination);
@@ -340,12 +347,14 @@ class file
         if (dirname($source) !== dirname($destination))
         {
             throw new framework\exception\argument(
-                "Destination and source directories must be the same.", 1);
+                "Destination and source directories must be the same.", 1
+            );
         }
 
         if (basename($source) === basename($destination)) {
             throw new framework\exception\argument(
-                "Destination and source filenames must be different.", 2);
+                "Destination and source filenames must be different.", 2
+            );
         }
 
         return \rename($source, $destination);
@@ -364,7 +373,8 @@ class file
         if (!dir::exists($directory))
         {
             throw new framework\exception\argument(
-                "Not a valid directory: `{$directory}`.", 1);
+                "Not a valid directory: `{$directory}`.", 1
+            );
         }
 
         $collection = array_diff(scandir($directory), ['.','..']);
@@ -442,7 +452,8 @@ class file
         if (!file_exists($filename))
         {
             throw new framework\exception\argument(
-                "File not found: `{$filename}`.", 1);
+                "File not found: `{$filename}`.", 1
+            );
         }
 
         return md5_file($filename);

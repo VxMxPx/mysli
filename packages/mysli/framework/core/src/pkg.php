@@ -205,10 +205,12 @@ class pkg
 
     // R/W
 
-    static function read() {
+    static function read()
+    {
         return (self::$r = json_decode(file_get_contents(self::$path), true));
     }
-    static function write() {
+    static function write()
+    {
         return (file_put_contents(self::$path, json_encode(self::$r)));
     }
 }

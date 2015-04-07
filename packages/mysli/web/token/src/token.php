@@ -8,8 +8,8 @@ __use(__namespace__, '
     mysli.framework.type/int
 ');
 
-class token {
-
+class token
+{
     private static $data_source;
     private static $registry;
 
@@ -17,18 +17,24 @@ class token {
      * Set registry path.
      * @param string $path
      */
-    static function set_data_source($path) {
+    static function set_data_source($path)
+    {
         self::$data_source = $path;
     }
     /**
      * Reload tokens list
      */
-    static function reload() {
+    static function reload()
+    {
         self::$registry = json::decode_file(self::$data_source, true);
-        if (!isset(self::$registry['qid'])) {
+
+        if (!isset(self::$registry['qid']))
+        {
             self::$registry['qid'] = self::generate_qid();
         }
-        if (!isset(self::$registry['tokens'])) {
+
+        if (!isset(self::$registry['tokens']))
+        {
             self::$registry['tokens'] = [];
         }
     }
@@ -37,11 +43,15 @@ class token {
      * @param  string $id
      * @return boolean
      */
-    static function remove($id) {
-        if (isset(self::$registry['tokens'][$id])) {
+    static function remove($id)
+    {
+        if (isset(self::$registry['tokens'][$id]))
+        {
             unset(self::$registry['tokens'][$id]);
             return self::write();
-        } else {
+        }
+        else
+        {
             return false;
         }
     }
@@ -50,15 +60,22 @@ class token {
      * @param  string $id
      * @return string false if not found.
      */
-    static function get($id) {
-        if (isset(self::$registry['tokens'][$id])) {
+    static function get($id)
+    {
+        if (isset(self::$registry['tokens'][$id]))
+        {
             $token = self::$registry['tokens'][$id];
-            if (time() > $token['expires_on']) {
+
+            if (time() > $token['expires_on'])
+            {
                 self::remove($id);
                 return false;
             }
+
             return $token['data'];
-        } else {
+        }
+        else
+        {
             return false;
         }
     }
@@ -68,7 +85,8 @@ class token {
      * @param  integer $expires in seconds
      * @return string
      */
-    static function create($data, $expires=1440) {
+    static function create($data, $expires=1440)
+    {
         $id = self::generate_qid(self::$registry['qid']);
         $id = "t1{$id}";
         $token = [
@@ -86,20 +104,25 @@ class token {
      * Remove expired tokens.
      * @return integer  number of removed tokens
      */
-    static function cleanup() {
+    static function cleanup()
+    {
         $now  = time();
         $rnum = 0;
 
-        foreach (self::$registry['tokens'] as $tid => $tdat) {
-            if ($now > $tdat['expires_on']) {
+        foreach (self::$registry['tokens'] as $tid => $tdat)
+        {
+            if ($now > $tdat['expires_on'])
+            {
                 self::$registry['tokens'][$tid];
                 $rnum++;
             }
         }
 
-        if ($rnum > 0) {
+        if ($rnum > 0)
+        {
             self::write();
         }
+
         return $rnum;
     }
 
@@ -108,18 +131,20 @@ class token {
      * @param  $salt string
      * @return string
      */
-    private static function generate_qid($salt=null) {
-        return
-            sha1(
-                sha1(md5(time())) .
-                int::random(10000, 99999) .
-                sha1(md5($salt)));
+    private static function generate_qid($salt=null)
+    {
+        return sha1(
+            sha1(md5(time())) .
+            int::random(10000, 99999) .
+            sha1(md5($salt))
+        );
     }
     /**
      * Write changes to file.
      * @return boolean
      */
-    private static function write() {
+    private static function write()
+    {
         self::$registry['qid'] = self::generate_qid(self::$registry['qid']);
         return json::encode_file(self::$data_source, self::$registry);
     }

@@ -6,8 +6,8 @@ __use(__namespace__, '
     mysli.framework.type/arr,str
 ');
 
-class request {
-
+class request
+{
     // Request methods types
     const method_get    = 'GET';
     const method_post   = 'POST';
@@ -23,14 +23,20 @@ class request {
      * @param  mixed  $default
      * @return mixed
      */
-    static function segment($id=false, $default=null) {
-        if (self::$segments === false) {
+    static function segment($id=false, $default=null)
+    {
+        if (self::$segments === false)
+        {
             self::$segments = trim(self::path(), '/');
             self::$segments = str::split_trim(self::$segments, '/');
         }
-        if ($id === false) {
+
+        if ($id === false)
+        {
             return self::$segments;
-        } else {
+        }
+        else
+        {
             return arr::get(self::$segments, $id, $default);
         }
     }
@@ -42,15 +48,19 @@ class request {
      * @param  mixed $default Default value(s) when key not found
      * @return mixed
      */
-    static function get($key=false, $default=null) {
-
-        if (!$key) {
+    static function get($key=false, $default=null)
+    {
+        if (!$key)
+        {
             return $_GET;
         }
 
-        if (is_array($key)) {
+        if (is_array($key))
+        {
             return arr::get_all($_GET, $key, $default);
-        } else {
+        }
+        else
+        {
             return arr::get($_GET, $key, $default);
         }
     }
@@ -62,15 +72,19 @@ class request {
      * @param  mixed $default Default value(s) when key not found
      * @return mixed
      */
-    static function post($key=false, $default=null) {
-
-        if (!$key) {
+    static function post($key=false, $default=null)
+    {
+        if (!$key)
+        {
             return $_POST;
         }
 
-        if (is_array($key)) {
+        if (is_array($key))
+        {
             return arr::get_all($_POST, $key, $default);
-        } else {
+        }
+        else
+        {
             return arr::get($_POST, $key, $default);
         }
     }
@@ -80,10 +94,14 @@ class request {
      * @param  string $default
      * @return string
      */
-    static function protocol($default='HTTP/1.1') {
-        if (isset($_SERVER['SERVER_PROTOCOL'])) {
+    static function protocol($default='HTTP/1.1')
+    {
+        if (isset($_SERVER['SERVER_PROTOCOL']))
+        {
             return $_SERVER['SERVER_PROTOCOL'];
-        } else {
+        }
+        else
+        {
             return $default;
         }
     }
@@ -91,14 +109,16 @@ class request {
      * Get IP from which request was made.
      * @return string
      */
-    static function ip() {
+    static function ip()
+    {
         return $_SERVER['REMOTE_ADDR'];
     }
     /**
      * Return user's agent.
      * @return  string
      */
-    static function agent() {
+    static function agent()
+    {
         return $_SERVER['HTTP_USER_AGENT'];
     }
     /**
@@ -106,16 +126,23 @@ class request {
      * _Borrowed from Wordpress_
      * @return boolean
      */
-    static function is_ssl() {
-        if (isset($_SERVER['HTTPS'])) {
-            if ('on' == strtolower($_SERVER['HTTPS'])) {
+    static function is_ssl()
+    {
+        if (isset($_SERVER['HTTPS']))
+        {
+            if ('on' == strtolower($_SERVER['HTTPS']))
+            {
                 return true;
             }
-            if ('1' == $_SERVER['HTTPS']) {
+
+            if ('1' == $_SERVER['HTTPS'])
+            {
                 return true;
             }
-        } elseif (isset($_SERVER['SERVER_PORT'])
-        && ('443' == $_SERVER['SERVER_PORT'])) {
+        }
+        elseif (isset($_SERVER['SERVER_PORT']) &&
+            ('443' == $_SERVER['SERVER_PORT']))
+        {
             return true;
         }
 
@@ -125,7 +152,8 @@ class request {
      * Retrun get current domain
      * @return string
      */
-    static function host() {
+    static function host()
+    {
         return isset($_SERVER['SERVER_NAME'])
             ? $_SERVER['SERVER_NAME']
             : isset($_SERVER['HTTP_HOST'])
@@ -140,19 +168,28 @@ class request {
      * then this would return /some/stuff.
      * @return string
      */
-    static function path() {
-        if (isset($_SERVER['PATH_INFO'])) {
+    static function path()
+    {
+        if (isset($_SERVER['PATH_INFO']))
+        {
             return $_SERVER['PATH_INFO'];
         }
-        if (isset($_SERVER['REQUEST_URI'])) {
+
+        if (isset($_SERVER['REQUEST_URI']))
+        {
             $path = explode('?', $_SERVER['REQUEST_URI'])[0];
             $script_name = isset($_SERVER['SCRIPT_NAME'])
-                                            ? $_SERVER['SCRIPT_NAME'] : null;
-            if (substr($path, 0, strlen($script_name)) === $script_name) {
+                ? $_SERVER['SCRIPT_NAME']
+                : null;
+
+            if (substr($path, 0, strlen($script_name)) === $script_name)
+            {
                 $path = substr($path, strlen($script_name));
             }
+
             return $path;
         }
+
         return null;
     }
     /**
@@ -161,11 +198,12 @@ class request {
      * @param   boolean $with_query
      * @return  string
      */
-    static function url($with_query=false) {
-
+    static function url($with_query=false)
+    {
         $url = (self::is_ssl() ? 'https://' : 'http://') . self::host();
 
-        if ($with_query) {
+        if ($with_query)
+        {
             // Make sure we have ending '/'!
             $url = trim($url, '/') . '/';
             $url = $url . ltrim($_SERVER['REQUEST_URI'], '/');
@@ -179,11 +217,15 @@ class request {
      * @param  array $segments
      * @return string
      */
-    static function modify_query(array $segments) {
+    static function modify_query(array $segments)
+    {
         $query = $_GET;
-        foreach ($segments as $key => $val) {
+
+        foreach ($segments as $key => $val)
+        {
             $query[$key] = $val;
         }
+
         return '?' . http_build_query($query);
     }
     /**
@@ -191,15 +233,19 @@ class request {
      * @param  string $key is particular key set int post
      * @return boolean
      */
-    static function has_post($key=false) {
-        return $key ? isset($_POST[$key]) : !empty($_POST);
+    static function has_post($key=false)
+    {
+        return $key
+            ? isset($_POST[$key])
+            : !empty($_POST);
     }
     /**
      * Get request method: request::method_get, request::method_post,
      *                     request::method_put, request::method_delete
      * @return string
      */
-    static function method() {
+    static function method()
+    {
         // Is it put?
         if ($_SERVER['REQUEST_METHOD'] === 'PUT' ||
             self::post('REQUEST_METHOD') === 'PUT')
@@ -216,7 +262,8 @@ class request {
         }
 
         // Is it post?
-        if (self::has_post()) {
+        if (self::has_post())
+        {
             return self::method_post;
         }
 

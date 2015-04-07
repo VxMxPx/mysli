@@ -2,8 +2,8 @@
 
 namespace mysli\web\html;
 
-class html {
-
+class html
+{
     const ent_double     = 2; // convert double-quotes
     const ent_signle     = 4; // convert single-quotes
     const ent_substitute = 8;
@@ -22,31 +22,47 @@ class html {
      * @param  integer $flags
      * @return integer
      */
-    private static function translate_flags($flags) {
+    private static function translate_flags($flags)
+    {
         $return = 0;
-        if ($flags & self::ent_single && $flags & self::ent_double) {
+
+        if ($flags & self::ent_single && $flags & self::ent_double)
+        {
             $return |= ENT_QUOTES;
-        } elseif ($flags & self::ent_double) {
+        }
+        elseif ($flags & self::ent_double)
+        {
             $return |= ENT_COMPAT;
-        } else {
+        }
+        else
+        {
             $return |= ENT_NOQUOTES;
         }
 
-        if ($flags & self::ent_substitute) {
+        if ($flags & self::ent_substitute)
+        {
             $return |= ENT_SUBSTITUTE;
         }
 
-        if ($flags & self::ent_disallowed) {
+        if ($flags & self::ent_disallowed)
+        {
             $return |= ENT_DISALLOWED;
         }
 
-        if ($flags & self::ent_html401) {
+        if ($flags & self::ent_html401)
+        {
             $return |= ENT_HTML401;
-        } elseif ($flags & self::ent_xml1) {
+        }
+        elseif ($flags & self::ent_xml1)
+        {
             $return |= ENT_XML1;
-        } elseif ($flags & self::ent_xhtml) {
+        }
+        elseif ($flags & self::ent_xhtml)
+        {
             $return |= ENT_XHTML;
-        } elseif ($flags & self::ent_html5) {
+        }
+        elseif ($flags & self::ent_html5)
+        {
             $return |= ENT_HTML5;
         }
 
@@ -71,8 +87,11 @@ class html {
 
         return call_user_func_array(
             (($flags & self::ent_special)
-                ? 'htmlspecialchars' : 'htmlentities'),
-            [$string, $tflags, $encoding, $double_encode]);
+                ? 'htmlspecialchars'
+                : 'htmlentities'
+            ),
+            [$string, $tflags, $encoding, $double_encode]
+        );
     }
     /**
      * Convert all HTML entities to their applicable characters.
@@ -85,13 +104,16 @@ class html {
      * @param  string  $encoding
      * @return string
      */
-    static function entities_decode($string, $flags=1542, $encoding='UTF-8') {
+    static function entities_decode($string, $flags=1542, $encoding='UTF-8')
+    {
         $tflags = self::translate_flags($flags);
 
         return call_user_func_array(
             (($flags & self::ent_special)
-                ? 'htmlspecialchars_decode' : 'html_entity_decode'),
-            [$string, $tflags, $encoding]);
+                ? 'htmlspecialchars_decode'
+                : 'html_entity_decode'),
+            [$string, $tflags, $encoding]
+        );
     }
     /**
      * Inserts HTML line breaks before all newlines in a string.
@@ -99,7 +121,8 @@ class html {
      * @param  string $string
      * @return string
      */
-    static function nl_to_br($string) {
+    static function nl_to_br($string)
+    {
         return nl2br($string, true);
     }
     /**
@@ -108,7 +131,8 @@ class html {
      * @param  string $allowed e.g. <p><a><div>
      * @return string
      */
-    static function strip_tags($string, $allowed=null) {
+    static function strip_tags($string, $allowed=null)
+    {
         return $allowed
             ? strip_tags($string, $allowed)
             : strip_tags($string);

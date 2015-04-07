@@ -7,7 +7,8 @@ __use(__namespace__, '
     mysli.util.config
 ');
 
-class cookie {
+class cookie
+{
     /**
      * Set cookie.
      * @param string  $name
@@ -21,10 +22,12 @@ class cookie {
      * custom value - must be time() + seconds
      * @return boolean
      */
-    static function set($name, $value, $path='/', $expire=false) {
-        $c = config::select('mysli/web/cookie');
+    static function set($name, $value, $path='/', $expire=false)
+    {
+        $c = config::select('mysli.web.cookie');
 
-        if ($expire === false) {
+        if ($expire === false)
+        {
             $expire = time() + $c->get('timeout');
         }
 
@@ -38,21 +41,27 @@ class cookie {
      * @param  mixed   $key string (one cookie), array (multiple cookies)
      * @return string
      */
-    static function get($key, $default=null) {
-
-        if (is_array($key)) {
+    static function get($key, $default=null)
+    {
+        if (is_array($key))
+        {
             $cookies = [];
-            foreach ($key as $val) {
+            foreach ($key as $val)
+            {
                 $cookies[] = self::get($val, $default);
             }
+
             return $cookies;
         }
 
-        $key = config::select('mysli/web/cookie', 'prefix') . $key;
+        $key = config::select('mysli.web.cookie', 'prefix') . $key;
 
-        if (arr::key_in($_COOKIE, $key)) {
+        if (arr::key_in($_COOKIE, $key))
+        {
             return $_COOKIE[$key];
-        } else {
+        }
+        else
+        {
             return $default;
         }
     }
@@ -62,8 +71,9 @@ class cookie {
      * @param  string $path
      * @return boolean
      */
-    static function remove($name, $path='/') {
-        $c = config::select('mysli/web/cookie');
+    static function remove($name, $path='/')
+    {
+        $c = config::select('mysli.web.cookie');
 
         $domain = $c->get('domain', $_SERVER['SERVER_NAME']);
         $prefix = $c->get('prefix');

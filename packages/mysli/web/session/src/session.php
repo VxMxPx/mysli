@@ -13,8 +13,8 @@ __use(__namespace__, '
     mysli.web.request
 ');
 
-class session {
-
+class session
+{
     private static $user;
     private static $info;
 
@@ -22,26 +22,29 @@ class session {
      * Current session information, like ID, etc...
      * @return mixed  array or null session is not set.
      */
-    static function info() {
+    static function info()
+    {
         return self::$info;
     }
     /**
      * Get current user.
      * @return mixed  object or null if no user is set.
      */
-    static function user() {
+    static function user()
+    {
         return self::$user;
     }
     /**
      * Find session, and set user if found
      * @return boolean
      */
-    static function discover() {
-
+    static function discover()
+    {
         $c = config::select('mysli/web/session');
 
         // Check if we can find session id in cookies.
-        if (!($session_id = cookie::get($c->get('cookie_name')))) {
+        if (!($session_id = cookie::get($c->get('cookie_name'))))
+        {
             return false;
         }
 
@@ -50,35 +53,42 @@ class session {
 
         // Does such session_id exists?
         $session_path = self::path_from_id($session_id);
-        if (!file::exists($session_path) ) {
+        if (!file::exists($session_path))
+        {
             self::destroy($session_id);
             return false;
         }
 
         // Read session file
         $session = json::decode_file($session_path, true);
-        if (!is_array($session)) {
+        if (!is_array($session))
+        {
             self::destroy($session_id);
             return false;
         }
 
         // Is it expired?
-        if ((int) $session['expires_on'] < time()) {
+        if ((int) $session['expires_on'] < time())
+        {
             self::destroy($session_id);
             return false;
         }
 
         // Do we need identical IP address?
-        if ($c->get('require_ip')) {
-            if ($session['ip'] !== request::ip()) {
+        if ($c->get('require_ip'))
+        {
+            if ($session['ip'] !== request::ip())
+            {
                 self::destroy($session_id);
                 return false;
             }
         }
 
         // Do we need identical agent?
-        if ($c->get('require_agent')) {
-            if ($session['agent'] !== md5(request::agent())) {
+        if ($c->get('require_agent'))
+        {
+            if ($session['agent'] !== md5(request::agent()))
+            {
                 self::destroy($session_id);
                 return false;
             }
@@ -86,12 +96,14 @@ class session {
 
         // Get the user...
         $user = users::get_by_id($session['user_id']);
-        if (!$user) {
+        if (!$user)
+        {
             self::destroy($session_id);
             return false;
         }
 
-        if (!$user->is_active || $user->is_deleted) {
+        if (!$user->is_active || $user->is_deleted)
+        {
             self::destroy($session_id);
             return false;
         }
@@ -111,12 +123,16 @@ class session {
      *                       0 to expires when browser is closed
      * @return boolean
      */
-    static function set($user, $expires=null) {
-        if (!method_exists($user, 'id')) {
+    static function set($user, $expires=null)
+    {
+        if (!method_exists($user, 'id'))
+        {
             throw new exception\session(
-                "User object need to have `id` property.", 1);
+                "User object need to have `id` property.", 1
+            );
         }
         self::$user = $user;
+
         return self::create($user->id(), $expires);
     }
     /**
@@ -127,14 +143,17 @@ class session {
      *                          0 to expires when browser is closed
      * @return boolean
      */
-    static function create($uid, $expires=null) {
-
+    static function create($uid, $expires=null)
+    {
         $c = config::select('mysli/web/session');
 
-        if ($expires === null) {
+        if ($expires === null)
+        {
             $expires = (int) $c->get('expires');
             $expires = $expires > 0 ? $expires + time() : 0;
-        } else {
+        }
+        else
+        {
             $expires = (int) $expires;
         }
 
@@ -161,22 +180,24 @@ class session {
      * Will clear all expired sessions, and return the amount of removed items.
      * @return integer number of removed sessions
      */
-    static function cleanup() {
-
+    static function cleanup()
+    {
         $removed = 0;
         $path = fs::datpath('mysli/web/session/sessions');
         $sessions = fs::ls($path);
 
-        foreach ($sessions as $session_file) {
-
-            if (substr($session_file, -13) !== '_session.json') {
+        foreach ($sessions as $session_file)
+        {
+            if (substr($session_file, -13) !== '_session.json')
+            {
                 continue;
             }
 
             $filename = ds($path, $session_file);
             $session = json::decode_file($filename);
 
-            if ($session['expires_on'] < time()) {
+            if ($session['expires_on'] < time())
+            {
                 file::remove($filename);
                 $removed++;
             }
@@ -190,43 +211,46 @@ class session {
      * @param mixed $session_id false to destroy current session,
      *                          string - session id which needs to be destroyed
      */
-    static function destroy($session_id=false) {
-
-        if (!$session_id) {
+    static function destroy($session_id=false)
+    {
+        if (!$session_id)
+        {
             $session_id = self::$info['id'];
         }
 
         self::$user = null;
         self::$info = null;
 
-        cookie::remove(config::select('mysli/web/session', 'cookie_name'));
+        cookie::remove(config::select('mysli.web.session', 'cookie_name'));
 
         $filename = self::path_from_id($session_id);
 
-        if (file::exists($filename)) {
+        if (file::exists($filename))
+        {
             file::remove($filename);
         }
     }
-
 
     /**
      * Renew session (extend timeout, etc...)
      * @param  array   $session
      * @return boolean
      */
-    private static function extend(array $session) {
-
-        $c = config::select('mysli/web/session');
+    private static function extend(array $session)
+    {
+        $c = config::select('mysli.web.session');
 
         // Sessions which expires when browser window is closed,
         // doesn't need to be extended
-        if ($session['expires_relative'] === 0) {
+        if ($session['expires_relative'] === 0)
+        {
             return true;
         }
 
         // If we have to change id on renew,
         // then we'll destroy current session and set new one.
-        if ($c->get('change_id_on_renew')) {
+        if ($c->get('change_id_on_renew'))
+        {
             self::destroy($session['id']);
             return self::create($session['uid'], $session['expires_relative']);
         }
@@ -234,10 +258,14 @@ class session {
         // Set expires to some time in future. It 0 was set, then we
         // set it to expires immediately when browser window is closed.
         $expires = $session['expires_relative'];
-        if ($expires === null) {
+
+        if ($expires === null)
+        {
             $expires = (int) $c->get('expires');
             $expires = $expires > 0 ? $expires + time() : 0;
-        } else {
+        }
+        else
+        {
             $expires = (int) $expires;
         }
 
@@ -246,6 +274,7 @@ class session {
         $session['agent']      = request::agent();
 
         cookie::set($c->get('cookie_name'), $session['id'], '/', $expires);
+
         return self::write($session['id'], $session);
     }
     /**
@@ -253,7 +282,8 @@ class session {
      * @param  string $id
      * @return string
      */
-    private static function path_from_id($id) {
+    private static function path_from_id($id)
+    {
         return fs::datpath('mysli/web/session/sessions', $id . '_session.json');
     }
     /**
@@ -262,7 +292,8 @@ class session {
      * @param  array  $session
      * @return boolean
      */
-    private static function write($id, array $session) {
+    private static function write($id, array $session)
+    {
         return json::encode_file(self::path_from_id($id), $session);
     }
 }

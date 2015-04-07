@@ -6,8 +6,8 @@ __use(__namespace__, '
     mysli.framework.exception/* -> framework\exception\*
 ');
 
-class fs {
-
+class fs
+{
     const map_continue = '\\/map continue\\/';
 
     /**
@@ -17,22 +17,31 @@ class fs {
      * @param  integer $round_precision
      * @return array   [12, 'MB']
      */
-    static function format_size($size, $round_precision=4) {
+    static function format_size($size, $round_precision=4)
+    {
         $size = floatval($size);
 
-        if ($size < 1024) {
+        if ($size < 1024)
+        {
             return [$size, 'bytes'];
         }
-        elseif ($size < 1048576) {
+        elseif ($size < 1048576)
+        {
             return [round($size/1024, $round_precision), 'KB'];
         }
-        else {
+        else
+        {
             $result = round($size/1048576, $round_precision);
-            if ($result > 1024) {
+
+            if ($result > 1024)
+            {
                 $result = [round($result/1024, $round_precision), 'GB'];
-            } else {
+            }
+            else
+            {
                 $result = [$result, 'MB'];
             }
+
             return $result;
         }
     }
@@ -42,12 +51,17 @@ class fs {
      * @param  mixed $new String or null (if first param is array)
      * @return integer number of renamed files
      */
-    static function rename($old, $new=null) {
-        if (is_array($old)) {
+    static function rename($old, $new=null)
+    {
+        if (is_array($old))
+        {
             $renamed = 0;
-            foreach ($old as $o => $n) {
+
+            foreach ($old as $o => $n)
+            {
                 $renamed = $renamed + self::rename($o, $n);
             }
+
             return $renamed;
         }
 
@@ -58,7 +72,8 @@ class fs {
      * @param  string $filename full path
      * @return string new filename
      */
-    static function unique_prefix($filename) {
+    static function unique_prefix($filename)
+    {
         $destination = dirname($filename);
         $filename    = basename($filename);
         return md5(self::ds($destination, $filename)) . '_' . $filename;
@@ -69,7 +84,8 @@ class fs {
      * to build full path from them.
      * @return string
      */
-    static function datpath() {
+    static function datpath()
+    {
         $arguments = func_get_args();
         $arguments = implode(DIRECTORY_SEPARATOR, $arguments);
         return self::ds(MYSLI_DATPATH, $arguments);
@@ -80,7 +96,8 @@ class fs {
      *                   to build full path from them.
      * @return string
      */
-    static function pkgpath() {
+    static function pkgpath()
+    {
         $arguments = func_get_args();
         $arguments = implode(DIRECTORY_SEPARATOR, $arguments);
         return self::ds(MYSLI_PKGPATH, $arguments);
@@ -142,7 +159,8 @@ class fs {
      * to build full path from them.
      * @return string
      */
-    static function tmppath() {
+    static function tmppath()
+    {
         $arguments = func_get_args();
         $arguments = implode(DIRECTORY_SEPARATOR, $arguments);
         return self::ds(MYSLI_TMPPATH, $arguments);
@@ -153,14 +171,19 @@ class fs {
      * to build full path from them.
      * @return string
      */
-    static function ds() {
+    static function ds()
+    {
         $path = func_get_args();
         $path = implode(DIRECTORY_SEPARATOR, $path);
 
-        if ($path) {
+        if ($path)
+        {
             return preg_replace(
-                '/(?<![:\/])[\/\\\\]+/', DIRECTORY_SEPARATOR, $path);
-        } else {
+                '/(?<![:\/])[\/\\\\]+/', DIRECTORY_SEPARATOR, $path
+            );
+        }
+        else
+        {
             return null;
         }
     }
@@ -174,16 +197,20 @@ class fs {
      * @param  string $ps
      * @return string
      */
-    static function relative_path($to, $from, $ps=DIRECTORY_SEPARATOR) {
+    static function relative_path($to, $from, $ps=DIRECTORY_SEPARATOR)
+    {
         $ar_from = explode($ps, rtrim($from, $ps));
         $ar_to = explode($ps, rtrim($to, $ps));
-        while(count($ar_from) && count($ar_to)
-            && ($ar_from[0] == $ar_to[0])) {
+
+        while(count($ar_from) && count($ar_to) && ($ar_from[0] == $ar_to[0]))
+        {
             array_shift($ar_from);
             array_shift($ar_to);
         }
-        return str_pad(
-            '', count($ar_from) * 3, '..' . $ps) . implode($ps, $ar_to);
+
+        return
+            str_pad('', count($ar_from) * 3, '..' . $ps) .
+            implode($ps, $ar_to);
     }
     /**
      * Will generate new unique file/dir name,
@@ -192,7 +219,8 @@ class fs {
      * @param  string $divider e.g. file.txt => file_2.txt when divider is _
      * @return string /absolute/path/to/file
      */
-    static function unique_name($filename, $divider='_') {
+    static function unique_name($filename, $divider='_')
+    {
         $directory    = dirname($filename);
         $filename     = basename($filename);
         $new_filename = $filename;
@@ -201,7 +229,8 @@ class fs {
         $base         = file::name($filename, false);
         $n            = 2;
 
-        while (file::exists(self::ds($directory, $new_filename))) {
+        while (file::exists(self::ds($directory, $new_filename)))
+        {
             $new_filename = $base . $divider . $n . $ext;
             $n++;
         }
@@ -219,17 +248,23 @@ class fs {
      * @param  integer  $rcut
      * @return array
      */
-    static function map($directory, $callback, $rcut=null) {
+    static function map($directory, $callback, $rcut=null)
+    {
         $collection = [];
-        if (!dir::exists($directory)) {
-            throw new framework\exception\not_found(
-                "Not a valid directory: `{$directory}`.", 1);
-        }
-        foreach (self::ls($directory) as $file) {
 
+        if (!dir::exists($directory))
+        {
+            throw new framework\exception\not_found(
+                "Not a valid directory: `{$directory}`.", 1
+            );
+        }
+
+        foreach (self::ls($directory) as $file)
+        {
             $abs_path = self::ds($directory, $file);
 
-            if ($rcut !== null) {
+            if ($rcut !== null)
+            {
                 $file = substr($abs_path, $rcut);
             }
 
@@ -237,22 +272,29 @@ class fs {
 
             $r = $callback($abs_path, $file, $is_dir);
 
-            if ($r === self::map_continue) {
+            if ($r === self::map_continue)
+            {
                 continue;
             }
 
-            if ($r !== null) {
+            if ($r !== null)
+            {
                 $collection[] = $r;
             }
 
-            if ($is_dir) {
-                if ($rcut === null) {
+            if ($is_dir)
+            {
+                if ($rcut === null)
+                {
                     $rcut = strlen($directory)+1;
                 }
+
                 $collection = array_merge(
-                    $collection, self::map($abs_path, $callback, $rcut));
+                    $collection, self::map($abs_path, $callback, $rcut)
+                );
             }
         }
+
         return $collection;
     }
     /**
@@ -263,18 +305,27 @@ class fs {
      *                           matching files will be returned.
      * @return array
      */
-    static function ls($directory, $filter=null) {
-        if (!$filter) {
+    static function ls($directory, $filter=null)
+    {
+        if (!$filter)
+        {
             return array_diff(scandir($directory), ['.', '..']);
-        } else {
+        }
+        else
+        {
             $collection = [];
             $filter = substr($filter, 0, 1) === '/'
-                ? $filter : "/{$filter}/";
-            foreach (scandir($directory) as $file) {
-                if (preg_match($filter, $file)) {
+                ? $filter
+                : "/{$filter}/";
+
+            foreach (scandir($directory) as $file)
+            {
+                if (preg_match($filter, $file))
+                {
                     $collection[] = $file;
                 }
             }
+
             return $collection;
         }
     }

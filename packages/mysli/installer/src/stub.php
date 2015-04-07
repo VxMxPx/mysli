@@ -2,12 +2,15 @@
 
 namespace mysli\installer\stub;
 
-function __init() {
-
+function __init()
+{
     $base_dir = __FILE__;
-    if (substr($base_dir, -5) === '.phar') {
+    if (substr($base_dir, -5) === '.phar')
+    {
         $base_dir = 'phar://'.$base_dir;
-    } else {
+    }
+    else
+    {
         // ROOT!
         $base_dir = dirname(dirname($base_dir));
     }
@@ -16,18 +19,26 @@ function __init() {
     try_to_include($base_dir.'/src/common.php');
 
     // Is cli?
-    if (php_sapi_name() === 'cli' || defined('STDIN')) {
+    if (php_sapi_name() === 'cli' || defined('STDIN'))
+    {
         try_to_include($base_dir.'/sh/installer.php');
         \mysli\installer\sh\installer\__init($_SERVER['argv']);
-    } else {
+    }
+    else
+    {
         try_to_include($base_dir.'/src/web.php');
         \mysli\installer\web::boot();
     }
 }
-function try_to_include($file) {
-    if (!file_exists($file)) {
+
+function try_to_include($file)
+{
+    if (!file_exists($file))
+    {
         throw new \Exception("Cannot find: `{$file}`");
-    } else {
+    }
+    else
+    {
         include $file;
     }
 }

@@ -3,11 +3,12 @@
 namespace mysli\framework\type;
 
 __use(__namespace__, '
+    ./tc,int
     mysli.framework.exception/* -> framework\exception\*
 ');
 
-class str {
-
+class str
+{
     // Characters for normalize
     protected static $normalize_map = array(
         'Ĳ' => 'I', 'Ö' => 'O','Œ' => 'O','Ü' => 'U','ä' => 'a','æ' => 'a',
@@ -110,13 +111,18 @@ class str {
      * @param  string $encoding
      * @return string
      */
-    static function encoding($encoding=null) {
-        if ($encoding) {
-            if (!mb_internal_encoding($encoding)) {
+    static function encoding($encoding=null)
+    {
+        if ($encoding)
+        {
+            if (!mb_internal_encoding($encoding))
+            {
                 throw new framework\exception\argument(
-                    "Invalid encoding: `{$encoding}`.", 1);
+                    "Invalid encoding: `{$encoding}`.", 1
+                );
             }
         }
+
         return mb_internal_encoding();
     }
     /**
@@ -127,33 +133,42 @@ class str {
      * @param  string  $mask
      * @return array
      */
-    static function split_trim($string, $separator, $limit=null,
-                               $mask=null) {
+    static function split_trim($string, $separator, $limit=null, $mask=null)
+    {
         tc::need_str($string);
 
-        if (is_array($separator)) {
+        if (is_array($separator))
+        {
             $first = array_shift($separator);
 
-            foreach ($separator as $s) {
+            foreach ($separator as $s)
+            {
                 $string = str_replace($s, $first, $string);
             }
 
             $separator = $first;
         }
 
-        if ($limit !== null) {
+        if ($limit !== null)
+        {
             tc::need_int($limit);
             $segments = explode($separator, $string, $limit);
-        } else {
+        }
+        else
+        {
             $segments = explode($separator, $string);
         }
 
         $return = [];
 
-        foreach($segments as $segment) {
-            if ($mask !== null) {
+        foreach($segments as $segment)
+        {
+            if ($mask !== null)
+            {
                 $return[] = trim($segment, $mask);
-            } else {
+            }
+            else
+            {
                 $return[] = trim($segment);
             }
         }
@@ -166,13 +181,19 @@ class str {
      * @param  string $encoding
      * @return integer
      */
-    static function length($string, $encoding=null) {
+    static function length($string, $encoding=null)
+    {
         $r = mb_strlen($string, mb_internal_encoding());
-        if ($r === false) {
+
+        if ($r === false)
+        {
             throw new framework\exception\argument(
                 "Cannot get string length. Probably invalid encoding ".
-                "was set: `{$encoding}`.", 2);
-        } else {
+                "was set: `{$encoding}`.", 2
+            );
+        }
+        else
+        {
             return $r;
         }
     }
@@ -193,11 +214,15 @@ class str {
      * @param  integer $limit to how many characters should the limit be set
      * @return string
      */
-    static function limit_repeat($input, $char, $limit=1) {
-        if (is_array($char)) {
-            foreach ($char as $one_char) {
+    static function limit_repeat($input, $char, $limit=1)
+    {
+        if (is_array($char))
+        {
+            foreach ($char as $one_char)
+            {
                 $input = self::limit_repeat($input, $one_char, $limit);
             }
+
             return $input;
         }
 
@@ -222,7 +247,8 @@ class str {
      * s ~#$%&()=?*<>-_:.;,+!
      * @return  string
      */
-    static function random($length, $mask='aA1s') {
+    static function random($length, $mask='aA1s')
+    {
         tc::need_int($length, 1);
         tc::need_str($mask);
 
@@ -240,7 +266,8 @@ class str {
         $i = 1;
         $result = '';
 
-        while ($i <= $length) {
+        while ($i <= $length)
+        {
             $result .= $chars{int::random(0, strlen($chars)-1)};
             $i++;
         }
@@ -253,11 +280,15 @@ class str {
      * @param  boolean $limit_lines true to limit empty new lines to 2
      * @return string
      */
-    static function to_unix_line_endings($input, $limit_lines=false) {
+    static function to_unix_line_endings($input, $limit_lines=false)
+    {
         $input = str_replace(["\r\n", "\r"], "\n", $input);
-        if ($limit_lines) {
+
+        if ($limit_lines)
+        {
             $input = preg_replace('/\n{3,}/ism', "\n\n", $input);
         }
+
         return $input;
     }
     /**
@@ -270,14 +301,17 @@ class str {
      * php-translit-remove-accent-unaccent-21001
      * @return string
      */
-    static function normalize($str, $utf8=true) {
+    static function normalize($str, $utf8=true)
+    {
         $str = (string) $str;
 
-        if (is_null($utf8)) {
+        if (is_null($utf8))
+        {
             $utf8 = (strtolower(mb_detect_encoding($str)) == 'utf-8');
         }
 
-        if (!$utf8) {
+        if (!$utf8)
+        {
             $str = utf8_encode($str);
         }
 
@@ -294,13 +328,18 @@ class str {
      * @param  integer $length
      * @return string
      */
-    static function slice($string, $start, $length=null) {
+    static function slice($string, $start, $length=null)
+    {
         tc::need_str($string);
         tc::need_int($start, null, null, 1);
-        if ($length !== null) {
+
+        if ($length !== null)
+        {
             tc::need_int($length, null, null, 2);
             return mb_substr($string, $start, $length);
-        } else {
+        }
+        else
+        {
             return mb_substr($string, $start);
         }
     }
@@ -311,16 +350,18 @@ class str {
      * @param  string  $custom any custom characters (like ,-+*!?#)
      * @return string
      */
-    static function clean($string, $mask='aA1s', $custom=null) {
-
+    static function clean($string, $mask='aA1s', $custom=null)
+    {
         tc::need_str($string, 1);
         tc::need_str($mask, 2);
 
-        if ($custom) {
+        if ($custom)
+        {
             tc::need_str_or_int($custom);
         }
 
-        if (empty($string)) {
+        if (empty($string))
+        {
             return '';
         }
 
@@ -330,17 +371,18 @@ class str {
         $n = '0-9';
         $s = preg_quote(' ', '/');
 
-        if ($mask) {
+        if ($mask)
+        {
             if (strpos($mask, 'a') !== false) { $filter .= $a; }
             if (strpos($mask, 'A') !== false) { $filter .= $A; }
             if (strpos($mask, '1') !== false) { $filter .= $n; }
             if (strpos($mask, 's') !== false) { $filter .= $s; }
-            if ($custom !== null)  { $filter .= preg_quote($custom, '/'); }
+            if ($custom            !== null)  { $filter .= preg_quote($custom, '/'); }
         }
 
-        if (!$filter) {
-            throw new framework\exception\argument(
-                "Invalid \$mask parameter.", 2);
+        if (!$filter)
+        {
+            throw new framework\exception\argument("Invalid \$mask parameter.", 2);
         }
 
         $filter = '/([^' . $filter . '])/sm';
@@ -355,7 +397,8 @@ class str {
      * @param  string  $regex
      * @return string
      */
-    static function clean_regex($string, $regex) {
+    static function clean_regex($string, $regex)
+    {
         tc::need_str($string, 1);
         tc::need_str($regex, 2);
         return preg_replace($regex, '', $string);
@@ -366,17 +409,22 @@ class str {
      * @param  array   $delimiter
      * @return string
      */
-    static function slug($string, $delimiter='-') {
+    static function slug($string, $delimiter='-')
+    {
         tc::need_str($string);
         tc::need_str($delimiter, 1);
-        if (empty($string)) {
+
+        if (empty($string))
+        {
             return '';
         }
+
         $string = self::to_lower($string);
         $string = self::normalize($string);
         $string = self::clean($string, 'a1s', '-_');
         $string = preg_replace('/( |_|-)+/', $delimiter, $string);
         $string = trim($string, $delimiter);
+
         return $string;
     }
     /**
@@ -387,12 +435,14 @@ class str {
      * @param  string  $delimiter
      * @return string
      */
-    static function slug_unique($string, array $slugs, $delimiter='-') {
+    static function slug_unique($string, array $slugs, $delimiter='-')
+    {
         $string = self::slug($string, $delimiter);
         $num = 2;
         $base_string = $string;
 
-        while (in_array($string, $slugs)) {
+        while (in_array($string, $slugs))
+        {
             $string = $base_string . $delimiter . $num;
             $num++;
         }
@@ -407,19 +457,21 @@ class str {
      * only if it was shortened
      * @return string
      */
-    static function limit_words($string, $limit, $ending=null) {
+    static function limit_words($string, $limit, $ending=null)
+    {
         tc::need_int($limit, 1);
         $string = (string) $string;
         $string_initial_length = self::length($string);
 
-        if (strpos($string, ' ') === false) {
+        if (strpos($string, ' ') === false)
+        {
             return $string;
         }
 
-        $string = implode(
-            ' ', array_slice(explode(' ', $string), 0, $limit));
+        $string = implode(' ', array_slice(explode(' ', $string), 0, $limit));
 
-        if ($ending && self::length($string) !== $string_initial_length) {
+        if ($ending && self::length($string) !== $string_initial_length)
+        {
             $string = $string . $ending;
         }
 
@@ -434,13 +486,15 @@ class str {
      * only if it was shortened.
      * @return string
      */
-    static function limit_length($string, $limit, $ending=null) {
+    static function limit_length($string, $limit, $ending=null)
+    {
         tc::need_int($limit, 1);
         $string = (string) $string;
         $string_initial_length = self::length($string);
         $string = self::slice($string, 0, $limit);
 
-        if ($ending && self::length($string) !== $string_initial_length) {
+        if ($ending && self::length($string) !== $string_initial_length)
+        {
             $string = $string . $ending;
         }
 
@@ -456,8 +510,9 @@ class str {
      * @param  integer $limit (split limit)
      * @return string  null if not found
      */
-    static function split_get($string, $separator, $index, $default=null,
-                              $mask=null, $limit=null) {
+    static function split_get(
+        $string, $separator, $index, $default=null, $mask=null, $limit=null)
+    {
         $return = self::split_trim($string, $separator, $limit, $mask);
         return arr::key_in($return, $index) ? $return[$index] : $default;
     }
@@ -472,76 +527,89 @@ class str {
      * same end as start, or array, with open and end tag.
      * @return array
      */
-    static function tokenize($input, $separator, $protected) {
+    static function tokenize($input, $separator, $protected)
+    {
         tc::need_str($input);
 
-        if ($separator === '\\') {
+        if ($separator === '\\')
+        {
             throw new framework\exception\argument(
-                "Separator can't be backslash.", 1);
+                "Separator can't be backslash.", 1
+            );
         }
+
         // Open and close of protected region
-        if (is_array($protected)) {
-            if (count($protected) !== 2) {
+        if (is_array($protected))
+        {
+            if (count($protected) !== 2)
+            {
                 throw new framework\exception\argument(
-                    "\$protected need to have exactly 2 elements.", 2);
+                    "\$protected need to have exactly 2 elements.", 2
+                );
             }
             $popen = $protected[0];
             $pclose = $protected[1];
-        } else {
+        }
+        else
+        {
             $popen = $protected;
             $pclose = $protected;
         }
+
         // Define lengths + first character of open and close tag
-        $open_first = self::slice($popen, 0, 1);
-        $close_first = self::slice($pclose, 0, 1);
-        $open_length = self::length($popen);
+        $open_first   = self::slice($popen, 0, 1);
+        $close_first  = self::slice($pclose, 0, 1);
+        $open_length  = self::length($popen);
         $close_length = self::length($pclose);
         $input_length = self::length($input);
-        $sep_length = self::length($separator);
-        $sep_first = self::slice($separator, 0, 1);
+        $sep_length   = self::length($separator);
+        $sep_first    = self::slice($separator, 0, 1);
+
         // Define protected
         $is_protected = false;
         $is_escaped = false;
+
         // Define empty result
         $current_token = '';
         $current_char = '';
         $result = array();
+
         // Walk through string
-        for ($i=0; $i < $input_length; $i++) {
+        for ($i=0; $i < $input_length; $i++)
+        {
             $current_char = $input[$i];
-            switch ($current_char) {
+            switch ($current_char)
+            {
                 case '\\':
                     $is_escaped = true;
                     //$current_token .= '\\';
                     continue 2;
+
                 case $close_first:
-                    if (
-                        self::slice($input, $i, $close_length) === $pclose
-                        && $is_protected
-                        && !$is_escaped
-                    ) {
+                    if (self::slice($input, $i, $close_length) === $pclose &&
+                        $is_protected && !$is_escaped)
+                    {
                         $is_protected = false;
                         $current_char = $pclose;
                         $i = $i + $close_length - 1;
                         break;
                     }
                     // Pass through
+
                 case $open_first:
-                    if (
-                        self::slice($input, $i, $open_length) === $popen
-                        && !$is_escaped
-                    ) {
+                    if (self::slice($input, $i, $open_length) === $popen &&
+                        !$is_escaped)
+                    {
                         $is_protected = true;
                         $current_char = $popen;
                         $i = $i + $open_length - 1;
                     }
                     break;
+
                 case $sep_first:
-                    if (
-                        self::slice($input, $i, $sep_length) === $separator
-                        && !$is_escaped
-                        && !$is_protected
-                    ) {
+                    if (self::slice($input, $i, $sep_length) === $separator &&
+                        !$is_escaped && !$is_protected)
+                    {
                         $result[] = $current_token;
                         $current_token = '';
                         $i = $i + $sep_length - 1;
@@ -555,7 +623,8 @@ class str {
             $is_escaped = false;
         }
 
-        if (!empty($current_token)) {
+        if (!empty($current_token))
+        {
             $result[] = $current_token;
         }
 
@@ -569,13 +638,16 @@ class str {
      * @param  string  $encoding
      * @return integer false if not found
      */
-    static function find($string, $find, $offset=0, $encoding=null) {
+    static function find($string, $find, $offset=0, $encoding=null)
+    {
         tc::need_str($string, 1);
         tc::need_str($find, 2);
         tc::need_int($offset, 0);
-        if ($encoding === null) {
+        if ($encoding === null)
+        {
             $encoding = self::encoding();
         }
+
         return mb_strpos($string, $find, $offset, $encoding);
     }
     /**
@@ -584,30 +656,40 @@ class str {
      * @param  boolean $uc_first  Upper case first letter also?
      * @return string
      */
-    static function to_camelcase($string, $uc_first=true) {
+    static function to_camelcase($string, $uc_first=true)
+    {
         tc::need_str($string);
+
         // Convert _
-        if (self::find($string, '_') !== false) {
+        if (self::find($string, '_') !== false)
+        {
             $string = str_replace('_', ' ', $string);
             $string = ucwords($string);
             $string = str_replace(' ', '', $string);
         }
+
         // Convert backslashes
-        if (self::find($string, '\\') !== false) {
+        if (self::find($string, '\\') !== false)
+        {
             $string = str_replace('\\', ' ', $string);
             $string = $uc_first ? ucwords($string) : lcfirst($string);
             $string = str_replace(' ', '\\', $string);
         }
+
         // Convert slashes
-        if (self::find($string, '/') !== false) {
+        if (self::find($string, '/') !== false)
+        {
             $string = str_replace('/', ' ', $string);
             $string = $uc_first ? ucwords($string) : lcfirst($string);
             $string = str_replace(' ', '/', $string);
         }
 
-        if (!$uc_first) {
+        if (!$uc_first)
+        {
             $string = lcfirst($string);
-        } else {
+        }
+        else
+        {
             $string = ucfirst($string);
         }
 
@@ -618,17 +700,18 @@ class str {
      * @param  string  $string
      * @return string
      */
-    static function to_underscore($string) {
+    static function to_underscore($string)
+    {
         tc::need_str($string);
-        return self::to_lower(
-            preg_replace('/(?<=[a-z])([A-Z])/', '_$1', $string));
+        return self::to_lower(preg_replace('/(?<=[a-z])([A-Z])/', '_$1', $string));
     }
     /**
      * Convert string to lowercase (unicode)
      * @param  string $string
      * @return string
      */
-    static function to_lower($string) {
+    static function to_lower($string)
+    {
         tc::need_str($string);
         return mb_strtolower($string);
     }
@@ -637,7 +720,8 @@ class str {
      * @param  string $string
      * @return string
      */
-    static function to_upper($string) {
+    static function to_upper($string)
+    {
         tc::need_str($string);
         return mb_strtoupper($string);
     }
@@ -648,13 +732,18 @@ class str {
      * @param  integer $limit
      * @return array
      */
-    static function split($string, $separator, $limit=null) {
+    static function split($string, $separator, $limit=null)
+    {
         tc::need_str($string);
         tc::need_str($separator, 2);
-        if ($limit !== null) {
+
+        if ($limit !== null)
+        {
             tc::need_int($limit);
             return explode($separator, $string, $limit);
-        } else {
+        }
+        else
+        {
             return explode($separator, $string);
         }
     }

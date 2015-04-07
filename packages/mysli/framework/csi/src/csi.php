@@ -2,8 +2,8 @@
 
 namespace mysli\framework\csi;
 
-class csi {
-
+class csi
+{
     protected $id;
 
     protected $status = 'none';
@@ -16,51 +16,65 @@ class csi {
      * For example: mysli/core/enable
      * @param string $id
      */
-    function __construct($id) {
+    function __construct($id)
+    {
         // Lower case, convert / => _, remove all characters but a-z0-9_
         $this->id = preg_replace(
             '/[^a-z0-9_]/i',
             '',
-            str_replace('/', '_', strtolower($id)));
+            str_replace('/', '_', strtolower($id))
+        );
     }
     /**
      * Get object's unique ID. Used for posting.
      * @return string
      */
-    function get_id() {
+    function get_id()
+    {
         return $this->id;
     }
     /**
      * Get all assigned values.
      * @return array
      */
-    function get_values() {
+    function get_values()
+    {
         $values = [];
-        foreach ($this->fields as $id => $properties) {
-            if ($properties['value'] !== null) {
+
+        foreach ($this->fields as $id => $properties)
+        {
+            if ($properties['value'] !== null)
+            {
                 $values[$id] = $properties['value'];
             }
         }
+
         return $values;
     }
     /**
      * Get all fields' messages (if any).
      * @return array
      */
-    function get_messages() {
+    function get_messages()
+    {
         $messages = [];
-        foreach ($this->fields as $field => $properties) {
-            if (!empty($properties['messages'])) {
+
+        foreach ($this->fields as $field => $properties)
+        {
+            if (!empty($properties['messages']))
+            {
                 $messages[$field] = $properties['messages'];
             }
         }
+
         return $messages;
     }
     /**
      * Return collection of fields.
      * @return array
      */
-    function get_fields() {
+    function get_fields()
+    {
         return $this->fields;
     }
     /**
@@ -86,13 +100,15 @@ class csi {
             'messages' => [],
             'callback' => $callback
         ];
+
         return $this;
     }
     /**
      * Output particular text...
      * @return object $this
      */
-    function text($text) {
+    function text($text)
+    {
         return $this->generic(count($this->fields), 'text', $text);
     }
     /**
@@ -103,7 +119,8 @@ class csi {
      * @param  callable $callback
      * @return object   $this
      */
-    function input($id, $label='', $default='', $callback=false) {
+    function input($id, $label='', $default='', $callback=false)
+    {
         return $this->generic($id, 'input', $label, [], $default, $callback);
     }
     /**
@@ -113,7 +130,8 @@ class csi {
      * @param  callable $callback
      * @return object   $this
      */
-    function password($id, $label='', $callback=false) {
+    function password($id, $label='', $callback=false)
+    {
         return $this->generic($id, 'password', $label, [], '', $callback);
     }
     /**
@@ -124,7 +142,8 @@ class csi {
      * @param  callable $callback
      * @return object   $this
      */
-    function textarea($id, $label='', $default='', $callback=false) {
+    function textarea($id, $label='', $default='', $callback=false)
+    {
         return $this->generic($id, 'textarea', $label, [], $default, $callback);
     }
     /**
@@ -137,9 +156,11 @@ class csi {
      * @param  callable $callback
      * @return object   $this
      */
-    function radio($id, $label, array $options, $default='', $callback=false) {
+    function radio($id, $label, array $options, $default='', $callback=false)
+    {
         return $this->generic(
-            $id, 'radio', $label, $options, $default, $callback);
+            $id, 'radio', $label, $options, $default, $callback
+        );
     }
     /**
      * Input checkbox field.
@@ -154,7 +175,8 @@ class csi {
     function checkbox($id, $label, array $options, $default='', $callback=false)
     {
         return $this->generic(
-            $id, 'checkbox', $label, $options, $default, $callback);
+            $id, 'checkbox', $label, $options, $default, $callback
+        );
     }
     /**
      * Input hidden field. HTML: <input type="hidden"></ ...
@@ -163,7 +185,8 @@ class csi {
      * @param  callable $callback
      * @return object   $this
      */
-    function hidden($id, $callback=false) {
+    function hidden($id, $callback=false)
+    {
         return $this->generic($id, 'hidden', '', [], '', $callback);
     }
     /**
@@ -174,13 +197,21 @@ class csi {
      * identifier exists and accept only fields with it.
      * @return null
      */
-    function set_multiple(array $values, $check_unique=false) {
-        foreach ($values as $field_id => $value) {
-            if ($check_unique) {
+    function set_multiple(array $values, $check_unique=false)
+    {
+        foreach ($values as $field_id => $value)
+        {
+            if ($check_unique)
+            {
                 $prefix = 'csi_'. $this->id . '_';
-                if (substr($field_id, 0, strlen($prefix)) === $prefix ) {
+                if (substr($field_id, 0, strlen($prefix)) === $prefix )
+                {
                     $field_id = substr($field_id, strlen($prefix));
-                } else continue;
+                }
+                else
+                {
+                    continue;
+                }
             }
             $this->set($field_id, $value);
         }
@@ -191,8 +222,10 @@ class csi {
      * @param mixed  $value
      * @return null
      */
-    function set($field, $value) {
-        if (array_key_exists($field, $this->fields)) {
+    function set($field, $value)
+    {
+        if (array_key_exists($field, $this->fields))
+        {
             $this->fields[$field]['value'] = $value;
         }
     }
@@ -203,17 +236,24 @@ class csi {
      * @param  mixed  $default
      * @return mixed
      */
-    function get($field_id, $default=null) {
-        if (array_key_exists($field_id, $this->fields)) {
+    function get($field_id, $default=null)
+    {
+        if (array_key_exists($field_id, $this->fields))
+        {
             return $this->fields[$field_id]['value'];
-        } else return $default;
+        }
+        else
+        {
+            return $default;
+        }
     }
     /**
      * Set validate callback.
      * @param  callback $callback
      * @return void
      */
-    function on_validate($callback) {
+    function on_validate($callback)
+    {
         $this->on_validate = $callback;
     }
     /**
@@ -222,38 +262,49 @@ class csi {
      * @param  array  $values
      * @return boolean
      */
-    function validate(array $values=null) {
+    function validate(array $values=null)
+    {
         // Parse values!
-        if ($values) {
+        if ($values)
+        {
             $this->set_multiple($values, true);
         }
 
         $statuses = [];
 
-        if (is_callable($this->on_validate)) {
+        if (is_callable($this->on_validate))
+        {
             $status = call_user_func_array(
-                                        $this->on_validate, [&$this->fields]);
+                $this->on_validate, [&$this->fields]
+            );
             $statuses[] = $status;
             // if     ($status === true)  $this->status = 'success';
             // elseif ($status === false) $this->status = 'failed';
         }
 
         // Collection of statuses
-        foreach ($this->fields as $field => &$properties) {
+        foreach ($this->fields as $field => &$properties)
+        {
             // Reset field's messages
             $properties['messages'] = [];
 
-            if (is_callable($properties['callback'])) {
+            if (is_callable($properties['callback']))
+            {
                 // Call costume function
-                $status = call_user_func_array($properties['callback'],
-                                                [&$properties]);
+                $status = call_user_func_array(
+                    $properties['callback'], [&$properties]
+                );
+
                 // Set field's status
                 $properties['status'] = $status;
+
                 // interrupted
-                if ($status === -1) {
+                if ($status === -1)
+                {
                     $this->status = 'interrupted';
                     return false;
                 }
+
                 // Add status to all statuses array
                 $statuses[] = $status;
                 // Check if we've got -1
@@ -261,19 +312,27 @@ class csi {
                 //     $this->status = 'interrupted';
                 //     return false;
                 // }
-            } else {
+            }
+            else
+            {
                 $properties['status'] = true;
                 $statuses[] = true;
             }
         }
 
-        if (!empty($statuses)) {
-            if (in_array(false, $statuses)) {
+        if (!empty($statuses))
+        {
+            if (in_array(false, $statuses))
+            {
                 $this->status = 'failed';
-            } elseif (in_array(true, $statuses)) {
+            }
+            elseif (in_array(true, $statuses))
+            {
                 $this->status = 'success';
             }
-        } else {
+        }
+        else
+        {
             // Nothing to validate, success!
             $this->status = 'success';
         }
@@ -285,7 +344,8 @@ class csi {
      * success, failed, none, interrupted
      * @return string
      */
-    function status() {
+    function status()
+    {
         return $this->status;
     }
 }

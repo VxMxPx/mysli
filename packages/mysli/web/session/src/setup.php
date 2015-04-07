@@ -7,8 +7,9 @@ __use(__namespace__, '
     mysli.framework.fs/fs,dir
 ');
 
-function enable() {
-    $c = config::select('mysli/web/session');
+function enable()
+{
+    $c = config::select('mysli.web.session');
     $c->merge([
         'cookie_name'        => 'mysli_session',
         'require_ip'         => false,
@@ -16,10 +17,13 @@ function enable() {
         'expires'            => 60 * 60 * 24 * 7,
         'change_id_on_renew' => false,
     ]);
-    return $c->save()
-        && dir::create(fs::datpath('mysli/web/session/sessions'));
+
+    return $c->save() &&
+        dir::create(fs::datpath('mysli/web/session/sessions'));
 }
-function disable() {
-    return config::select('mysli/web/session')->destroy()
-        && dir::remove(fs::datpath('mysli/web/session/sessions'));
+
+function disable()
+{
+    return config::select('mysli.web.session')->destroy() &&
+        dir::remove(fs::datpath('mysli/web/session/sessions'));
 }

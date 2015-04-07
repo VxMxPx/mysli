@@ -15,7 +15,8 @@ __use(__namespace__, '
  * @param  array $arguments
  * @return null
  */
-function __init(array $args) {
+function __init(array $args)
+{
     $params = new cparam('Mysli Config', $args);
     $params->command = 'config';
     $params->add('--list/-l', [
@@ -40,21 +41,30 @@ function __init(array $args) {
     ]);
 
     $params->parse();
-    if (!$params->is_valid()) {
+
+    if (!$params->is_valid())
+    {
         cout::line($params->messages());
         return;
     }
 
     $values = $params->values();
-    if ($values['list']) {
+
+    if ($values['list'])
+    {
         get_list($values['package']);
-    } elseif (is_array($values['set'])) {
+    }
+    elseif (is_array($values['set']))
+    {
         set_value(
             $values['package'],
             $values['set'][0],
             $values['set'][1],
-            $values['string']);
-    } else {
+            $values['string']
+        );
+    }
+    else
+    {
         cout::line($params->help());
     }
 }
@@ -65,22 +75,31 @@ function __init(array $args) {
  * @param string  $value
  * @param boolean $string
  */
-function set_value($package, $key, $value, $string) {
-    if (!pkgm::is_enabled($package)) {
+function set_value($package, $key, $value, $string)
+{
+    if (!pkgm::is_enabled($package))
+    {
         cout::error("Package is not enabled: `{$package}`");
         return;
     }
 
     $original_value = $value;
 
-    if (!$string) {
-        if (is_numeric($value)) {
-            if (strpos($value, '.')) {
+    if (!$string)
+    {
+        if (is_numeric($value))
+        {
+            if (strpos($value, '.'))
+            {
                 $value = (float) $value;
-            } else {
+            }
+            else
+            {
                 $value = (int) $value;
             }
-        } elseif ($value === 'true' || $value === 'false') {
+        }
+        elseif ($value === 'true' || $value === 'false')
+        {
             $value = $value === 'true' ? true : false;
         }
     }
@@ -89,9 +108,12 @@ function set_value($package, $key, $value, $string) {
     $c->set($key, $value);
     cout::nl();
 
-    if ($c->save()) {
+    if ($c->save())
+    {
         cout::format("+green OK:-all  {$key} => {$original_value}");
-    } else {
+    }
+    else
+    {
         cout::format("+red FAILED:-all  {$key} => {$original_value}");
     }
 }
@@ -100,27 +122,39 @@ function set_value($package, $key, $value, $string) {
  * or config values for particular package
  * @param  string $package
  */
-function get_list($package) {
-    if ($package) {
+function get_list($package)
+{
+    if ($package)
+    {
         cout::nl();
         cout::line("Available options for `{$package}`:");
         $options = config::select($package)->as_array();
-        if (empty($options)) {
+
+        if (empty($options))
+        {
             cout::line('No options available.');
-        } else {
+        }
+        else
+        {
             cout::nl();
             cout::line(arr::readable($options, 2, 2, ' : ', "\n", true));
         }
-    } else {
+    }
+    else
+    {
         $files = fs::ls(fs::datpath('mysli/util/config'));
         cout::nl();
         cout::line('Available packages:');
-        foreach ($files as $file) {
+
+        foreach ($files as $file)
+        {
             cout::line('  '.substr(str_replace('.', '/', $file), 0, -5));
         }
+
         cout::nl();
         cout::line(
             'Use `./dot config -l -p vendor/package` to see all options '.
-            'for particular package.');
+            'for particular package.'
+        );
     }
 }

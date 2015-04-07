@@ -2,6 +2,11 @@
 
 namespace mysli\framework\type;
 
-function __init() {
+__use(__namespace__, '
+    ./str
+');
+
+function __init()
+{
     str::encoding('UTF-8');
 }

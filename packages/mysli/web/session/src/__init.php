@@ -2,6 +2,7 @@
 
 namespace mysli\web\session;
 
-function __init() {
+function __init()
+{
     session::discover();
 }

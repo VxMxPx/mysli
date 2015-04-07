@@ -6,6 +6,7 @@ __use(__namespace__, '
     mysli.framework.fs
 ');
 
-function __init() {
+function __init()
+{
     event::__init(fs::datpath('mysli/framework/event/r.json'));
 }

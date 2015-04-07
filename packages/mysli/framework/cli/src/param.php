@@ -7,8 +7,8 @@ __use(__namespace__, '
     mysli.framework.type/str,arr
 ');
 
-class param {
-
+class param
+{
     private $term_width;
 
     private $params = [];
@@ -57,14 +57,16 @@ class param {
      * Construct cli/param
      * @param array  $arguments
      */
-    function __construct($title=null, array $arguments=null) {
-
+    function __construct($title=null, array $arguments=null)
+    {
         $this->term_width = util::terminal_width() ?: 75;
 
         $this->arguments = !is_null($arguments)
             ? $arguments
             : array_slice($_SERVER['argv'], 1);
+
         $this->title = $title;
+
         $this->add('--help/-h', [
             'type'   => 'bool',
             'help'   => 'Display this help',
@@ -82,7 +84,8 @@ class param {
      * @param string $name long/short e.g.: long/s (--long -s) or only long
      * @param array  $options
      */
-    function add($name, array $options = []) {
+    function add($name, array $options = [])
+    {
         list($positional, $long, $short) = $this->parse_name_params($name);
         $options = arr::merge($this->defaults, $options);
         $options['positional'] = !!$positional;
@@ -91,9 +94,12 @@ class param {
         $options['id'] = $options['id']
             ?: ($positional
                 ?: ($long ?: $short));
-        if ($positional && $options['required'] === null) {
+
+        if ($positional && $options['required'] === null)
+        {
             $options['required'] = true;
         }
+
         $this->options_validate($options);
         // null to false
         $options['required'] = !!$options['required'];
@@ -103,7 +109,8 @@ class param {
      * Return list of messages, which are set after parse()
      * @return string
      */
-    function messages() {
+    function messages()
+    {
         return implode("\n", $this->messages);
     }
     /**
@@ -111,21 +118,24 @@ class param {
      * were set, etc...)
      * @return boolean
      */
-    function is_valid() {
+    function is_valid()
+    {
         return $this->is_valid;
     }
     /**
      * Get list of values
      * @return array
      */
-    function values() {
+    function values()
+    {
         return $this->values;
     }
     /**
      * Return list of currently set parameters.
      * @return array
      */
-    function dump() {
+    function dump()
+    {
         return [
             $this->params,
             $this->values,
@@ -137,129 +147,190 @@ class param {
      * Parse all parameters
      * @return boolean (is_valid)
      */
-    function parse() {
-
-        $this->values = [];
+    function parse()
+    {
+        $this->values   = [];
         $this->messages = [];
         $this->is_valid = true;
-        $b = false; // break the loop and return immediately
-        $current = null;
+        $b              = false; // break the loop and return immediately
+        $current        = null;
 
-        foreach ($this->arguments as $arg) {
-            if (is_array($current) && substr($arg, 0, 1) === '-') {
-                if ($current['type'] === 'arr') {
+        foreach ($this->arguments as $arg)
+        {
+            if (is_array($current) && substr($arg, 0, 1) === '-')
+            {
+                if ($current['type'] === 'arr')
+                {
                     $values_c = isset($this->values[$current['id']])
-                                    ? count($this->values[$current['id']])
-                                    : 0;
-                    if ($current['min'] !== null
-                    && count($values_c) < $current['min'])
+                        ? count($this->values[$current['id']])
+                        : 0;
+
+                    if ($current['min'] !== null &&
+                        count($values_c) < $current['min'])
                     {
                         $this->invalidate(
                             "Expected at least `{$current['min']}` ".
-                            "arguments for `{$current['id']}`.");
+                            "arguments for `{$current['id']}`."
+                        );
                         return false;
                     }
+
                     $current = null;
-                } elseif ($current['allow_empty']) {
-                    if ($current['default'] !== null) {
+                }
+                elseif ($current['allow_empty'])
+                {
+                    if ($current['default'] !== null)
+                    {
                         $this->set_value($current['default'], $current);
-                    } else {
+                    }
+                    else
+                    {
                         $this->set_value(
                             $this->get_null_value($current['type']),
-                            $current);
+                            $current
+                        );
                     }
-                    if ($this->is_valid) {
+
+                    if ($this->is_valid)
+                    {
                         $current = null;
-                    } else {
+                    }
+                    else
+                    {
                         return false;
                     }
-                } else {
-                    $this->invalidate(
-                        "Expected value for: {$current['id']}");
+                }
+                else
+                {
+                    $this->invalidate("Expected value for: {$current['id']}");
                     return false;
                 }
             }
-            if (is_array($current)) {
-                if ($this->set_value($arg, $current) === false) {
+            if (is_array($current))
+            {
+                if ($this->set_value($arg, $current) === false)
+                {
                     return false;
-                } else {
-                    if ($current['type'] === 'arr') {
+                }
+                else
+                {
+                    if ($current['type'] === 'arr')
+                    {
                         $has_max = ($current['max'] !== null);
-                        if ($has_max) {
+                        if ($has_max)
+                        {
                             $has_value = isset($this->values[$current['id']]);
                             $values_c  = $has_value
-                                        ? count($this->values[$current['id']])
-                                        : 0;
-                            if ($has_value && $values_c >= $current['max']) {
+                                ? count($this->values[$current['id']])
+                                : 0;
+
+                            if ($has_value && $values_c >= $current['max'])
+                            {
                                 $current = null;
                             }
                         }
-                    } else {
+                    }
+                    else
+                    {
                         $current = null;
                     }
                 }
-            } elseif (substr($arg, 0, 2) === '--') {
+            }
+            elseif (substr($arg, 0, 2) === '--')
+            {
                 $arg = substr($arg, 2);
-                if (!($current = $this->resolve_value($arg, 'long'))) {
+                if (!($current = $this->resolve_value($arg, 'long')))
+                {
                     return false;
                 }
-            } elseif (substr($arg, 0, 1) === '-') {
+            }
+            elseif (substr($arg, 0, 1) === '-')
+            {
                 $arg = substr($arg, 1);
-                if (strlen($arg) > 1) {
-                    foreach (str_split($arg) as $sarg) {
-                        if (!$this->resolve_value($sarg, 'short', false)) {
+                if (strlen($arg) > 1)
+                {
+                    foreach (str_split($arg) as $sarg)
+                    {
+                        if (!$this->resolve_value($sarg, 'short', false))
+                        {
                             return false;
                         }
                     }
-                } else {
-                    if (!($current = $this->resolve_value($arg, 'short'))) {
+                }
+                else
+                {
+                    if (!($current = $this->resolve_value($arg, 'short')))
+                    {
                         return false;
                     }
                 }
-            } else {
-                if ($opt = $this->find($arg, 'positional')) {
-                    if ($this->set_value($arg, $opt) === false) {
+            }
+            else
+            {
+                if ($opt = $this->find($arg, 'positional'))
+                {
+                    if ($this->set_value($arg, $opt) === false)
+                    {
                         return false;
-                    } else {
+                    }
+                    else
+                    {
                         $current = null;
                     }
-                } else {
+                }
+                else
+                {
                     $this->invalidate("Unexpected argument: `{$arg}`");
                     return false;
                 }
             }
         }
 
-        if (is_array($current)) {
-            if ($current['type'] === 'arr') {
+        if (is_array($current))
+        {
+            if ($current['type'] === 'arr')
+            {
                 $values_c = isset($this->values[$current['id']])
-                                ? count($this->values[$current['id']])
-                                : 0;
-                if ($current['min'] !== null
-                && count($values_c) < $current['min'])
+                    ? count($this->values[$current['id']])
+                    : 0;
+
+                if ($current['min'] !== null &&
+                    count($values_c) < $current['min'])
                 {
                     $this->invalidate(
                         "Expected at least `{$current['min']}` ".
-                        "arguments for `{$current['id']}`.");
+                        "arguments for `{$current['id']}`."
+                    );
                     return false;
                 }
                 $current = null;
-            } elseif ($current['allow_empty']) {
-                if ($current['default'] !== null) {
+            }
+            elseif ($current['allow_empty'])
+            {
+                if ($current['default'] !== null)
+                {
                     $this->set_value($current['default'], $current);
-                } else {
-                    $this->set_value(
-                            $this->get_null_value($current['type']),
-                            $current);
                 }
-                if ($this->is_valid) {
+                else
+                {
+                    $this->set_value(
+                        $this->get_null_value($current['type']),
+                        $current
+                    );
+                }
+
+                if ($this->is_valid)
+                {
                     $current = null;
-                } else {
+                }
+                else
+                {
                     return false;
                 }
-            } else {
-                $this->invalidate(
-                    "Expected value for: {$current['id']}");
+            }
+            else
+            {
+                $this->invalidate("Expected value for: {$current['id']}");
                 return false;
             }
         }
@@ -272,40 +343,52 @@ class param {
 
         // check for exclude errors and set list of items to be invoked
         $invoke = [];
-        foreach ($this->params as $pid => $opt) {
-            if (array_key_exists($pid, $this->values) && $opt['exclude']) {
+        foreach ($this->params as $pid => $opt)
+        {
+            if (array_key_exists($pid, $this->values) && $opt['exclude'])
+            {
                 $exclude = is_array($opt['exclude'])
                     ? $opt['exclude']
                     : [$opt['exclude']];
-                foreach ($exclude as $exc) {
+
+                foreach ($exclude as $exc)
+                {
+
                     if (isset($this->values[$exc])) {
                         $this->invalidate(
-                            "You cannot use both `{$pid}` and `{$exc}`");
+                            "You cannot use both `{$pid}` and `{$exc}`"
+                        );
                         return false;
                     }
                 }
             }
-            if ($opt['invoke'] && isset($this->values[$pid])) {
+
+            if ($opt['invoke'] && isset($this->values[$pid]))
+            {
                 $invoke[$pid] = $opt['invoke'];
             }
         }
         // check weather all required items are set
-        foreach ($this->params as $pid => $opt) {
-            if (!isset($this->values[$pid]) && !$opt['ignore']) {
-                if ($opt['required']) {
-                    $this->invalidate(
-                        "Missing parameter: `{$pid}`");
+        foreach ($this->params as $pid => $opt)
+        {
+            if (!isset($this->values[$pid]) && !$opt['ignore'])
+            {
+                if ($opt['required'])
+                {
+                    $this->invalidate("Missing parameter: `{$pid}`");
                     return false;
-                } else {
+                }
+                else
+                {
                     $this->values[$pid] = $opt['default'];
                 }
             }
         }
         // check if any parameters to be invoked is present
         // we need seperate loop for this, as all values needs to be set
-        foreach ($invoke as $pid => $call) {
-            call_user_func_array(
-                $call, [$this->values[$pid], $this->values]);
+        foreach ($invoke as $pid => $call)
+        {
+            call_user_func_array($call, [$this->values[$pid], $this->values]);
         }
 
         return true;
@@ -314,11 +397,13 @@ class param {
      * Return full (auto-generated) help.
      * @return string
      */
-    function help() {
+    function help()
+    {
         $command = $this->command ?: "COMMAND";
         $sargs   = $this->fromat_arguments_short();
         $pargs   = $this->fromat_arguments_detailed('positional');
         $dargs   = $this->fromat_arguments_detailed();
+
         $description = $this->description
             ? (strlen($this->description) > $this->term_width
                 ? substr($this->description, 0, ($this->term_width-3)).'...'
@@ -332,9 +417,9 @@ class param {
             ($pargs ? "\n{$pargs}\n" : '').
             ($dargs ? "\nOptions:\n{$dargs}\n" : '').
             ($this->description_long
-                ? "\n".wordwrap($this->description_long, $this->term_width).
-                  "\n"
-                : '');
+                ? "\n".wordwrap($this->description_long, $this->term_width)."\n"
+                : ''
+            );
     }
 
     // protected
@@ -349,8 +434,10 @@ class param {
      * @param   string $type
      * @return  mixed
      */
-    private function get_null_value($type) {
-        switch ($type) {
+    private function get_null_value($type)
+    {
+        switch ($type)
+        {
             case 'str'  : return '';
             case 'int'  : return 0;
             case 'float': return 0.0;
@@ -366,20 +453,31 @@ class param {
      * @param  boolean $get_current
      * @return mixed
      */
-    private function resolve_value($arg, $type, $get_current=true) {
-        if ($opt = $this->find($arg, $type)) {
-            if ($opt['type'] === 'bool') {
+    private function resolve_value($arg, $type, $get_current=true)
+    {
+        if ($opt = $this->find($arg, $type))
+        {
+            if ($opt['type'] === 'bool')
+            {
                 return $this->set_value($arg, $opt);
-            } else {
-                if (!$get_current) {
+            }
+            else
+            {
+                if (!$get_current)
+                {
                     $this->invalidate("Expected boolean for: `{$arg}`");
-                } else {
+                }
+                else
+                {
                     return $opt;
                 }
             }
-        } else {
+        }
+        else
+        {
             $this->invalidate("Invalid argument: `{$arg}`");
         }
+
         return true;
     }
     /**
@@ -388,16 +486,24 @@ class param {
      * @param   array   $opt
      * @return  boolean
      */
-    private function set_value($arg, array $opt) {
+    private function set_value($arg, array $opt)
+    {
         $value = $this->set_type($arg, $opt['type'], $opt['invert']);
         $rt = true;
-        if (is_callable($opt['action'])) {
+
+        if (is_callable($opt['action']))
+        {
             $rt = $opt['action']($value, $this->is_valid, $this->messages);
         }
-        if (!$opt['ignore']) {
-            if ($opt['type'] === 'arr') {
+
+        if (!$opt['ignore'])
+        {
+            if ($opt['type'] === 'arr')
+            {
                 $this->values[$opt['id']][] = $value;
-            } else {
+            }
+            else
+            {
                 if ($opt['max'] !== null &&
                     ($opt['type'] === 'int' || $opt['type'] === 'float') &&
                     $value > $opt['max'])
@@ -405,8 +511,10 @@ class param {
                     $this->invalidate(
                         "The `{$opt['id']}` is more than the maximum allowed ".
                         "value, can be maximum: `{$opt['max']}`, ".
-                        "your value: `{$value}`");
+                        "your value: `{$value}`"
+                    );
                 }
+
                 if ($opt['min'] !== null &&
                     ($opt['type'] === 'int' || $opt['type'] === 'float') &&
                     $value < $opt['min'])
@@ -414,38 +522,62 @@ class param {
                     $this->invalidate(
                         "The `{$opt['id']}` is less than the minimum allowed ".
                         "value. Need to be at least `{$opt['min']}`, ".
-                        "your value: `{$value}`");
+                        "your value: `{$value}`"
+                    );
                 }
+
                 $this->values[$opt['id']] = $value;
             }
         }
+
         return $rt;
     }
     /**
      * Format arguments and print them as string.
      * @return string
      */
-    private function fromat_arguments_short() {
+    private function fromat_arguments_short()
+    {
         $return = '';
         $count = 0;
         $required = 0;
         $positionals = [];
-        foreach ($this->params as $pid => $opt) {
-            if (!$opt['positional']) {
+
+        foreach ($this->params as $pid => $opt)
+        {
+            if (!$opt['positional'])
+            {
                 $count++;
                 $required += $opt['required'];
-            } else {
+            }
+            else
+            {
                 $positionals[] = $opt['required']
                     ? strtoupper($pid)
                     : '[' . strtoupper($pid) . ']';
             }
         }
-        if ($count > 0) { $return = 'OPTIONS'; }
-        if ($required === 0) { $return = "[{$return}]"; }
-        if ($count > 1) { $return .= '...'; }
-        if ($positionals) {
+
+        if ($count > 0)
+        {
+            $return = 'OPTIONS';
+        }
+
+        if ($required === 0)
+        {
+            $return = "[{$return}]";
+        }
+
+        if ($count > 1)
+        {
+            $return .= '...';
+        }
+
+        if ($positionals)
+        {
             $return .= ' ' . implode(' ', $positionals);
         }
+
         return $return;
     }
     /**
@@ -453,55 +585,83 @@ class param {
      * @param  string $type null|positional
      * @return string
      */
-    private function fromat_arguments_detailed($type=null) {
+    private function fromat_arguments_detailed($type=null)
+    {
         $params = [];
         $lkey = 0;
         $ldefault = 0;
         $lmax = $this->term_width - 15;
 
-        foreach ($this->params as $pid => $opt) {
+        foreach ($this->params as $pid => $opt)
+        {
             if (($type === 'positional' && !$opt['positional']) ||
-                ($type !== 'positional' &&  $opt['positional'])) {
+                ($type !== 'positional' &&  $opt['positional']))
+            {
                 continue;
             }
+
             // set key
-            if ($opt['positional']) {
+            if ($opt['positional'])
+            {
                 $params[$pid]['key'] = strtoupper($pid);
-            } else {
-                if ($opt['long'] && $opt['short']) {
-                    $params[$pid]['key'] =
-                        "-{$opt['short']}, --{$opt['long']}";
-                } elseif ($opt['long']) {
+            }
+            else
+            {
+                if ($opt['long'] && $opt['short'])
+                {
+                    $params[$pid]['key'] = "-{$opt['short']}, --{$opt['long']}";
+                }
+                elseif ($opt['long'])
+                {
                     $params[$pid]['key'] = "    --{$opt['long']}";
-                } else {
+                }
+                else
+                {
                     $params[$pid]['key'] = "-{$opt['short']}";
                 }
             }
+
             // set default
-            if ($opt['default'] !== null) {
-                if (is_bool($opt['default'])) {
-                    if (!$opt['default']) {
+            if ($opt['default'] !== null)
+            {
+                if (is_bool($opt['default']))
+                {
+                    if (!$opt['default'])
+                    {
                         $params[$pid]['default'] = '[false]';
-                    } else {
+                    }
+                    else
+                    {
                         $params[$pid]['default'] = '[true]';
                     }
-                } else {
+                }
+                else
+                {
                     $default = (string) $opt['default'];
-                    if (strlen($default) > 15) {
+
+                    if (strlen($default) > 15)
+                    {
                         $default = substr($default, 0, 13) . '...';
                     }
                     $params[$pid]['default'] = "[{$default}]";
                 }
-            } else {
+            }
+            else
+            {
                 $params[$pid]['default'] = '';
             }
+
             // set help
             $params[$pid]['help'] = $opt['help'];
+
             // set lengths
-            if (strlen($params[$pid]['key']) > $lkey) {
+            if (strlen($params[$pid]['key']) > $lkey)
+            {
                 $lkey = strlen($params[$pid]['key']);
             }
-            if (strlen($params[$pid]['default']) > $ldefault) {
+
+            if (strlen($params[$pid]['default']) > $ldefault)
+            {
                 $ldefault = strlen($params[$pid]['default']);
             }
         }
@@ -509,22 +669,32 @@ class param {
         // full length of key + default + spaces:
         // --key [default]
         $lfull = ($lkey + 2) + ($ldefault ? $ldefault + 3 : 2);
+
         // if too long, new line
-        if ($lfull > $lmax) {
+        if ($lfull > $lmax)
+        {
             $lfull = 4;
         }
 
-        foreach ($params as $pid => &$opt) {
+        foreach ($params as $pid => &$opt)
+        {
             $opt['key'] .= str_repeat(' ', $lkey - strlen($opt['key']));
             $opt['default'] .= str_repeat(
-                ' ', $ldefault - strlen($opt['default']));
+                ' ', $ldefault - strlen($opt['default'])
+            );
             $opt['help'] = wordwrap(
-                $opt['help'], $this->term_width - $lfull);
-            if ($lfull === 4) {
+                $opt['help'], $this->term_width - $lfull
+            );
+
+            if ($lfull === 4)
+            {
                 $opt['help'] = "\n{$opt['help']}\n";
             }
+
             $opt['help'] = str_replace(
-                "\n", "\n" . str_repeat(' ', $lfull), $opt['help']);
+                "\n", "\n" . str_repeat(' ', $lfull), $opt['help']
+            );
+
             $opt = "  {$opt['key']} ".
                 ($opt['default'] ? $opt['default'] . "  " : ' ').
                 $opt['help'];
@@ -537,7 +707,8 @@ class param {
      * @param  string $message
      * @return null
      */
-    private function invalidate($message) {
+    private function invalidate($message)
+    {
         $this->is_valid = false;
         $this->messages[] = $message;
     }
@@ -547,17 +718,22 @@ class param {
      * @param  string $type
      * @return mixed
      */
-    private function set_type($value, $type, $invert) {
-        switch ($type) {
+    private function set_type($value, $type, $invert)
+    {
+        switch ($type)
+        {
             case 'bool':
                 $value = (bool) $value;
                 return ($invert) ? !$value : $value;
+
             case 'int':
                 $value = (int) $value;
                 return ($invert) ? -($value) : $value;
+
             case 'float':
                 $value = (float) $value;
                 return ($invert) ? -($value) : $value;
+
             case 'arr':
             default:
                 return (string) $value;
@@ -569,106 +745,148 @@ class param {
      * @param  string $type
      * @return mixed array if found, false if not
      */
-    private function find($argument, $type) {
-        foreach ($this->params as $id => $optv) {
-            if ($type === 'positional' && $optv['positional']) {
+    private function find($argument, $type)
+    {
+        foreach ($this->params as $id => $optv)
+        {
+            if ($type === 'positional' && $optv['positional'])
+            {
                 return $optv;
-            } elseif ($optv[$type] === $argument) {
+            }
+            elseif ($optv[$type] === $argument)
+            {
                 return $optv;
             }
         }
+
         return false;
     }
     /**
      * Validate options values
      * @param  array $options
      */
-    private function options_validate(array $options) {
-
+    private function options_validate(array $options)
+    {
         $typesok = ['str', 'float', 'int', 'bool', 'arr'];
+
         // need a valid ID
-        if (!$options['id']) {
+        if (!$options['id'])
+        {
             throw new framework\exception\argument(
-                "Invalid arguments! No valid ID.", 1);
+                "Invalid arguments! No valid ID.", 1
+            );
         }
+
         // ID must be unique
-        if (arr::key_in($this->params, $options['id'])) {
+        if (arr::key_in($this->params, $options['id']))
+        {
             throw new framework\exception\argument(
-                "ID exists: `{$options['id']}`.", 2);
+                "ID exists: `{$options['id']}`.", 2
+            );
         }
+
         // if long...
-        if ($options['long']) {
+        if ($options['long'])
+        {
             // long need to be at lest 2 characters
-            if (strlen($options['long']) < 2) {
+            if (strlen($options['long']) < 2)
+            {
                 throw new framework\exception\argument(
                     "Long argument need to be longer than one character: ".
-                    "`{$options['long']}` for `{$options['id']}`.", 3);
+                    "`{$options['long']}` for `{$options['id']}`.", 3
+                );
             }
-            if (strlen($options['long']) > 40) {
+
+            if (strlen($options['long']) > 40)
+            {
                 throw new framework\exception\argument(
                     "Long argument cannot be longer than 40 characters: ".
-                    "`{$options['long']}` for `{$options['id']}`.", 3);
+                    "`{$options['long']}` for `{$options['id']}`.", 3
+                );
             }
         }
-        if ($options['positional'] && $options['type'] === 'bool') {
+
+        if ($options['positional'] && $options['type'] === 'bool')
+        {
             throw new framework\exception\argument(
                 "Positional arguments cannot have (bool) type".
-                " `{$options['id']}`.", 5);
+                " `{$options['id']}`.", 5
+            );
         }
+
         // if short...
-        if ($options['short']) {
+        if ($options['short'])
+        {
             // short cannot be more than one character
-            if (strlen($options['short']) > 1) {
+            if (strlen($options['short']) > 1)
+            {
                 throw new framework\exception\argument(
                     "Short argument need to be one character long: ".
-                    "`{$options['short']}` for `{$options['id']}`.", 10);
+                    "`{$options['short']}` for `{$options['id']}`.", 10
+                );
             }
+
             // short cannot be doubled
-            foreach ($this->params as $pid => $popt) {
-                if ($popt['short'] === $options['short']) {
+            foreach ($this->params as $pid => $popt)
+            {
+                if ($popt['short'] === $options['short'])
+                {
                     throw new framework\exception\argument(
                         "Short argument exists: ".
                         "`{$options['short']}` for `{$options['id']}` ".
-                        "defined in `{$pid}`.", 12);
+                        "defined in `{$pid}`.", 12
+                    );
                 }
             }
         }
+
         // need to be valid type
-        if (!in_array($options['type'], $typesok)) {
+        if (!in_array($options['type'], $typesok))
+        {
             throw new framework\exception\argument(
                 "Invalid type: `{$options['type']}`. ".
-                "Acceptable types: " . implode(', ', $typesok), 20);
+                "Acceptable types: " . implode(', ', $typesok), 20
+            );
         }
+
         // if default provided...
-        if ($options['default'] !== null) {
+        if ($options['default'] !== null)
+        {
             // if type bool, default needs to be bool
-            if ($options['type'] === 'bool' &&
-                !is_bool($options['default'])) {
+            if ($options['type'] === 'bool' && !is_bool($options['default']))
+            {
                 throw new framework\exception\argument(
                     "Invalid default value for type `bool`. ".
-                    "Require true/false.", 30);
+                    "Require true/false.", 30
+                );
             }
             // if type int, default needs to be int
-            elseif ($options['type'] === 'int' &&
-                !is_int($options['default'])) {
+            elseif ($options['type'] === 'int' && !is_int($options['default']))
+            {
                 throw new framework\exception\input(
                     "Invalid default value for type `int`. ".
-                    "Require integer value.", 31);
+                    "Require integer value.", 31
+                );
             }
             // if float, default needs to be float
-            elseif ($options['type'] === 'float' &&
-                !is_float($options['default'])) {
+            elseif ($options['type'] === 'float' && !is_float($options['default']))
+            {
                 throw new framework\exception\input(
                     "Invalid default value for type `float`. ".
-                    "Require float value.", 32);
+                    "Require float value.", 32
+                );
             }
         }
+
         // if min > max
-        if ($options['max'] !== null && $options['min'] !== null) {
-            if ($options['min'] > $options['max']) {
+        if ($options['max'] !== null && $options['min'] !== null)
+        {
+            if ($options['min'] > $options['max'])
+            {
                 throw new framework\exception\argument(
                     "Values for `min` ({$options['min']}) cannot be bigger ".
-                    "than value for `max` ({$options['max']})", 40);
+                    "than value for `max` ({$options['max']})", 40
+                );
             }
         }
     }
@@ -677,25 +895,38 @@ class param {
      * @param  string $name
      * @return array
      */
-    private function parse_name_params($name) {
+    private function parse_name_params($name)
+    {
         $positional = false;
         $long       = null;
         $short      = null;
 
-        if (!strpos($name, '/')) {
-            if (substr($name, 0, 2) === '--') {
+        if (!strpos($name, '/'))
+        {
+            if (substr($name, 0, 2) === '--')
+            {
                 $long = substr($name, 2);
-            } elseif (substr($name, 0, 1) === '-') {
+            }
+            elseif (substr($name, 0, 1) === '-')
+            {
                 $short = substr($name, 1);
-            } else {
+            }
+            else
+            {
                 $positional = strtolower($name);
             }
-        } else {
+        }
+        else
+        {
             $segments = explode('/', $name);
-            if (substr($segments[0], 0, 2) === '--') {
+
+            if (substr($segments[0], 0, 2) === '--')
+            {
                 $long = substr($segments[0], 2);
                 $short = substr($segments[1], 1);
-            } else {
+            }
+            else
+            {
                 $long = substr($segments[1], 2);
                 $short = substr($segments[0], 1);
             }

@@ -7,10 +7,13 @@ __use(__namespace__, '
     mysli.framework.json
 ');
 
-function enable() {
+function enable()
+{
     return dir::create(fs::datpath('mysli/framework/event'))
         && json::encode_file(fs::datpath('mysli/framework/event/r.json'), []);
 }
-function disable() {
+
+function disable()
+{
     return dir::remove(fs::datpath('mysli/framework/event'));
 }

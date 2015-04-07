@@ -22,8 +22,8 @@ class input
         if ($call)
         {
             $result = null;
-
-            do {
+            do
+            {
                 $stdin  = self::line($title);
                 $result = $call($stdin);
             } while($result === null);
@@ -59,9 +59,10 @@ class input
         $stdin  = '';
         $enter_key = 0;
 
-        do {
-
-            do {
+        do
+        {
+            do
+            {
                 $stdin_t = self::line($title);
                 $stdin .= $stdin_t . "\n";
 
@@ -150,7 +151,8 @@ class input
     {
         $map = array_keys($options);
 
-        foreach ($map as $k => $v) {
+        foreach ($map as $k => $v)
+        {
             $k = $k + 1;
             $question[] = (in_array($v, $checked) ? "[{$k}]" : $k).
                 " {$options[$v]}";
@@ -204,7 +206,8 @@ class input
     {
         $map = array_keys($options);
 
-        foreach ($map as $k => $v) {
+        foreach ($map as $k => $v)
+        {
             $k = $k + 1;
             $question[] = ($v === $selected ? "[{$k}]" : $k)." {$options[$v]}";
         }

@@ -8,22 +8,17 @@ __use(__namespace__, '
     mysli.framework.exception/* -> framework\exception\*
 ');
 
-class json {
-
+class json
+{
     private static $json_errors = [
-        JSON_ERROR_DEPTH => 'The maximum stack depth has been exceeded',
-        JSON_ERROR_STATE_MISMATCH => 'Invalid or malformed JSON',
-        JSON_ERROR_CTRL_CHAR =>
-            'Control character error, possibly incorrectly encoded',
-        JSON_ERROR_SYNTAX => 'Syntax error',
-        JSON_ERROR_UTF8 =>
-            'Malformed UTF-8 characters, possibly incorrectly encoded',
-        JSON_ERROR_RECURSION =>
-            'One or more recursive references in the value to be encoded',
-        JSON_ERROR_INF_OR_NAN =>
-            'One or more NAN or INF values in the value to be encoded',
-        JSON_ERROR_UNSUPPORTED_TYPE =>
-            'A value of a type that cannot be encoded was given',
+        JSON_ERROR_DEPTH            => 'The maximum stack depth has been exceeded',
+        JSON_ERROR_STATE_MISMATCH   => 'Invalid or malformed JSON',
+        JSON_ERROR_CTRL_CHAR        => 'Control character error, possibly incorrectly encoded',
+        JSON_ERROR_SYNTAX           => 'Syntax error',
+        JSON_ERROR_UTF8             => 'Malformed UTF-8 characters, possibly incorrectly encoded',
+        JSON_ERROR_RECURSION        => 'One or more recursive references in the value to be encoded',
+        JSON_ERROR_INF_OR_NAN       => 'One or more NAN or INF values in the value to be encoded',
+        JSON_ERROR_UNSUPPORTED_TYPE => 'A value of a type that cannot be encoded was given',
     ];
 
     /**
@@ -34,14 +29,20 @@ class json {
      * @param  integet $depth user specified recursion depth.
      * @return mixed
      */
-    static function decode_file($filename, $assoc=false, $depth=512) {
+    static function decode_file($filename, $assoc=false, $depth=512)
+    {
         $filename = fs::ds($filename);
-        if (file::exists($filename)) {
+
+        if (file::exists($filename))
+        {
             $content = file::read($filename);
             return self::decode($content, $assoc, $depth);
-        } else {
+        }
+        else
+        {
             throw new framework\exception\not_found(
-                "File not found: `{$filename}`.", 1);
+                "File not found: `{$filename}`.", 1
+            );
         }
     }
     /**
@@ -52,7 +53,8 @@ class json {
      * @param  integet $depth user specified recursion depth.
      * @return mixed
      */
-    static function decode($json, $assoc=false, $depth=512) {
+    static function decode($json, $assoc=false, $depth=512)
+    {
         $decoded = json_decode($json, $assoc, $depth);
         self::exception_on_error();
         return $decoded;
@@ -69,10 +71,11 @@ class json {
      * @param  integer $depth the maximum depth. Must be greater than zero.
      * @return boolean
      */
-    static function encode_file($filename, $values, $options=0,
-                                $depth=512) {
-        return (file::write(
-                $filename, self::encode($values, $options, $depth)) !== false);
+    static function encode_file($filename, $values, $options=0, $depth=512)
+    {
+        return (
+            file::write($filename, self::encode($values, $options, $depth)) !== false
+        );
     }
     /**
      * Returns the JSON representation of a value
@@ -84,7 +87,8 @@ class json {
      * @param  integer $depth the maximum depth. Must be greater than zero.
      * @return string
      */
-    static function encode($values, $options=0, $depth=512) {
+    static function encode($values, $options=0, $depth=512)
+    {
         $json = json_encode($values, $options, $depth);
         self::exception_on_error();
         return $json;
@@ -93,16 +97,25 @@ class json {
      * Throw data exception if json error is detected.
      * @return null
      */
-    private static function exception_on_error() {
+    private static function exception_on_error()
+    {
         $last_error = json_last_error();
-        if ($last_error != JSON_ERROR_NONE) {
-            if (function_exists('\\json_last_error')) {
+
+        if ($last_error != JSON_ERROR_NONE)
+        {
+            if (function_exists('\\json_last_error'))
+            {
                 $error = \json_last_error();
-            } else {
-                $error = arr::get(
-                    self::$json_errors, json_last_error(),
-                    'Unknown: ' . $json_last_error);
             }
+            else
+            {
+                $error = arr::get(
+                    self::$json_errors,
+                    json_last_error(),
+                    'Unknown: ' . $json_last_error
+                );
+            }
+
             throw new framework\exception\data("JSON error: `{$error}`.");
         }
     }

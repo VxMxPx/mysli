@@ -6,9 +6,12 @@ __use(__namespace__, '
     mysli.framework.fs/fs,dir
 ');
 
-function enable() {
+function enable()
+{
     return dir::create(fs::datpath('mysli/web/users'));
 }
-function disable() {
+
+function disable()
+{
     return dir::remove(fs::datpath('mysli/web/users'));
 }

@@ -6,8 +6,8 @@ __use(__namespace__, '
     mysli.framework.exception/* -> framework\exception\*
 ');
 
-class datetime {
-
+class datetime
+{
     const timestamp = 'datetime::timestamp';
     const timezone  = 'datetime::timezone';
     const time      = 'H:i:s';
@@ -34,37 +34,56 @@ class datetime {
      * @param mixed  $datetime
      * @param string $timezone
      */
-    function __construct($datetime=null, $timezone=null) {
-        if (is_null($timezone)) {
+    function __construct($datetime=null, $timezone=null)
+    {
+        if (is_null($timezone))
+        {
             $timezone = self::get_default_timezone();
         }
 
         // null, generate date
-        if (!$datetime) {
+        if (!$datetime)
+        {
             $datetime = gmdate('Y-m-d H:i:s');
         }
+
         // probably timestamp
-        if (is_numeric($datetime)) {
+        if (is_numeric($datetime))
+        {
             $datetime = gmdate('Y-m-d H:i:s', $datetime);
         }
 
-        if (is_string($datetime)) {
-            $this->datetime = new \DateTime($datetime,
-                new \DateTimeZone($timezone));
-        } elseif (is_object($datetime)) {
-            if ($datetime instanceof \DateTime) {
+        if (is_string($datetime))
+        {
+            $this->datetime = new \DateTime(
+                $datetime, new \DateTimeZone($timezone)
+            );
+        }
+        elseif (is_object($datetime))
+        {
+            if ($datetime instanceof \DateTime)
+            {
                 $this->datetime = $datetime;
-            } elseif ($datetime instanceof self) {
+            }
+            elseif ($datetime instanceof self)
+            {
                 $this->datetime = new \DateTime(
                     $datetime->format('Y-m-d H:i:s'),
-                    new \DateTimeZone($datetime->format(self::timezone)));
-            } else {
-                throw new framework\exception\argument(
-                    "Invalid \$datetime object type.", 1);
+                    new \DateTimeZone($datetime->format(self::timezone))
+                );
             }
-        } else {
+            else
+            {
+                throw new framework\exception\argument(
+                    "Invalid \$datetime object type.", 1
+                );
+            }
+        }
+        else
+        {
             throw new framework\exception\argument(
-                "Invalid \$datetime object type.", 2);
+                "Invalid \$datetime object type.", 2
+            );
         }
     }
     /**
@@ -72,20 +91,31 @@ class datetime {
      * @param  mixed $datetime
      * @return null
      */
-    function set_datetime($datetime) {
-        if (is_object($datetime)) {
-            if ($datetime instanceof \DateTime) {
+    function set_datetime($datetime)
+    {
+        if (is_object($datetime))
+        {
+            if ($datetime instanceof \DateTime)
+            {
                 $datetime = $datetime->getTimestamp();
-            } elseif ($datetime instanceof self) {
+            }
+            elseif ($datetime instanceof self)
+            {
                 $datetime = $datetime->format(self::timestamp);
-            } else {
+            }
+            else
+            {
                 throw new framework\exception\argument(
-                    "Invalid \$datetime object type.", 1);
+                    "Invalid \$datetime object type.", 1
+                );
             }
         }
-        if (!is_numeric($datetime)) {
+
+        if (!is_numeric($datetime))
+        {
             $datetime = strtotime($datetime);
         }
+
         $this->datetime->setTimestamp($datetime);
     }
     /**
@@ -93,7 +123,8 @@ class datetime {
      * @param  string $timezone
      * @return null
      */
-    function set_timezone($timezone) {
+    function set_timezone($timezone)
+    {
         $this->datetime->setTimezone(new \DateTimeZone($timezone));
     }
     /**
@@ -102,13 +133,18 @@ class datetime {
      * @param  string $datetime
      * @return string
      */
-    function format($format) {
-        if ($format === self::timezone) {
+    function format($format)
+    {
+        if ($format === self::timezone)
+        {
             return $this->datetime->getTimezone()->getName();
         }
-        if ($format === self::timestamp) {
+
+        if ($format === self::timestamp)
+        {
             return $this->datetime->getTimestamp();
         }
+
         return $this->datetime->format($format);
     }
     /**
@@ -117,7 +153,8 @@ class datetime {
      * @param  string $modify
      * @return integer
      */
-    function modify($modify) {
+    function modify($modify)
+    {
         return new self($this->datetime->modify($modify));
     }
     /**
@@ -125,7 +162,8 @@ class datetime {
      * @param  string $datetime
      * @return DateInterval
      */
-    function diff($datetime) {
+    function diff($datetime)
+    {
         return date_diff($this->datetime, new \DateTime($datetime));
     }
 
@@ -136,21 +174,24 @@ class datetime {
      * @param  string  $timezone
      * @return null
      */
-    static function set_default_timezone($timezone) {
+    static function set_default_timezone($timezone)
+    {
         date_default_timezone_set($timezone);
     }
     /**
      * Get the default timezone used by all date/time functions.
      * @return string
      */
-    static function get_default_timezone() {
+    static function get_default_timezone()
+    {
         return date_default_timezone_get();
     }
     /**
      * Return Unix timestamp for current date/time! Always UTC.
      * @return integer
      */
-    static function now() {
+    static function now()
+    {
         return time();
     }
     /**
@@ -159,7 +200,8 @@ class datetime {
      * @param  mixed  $datetime
      * @return string
      */
-    static function f($format, $datetime=null) {
+    static function f($format, $datetime=null)
+    {
         return (new self($datetime))->format($format);
     }
 }

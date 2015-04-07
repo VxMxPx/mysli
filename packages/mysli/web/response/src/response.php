@@ -7,8 +7,8 @@ __use(__namespace__, '
     mysli.framework.event
 ');
 
-class response {
-
+class response
+{
     const status_200_ok                    = 200;
     const status_204_no_content            = 204;
     const status_301_moved_permanently     = 301;
@@ -105,18 +105,22 @@ class response {
      * Apply headers, no way back at this point!
      * @event  mysli/web/response:apply_headers (array $headers)
      */
-    static function apply_headers() {
-
-        if (headers_sent($file, $line)) {
+    static function apply_headers()
+    {
+        if (headers_sent($file, $line))
+        {
             throw new exception\response(
                 "Output was already started in file: ".
-                "'{$file}', on line: '{$line}'.");
+                "'{$file}', on line: '{$line}'."
+            );
         }
 
         event::trigger('mysli/web/response:apply_headers', [self::$headers]);
 
-        foreach (self::$headers as $type => $header) {
-            if (substr($type, 0, 1) !== '-') {
+        foreach (self::$headers as $type => $header)
+        {
+            if (substr($type, 0, 1) !== '-')
+            {
                 $header = $type . ': ' . $header;
             }
             header($header);
@@ -127,13 +131,15 @@ class response {
      * @param  mixed  $header array or string
      * @param  string $type   unique header type
      */
-    static function set_header($header, $type=null) {
-
-        if (!is_array($header)) {
+    static function set_header($header, $type=null)
+    {
+        if (!is_array($header))
+        {
             $header = [$type => $header];
         }
 
-        foreach ($header as $type => $hdr) {
+        foreach ($header as $type => $hdr)
+        {
             self::$headers[$type] = $hdr;
         }
     }
@@ -143,11 +149,16 @@ class response {
      * @param  string $id
      * @return mixed string|array
      */
-    static function get_header($id=null) {
-        if (!$id) {
+    static function get_header($id=null)
+    {
+        if (!$id)
+        {
             return self::$headers;
-        } else {
-            if (array_key_exists($id, self::$headers)) {
+        }
+        else
+        {
+            if (array_key_exists($id, self::$headers))
+            {
                 return self::$headers[$id];
             }
         }
@@ -157,14 +168,16 @@ class response {
      * @param  mixed $header string or array
      * @param  mixed $type   string or null
      */
-    static function replace($header, $type=null) {
+    static function replace($header, $type=null)
+    {
         self::clear();
         self::set_header($header, $type);
     }
     /**
      * Will remove all headers and status set so far.
      */
-    static function clear() {
+    static function clear()
+    {
         self::$headers = [];
         self::$status  = 0;
     }
@@ -172,7 +185,8 @@ class response {
      * Get currently set status.
      * @return integer
      */
-    static function get_status() {
+    static function get_status()
+    {
         return self::$status;
     }
     /**
@@ -180,22 +194,26 @@ class response {
      * @param integer $status
      * @param string  $location
      */
-    static function set_status($status, $location=null) {
-
+    static function set_status($status, $location=null)
+    {
         $status = (int) $status;
 
-        if (!isset(self::$statuses[$status])) {
+        if (!isset(self::$statuses[$status]))
+        {
             throw new framework\exception\argument(
-                "Not a valid status: `{$status}`");
+                "Not a valid status: `{$status}`"
+            );
         }
 
         self::$status = $status;
 
         self::set_header(
             request::protocol().' '.$status.' '.self::$statuses[$status],
-            '-Status');
+            '-Status'
+        );
 
-        if ($location) {
+        if ($location)
+        {
             self::set_header($location, 'Location');
         }
     }
@@ -203,7 +221,8 @@ class response {
      * Get content-type header.
      * @return string
      */
-    static function get_content_type() {
+    static function get_content_type()
+    {
         return self::get_header('Content-type');
     }
     /**
@@ -211,7 +230,8 @@ class response {
      * @param string $type
      * @param string $charset
      */
-    static function set_content_type($type, $charset='utf-8') {
+    static function set_content_type($type, $charset='utf-8')
+    {
         self::set_header("{$type}; charset={$charset}", 'Content-type');
     }
 }

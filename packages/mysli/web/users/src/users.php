@@ -8,8 +8,8 @@ __use(__namespace__, '
     mysli.framework.fs/fs,file
 ');
 
-class users {
-
+class users
+{
     private static $cache = [];
 
     /**
@@ -18,8 +18,8 @@ class users {
      * @param  string $password
      * @return mixed  false, or object \mysli\users\user
      */
-    static function auth($email, $password) {
-
+    static function auth($email, $password)
+    {
         $user = self::get_by_uname($email);
 
         if (!$user)                           return false;
@@ -37,16 +37,22 @@ class users {
      *                           list of IDs will be returned.
      * @return array
      */
-    static function get_all($detailed=false) {
+    static function get_all($detailed=false)
+    {
         $users_files = fs::ls(fs::datpath('mysli/web/users'), '/^.*?\.json$/');
         $users = [];
 
-        foreach ($users_files as $user_file) {
+        foreach ($users_files as $user_file)
+        {
             $id = substr($users_file, 0, -5); // -.json
-            if ($detailed) {
+
+            if ($detailed)
+            {
                 $filename = fs::datpath("mysli/web/users/{$user_file}");
                 $users[$id] = json::decode_file($filename, false);
-            } else {
+            }
+            else
+            {
                 $users[] = $id;
             }
         }
@@ -58,7 +64,8 @@ class users {
      * @param  string $email
      * @return mixed  false, or object \mysli\web\users\user
      */
-    static function get_by_uname($email) {
+    static function get_by_uname($email)
+    {
         // The id is just a md5 version of email...
         return self::get_by_id(self::get_id_from_uname($email));
     }
@@ -67,13 +74,17 @@ class users {
      * @param  string  $id
      * @return mixed   false, or object \mysli\web\users\user
      */
-    static function get_by_id($id) {
-
-        if (!isset(self::$cache[$id])) {
-            if (self::exists($id)) {
+    static function get_by_id($id)
+    {
+        if (!isset(self::$cache[$id]))
+        {
+            if (self::exists($id))
+            {
                 $u = new user(json::decode_file(self::path_by_id($id), true));
                 self::$cache[$id] = $u;
-            } else {
+            }
+            else
+            {
                 return false;
             }
         }
@@ -85,7 +96,8 @@ class users {
      * @param  string $id
      * @return boolean
      */
-    static function exists($id) {
+    static function exists($id)
+    {
         return file::exists(self::path_by_id($id));
     }
     /**
@@ -93,7 +105,8 @@ class users {
      * @param  string $email
      * @return string
      */
-    static function get_id_from_uname($email) {
+    static function get_id_from_uname($email)
+    {
         return md5($email);
     }
     /**
@@ -101,14 +114,21 @@ class users {
      * @param  string $id
      * @return boolean
      */
-    static function delete($id) {
+    static function delete($id)
+    {
         $file = self::path_by_id($id);
-        if (file::exists($file)) {
-            if (isset(self::$cache[$id])) {
+
+        if (file::exists($file))
+        {
+            if (isset(self::$cache[$id]))
+            {
                 unset(self::$cache[$id]);
             }
+
             return file::remove($file);
-        } else {
+        }
+        else
+        {
             return true;
         }
     }
@@ -118,20 +138,24 @@ class users {
      *                     if array, then the `email` key should exists.
      * @return mixed \mysli\web\users\user or false if user already exists.
      */
-    static function create($user) {
-
-        if (!is_array($user)) {
+    static function create($user)
+    {
+        if (!is_array($user))
+        {
             $user = [
                 'email' => $user
             ];
-        } elseif (!isset($user['email'])) {
+        }
+        elseif (!isset($user['email']))
+        {
             throw new framework\exception\argument('The `email` must be set.');
         }
 
         $id = self::get_id_from_uname($user['email']);
 
         // User already exists?
-        if (self::exists($id)) {
+        if (self::exists($id))
+        {
             return false;
         }
 
@@ -149,7 +173,8 @@ class users {
      * @param  string $id
      * @return string Path to user's file.
      */
-    static function path_by_id($id) {
+    static function path_by_id($id)
+    {
         return fs::datpath("mysli/web/users/{$id}.json");
     }
 }

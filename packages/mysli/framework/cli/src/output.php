@@ -7,37 +7,37 @@ __use(__namespace__, '
     ./util -> cutil
 ');
 
-class output {
-
+class output
+{
     // http://misc.flogisoft.com/bash/tip_colors_and_formatting
     private static $format = [
         // clean all
-        'all'       => [0, 0],
+        'all'              => [0, 0],
         // formatting
-        'bold'      => [1, 21],
-        'dim'       => [2, 22],
-        'underline' => [4, 24],
-        'blink'     => [5, 25],
-        'invert'    => [7, 27], // invert the foreground and background colors
-        'hidden'    => [8, 28],
+        'bold'             => [1, 21],
+        'dim'              => [2, 22],
+        'underline'        => [4, 24],
+        'blink'            => [5, 25],
+        'invert'           => [7, 27], // invert the foreground and background colors
+        'hidden'           => [8, 28],
         // foreground (text) colors
-        'default'       => [39, 39],
-        'black'         => [30, 39],
-        'red'           => [31, 39],
-        'green'         => [32, 39],
-        'yellow'        => [33, 39],
-        'blue'          => [34, 39],
-        'magenta'       => [35, 39],
-        'cyan'          => [36, 39],
-        'light_gray'    => [37, 39],
-        'dark_gray'     => [90, 39],
-        'light_red'     => [91, 39],
-        'light_green'   => [92, 39],
-        'light_yellow'  => [93, 39],
-        'light_blue'    => [94, 39],
-        'light_magenta' => [95, 39],
-        'light_cyan'    => [96, 39],
-        'white'         => [97, 39],
+        'default'          => [39, 39],
+        'black'            => [30, 39],
+        'red'              => [31, 39],
+        'green'            => [32, 39],
+        'yellow'           => [33, 39],
+        'blue'             => [34, 39],
+        'magenta'          => [35, 39],
+        'cyan'             => [36, 39],
+        'light_gray'       => [37, 39],
+        'dark_gray'        => [90, 39],
+        'light_red'        => [91, 39],
+        'light_green'      => [92, 39],
+        'light_yellow'     => [93, 39],
+        'light_blue'       => [94, 39],
+        'light_magenta'    => [95, 39],
+        'light_cyan'       => [96, 39],
+        'white'            => [97, 39],
         // background colors
         'bg_default'       => [49, 49],
         'bg_black'         => [40, 49],
@@ -65,15 +65,21 @@ class output {
      * @param   boolean $new_line append new line after this one
      * @return  null
      */
-    static function line($string, $new_line=true) {
+    static function line($string, $new_line=true)
+    {
         fwrite(STDOUT, $string);
-        if ($new_line) {
+
+        if ($new_line)
+        {
             fwrite(STDOUT, "\e[0m");
             self::$last_length = 0;
             fwrite(STDOUT, PHP_EOL);
-        } else {
-            self::$last_length += strlen(preg_replace(
-                                            '/\\e\[[0-9]+m/', '', $string));
+        }
+        else
+        {
+            self::$last_length += strlen(
+                preg_replace('/\\e\[[0-9]+m/', '', $string)
+            );
         }
         flush();
     }
@@ -83,13 +89,17 @@ class output {
      * @param  integer $padding
      * @return null
      */
-    static function right($message, $padding=2) {
+    static function right($message, $padding=2)
+    {
         $len = strlen(preg_replace('/\\e\[[0-9]+m/', '', $message));
         $pos = cutil::terminal_width() - $padding - self::$last_length;
         $pos = $pos - $len;
-        if ($pos < 0) {
+
+        if ($pos < 0)
+        {
             $pos = 0;
         }
+
         return str_repeat(' ', $pos) . $message;
     }
     /**
@@ -101,22 +111,35 @@ class output {
      * @param  array $params
      * @return null
      */
-    static function format($format, array $params=[]) {
+    static function format($format, array $params=[])
+    {
         $format = preg_replace_callback(
-            '/([\+\-])([a-z_]{3,})\ ?/i', function ($match) {
-                if (isset(self::$format[$match[2]])) {
+            '/([\+\-])([a-z_]{3,})\ ?/i',
+            function ($match)
+            {
+                if (isset(self::$format[$match[2]]))
+                {
                     $f = self::$format[$match[2]][(int) ($match[1] == '-')];
                     return "\e[{$f}m";
-                } elseif ($match[2] === 'right') {
+                }
+                elseif ($match[2] === 'right')
+                {
                     return '+right';
                 }
-            }, $format);
+            },
+            $format
+        );
+
         $output = vsprintf($format, $params);
-        if (strpos($format, '+right') !== false) {
+
+        if (strpos($format, '+right') !== false)
+        {
             $output = explode('+right', $output, 2);
             self::line($output[0], false);
             self::line(self::right($output[1]), true);
-        } else {
+        }
+        else
+        {
             self::line($output, true);
         }
     }
@@ -124,7 +147,8 @@ class output {
      * Create a new line(s)
      * @param integer $num Nnumber of new lines
      */
-    static function nl($num=1) {
+    static function nl($num=1)
+    {
         self::$last_length = 0;
         fwrite(STDOUT, str_repeat(PHP_EOL, (int) $num));
     }
@@ -132,41 +156,42 @@ class output {
      * Fill full width of the line with particular character(s).
      * @param  string $character
      */
-    static function fill($character) {
+    static function fill($character)
+    {
         $width = cutil::terminal_width() ?: 75;
         $width = floor($width / strlen($character));
         self::line(str_repeat($character, $width));
     }
 
     // format shortcuts
-    static function info($s)           { self::line($s); }
-    static function warn($s)           { self::yellow($s); }
-    static function error($s)          { self::red($s); }
-    static function success($s)        { self::green($s); }
+    static function info($s)            { self::line($s); }
+    static function warn($s)            { self::yellow($s); }
+    static function error($s)           { self::red($s); }
+    static function success($s)         { self::green($s); }
     // basic formatting
-    static function bold($s)           { self::line("\e[1m{$s}\e[21m"); }
-    static function dim($s)            { self::line("\e[2m{$s}\e[22m"); }
-    static function underline($s)      { self::line("\e[4m{$s}\e[24m"); }
-    static function blink($s)          { self::line("\e[5m{$s}\e[25m"); }
-    static function invert($s)         { self::line("\e[7m{$s}\e[27m"); }
-    static function hidden($s)         { self::line("\e[8m{$s}\e[28m"); }
+    static function bold($s)            { self::line("\e[1m{$s}\e[21m"); }
+    static function dim($s)             { self::line("\e[2m{$s}\e[22m"); }
+    static function underline($s)       { self::line("\e[4m{$s}\e[24m"); }
+    static function blink($s)           { self::line("\e[5m{$s}\e[25m"); }
+    static function invert($s)          { self::line("\e[7m{$s}\e[27m"); }
+    static function hidden($s)          { self::line("\e[8m{$s}\e[28m"); }
     // foreground (text) colors
-    static function black($s)          { self::line("\e[30m{$s}\e[39m"); }
-    static function red($s)            { self::line("\e[31m{$s}\e[39m"); }
-    static function green($s)          { self::line("\e[32m{$s}\e[39m"); }
-    static function yellow($s)         { self::line("\e[33m{$s}\e[39m"); }
-    static function blue($s)           { self::line("\e[34m{$s}\e[39m"); }
-    static function magenta($s)        { self::line("\e[35m{$s}\e[39m"); }
-    static function cyan($s)           { self::line("\e[36m{$s}\e[39m"); }
-    static function light_gray($s)     { self::line("\e[37m{$s}\e[39m"); }
-    static function dark_gray($s)      { self::line("\e[90m{$s}\e[39m"); }
-    static function light_red($s)      { self::line("\e[91m{$s}\e[39m"); }
-    static function light_green($s)    { self::line("\e[92m{$s}\e[39m"); }
-    static function light_yellow($s)   { self::line("\e[93m{$s}\e[39m"); }
-    static function light_blue($s)     { self::line("\e[94m{$s}\e[39m"); }
-    static function light_magenta($s)  { self::line("\e[95m{$s}\e[39m"); }
-    static function light_cyan($s)     { self::line("\e[96m{$s}\e[39m"); }
-    static function white($s)          { self::line("\e[97m{$s}\e[39m"); }
+    static function black($s)           { self::line("\e[30m{$s}\e[39m"); }
+    static function red($s)             { self::line("\e[31m{$s}\e[39m"); }
+    static function green($s)           { self::line("\e[32m{$s}\e[39m"); }
+    static function yellow($s)          { self::line("\e[33m{$s}\e[39m"); }
+    static function blue($s)            { self::line("\e[34m{$s}\e[39m"); }
+    static function magenta($s)         { self::line("\e[35m{$s}\e[39m"); }
+    static function cyan($s)            { self::line("\e[36m{$s}\e[39m"); }
+    static function light_gray($s)      { self::line("\e[37m{$s}\e[39m"); }
+    static function dark_gray($s)       { self::line("\e[90m{$s}\e[39m"); }
+    static function light_red($s)       { self::line("\e[91m{$s}\e[39m"); }
+    static function light_green($s)     { self::line("\e[92m{$s}\e[39m"); }
+    static function light_yellow($s)    { self::line("\e[93m{$s}\e[39m"); }
+    static function light_blue($s)      { self::line("\e[94m{$s}\e[39m"); }
+    static function light_magenta($s)   { self::line("\e[95m{$s}\e[39m"); }
+    static function light_cyan($s)      { self::line("\e[96m{$s}\e[39m"); }
+    static function white($s)           { self::line("\e[97m{$s}\e[39m"); }
     // background colors
     static function bg_black($s)        { self::line("\e[40m{$s}\e[49m"); }
     static function bg_red($s)          { self::line("\e[41m{$s}\e[49m"); }
