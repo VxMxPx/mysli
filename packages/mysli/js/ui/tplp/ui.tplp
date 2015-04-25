@@ -1,0 +1,24 @@
+::use mysli.web.assets
+::use mysli.js.jquery
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{page|ucfirst} :: Mysli Web Ui :: Developer</title>
+    {'mysli.js.ui/css-min/ui.css'|assets/tags}
+    {{{
+    <style type="text/css">
+        body {
+            overflow: hidden;
+            background-color: #ebebe1;
+        }
+    </style>
+    }}}
+</head>
+<body id="mysli-js-ui-developer" class="mysli-ui">
+    {|jquery/tag}
+    {'mysli.js.ui/ui.js'|assets/tags}
+    <script>
+        {script}
+    </script>
+</body>
+</html>

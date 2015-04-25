@@ -1,0 +1,18 @@
+.ui-box {
+  background-color: transparent;
+  display: table;
+  position: relative;
+  overflow: hidden;
+}
+.ui-box .ui-cell {
+  display: table-cell;
+}
+.ui-box .ui-cell.collapsed {
+  width: 1%;
+}
+.ui-box .ui-row {
+  display: table-row;
+}
+.ui-box .ui-row.collapsed {
+  height: 1%;
+}
