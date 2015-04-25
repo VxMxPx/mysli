@@ -1,4 +1,4 @@
-# Mysli External jQuery
+# Mysli JavaScript jQuery
 
 ## Introduction
 

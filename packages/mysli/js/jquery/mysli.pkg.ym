@@ -1,6 +1,6 @@
-package:     mysli.external.jquery
+package:     mysli.js.jquery
 version:     1
-description: Mysli Assets: jQuery. Wrapper library for Mysli.
+description: Mysli JavaScript jQuery.
 license:
     - GPL-3.0
 authors:
@@ -16,4 +16,4 @@ require:
 require-recommend:
     mysli.util.curl:
         verison:     1
-        description: If you want to acquire jQuery library, to load it from local source.
+        description: If you want to acquire jQuery library, to load it from a local source.

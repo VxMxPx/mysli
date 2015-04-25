@@ -1,6 +1,6 @@
 <?php
 
-namespace mysli\external\jquery\tplp;
+namespace mysli\js\jquery\tplp;
 
 __use(__namespace__, '
     ./jquery -> root\jquery

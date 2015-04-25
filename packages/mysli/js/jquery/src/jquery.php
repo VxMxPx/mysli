@@ -1,6 +1,6 @@
 <?php
 
-namespace mysli\external\jquery;
+namespace mysli\js\jquery;
 
 __use(__namespace__, '
     mysli.framework.fs/fs,file
@@ -22,7 +22,7 @@ class jquery
      */
     static function get_link($version=null, $dev=null)
     {
-        $c = config::select('mysli.external.jquery');
+        $c = config::select('mysli.js.jquery');
 
         if ($dev === null)
         {
@@ -52,7 +52,7 @@ class jquery
                 }
             }
 
-            $url = assets::get_public_url('mysli.external.jquery');
+            $url = assets::get_public_url('mysli.js.jquery');
 
             return $url."/jquery-{$version}.js";
         }
@@ -70,7 +70,7 @@ class jquery
     static function get_path($version)
     {
         return fs::ds(
-            assets::get_public_path('mysli.external.jquery'),
+            assets::get_public_path('mysli.js.jquery'),
             "/jquery-{$version}.js"
         );
     }
@@ -92,7 +92,7 @@ class jquery
      */
     static function get_version($dev)
     {
-        $c = config::select('mysli.external.jquery');
+        $c = config::select('mysli.js.jquery');
         $version = $c->get($dev ? 'dev_version' : 'version');
 
         return $dev ? $version : $version.($dev?'':'.min');

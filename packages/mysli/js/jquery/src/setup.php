@@ -1,6 +1,6 @@
 <?php
 
-namespace mysli\external\jquery\setup;
+namespace mysli\js\jquery\setup;
 
 __use(__namespace__, '
     mysli.framework.fs/dir
@@ -10,7 +10,7 @@ __use(__namespace__, '
 
 function enable()
 {
-    $c = config::select('mysli.external.jquery');
+    $c = config::select('mysli.js.jquery');
     $c->merge([
         // Base URL from which jQuery will be loaded (if not local)
         'remote_url'  => 'http://code.jquery.com/jquery-{version}.js',
@@ -25,11 +25,11 @@ function enable()
         'development' => false
     ]);
 
-    return dir::create(assets::get_public_path('mysli.external.jquery'))
+    return dir::create(assets::get_public_path('mysli.js.jquery'))
         && $c->save();
 }
 function disable()
 {
-    return dir::remove(assets::get_public_path('mysli.external.jquery'))
-        && config::select('mysli.external.jquery')->destroy();
+    return dir::remove(assets::get_public_path('mysli.js.jquery'))
+        && config::select('mysli.js.jquery')->destroy();
 }
