@@ -113,7 +113,7 @@ function check_required_modules(array $required)
         }
         else
         {
-            if ($params['type'] === 'warn')
+            if ($params['level'] === 'warn')
             {
                 cout::format("    {$id}+right+yellow WARNING");
             }
@@ -128,9 +128,9 @@ function check_required_modules(array $required)
                 $params['message']
             );
 
-            count::line('    '.$message);
+            cout::line('    '.$message);
 
-            if ($params['type'] === 'error')
+            if ($params['level'] === 'error')
             {
                 return false;
             }
