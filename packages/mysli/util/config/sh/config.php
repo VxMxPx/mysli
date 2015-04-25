@@ -5,7 +5,6 @@ namespace mysli\util\config\sh\config;
 __use(__namespace__, '
     ./config
     mysli.framework.fs
-    mysli.framework.pkgm
     mysli.framework.type/arr
     mysli.framework.cli/param,output -> cparam,cout
 ');
@@ -77,7 +76,7 @@ function __init(array $args)
  */
 function set_value($package, $key, $value, $string)
 {
-    if (!pkgm::is_enabled($package))
+    if (!\core\pkg::is_enabled($package))
     {
         cout::error("Package is not enabled: `{$package}`");
         return;
@@ -148,7 +147,7 @@ function get_list($package)
 
         foreach ($files as $file)
         {
-            cout::line('  '.substr(str_replace('.', '/', $file), 0, -5));
+            cout::line('  '.substr($file, 0, -5));
         }
 
         cout::nl();

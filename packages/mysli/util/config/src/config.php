@@ -3,7 +3,6 @@
 namespace mysli\util\config;
 
 __use(__namespace__, '
-    mysli.framework.pkgm
     mysli.framework.json
     mysli.framework.fs/fs,file
     mysli.framework.type/arr,arr_path
@@ -169,11 +168,11 @@ class config
         {
             $in = explode('\\', $in);
 
-            if (pkgm::exists($pkg = implode('.', array_slice($in, 0, 3))))
+            if (\core\pkg::exists($pkg = implode('.', array_slice($in, 0, 3))))
             {
                 return $pkg;
             }
-            elseif (pkgm::exists($pkg = implode('.', array_slice($in, 0, 2))))
+            elseif (\core\pkg::exists($pkg = implode('.', array_slice($in, 0, 2))))
             {
                 return $pkg;
             }
