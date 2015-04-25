@@ -1,0 +1,9 @@
+package:     mysli.js.common
+version:     1
+description: JavaScript Common Framework.
+license:     GPL-3.0
+authors:
+    - Marko Gajšt (Developer) <m@gaj.st>
+require:
+    mysli.web.assets: 1
+    mysli.js.jquery:  1

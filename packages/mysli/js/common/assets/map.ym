@@ -1,0 +1,11 @@
+before:
+    - rm -rf {dest_dir}
+    - mkdir {dest_dir}
+
+files:
+    common.js:
+        compress: Yes
+        include :
+            - js/namespace.js
+            - js/common.js
+            - js/arr.js
