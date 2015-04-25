@@ -42,10 +42,15 @@ function __init(array $args)
     $package = $v['package'];
     $watch   = $v['watch'];
 
-    // Get default paths
-    list($source, $destination) = tplp::get_paths($package);
-
-    return observe_or_parse($package, $source, $destination, $watch);
+    if (!\core\pkg::exists($package)) {
+        cout::warn("Package not found: `{$package}`");
+    }
+    else
+    {
+        // Get default paths
+        list($source, $destination) = tplp::get_paths($package);
+        return observe_or_parse($package, $source, $destination, $watch);
+    }
 }
 /**
  * Compare two lists of files, and return changes for each file.
