@@ -16,6 +16,7 @@
 </head>
 <body id="mysli-js-ui-developer" class="mysli-ui">
     {|jquery/tag}
+    {'mysli.js.common/common.js'|assets/tags}
     {'mysli.js.ui/ui.js'|assets/tags}
     <script>
         {script}
