@@ -6,9 +6,9 @@ settings:
             level   : error
             message : "JS files can not be processed. Missing `{id}` (npm install -g typescript). Expected version `{expect}` got `{result}`."
     process:
-        ts : tsc --outDir {dest_dir} {source} --target ES5
+        ts: tsc --outDir {dest_dir} {source} --target ES5 -d
     ext:
-        ts : js
+        ts: js
 
 before:
     - rm -rf {dest_dir}
@@ -45,29 +45,20 @@ files:
     # Main UI Scripts
     ui.js:
         compress: Yes
-        include :
-            - js/_arr.ts
-            - js/_util.ts
-            - js/widget.ts
+        include:
+            # Internal
             - js/cell.ts
+            # Widgets
+            - js/widget.ts
             - js/container.ts
             - js/box.ts
             - js/button.ts
-            # # Extends
-            # - js/extend/_common.js
-            # - js/extend/event.js
-            # - js/extend/collection.js
-            # # Util
-            # - js/util/_common.js
-            # - js/util/uid.js
-            # # Elements
-            # - js/button.js
-            # - js/box.js
-            # - js/panel.js
-            # - js/panel_container.js
-            # - js/panel_side.js
-            # - js/html.js
-            # - js/titlebar.js
-            # - js/title.js
-            # - js/overlay.js
-            # - js/navigation.js
+            - js/html.ts
+            - js/overlay.ts
+            - js/label.ts
+            - js/titlebar.ts
+            - js/navigation.ts
+            # Panel
+            - js/panel.ts
+            - js/panel_side.ts
+            - js/panel_container.ts

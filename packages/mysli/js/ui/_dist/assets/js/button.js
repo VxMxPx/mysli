@@ -5,6 +5,7 @@ var __extends = this.__extends || function (d, b) {
     d.prototype = new __();
 };
 /// <reference path="widget.ts" />
+/// <reference path="_inc.common.ts" />
 var mysli;
 (function (mysli) {
     var js;
@@ -17,7 +18,7 @@ var mysli;
                     if (options === void 0) { options = {}; }
                     _super.call(this, options);
                     // Properties
-                    this.prop = ui.Util.mix({
+                    this.prop = js.common.mix({
                         label: null,
                         icon: {
                             name: null,
@@ -26,7 +27,7 @@ var mysli;
                         }
                     }, this.prop);
                     // Apply defaults
-                    ui.Util.use(this.prop, this, {
+                    js.common.use(this.prop, this, {
                         label: 'label',
                         icon: 'icon',
                         style: 'style',
@@ -40,7 +41,7 @@ var mysli;
                   * @return {string}
                   */
                 Button.prototype.label = function (value) {
-                    var $label = this.element().find('span.label');
+                    var $label = this.element.find('span.label');
                     var method;
                     if (typeof value !== 'undefined') {
                         if (value === null) {
@@ -50,7 +51,7 @@ var mysli;
                         if (!$label.length) {
                             $label = $('<span class="label" />');
                             method = this.prop.icon.position === 'right' ? 'prepend' : 'append';
-                            this.element()[method]($label);
+                            this.element[method]($label);
                         }
                         $label.text(value);
                     }
@@ -66,7 +67,7 @@ var mysli;
                     var method;
                     var spin;
                     if (typeof icon !== 'undefined') {
-                        $icon = this.element().find('i.fa');
+                        $icon = this.element.find('i.fa');
                         $icon.remove();
                         if (icon === null || icon.name === null) {
                             this.prop.icon.name = null;
@@ -76,11 +77,11 @@ var mysli;
                             this.prop.icon.name = icon;
                         }
                         else {
-                            this.prop.icon = ui.Util.mix(this.prop.icon, icon);
+                            this.prop.icon = js.common.mix(this.prop.icon, icon);
                         }
                         method = this.prop.icon.position === 'right' ? 'append' : 'prepend';
                         spin = this.prop.icon.spin ? ' fa-spin' : '';
-                        this.element()[method]($('<i class="fa fa-' + this.prop.icon.name + spin + '" />'));
+                        this.element[method]($('<i class="fa fa-' + this.prop.icon.name + spin + '" />'));
                     }
                     return this.prop.icon;
                 };

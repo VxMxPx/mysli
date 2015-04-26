@@ -1,5 +1,5 @@
 /// <reference path="container.ts" />
-/// <reference path="_jquery.d.ts" />
+/// <reference path="_inc.common.ts" />
 var mysli;
 (function (mysli) {
     var js;

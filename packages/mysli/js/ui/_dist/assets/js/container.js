@@ -6,7 +6,7 @@ var __extends = this.__extends || function (d, b) {
 };
 /// <reference path="widget.ts" />
 /// <reference path="cell.ts" />
-/// <reference path="_arr.ts" />
+/// <reference path="_inc.common.ts" />
 var mysli;
 (function (mysli) {
     var js;
@@ -18,9 +18,9 @@ var mysli;
                 function Container(options) {
                     if (options === void 0) { options = {}; }
                     _super.call(this, options);
-                    this.collection = new ui.Arr();
-                    this.element().addClass('ui-container');
-                    this.$target = this.element();
+                    this.collection = new js.common.Arr();
+                    this.element.addClass('ui-container');
+                    this.$target = this.element;
                 }
                 /**
                  * Push widget to the contaner
@@ -49,7 +49,7 @@ var mysli;
                     }
                     // If no UID is provided, the element's uid will be used
                     if (uid === null) {
-                        uid = widget.uid();
+                        uid = widget.uid;
                     }
                     // Set collection uid (which might be different from uid itself)
                     // element.collection_uid = uid;
@@ -61,29 +61,29 @@ var mysli;
                         at_index = this.collection.push(uid, widget);
                     }
                     // If costume allows us to continue
-                    class_id = 'coll-euid-' + widget.uid() + ' coll-uid-' + uid;
+                    class_id = 'coll-euid-' + widget.uid + ' coll-uid-' + uid;
                     // Create wrapper, append at the end of the list
                     if (this.constructor['element_wrapper']) {
                         pushable = $(this.constructor['element_wrapper']);
                         pushable.addClass(class_id);
                         if (pushable.filter('.container-target').length) {
-                            pushable.filter('.container-target').append(widget.element());
+                            pushable.filter('.container-target').append(widget.element);
                         }
                         else if (pushable.find('.container-target').length) {
-                            pushable.find('.container-target').append(widget.element());
+                            pushable.find('.container-target').append(widget.element);
                         }
                         else {
                             throw new Error("Cannot find .container-target!");
                         }
                     }
                     else {
-                        widget.element().addClass(class_id);
-                        pushable = widget.element();
+                        widget.element.addClass(class_id);
+                        pushable = widget.element;
                     }
                     // Either inster after particular element or just at the end
                     if (at > -1) {
                         this.$target
-                            .find('.coll-euid-' + this.collection.get_from(at_index, -1).uid())
+                            .find('.coll-euid-' + this.collection.get_from(at_index, -1).uid)
                             .after(pushable);
                     }
                     else {
@@ -99,7 +99,7 @@ var mysli;
                 */
                 Container.prototype.get = function (uid, cell) {
                     if (cell && this.constructor['element_wrapper']) {
-                        uid = '.coll-euid-' + this.collection.get(uid).uid();
+                        uid = '.coll-euid-' + this.collection.get(uid).uid;
                         return new ui.Cell(this, this.$target.find(uid));
                     }
                     else {
@@ -111,7 +111,7 @@ var mysli;
                  * @param {string|number} uid
                  */
                 Container.prototype.remove = function (uid) {
-                    uid = this.collection.get(uid).uid();
+                    uid = this.collection.get(uid).uid;
                     this.collection.remove(uid);
                     this.$target.find('.coll-euid-' + uid).remove();
                 };

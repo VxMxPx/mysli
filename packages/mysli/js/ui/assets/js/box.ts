@@ -1,26 +1,29 @@
 /// <reference path="container.ts" />
-/// <reference path="_jquery.d.ts" />
+/// <reference path="_inc.common.ts" />
 module mysli.js.ui {
     export class Box extends Container {
 
         protected static element_wrapper: string;
         private element_wrapper_original: string;
 
+        public static get HORIZONTAL(): number { return 1; }
+        public static get VERTICAL(): number { return 2; }
+
         constructor(options={}) {
             super(options);
 
             // Apply own defaults first...
-            this.prop = Util.mix({
-                orientation: 'horizontal'
+            this.prop = common.mix({
+                orientation: Box.HORIZONTAL
             }, this.prop);
 
-            this.element().addClass('ui-box');
+            this.element.addClass('ui-box');
 
             Box.element_wrapper = Container.element_wrapper;
 
-            if (this.prop.orientation === 'vertical') {
+            if (this.prop.orientation === Box.VERTICAL) {
                 var row:JQuery = $('<div class="ui-row" />');
-                this.element().append(row);
+                this.element.append(row);
                 this.$target = row;
             }
         }
@@ -40,7 +43,7 @@ module mysli.js.ui {
          * Override insert, to support horizontal/vertical layout.
          */
         insert():Widget {
-            if (this.prop.orientation === 'horizontal') {
+            if (this.prop.orientation === Box.HORIZONTAL) {
                 Box.element_wrapper = '<div class="ui-row"><div class="ui-cell container-target" /></div>';
             } else {
                 Box.element_wrapper = this.element_wrapper_original;

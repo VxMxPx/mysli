@@ -17,6 +17,7 @@ use mysli\js\jquery\tplp\util as jquery;
 </head>
 <body id="mysli-js-ui-developer" class="mysli-ui">
     <?php echo jquery::tag(); ?>
+    <?php echo assets::tags('mysli.js.common/common.js'); ?>
     <?php echo assets::tags('mysli.js.ui/ui.js'); ?>
     <script>
         <?php echo $script; ?>

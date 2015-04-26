@@ -1,5 +1,4 @@
-/// <reference path="_util.ts" />
-/// <reference path="_jquery.d.ts" />
+/// <reference path="_inc.common.ts" />
 var mysli;
 (function (mysli) {
     var js;
@@ -20,7 +19,7 @@ var mysli;
                         destroyed: {}
                     };
                     // Extends properties
-                    this.prop = ui.Util.mix({
+                    this.prop = js.common.mix({
                         // Weather widget is disabled.
                         disabled: false,
                         // Widget's style
@@ -30,7 +29,7 @@ var mysli;
                     }, options);
                     // Check for uid
                     if (typeof this.prop.uid === 'undefined') {
-                        this.prop.uid = 'mju-id-' + (++Widget.uid_count);
+                        this.prop.uid = Widget.next_uid();
                     }
                     else {
                         if (Widget.uid_list.indexOf(this.prop.uid) > -1) {
@@ -44,33 +43,49 @@ var mysli;
                     this.$element = $(this.constructor['template']);
                     this.$element.prop('id', this.prop.uid);
                     // Apply default properties
-                    ui.Util.use(this.prop, this, {
+                    js.common.use(this.prop, this, {
                         style: 'style',
                         flat: 'flat',
                         disabled: 'disabled'
                     });
                 }
-                // Widget handling
                 /**
-                 * Return a main element.
-                 * @return {JQuery}
+                 * Generate a new UID and return it.
                  */
-                Widget.prototype.element = function () {
-                    return this.$element;
+                Widget.next_uid = function () {
+                    return 'mju-id-' + (++Widget.uid_count);
                 };
-                /**
-                 * Return element's uid.
-                 * @return {string}
-                 */
-                Widget.prototype.uid = function () {
-                    return this.prop.uid;
-                };
+                Object.defineProperty(Widget.prototype, "element", {
+                    // Widget handling
+                    /**
+                     * Return a main element.
+                     * @return {JQuery}
+                     */
+                    get: function () {
+                        return this.$element;
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
+                Object.defineProperty(Widget.prototype, "uid", {
+                    /**
+                     * Return element's uid.
+                     * @return {string}
+                     */
+                    get: function () {
+                        return this.prop.uid;
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
                 /**
                  * Destroy this widget. This will trigger the 'destroyed' event.
                  */
                 Widget.prototype.destroy = function () {
                     this.trigger('destroyed');
                     this.$element.remove();
+                    Widget.uid_list.slice(Widget.uid_list.indexOf(this.uid), 1);
+                    this.uid = -1;
                 };
                 /**
                  * Get/get disabled status.
@@ -107,8 +122,6 @@ var mysli;
                  * @return {string}
                  */
                 Widget.prototype.style = function (style) {
-                    var classes;
-                    var current;
                     if (typeof style !== 'undefined') {
                         if (this.constructor['allowed_styles'].indexOf(style) > -1) {
                             this.prop.style = style;

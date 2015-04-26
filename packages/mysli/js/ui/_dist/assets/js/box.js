@@ -5,7 +5,7 @@ var __extends = this.__extends || function (d, b) {
     d.prototype = new __();
 };
 /// <reference path="container.ts" />
-/// <reference path="_jquery.d.ts" />
+/// <reference path="_inc.common.ts" />
 var mysli;
 (function (mysli) {
     var js;
@@ -18,17 +18,27 @@ var mysli;
                     if (options === void 0) { options = {}; }
                     _super.call(this, options);
                     // Apply own defaults first...
-                    this.prop = ui.Util.mix({
-                        orientation: 'horizontal'
+                    this.prop = js.common.mix({
+                        orientation: Box.HORIZONTAL
                     }, this.prop);
-                    this.element().addClass('ui-box');
+                    this.element.addClass('ui-box');
                     Box.element_wrapper = ui.Container.element_wrapper;
-                    if (this.prop.orientation === 'vertical') {
+                    if (this.prop.orientation === Box.VERTICAL) {
                         var row = $('<div class="ui-row" />');
-                        this.element().append(row);
+                        this.element.append(row);
                         this.$target = row;
                     }
                 }
+                Object.defineProperty(Box, "HORIZONTAL", {
+                    get: function () { return 1; },
+                    enumerable: true,
+                    configurable: true
+                });
+                Object.defineProperty(Box, "VERTICAL", {
+                    get: function () { return 2; },
+                    enumerable: true,
+                    configurable: true
+                });
                 /**
                  * Override get, to support expanded method.
                  */
@@ -43,7 +53,7 @@ var mysli;
                  * Override insert, to support horizontal/vertical layout.
                  */
                 Box.prototype.insert = function () {
-                    if (this.prop.orientation === 'horizontal') {
+                    if (this.prop.orientation === Box.HORIZONTAL) {
                         Box.element_wrapper = '<div class="ui-row"><div class="ui-cell container-target" /></div>';
                     }
                     else {

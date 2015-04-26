@@ -18,6 +18,6 @@
   text-align: center;
   display: none;
 }
-.ui-overlay.state-busy .ui-overlay-busy {
+.ui-overlay.status-busy .ui-overlay-busy {
   display: block;
 }
