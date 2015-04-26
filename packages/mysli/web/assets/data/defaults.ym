@@ -2,7 +2,7 @@ settings:
     require:
         cleancss:
             command : {id} --version
-            expect  : 2.*.*
+            expect  : 3.*.*
             level   : warn
             message : "CSS Compression might not work. Missing `{id}` (npm install -g clean-css). Expected version `{expect}` got `{result}`."
         stylus:
@@ -17,7 +17,7 @@ settings:
             message : "JS files might not be compressed. Missing `{id}` (npm install -g {$id}). Expected version `{expect}` got `{result}`."
     compress:
         css : cleancss {source} -o {dest}
-        js  : uglifyjs -c -o {dest} {source}
+        js  : uglifyjs -c -o {dest} {source} --screw-ie8
     process:
         css  : cp {source} {dest}
         js   : cp {source} {dest}
