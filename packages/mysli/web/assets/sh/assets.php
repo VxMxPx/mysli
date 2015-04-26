@@ -260,6 +260,12 @@ function assets_merge(array $map, $t_file, $assets, $dest, array $changes)
                 parse_command($sett['process'][$file_ext], $src_file, $dest_file)
             );
 
+            // Do we have destination file?
+            if (!file::exists($dest_file)) {
+                cout::error("Destination file not found: `{$dest_file}`");
+                continue;
+            }
+
             // Add content to the merged content
             if ($props['merge'])
             {
@@ -305,6 +311,8 @@ function assets_merge(array $map, $t_file, $assets, $dest, array $changes)
             cout::format('        Nothing to do...');
         }
     }
+
+    return true;
 }
 /**
  * Compare two lists of files, and return changes for each file.
