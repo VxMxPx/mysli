@@ -1,58 +1,50 @@
-mysli.js.common.arr = (function () {
-
-    'use strict';
-
-    // Array
-    var arr = function () {
-        this.stack = {};
-        this.ids = [];
-    };
-
-    arr.prototype = {
-
-        construct: arr,
+module mysli.js.common {
+    export class Arr {
+        stack = {};
+        ids:string[] = [];
 
         /**
          * Push element to the end of an array.
-         * @param  {string}  id
-         * @param  {mixed}   element
-         * @return {integer} inserted index
+         * @return inserted index
          */
-        push: function (id, element) {
+        push(id: string, element: any): number {
             this.stack[id] = element;
             this.ids.push(id);
             return this.ids.length - 1;
-        },
+        }
 
         /**
          * Push element after particular element.
-         * @param  {string}  after_id
-         * @param  {string}  id
-         * @param  {mixed}   element
-         * @return {integer} inserted index
+         * @return inserted index
          */
-        push_after: function (after_id, id, element) {
-            var index_to = this.get_index(after_id) + 1;
+        push_after(after_id: string|number, id: string, element: any): number {
+            var index_to:number = typeof after_id === 'string' ? this.get_index(after_id) + 1 : after_id + 1;
             this.stack[id] = element;
             this.ids.splice(index_to, 0, id);
             return index_to;
-        },
+        }
 
         /**
-         * Remove particular element by id.
-         * @param  {string} id
+         * Remove particular element by id or index.
          */
-        remove: function (id) {
+        remove(id: string|number): void {
+            var index: number;
+
+            if (typeof id === 'number') {
+                index = <number> id;
+                id = this.ids[id];
+            } else {
+                index = this.get_index(<string> id);
+            }
+
             delete this.stack[id];
-            this.ids.splice(this.get_index(id), 1);
-        },
+            this.ids.splice(index, 1);
+        }
 
         /**
          * Get index of particular element by id.
-         * @param  {string} id
-         * @return {integer}
          */
-        get_index: function (id) {
+        get_index(id: string): number {
             if (typeof this.ids.indexOf !== 'function') {
                 for (var i = this.ids.length - 1; i >= 0; i--) {
                     if (this.ids[i] === id) {
@@ -62,72 +54,65 @@ mysli.js.common.arr = (function () {
             } else {
                 return this.ids.indexOf(id);
             }
-        },
+        }
 
         /**
          * Get index n positions from id.
-         * @param  {tring}   id
-         * @param  {integer} step
-         * @return {integer}
          */
-        get_index_from: function (id, step) {
-            id = this.get_index(id);
-            if (id !== false && id > 0) {
-                return id + step;
+        get_index_from(id: string, step: number): number {
+            var index: number = this.get_index(id);
+            if (index > 0) {
+                return index + step;
+            } else {
+                return -1;
             }
-        },
+        }
 
         /**
-         * Get element by id.
-         * @param  {string} id
-         * @return {mixed}
+         * Get element by id or index.
          */
-        get: function (id) {
+        get(id: string|number): any {
+            if (typeof id === 'number') {
+                id = this.ids[id];
+            }
             if (typeof this.stack[id] !== 'undefined') {
                 return this.stack[id];
             } else {
                 return false;
             }
-        },
+        }
 
         /**
          * Get element n positions from id.
-         * @param  {string}  id
-         * @param  {integer} step
-         * @return {mixed}
          */
-        get_from: function (id, step) {
-            id = this.get_index_from(id, step);
-            if (id !== false) {
+        get_from(id: string|number, step: number): any {
+            var index: number = typeof id === 'string' ? this.get_index_from(id, step) : id + step;
+            if (index > -1) {
                 return this.get(this.ids[id]);
             } else {
                 return false;
             }
-        },
+        }
 
         /**
          * Number of elements.
-         * @return {integer}
          */
-        count: function () {
+        count(): number {
             return this.ids.length;
-        },
+        }
 
         /**
          * Get last element
-         * @return {mixed}
          */
-        get_last: function () {
+        get_last(): any {
             return this.stack[this.ids[this.ids.length-1]];
-        },
+        }
 
         /**
          * Execute function for each element.
-         * @param   {Function} callback (index, element) ->
-         *                              Break when anything is returned.
-         * @returns {mixed}
+         * @param callback (index, element) will break when anything is returned.
          */
-        each: function (callback) {
+        each(callback: (index?: number, element?: any) => any): any {
             var r;
             for (var i = 0; i < this.ids.length; i++) {
                 r = callback(i, this.stack[this.ids[i]]);
@@ -135,16 +120,13 @@ mysli.js.common.arr = (function () {
                     return r;
                 }
             }
-        },
+        }
 
         /**
          * Execute function for each element, after particular id.
-         * @param  {string}   id
-         * @param   {Function} callback (index, element) ->
-         *                              Break when anything is returned.
-         * @return {mixed}
+         * @param callback (index, element) will break when anything is returned.
          */
-        each_after: function (id, callback) {
+        each_after(id: string, callback: (index?: number, element?: any) => any): any {
             var r;
             for (var i = this.get_index(id) + 1; i < this.ids.length; i++) {
                 r = callback(i, this.stack[this.ids[i]]);
@@ -152,16 +134,13 @@ mysli.js.common.arr = (function () {
                     return r;
                 }
             }
-        },
+        }
 
         /**
          * Execute function for each element, before particular id.
-         * @param  {string}   id
-         * @param   {Function} callback (index, element) ->
-         *                              Break when anything is returned.
-         * @return {mixed}
+         * @param callback (index, element) will break when anything is returned.
          */
-        each_before: function (id, callback) {
+        each_before(id: string, callback: (index?: number, element?: any) => any): any {
             var r;
             for (var i = 0; i < this.get_index(id); i++) {
                 r = callback(i, this.stack[this.ids[i]]);
@@ -170,7 +149,5 @@ mysli.js.common.arr = (function () {
                 }
             }
         }
-    };
-
-    return arr;
-}());
+    }
+}

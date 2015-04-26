@@ -1,3 +1,15 @@
+settings:
+    require:
+        tsc:
+            command : {id} --version
+            expect  : * Version 1.*.*
+            level   : error
+            message : "JS files can not be processed. Missing `{id}` (npm install -g typescript). Expected version `{expect}` got `{result}`."
+    process:
+        ts : tsc --outDir {dest_dir} {source} --target ES5 -d
+    ext:
+        ts : js
+
 before:
     - rm -rf {dest_dir}
     - mkdir {dest_dir}
@@ -6,6 +18,6 @@ files:
     common.js:
         compress: Yes
         include :
-            - js/namespace.js
-            - js/common.js
-            - js/arr.js
+            - js/common.ts
+            - js/arr.ts
+            - js/num.ts
