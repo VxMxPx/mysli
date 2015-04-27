@@ -1,6 +1,7 @@
 /// <reference path="widget.ts" />
 module mysli.js.ui {
     export class Overlay extends Widget {
+
         protected static template: string = '<div class="ui-overlay ui-widget"><div class="ui-overlay-busy"><i class="fa fa-cog fa-spin"></i></div></div>';
 
         constructor(options) {
@@ -11,44 +12,26 @@ module mysli.js.ui {
                 visible: false
             }, this.prop);
 
-            common.use(this.prop, this, {
-                busy: 'busy',
-                visible: 'visible'
-            });
+            this.busy = this.prop.busy;
+            this.visibility = this.prop.visible;
         }
 
-        /**
-         * Get/Set busy state.
-         * @param  {boolean} status
-         * @return {boolean}
-         */
-        busy(status?:boolean):boolean {
-            if (typeof status !== 'undefined') {
-                this.prop.busy = status;
-                if (status) {
-                    this.element.addClass('status-busy');
-                } else {
-                    this.element.removeClass('status-busy');
-                }
-            }
+        // Get/set busy state.
+        get busy(): boolean {
             return this.prop.busy;
         }
+        set busy(status: boolean) {
+            this.prop.busy = status;
+            this.element[status ? 'addClass' : 'removeClass']('status-busy');
+        }
 
-        /**
-         * Get/Set visibility state.
-         * @param  {boolean} status
-         * @return {boolean}
-         */
-        visible(status?:boolean):boolean {
-            if (typeof status !== 'undefined') {
-                this.prop.visble = status;
-                if (status) {
-                    this.element.fadeIn();
-                } else {
-                    this.element.fadeOut(400);
-                }
-            }
+        // Get/set visibility
+        get visibility(): boolean {
             return this.element.is(':visible');
+        }
+        set visibility(status: boolean) {
+            this.prop.visible = status;
+            this.element[status ? 'show' : 'hide']();
         }
     }
 }
