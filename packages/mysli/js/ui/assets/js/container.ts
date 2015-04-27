@@ -4,12 +4,18 @@
 module mysli.js.ui {
     export class Container extends Widget {
 
+        // Allows to replace cell interface when extending this class
+        protected Cell_constructor: any = Cell;
+
+        // Collection of all contained elements
         protected collection: common.Arr = new common.Arr();
 
-        protected $target:JQuery;
-        protected static element_wrapper: string = '<div class="ui-cell container-target" />';
+        // Where the contained elements will be placed
+        protected $target: JQuery;
 
-        constructor(options={}) {
+        protected element_wrapper: string = '<div class="ui-cell container-target"></div>';
+
+        constructor(options: any = {}) {
             super(options);
 
             this.element.addClass('ui-container');
@@ -18,51 +24,48 @@ module mysli.js.ui {
 
         /**
          * Push widget to the contaner
-         * @param  {Widget} element
-         * @param  {string} uid
-         * @return {Widget}
+         * @param widget
+         * @param options
          */
-        push(widget:Widget, uid:string=null):Widget {
-            return this.insert(widget, -1, uid);
+        push(widget: Widget, options: any = null): Widget {
+            return this.insert(widget, -1, options);
         }
 
         /**
          * Insert widget to the container.
-         * @param  {Widget} widget
-         * @param  {number} at
-         * @param  {string} uid
-         * @return {Widget}
+         * @param widget
+         * @param at
+         * @param options
          */
-        insert(widget:Widget, at:number, uid:string=null):Widget {
-            var at_index:number;
-            var class_id:string;
-            var pushable:JQuery;
+        insert(widget: Widget, at: number, options: any = null): Widget {
+            var at_index: number;
+            var class_id: string;
+            var pushable: JQuery;
+            var cell: Cell = null;
 
             if (!(widget instanceof Widget)) {
                 throw new Error('Instance of widget is required!');
             }
 
-            // If no UID is provided, the element's uid will be used
-            if (uid === null) {
-                uid = widget.uid;
-            }
-
-            // Set collection uid (which might be different from uid itself)
-            // element.collection_uid = uid;
-
-            // Either push after another element or at the end of the list
-            if (at > -1) {
-                at_index = this.collection.push_after(at, uid, widget);
+            // UID only, no options
+            if (!options) {
+                options = {uid: widget.uid}
+            } else if (typeof options === 'string') {
+                options = {uid: options};
+            } else if (typeof options === 'object') {
+                if (typeof options.uid === 'undefined') {
+                    options.uid = widget.uid;
+                }
             } else {
-                at_index = this.collection.push(uid, widget);
+                throw new Error('Invalid options provided. Null, string or {} allowed.');
             }
 
-            // If costume allows us to continue
-            class_id = 'coll-euid-'+widget.uid+' coll-uid-'+uid;
+            // Create classes
+            class_id = 'coll-euid-'+widget.uid+' coll-uid-'+options.uid;
 
             // Create wrapper, append at the end of the list
-            if (this.constructor['element_wrapper']) {
-                pushable = $(this.constructor['element_wrapper']);
+            if (this.element_wrapper) {
+                pushable = $(this.element_wrapper);
                 pushable.addClass(class_id);
                 if (pushable.filter('.container-target').length) {
                     pushable.filter('.container-target').append(widget.element);
@@ -71,9 +74,18 @@ module mysli.js.ui {
                 } else {
                     throw new Error("Cannot find .container-target!");
                 }
+
+                cell = new this.Cell_constructor(this, pushable, options);
             } else {
                 widget.element.addClass(class_id);
                 pushable = widget.element;
+            }
+
+            // Either push after another element or at the end of the list
+            if (at > -1) {
+                at_index = this.collection.push_after(at, options.uid, [widget, cell]);
+            } else {
+                at_index = this.collection.push(options.uid, [widget, cell]);
             }
 
             // Either inster after particular element or just at the end
@@ -90,24 +102,22 @@ module mysli.js.ui {
 
          /**
          * Get elements from the collection. If `cell` is provided, get cell itself.
-         * @param  {string|number} uid  either string (uid) or number (index)
-         * @param  {boolean}       cell weather to get cell itself rather than containing element.
-         * @return {any}
+         * @param uid  either string (uid) or number (index)
+         * @param cell weather to get cell itself rather than containing element.
          */
-        get(uid:string|number, cell:boolean):any {
-            if (cell && this.constructor['element_wrapper']) {
-                uid = '.coll-euid-'+this.collection.get(uid).uid;
-                return new Cell(this, this.$target.find(uid));
+        get(uid: string|number, cell: boolean): Cell|Widget {
+            if (cell) {
+                return this.collection.get(uid)[1];
             } else {
-                return this.collection.get(uid);
+                return this.collection.get(uid)[0];
             }
         }
 
         /**
          * Remove particular cell (and the containing element)
-         * @param {string|number} uid
+         * @param uid
          */
-        remove(uid:string|number) {
+        remove(uid: string|number) {
             uid = this.collection.get(uid).uid;
             this.collection.remove(uid);
             this.$target.find('.coll-euid-'+uid).remove();
