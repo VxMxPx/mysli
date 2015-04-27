@@ -5,35 +5,35 @@ module mysli.js.ui {
         // Events
         private static events_native = [
             // When widget is clicked
-            // => ( object event, object this )
+            // => ( event: any, widget: Widget )
             'click',
             // When mouse cursor enter (parent) widget
-            // => ( object event, object this )
+            // => ( event: event, widget: Widget )
             'mouse-enter',
             // When mouse cursor leave (parent) widget
-            // => ( object event, object this )
+            // => ( event: any, widget: Widget )
             'mouse-leave',
             // When mouse cursor move over widget
-            // => ( object event, object this )
+            // => ( event: any, widget: Widget )
             'mouse-move',
             // When mouse cursor move out of the widget (even to child)
-            // => ( object event, object this )
+            // => ( event: any, widget: Widget )
             'mouse-out',
             // Mouse enter (even when enter to child element)
-            // => ( object event, object this )
+            // => ( event: any, widget: Widget )
             'mouse-over',
             // Mouse up
-            // => ( object event, object this )
+            // => ( event: any, widget: Widget )
             'mouse-up'
         ];
         private events_count: number = 0;
-        private events_count_native: number[] = [];
+        private events_count_native: any = {};
         protected events = {
             // When widget is clicked
-            // => ( object event, object this )
+            // => ( event: any, widget: Widget )
             click: {},
             // When widget is destroyed (destroy method called)
-            // => ( object this )
+            // => ( widget: Widget )
             destroyed: {}
         };
 
@@ -43,13 +43,14 @@ module mysli.js.ui {
 
         // Element's template & element
         protected static template: string = '<div class="ui-widget" />';
-        private $element: JQuery;
+        protected $element: JQuery;
 
         // Properties
         protected static allowed_styles: string[] = ['default', 'alt', 'primary', 'confirm', 'attention'];
         protected prop: any;
 
         constructor(options: any = {}) {
+
             // Extends properties
             this.prop = common.mix({
                 // Weather widget is disabled.
@@ -67,22 +68,20 @@ module mysli.js.ui {
                 this.prop.uid = Widget.next_uid();
             } else {
                 if (Widget.uid_list.indexOf(this.prop.uid) > -1) {
-                    throw new Error('Moduel with such ID is already added: ' + this.prop.uid);
+                    throw new Error('Model with such ID is already added: ' + this.prop.uid);
                 } else {
                     Widget.uid_list.push(this.prop.uid);
                 }
             }
 
             // Create element
-            this.$element = $(this.constructor['template']);
+            this.$element = $(this['constructor']['template']);
             this.$element.prop('id', this.prop.uid);
 
             // Apply default properties
-            common.use(this.prop, this, {
-                style: 'style',
-                flat: 'flat',
-                disabled: 'disabled'
-            });
+            this.style = this.prop.style;
+            this.flat = this.prop.flat;
+            this.disabled = this.prop.disabled;
         }
 
         /**
@@ -110,64 +109,47 @@ module mysli.js.ui {
             return this.prop.uid;
         }
 
+        // Get/set disabled status
+        get disabled(): boolean {
+            return this.prop.disabled;
+        }
+        set disabled(status: boolean) {
+            this.prop.disabled = status;
+            this.element.prop('disabled', status);
+        }
+
+        // Get/set widget style to flat.
+        get flat(): boolean {
+            return this.prop.flat;
+        }
+        set flat(value: boolean) {
+            this.element[value ? 'addClass' : 'removeClass']('style-flat');
+        }
+
+        // Get/set widget's style (in general)
+        get style(): string {
+            return this.prop.style;
+        }
+        set style(style: string) {
+            if (this['constructor']['allowed_styles'].indexOf(style) > -1) {
+                this.element.removeClass(`style-${this.prop.style}`);
+                this.prop.style = style;
+                this.element.addClass(`style-${style}`);
+            } else {
+                throw new Error(`Invalid style: ${style}, please use one of the following: ${this['constructor']['allowed_styles'].join(', ')}`);
+            }
+        }
+
+        // Other
+
         /**
          * Destroy this widget. This will trigger the 'destroyed' event.
          */
         destroy() {
             this.trigger('destroyed');
             this.$element.remove();
-            Widget.uid_list.slice(Widget.uid_list.indexOf(this.uid), 1);
-            this.uid = -1;
-        }
-
-        /**
-         * Get/get disabled status.
-         * @param  {boolean} status
-         * @return {boolean}
-         */
-        disabled(status?: boolean): boolean {
-            if (typeof status !== 'undefined') {
-                this.prop.disabled = status;
-                this.$element.prop('disabled', status);
-            }
-            return this.prop.disabled;
-        }
-
-        /**
-         * Get/set widget's style to be flat
-         * @param  {boolean} value
-         * @return {boolean}
-         */
-        flat(value?: boolean): boolean {
-            if (typeof value !== 'undefined' && value !== this.prop.flat) {
-                if (value) {
-                    this.$element.addClass('style-flat');
-                } else {
-                    this.$element.removeClass('style-flat');
-                }
-                this.prop.flat = value;
-            }
-
-            return this.prop.flat;
-        }
-
-        /**
-         * Get/set widget's style.
-         * @param  {string} style
-         * @return {string}
-         */
-        style(style?: string): string {
-            if (typeof style !== 'undefined') {
-                if (this.constructor['allowed_styles'].indexOf(style) > -1) {
-                    this.prop.style = style;
-                    this.$element.removeClass(this.prop.style);
-                    this.$element.addClass("style-"+style);
-                } else {
-                    throw new Error("Invalid style: `"+style+"`, please use one of the following: "+this.constructor['allowed_styles'].join(', '));
-                }
-            }
-
-            return this.prop.style;
+            Widget.uid_list.splice(Widget.uid_list.indexOf(this.uid), 1);
+            this.prop.uid = -1;
         }
 
         // Events
@@ -181,8 +163,8 @@ module mysli.js.ui {
          * @return {string}
          */
         connect(event: string, callback: (...args) => any): string {
-            var _ref:string[] = Widget.event_extract_name(event);
-            var id:string;
+            var _ref: string[] = Widget.event_extract_name(event);
+            var id: string;
 
             event = _ref[0];
             id = _ref[1];
@@ -196,14 +178,16 @@ module mysli.js.ui {
             this.events[event][id] = callback;
 
             // Handle native events
-            if (typeof Widget.events_native[event] !== 'undefined') {
+            if (Widget.events_native.indexOf(event) > -1) {
                 this.events_count_native[event] =
                     typeof this.events_count_native[event] === 'undefined' ?
-                        0 :
+                        1 :
                         this.events_count_native[event]+1;
                 // Prevent registering event more than once
                 if (this.events_count_native[event] === 1) {
-                    this.$element.on(event.replace('-', ''), this.trigger.bind(this, event));
+                    this.element.on(event.replace('-', ''), (e) => {
+                        this.trigger(event, e);
+                    });
                 }
             }
 
@@ -212,9 +196,6 @@ module mysli.js.ui {
 
         /**
          * Trigger an event.
-         * @param  {string} event
-         * @param  {array}  params
-         * @return {array}
          */
         trigger(event: string, params: any[] = []): any[] {
             var call;
@@ -225,7 +206,7 @@ module mysli.js.ui {
             }
 
             if (typeof params.push !== 'function') {
-                throw new Error("Params needs to be an array!");
+                params = [params];
             }
 
             params.push(this);
@@ -249,19 +230,23 @@ module mysli.js.ui {
 
         /**
          * Disconnect particular event.
-         * @param  {any} id
-         *   string: full id, or specified id (eg *my_id)
-         *   array:  [event, id] to disconnect specific event
-         * @return {boolean}
+         * @param id full id or specified id (eg *my_id) OR [event, id]
+         * @returns {boolean}
          */
-        disconnect(id: string|string[]): boolean {
+        disconnect(id: string|[string, string]): boolean {
             var event: any;
             var eid: string;
 
-            if (typeof id !== 'object' && id.substr(0, 1) === '*') {
+            if (typeof id === 'string' && id.substr(0, 1) === '*') {
                 id = id + "*";
                 for (event in this.events) {
+                    if (!this.events.hasOwnProperty(event)) {
+                        continue;
+                    }
                     for (eid in this.events[event]) {
+                        if (!this.events[event].hasOwnProperty(eid)) {
+                            continue;
+                        }
                         if (eid.substr(0, id.length) === id) {
                             this.event_disconnect_native(event);
                             delete this.events[event][eid];
@@ -270,8 +255,8 @@ module mysli.js.ui {
                 }
                 return true;
             } else {
-                if (typeof id !== 'object') {
-                    event = id.split('--', 2)[0];
+                if (typeof id === 'string') {
+                    event = (<string> id).split('--', 2)[0];
                 } else {
                     event = id[0];
                     id = id[1];
@@ -287,8 +272,8 @@ module mysli.js.ui {
         }
 
         /**
-         * Disconnect native event.
-         * @param {string} event
+         * Disconnect a native event.
+         * @param event
          */
         event_disconnect_native(event: string): void {
             if (typeof Widget.events_native[event] !== 'undefined') {
@@ -305,10 +290,9 @@ module mysli.js.ui {
 
         /**
          * Process event*special_id and return an array.
-         * @param  {string} event
-         * @return {array}        [event, id]
+         * @param event
          */
-        static event_extract_name(event: string): string[] {
+        static event_extract_name(event: string): [string, string] {
             var id: string[];
             var idr: string = '';
 
