@@ -3,18 +3,16 @@
 module mysli.js.ui {
     export class HTML extends Widget {
 
-        constructor(options) {
+        constructor(options: any = {}) {
             super(options);
             this.element.addClass('ui-html');
         }
 
         /**
          * Push new HTML to the container.
-         * @param  {string} html
-         * @param  {string} uid
-         * @return {JQuery}
+         * @param html
          */
-        push(html:string, uid:string=null):JQuery {
+        push(html: string): JQuery {
             var element: JQuery = $(html);
             this.element.append(element);
             return element;
@@ -22,9 +20,9 @@ module mysli.js.ui {
 
         /**
          * Remove element(s) by specific jQuery selector.
-         * @param {string} selector
+         * @param selector
          */
-        remove(selector:string):void {
+        remove(selector: string): void {
             this.element.filter(selector).remove();
         }
     }
