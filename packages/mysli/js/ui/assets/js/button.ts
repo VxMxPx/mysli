@@ -3,9 +3,10 @@
 module mysli.js.ui {
     export class Button extends Widget {
 
-        protected static template: string = '<button class="ui-widget ui-button" />';
+        protected static template: string = '<button class="ui-widget ui-button"></button>';
 
-        constructor(options:any={}) {
+        constructor(options: any = {}) {
+
             super(options);
 
             // Properties
@@ -18,75 +19,61 @@ module mysli.js.ui {
                 }
             }, this.prop);
 
-            // Apply defaults
-            common.use(this.prop, this, {
-                label: 'label',
-                icon: 'icon',
-                style: 'style',
-                flat: 'flat',
-                disabled: 'disabled'
-            });
+            this.label = this.prop.label;
+            this.icon = this.prop.icon;
         }
 
-       /**
-         * Get/Set button's label.
-         * @param  {string} value
-         * @return {string}
-         */
-        label(value?:string):string {
-            var $label:JQuery = this.element.find('span.label');
-            var method:string;
+        // Get/set button's label
+        get label(): string {
+            return this.prop.label;
+        }
+        set label(value: string) {
+            var $label: JQuery = this.element.find('span.label');
+            var method: string;
 
-            if (typeof value !== 'undefined') {
-                if (value === null) {
-                    $label.remove();
-                    return '';
-                }
+            this.prop.label = value;
 
-                if (!$label.length) {
-                    $label = $('<span class="label" />');
-                    method = this.prop.icon.position === 'right' ? 'prepend' : 'append';
-                    this.element[method]($label);
-                }
-
-                $label.text(value);
+            if (!value) {
+                $label.remove();
+                return;
             }
 
-            return $label.text();
+            if (!$label.length) {
+                $label = $('<span class="label" />');
+                method = this.icon.position === 'right' ? 'prepend' : 'append';
+                this.element[method]($label);
+            }
+
+            $label.text(value);
         }
 
-        /**
-         * Get/Set Button's Icon
-         * @param  {any} String: icon || Object: {icon: 0, position: 0, spin: 0} || false: remove icon
-         * @return {any} {icon: 0, position: 0, spin: 0}
-         */
-        icon(icon?:any):any {
-            var $icon:JQuery;
-            var method:string;
-            var spin:string;
-
-            if (typeof icon !== 'undefined') {
-                $icon = this.element.find('i.fa');
-                $icon.remove();
-
-                if (icon === null || icon.name === null) {
-                    this.prop.icon.name = null;
-                    return this.prop.icon;
-                }
-
-                if (typeof icon === 'string') {
-                    this.prop.icon.name = icon;
-                } else {
-                    this.prop.icon = common.mix(this.prop.icon, icon);
-                }
-
-                method = this.prop.icon.position === 'right' ? 'append' : 'prepend';
-                spin = this.prop.icon.spin ? ' fa-spin' : '';
-
-                this.element[method]($('<i class="fa fa-'+this.prop.icon.name+spin+'" />'));
-            }
-
+        // Get/set icon
+        get icon(): any {
             return this.prop.icon;
+        }
+        set icon(options: string|{name?: string; position?: string; spin?: boolean}) {
+            var $icon: JQuery;
+            var method: string;
+            var spin: string;
+
+            $icon = this.element.find('i.fa');
+            $icon.remove();
+
+            if (typeof  options === 'string') {
+                options = {name: <string> options};
+            }
+
+            if (!options['name']) {
+                this.prop.icon.name = null;
+                return;
+            }
+
+            this.prop.icon = common.mix(options, this.prop.icon);
+
+            method = this.prop.icon.position === 'right' ? 'append' : 'prepend';
+            spin = this.prop.icon.spin ? ' fa-spin' : '';
+
+            this.element[method]($(`<i class="fa fa-${this.prop.icon.name}${spin}" />`));
         }
     }
 }
