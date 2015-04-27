@@ -1,15 +1,18 @@
 /// <reference path="container.ts" />
+/// <reference path="cell.ts" />
 /// <reference path="_inc.common.ts" />
 module mysli.js.ui {
     export class Box extends Container {
 
-        protected static element_wrapper: string;
+        protected Cell_constructor: any = BoxCell;
+
+        protected element_wrapper: string;
         private element_wrapper_original: string;
 
         public static get HORIZONTAL(): number { return 1; }
         public static get VERTICAL(): number { return 2; }
 
-        constructor(options={}) {
+        constructor(options: any = {}) {
             super(options);
 
             // Apply own defaults first...
@@ -18,8 +21,7 @@ module mysli.js.ui {
             }, this.prop);
 
             this.element.addClass('ui-box');
-
-            Box.element_wrapper = Container.element_wrapper;
+            this.element_wrapper_original = this.element_wrapper;
 
             if (this.prop.orientation === Box.VERTICAL) {
                 var row:JQuery = $('<div class="ui-row" />');
@@ -29,38 +31,30 @@ module mysli.js.ui {
         }
 
         /**
-         * Override get, to support expanded method.
-         */
-        get():any {
-            var result:any = super.get.apply(this, arguments);
-            if (result instanceof Cell) {
-                result.expanded = Box.expanded.bind(result);
-            }
-            return result;
-        }
-
-        /**
          * Override insert, to support horizontal/vertical layout.
          */
-        insert():Widget {
+        insert(...args): Widget {
             if (this.prop.orientation === Box.HORIZONTAL) {
-                Box.element_wrapper = '<div class="ui-row"><div class="ui-cell container-target" /></div>';
+                this.element_wrapper = '<div class="ui-row"><div class="ui-cell container-target" /></div>';
             } else {
-                Box.element_wrapper = this.element_wrapper_original;
+                this.element_wrapper = this.element_wrapper_original;
             }
-            return super.insert.apply(this, arguments);
+            return super.insert.apply(this, args);
+        }
+    }
+
+    class BoxCell extends Cell {
+        constructor(parent: Container, $cell: JQuery, options: any = {}) {
+            super(parent, $cell, options);
+            this.expanded = options.expanded || false;
         }
 
-        /**
-         * Method to be appended to the Cell object.
-         * @param  {boolean} status
-         * @return {boolean}
-         */
-        private static expanded(status?:boolean):boolean {
-            if (typeof status !== 'undefined') {
-                this.$cell[status ? 'addClass' : 'removeClass']('cell-expanded');
-            }
-            return this.$cell.hasClass('cell-expanded');
+        // Get/set expanded
+        get expanded(): boolean {
+            return this.prop.expanded;
+        }
+        set expanded(value: boolean) {
+            this.$cell[value ? 'addClass' : 'removeClass']('expanded');
         }
     }
 }
