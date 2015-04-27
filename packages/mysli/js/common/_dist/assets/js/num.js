@@ -14,32 +14,31 @@ var mysli;
                 };
                 /**
                  * Format number
-                 * @param  {number} number
+                 * @param  {number} num
                  * @param  {number} decimals
                  * @param  {string} dec_point
                  * @param  {string} thousands_sep
                  * @return {string}
                  */
-                Num.format = function (number, decimals, dec_point, thousands_sep) {
+                Num.format = function (num, decimals, dec_point, thousands_sep) {
                     if (dec_point === void 0) { dec_point = '.'; }
                     if (thousands_sep === void 0) { thousands_sep = ','; }
                     var s_num;
                     var o_num;
-                    var prec;
+                    var perc;
                     var final;
                     var final_seg;
-                    s_num = (number + '').replace(/[^0-9+\-Ee.]/g, '');
+                    s_num = (num + '').replace(/[^0-9+\-Ee.]/g, '');
                     o_num = isFinite(+s_num) ? +s_num : 0;
-                    prec = isFinite(+decimals) ? Math.abs(decimals) : 0;
-                    final = '';
-                    final = prec ? Num.to_fixed_fix(o_num, prec) : '' + Math.round(o_num);
+                    perc = isFinite(+decimals) ? Math.abs(decimals) : 0;
+                    final = perc ? Num.to_fixed_fix(o_num, perc) : '' + Math.round(o_num);
                     final_seg = final.split('.');
                     if (final_seg[0].length > 3) {
                         final_seg[0] = final_seg[0].replace(/\B(?=(?:\d{3})+(?!\d))/g, thousands_sep);
                     }
-                    if ((final_seg[1] || '').length < prec) {
+                    if ((final_seg[1] || '').length < perc) {
                         final_seg[1] = final_seg[1] || '';
-                        final_seg[1] += new Array(prec - final_seg[1].length + 1).join('0');
+                        final_seg[1] += new Array(perc - final_seg[1].length + 1).join('0');
                     }
                     return final_seg.join(dec_point);
                 };

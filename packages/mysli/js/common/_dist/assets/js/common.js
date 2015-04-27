@@ -12,17 +12,25 @@ var mysli;
             common.mix = mix;
             /**
              * Call object's method for each option defined in 'methods'.
-             * @param  {object} options
-             * @param  {object} context
-             * @param  {object} methods
+             * @param options
+             * @param context
+             * @param methods
              */
             function use(options, context, methods) {
                 if (methods === void 0) { methods = {}; }
-                var arg, call, expect, params, _i, _len;
+                var arg;
+                var call;
+                var expect;
+                var params;
+                var _i;
+                var _len;
                 if (typeof options !== 'object') {
                     return;
                 }
                 for (call in methods) {
+                    if (!methods.hasOwnProperty(call)) {
+                        continue;
+                    }
                     expect = methods[call];
                     params = [];
                     if (typeof expect === 'string') {

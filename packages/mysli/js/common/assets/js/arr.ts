@@ -88,7 +88,7 @@ module mysli.js.common {
         get_from(id: string|number, step: number): any {
             var index: number = typeof id === 'string' ? this.get_index_from(id, step) : id + step;
             if (index > -1) {
-                return this.get(this.ids[id]);
+                return this.get(this.ids[index]);
             } else {
                 return false;
             }
@@ -124,6 +124,7 @@ module mysli.js.common {
 
         /**
          * Execute function for each element, after particular id.
+         * @param id
          * @param callback (index, element) will break when anything is returned.
          */
         each_after(id: string, callback: (index?: number, element?: any) => any): any {
@@ -138,6 +139,7 @@ module mysli.js.common {
 
         /**
          * Execute function for each element, before particular id.
+         * @param id
          * @param callback (index, element) will break when anything is returned.
          */
         each_before(id: string, callback: (index?: number, element?: any) => any): any {

@@ -47,11 +47,13 @@ declare module mysli.js.common {
         each(callback: (index?: number, element?: any) => any): any;
         /**
          * Execute function for each element, after particular id.
+         * @param id
          * @param callback (index, element) will break when anything is returned.
          */
         each_after(id: string, callback: (index?: number, element?: any) => any): any;
         /**
          * Execute function for each element, before particular id.
+         * @param id
          * @param callback (index, element) will break when anything is returned.
          */
         each_before(id: string, callback: (index?: number, element?: any) => any): any;

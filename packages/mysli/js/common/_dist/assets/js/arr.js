@@ -90,7 +90,7 @@ var mysli;
                 Arr.prototype.get_from = function (id, step) {
                     var index = typeof id === 'string' ? this.get_index_from(id, step) : id + step;
                     if (index > -1) {
-                        return this.get(this.ids[id]);
+                        return this.get(this.ids[index]);
                     }
                     else {
                         return false;
@@ -123,6 +123,7 @@ var mysli;
                 };
                 /**
                  * Execute function for each element, after particular id.
+                 * @param id
                  * @param callback (index, element) will break when anything is returned.
                  */
                 Arr.prototype.each_after = function (id, callback) {
@@ -136,6 +137,7 @@ var mysli;
                 };
                 /**
                  * Execute function for each element, before particular id.
+                 * @param id
                  * @param callback (index, element) will break when anything is returned.
                  */
                 Arr.prototype.each_before = function (id, callback) {

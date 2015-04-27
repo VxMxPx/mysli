@@ -9,34 +9,33 @@ module mysli.js.common {
 
         /**
          * Format number
-         * @param  {number} number
+         * @param  {number} num
          * @param  {number} decimals
          * @param  {string} dec_point
          * @param  {string} thousands_sep
          * @return {string}
          */
-        static format(number:number, decimals:number, dec_point:string='.', thousands_sep:string=','):string {
+        static format(num: number, decimals: number, dec_point: string = '.', thousands_sep: string = ','): string {
             var s_num: string;
             var o_num: number;
-            var prec: number;
+            var perc: number;
             var final: string;
             var final_seg: string[];
 
-            s_num = (number + '').replace(/[^0-9+\-Ee.]/g, '');
+            s_num = (num + '').replace(/[^0-9+\-Ee.]/g, '');
             o_num = isFinite(+s_num) ? +s_num : 0;
-            prec = isFinite(+decimals) ? Math.abs(decimals) : 0;
-            final = '';
+            perc = isFinite(+decimals) ? Math.abs(decimals) : 0;
 
-            final = prec ? Num.to_fixed_fix(o_num, prec) : '' + Math.round(o_num);
+            final = perc ? Num.to_fixed_fix(o_num, perc) : '' + Math.round(o_num);
             final_seg = final.split('.');
 
             if (final_seg[0].length > 3) {
                 final_seg[0] = final_seg[0].replace(/\B(?=(?:\d{3})+(?!\d))/g, thousands_sep);
             }
 
-            if ((final_seg[1] || '').length < prec) {
+            if ((final_seg[1] || '').length < perc) {
                 final_seg[1] = final_seg[1] || '';
-                final_seg[1] += new Array(prec - final_seg[1].length + 1).join('0');
+                final_seg[1] += new Array(perc - final_seg[1].length + 1).join('0');
             }
 
             return final_seg.join(dec_point);

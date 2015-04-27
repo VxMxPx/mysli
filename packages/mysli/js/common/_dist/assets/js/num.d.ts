@@ -3,13 +3,13 @@ declare module mysli.js.common {
         static to_fixed_fix(n: number, prec: number): string;
         /**
          * Format number
-         * @param  {number} number
+         * @param  {number} num
          * @param  {number} decimals
          * @param  {string} dec_point
          * @param  {string} thousands_sep
          * @return {string}
          */
-        static format(number: number, decimals: number, dec_point?: string, thousands_sep?: string): string;
+        static format(num: number, decimals: number, dec_point?: string, thousands_sep?: string): string;
         /**
          * Get X% by Y of Z.
          * @param  {number} amount
