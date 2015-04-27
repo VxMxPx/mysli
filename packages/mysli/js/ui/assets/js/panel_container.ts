@@ -41,10 +41,9 @@ module mysli.js.ui {
                     panel.element.css('z-index', 10000 - index);
                     panel.position = panel.position + value;
                     panel.animate();
-                    return;
                 });
             }
-        },
+        }
 
         /**
          * Update view when panel is added/removed or window is resized.
@@ -139,7 +138,6 @@ module mysli.js.ui {
                 panel.offset = -(panel_calculated + offset_so_far);
                 panel.animate();
                 offset_so_far += panel_calculated;
-                return;
             });
         }
 
@@ -155,7 +153,6 @@ module mysli.js.ui {
                 this.collection.each_before(after_id, function (index: number, ipanel: Panel) {
                     ipanel.element.css('z-index', 10000 - index);
                     size += ipanel.width;
-                    return;
                 });
                 panel.position = size;
             } else {
@@ -176,7 +173,6 @@ module mysli.js.ui {
                         ipanel.element.css('z-index', 10000 - index);
                         ipanel.position = ipanel.position + panel.width;
                         ipanel.animate();
-                        return;
                     });
                 }
             } else {
@@ -187,10 +183,15 @@ module mysli.js.ui {
 
             index = this.collection.get_index(panel.uid);
             panel.element.css('z-index', 10000 - index);
+
+            // Connect panel's events
             panel.connect('set-focus', this.switch_focus.bind(this));
-            panel.connect('set-expandable', function(status: boolean) {
-                this.expandable_count + (status ? 1 : -1);
-            }.bind(this));
+            panel.connect('set-expandable', (status: boolean) => {
+                this.expandable_count = this.expandable_count + (status ? 1 : -1);
+            });
+            panel.connect('close', () => {
+                this.remove(panel.uid);
+            });
 
             panel.focus = true;
 
@@ -261,7 +262,8 @@ module mysli.js.ui {
         /**
          * Set element's size to DOM element's size.
          */
-        set_size_from_dom_element(selector: string): void {
+        set_size_from_dom_element(selector: any): void {
+
             var width: number = $(selector).outerWidth();
             var height: number = $(selector).outerHeight();
 
