@@ -13,7 +13,7 @@ module mysli.js.ui {
         public static get SIZE_HUGE(): number { return 800; }
 
         // List of connected panels
-        private connected: common.Arr = new common.Arr();
+        // private connected: common.Arr = new common.Arr();
 
         // when true, some events will be prevented on the panel, like further animations
         private closing: boolean = false;
@@ -33,11 +33,15 @@ module mysli.js.ui {
 
             // Add supported events
             this.events = common.mix({
+                // When panel `close` method is called, just before panel's
+                // `destroy` method is invoked.
+                // => ( panel: Panel )
+                'close': {},
                 // On away status change
                 // => ( status: boolean, width: number, panel: Panel )
                 'set-away': {},
                 // On size changed
-                // => ( wdth: number, diff: number, panel: Panel )
+                // => ( width: number, diff: number, panel: Panel )
                 'set-width': {},
                 // On popout status changed
                 // => ( value: boolean, panel: Panel )
@@ -83,15 +87,21 @@ module mysli.js.ui {
                 insensitive: false,
                 // if panel is popout
                 popout: false,
+                // Size of the panel when popout
+                popout_size: Panel.SIZE_HUGE,
                 // Weather panel is in focus
                 focus: false,
                 // Weather panel can be flipped (back side exists!)
                 flippable: false
             }, this.prop);
 
+            this.element.width(this.prop.width);
+
             // Proxy the click event to focus
-            this.element.on('click', function(e: any, panel: Panel) {
-                panel.focus = true;
+            this.element.on('click', () => {
+                if (!this.prop.closing && !this.locked) {
+                    this.focus = true;
+                }
             });
 
             // Add Sides
@@ -109,13 +119,13 @@ module mysli.js.ui {
          * Animate all the changes made to the element.
          */
         animate(callback?: () => any): void {
-            if (this.closing) {
+            if (this.prop.closing) {
                 return;
             }
 
             this.element.stop(true, false).animate({
                 left: this.position + this.offset,
-                width: this.width + this.expanded_for,
+                width: this.width + this.expand,
                 opacity: 1
             }, 400, 'swing', function () {
                 if (callback) {
@@ -182,7 +192,7 @@ module mysli.js.ui {
         get popout(): boolean {
             return this.prop.popout;
         }
-        set popout(status: boolean, size: number = Panel.SIZE_HUGE) {
+        set popout(status: boolean) {
 
             if (status === this.popout) {
                 return;
@@ -194,7 +204,7 @@ module mysli.js.ui {
                 this.old_zindex = +this.element.css('z-index');
                 this.old_width = this.width;
                 this.element.css('z-index', 10005);
-                this.width = size;
+                this.width = this.prop.popout_size;
             } else {
                 this.prop.popout = false;
                 this.element.css('z-index', this.old_zindex);
@@ -266,7 +276,7 @@ module mysli.js.ui {
             }
 
             this.trigger('set-focus', [value]);
-        },
+        }
 
         /**
          * Get/set expandable status.
@@ -340,9 +350,14 @@ module mysli.js.ui {
             this.prop.closing = true;
 
             this.element.stop(true, false).animate({
-                left: (this.position + this.prop.offset) - (this.width + this.expand) - 10,
+                left: (this.position + this.offset) - (this.width + this.expand) - 10,
                 opacity: 0
-            }, 400, 'swing');
+            }, {
+               done: () => {
+                   this.trigger('close');
+                   this.destroy();
+               }
+            });
         }
     }
 }
