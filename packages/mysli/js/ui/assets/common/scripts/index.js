@@ -11,15 +11,15 @@
                         size: ui.Panel.SIZE_SMALL
                     }),
                     usermeta = new ui.Titlebar({flat: true}),
-                    navigation = new ui.Navigation({items: {
+                    navigation = new ui.Navigation({
                         introduction: "Introduction",
                         buttons: "Buttons",
                         tabs: "Tabs"
-                    }});
+                    }, {style: 'alt'});
 
                 panel.front.style = 'alt';
-                navigation.style = 'alt';
-                navigation.connect('action', function (id, self) {
+                navigation.connect('action', function (id, e, self) {
+                    e.stopPropagation();
                     open_panel(id, self);
                 });
 
@@ -33,19 +33,19 @@
                 var ui = mysli.js.ui,
                     panel = new ui.Panel({
                         uid: 'mysli-cms-dash-introduction',
-                        size : ui.Panel.SIZE_BIG,
-                        min_size : ui.Panel.SIZE_NORMAL
+                        size: ui.Panel.SIZE_BIG,
+                        min_size: ui.Panel.SIZE_NORMAL
                     }),
                     titlebar = new ui.Titlebar(),
                     content = new ui.HTML();
 
                 titlebar.push(new ui.Button({
                     icon: 'close',
-                    style_flat: true
+                    flat: true
                 })).connect('click', function () {
-                    panel.destroy();
+                    panel.close();
                 });
-                titlebar.push(new ui.Label({text: "Introduction"}), true);
+                titlebar.push(new ui.Label({text: "Introduction"}), {expanded: true});
 
                 panel.front.push(titlebar);
                 panel.front.push(content);
@@ -56,6 +56,10 @@
                     content.push(data);
                 });
 
+                panel.connect('set-focus', function (status) {
+                    console.log('Focus switched to: '+status);
+                });
+
                 return panel;
             }
         };
@@ -64,7 +68,7 @@
         var panel = panels.get("mysli-cms-dash-"+id);
         if (!panel) {
             if (typeof creator['mk_'+id] == 'function') {
-                panels.push_after('mysli-cms-dash-navigation', creator['mk_'+id]());
+                panels.insert(creator['mk_'+id](), 'mysli-cms-dash-navigation');
             } else {
                 //nav.get(id).set_busy(true);
                 $.getScript('?js='+id, function (_, __, jqxhr) {
@@ -74,7 +78,7 @@
                         console.log('Request failed!');
                     } else {
                         if (typeof creator['mk_'+id] == 'function') {
-                            panels.push_after('mysli-cms-dash-navigation', creator['mk_'+id]());
+                            panels.insert(creator['mk_'+id](), 'mysli-cms-dash-navigation');
                         }
                     }
                 });
@@ -84,8 +88,8 @@
         }
     }
 
-    panels.push(creator.mk_navigation());
     $('body').prepend(panels.element);
+    panels.push(creator.mk_navigation());
     panels.push(creator.mk_introduction());
     // panels.show();
 
