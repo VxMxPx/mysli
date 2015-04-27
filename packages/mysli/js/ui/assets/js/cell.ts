@@ -3,42 +3,42 @@
 module mysli.js.ui {
     export class Cell {
 
-        private parent:Container;
-        private $cell:JQuery;
-        private prop:any = {};
+        protected parent: Container;
+        protected $cell: JQuery;
+        protected prop: any;
 
-        constructor(parent:Container, $cell:JQuery) {
+        constructor(parent: Container, $cell: JQuery, options: any = {}) {
             this.parent = parent;
             this.$cell = $cell;
 
-            this.prop.visible = true;
+            // Set default values
+            this.prop = {
+                visible: true
+            };
+
+            // Apply new values if needed
+            this.visible = options.visible || true;
         }
 
         /**
          * Animate the cell.
-         * @param {any}    what
-         * @param {number} duration
-         * @param {any}    callback
+         * @param what
+         * @param duration
+         * @param callback
          */
-        animate(what:any, duration:number=500, callback:any=false):void {
+        animate(what: any, duration: number = 500, callback: any = false): void {
             this.$cell.animate(what, duration, callback);
         }
 
-        /**
-         * Change cell visibility
-         * @param  {boolean}  status
-         * @return {boolean}
-         */
-        visible(status?:boolean):boolean {
-            if (typeof status !== 'undefined' && status !== this.prop.visible) {
-                this.prop.visible = status;
-                if (status) {
-                    this.$cell.show();
-                } else {
-                    this.$cell.hide();
-                }
-            }
+        // Get/set visibility
+        get visible(): boolean {
             return this.prop.visible;
+        }
+        set visible(status: boolean) {
+            if (status === this.prop.visible) { return; }
+
+            this.prop.visible = status;
+            this.$cell[status ? 'show' : 'hide']();
         }
 
         /**
