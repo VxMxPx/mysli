@@ -16,10 +16,11 @@ var mysli;
             var Panel = (function (_super) {
                 __extends(Panel, _super);
                 function Panel(options) {
+                    var _this = this;
                     if (options === void 0) { options = {}; }
                     _super.call(this, options);
                     // List of connected panels
-                    this.connected = new js.common.Arr();
+                    // private connected: common.Arr = new common.Arr();
                     // when true, some events will be prevented on the panel, like further animations
                     this.closing = false;
                     // when panel goes to full screen highest zIndex is set, this is the
@@ -29,11 +30,15 @@ var mysli;
                     this.element.addClass('ui-panel');
                     // Add supported events
                     this.events = js.common.mix({
+                        // When panel `close` method is called, just before panel's
+                        // `destroy` method is invoked.
+                        // => ( panel: Panel )
+                        'close': {},
                         // On away status change
                         // => ( status: boolean, width: number, panel: Panel )
                         'set-away': {},
                         // On size changed
-                        // => ( wdth: number, diff: number, panel: Panel )
+                        // => ( width: number, diff: number, panel: Panel )
                         'set-width': {},
                         // On popout status changed
                         // => ( value: boolean, panel: Panel )
@@ -78,14 +83,19 @@ var mysli;
                         insensitive: false,
                         // if panel is popout
                         popout: false,
+                        // Size of the panel when popout
+                        popout_size: Panel.SIZE_HUGE,
                         // Weather panel is in focus
                         focus: false,
                         // Weather panel can be flipped (back side exists!)
                         flippable: false
                     }, this.prop);
+                    this.element.width(this.prop.width);
                     // Proxy the click event to focus
-                    this.element.on('click', function (e, panel) {
-                        panel.focus = true;
+                    this.element.on('click', function () {
+                        if (!_this.prop.closing && !_this.locked) {
+                            _this.focus = true;
+                        }
                     });
                     // Add Sides
                     this.front = new ui.PanelSide();
@@ -125,12 +135,12 @@ var mysli;
                  * Animate all the changes made to the element.
                  */
                 Panel.prototype.animate = function (callback) {
-                    if (this.closing) {
+                    if (this.prop.closing) {
                         return;
                     }
                     this.element.stop(true, false).animate({
                         left: this.position + this.offset,
-                        width: this.width + this.expanded_for,
+                        width: this.width + this.expand,
                         opacity: 1
                     }, 400, 'swing', function () {
                         if (callback) {
@@ -198,8 +208,7 @@ var mysli;
                     get: function () {
                         return this.prop.popout;
                     },
-                    set: function (status, size) {
-                        if (size === void 0) { size = Panel.SIZE_HUGE; }
+                    set: function (status) {
                         if (status === this.popout) {
                             return;
                         }
@@ -209,7 +218,7 @@ var mysli;
                             this.old_zindex = +this.element.css('z-index');
                             this.old_width = this.width;
                             this.element.css('z-index', 10005);
-                            this.width = size;
+                            this.width = this.prop.popout_size;
                         }
                         else {
                             this.prop.popout = false;
@@ -376,15 +385,21 @@ var mysli;
                  * Close the panel.
                  */
                 Panel.prototype.close = function () {
+                    var _this = this;
                     if (this.locked) {
                         return;
                     }
                     this.insensitive = true;
                     this.prop.closing = true;
                     this.element.stop(true, false).animate({
-                        left: (this.position + this.prop.offset) - (this.width + this.expand) - 10,
+                        left: (this.position + this.offset) - (this.width + this.expand) - 10,
                         opacity: 0
-                    }, 400, 'swing');
+                    }, {
+                        done: function () {
+                            _this.trigger('close');
+                            _this.destroy();
+                        }
+                    });
                 };
                 return Panel;
             })(ui.Widget);

@@ -15,24 +15,22 @@ var mysli;
             var HTML = (function (_super) {
                 __extends(HTML, _super);
                 function HTML(options) {
+                    if (options === void 0) { options = {}; }
                     _super.call(this, options);
                     this.element.addClass('ui-html');
                 }
                 /**
                  * Push new HTML to the container.
-                 * @param  {string} html
-                 * @param  {string} uid
-                 * @return {JQuery}
+                 * @param html
                  */
-                HTML.prototype.push = function (html, uid) {
-                    if (uid === void 0) { uid = null; }
+                HTML.prototype.push = function (html) {
                     var element = $(html);
                     this.element.append(element);
                     return element;
                 };
                 /**
                  * Remove element(s) by specific jQuery selector.
-                 * @param {string} selector
+                 * @param selector
                  */
                 HTML.prototype.remove = function (selector) {
                     this.element.filter(selector).remove();

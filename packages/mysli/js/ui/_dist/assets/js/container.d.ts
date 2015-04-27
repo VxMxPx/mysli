@@ -3,35 +3,33 @@
 /// <reference path="_inc.common.d.ts" />
 declare module mysli.js.ui {
     class Container extends Widget {
+        protected Cell_constructor: any;
         protected collection: common.Arr;
         protected $target: JQuery;
-        protected static element_wrapper: string;
-        constructor(options?: {});
+        protected element_wrapper: string;
+        constructor(options?: any);
         /**
          * Push widget to the contaner
-         * @param  {Widget} element
-         * @param  {string} uid
-         * @return {Widget}
+         * @param widget
+         * @param options
          */
-        push(widget: Widget, uid?: string): Widget;
+        push(widget: Widget, options?: any): Widget;
         /**
          * Insert widget to the container.
-         * @param  {Widget} widget
-         * @param  {number} at
-         * @param  {string} uid
-         * @return {Widget}
+         * @param widget
+         * @param at
+         * @param options
          */
-        insert(widget: Widget, at: number, uid?: string): Widget;
+        insert(widget: Widget, at: number, options?: any): Widget;
         /**
         * Get elements from the collection. If `cell` is provided, get cell itself.
-        * @param  {string|number} uid  either string (uid) or number (index)
-        * @param  {boolean}       cell weather to get cell itself rather than containing element.
-        * @return {any}
+        * @param uid  either string (uid) or number (index)
+        * @param cell weather to get cell itself rather than containing element.
         */
-        get(uid: string | number, cell: boolean): any;
+        get(uid: string | number, cell: boolean): Cell | Widget;
         /**
          * Remove particular cell (and the containing element)
-         * @param {string|number} uid
+         * @param uid
          */
         remove(uid: string | number): void;
     }

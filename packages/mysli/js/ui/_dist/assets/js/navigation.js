@@ -4,6 +4,8 @@ var __extends = this.__extends || function (d, b) {
     __.prototype = b.prototype;
     d.prototype = new __();
 };
+/// <reference path="button.ts" />
+/// <reference path="box.ts" />
 /// <reference path="widget.ts" />
 /// <reference path="_inc.common.ts" />
 var mysli;
@@ -14,22 +16,31 @@ var mysli;
         (function (ui) {
             var Navigation = (function (_super) {
                 __extends(Navigation, _super);
-                function Navigation(options) {
+                function Navigation(items, options) {
+                    if (options === void 0) { options = {}; }
                     _super.call(this, options);
+                    this.collection = new js.common.Arr();
+                    this.container = new ui.Box(options);
+                    this.$element = this.container.element;
+                    this.element.addClass('ui-navigation');
                     this.events = js.common.mix({
-                        // When any navigation item is clicked
-                        // ( string id, object this )
+                        // Respond to a navigation element click!
+                        // => ( id: string, event: any, navigation: Navigation )
                         action: {}
                     }, this.events);
-                    this.element.on('click', '.ui-navigation-item', function (e) {
-                        var id;
-                        e.stopPropagation();
-                        id = e.currentTarget['id'].substr(6);
-                        this.trigger('action', [id]);
-                    });
+                    for (var item in items) {
+                        if (items.hasOwnProperty(item)) {
+                            this.container.push(Navigation.produce(items[item], item, this), item);
+                        }
+                    }
                 }
-                Navigation.allowed_styles = ['default', 'alt'];
-                Navigation.collection = new js.common.Arr();
+                Navigation.produce = function (title, id, sender) {
+                    var button = new ui.Button({ label: title });
+                    button.connect('click', function (e) {
+                        this.trigger('action', [id, e]);
+                    }.bind(sender));
+                    return button;
+                };
                 return Navigation;
             })(ui.Widget);
             ui.Navigation = Navigation;

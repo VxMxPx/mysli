@@ -7,40 +7,43 @@ var mysli;
         var ui;
         (function (ui) {
             var Cell = (function () {
-                function Cell(parent, $cell) {
-                    this.prop = {};
+                function Cell(parent, $cell, options) {
+                    if (options === void 0) { options = {}; }
                     this.parent = parent;
                     this.$cell = $cell;
-                    this.prop.visible = true;
+                    // Set default values
+                    this.prop = {
+                        visible: true
+                    };
+                    // Apply new values if needed
+                    this.visible = options.visible || true;
                 }
                 /**
                  * Animate the cell.
-                 * @param {any}    what
-                 * @param {number} duration
-                 * @param {any}    callback
+                 * @param what
+                 * @param duration
+                 * @param callback
                  */
                 Cell.prototype.animate = function (what, duration, callback) {
                     if (duration === void 0) { duration = 500; }
                     if (callback === void 0) { callback = false; }
                     this.$cell.animate(what, duration, callback);
                 };
-                /**
-                 * Change cell visibility
-                 * @param  {boolean}  status
-                 * @return {boolean}
-                 */
-                Cell.prototype.visible = function (status) {
-                    if (typeof status !== 'undefined' && status !== this.prop.visible) {
+                Object.defineProperty(Cell.prototype, "visible", {
+                    // Get/set visibility
+                    get: function () {
+                        return this.prop.visible;
+                    },
+                    set: function (status) {
+                        if (status === this.prop.visible) {
+                            return;
+                        }
                         this.prop.visible = status;
-                        if (status) {
-                            this.$cell.show();
-                        }
-                        else {
-                            this.$cell.hide();
-                        }
-                    }
-                    return this.prop.visible;
-                };
+                        this.$cell[status ? 'show' : 'hide']();
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
                 /**
                  * Remove cell from a collection.
                  */

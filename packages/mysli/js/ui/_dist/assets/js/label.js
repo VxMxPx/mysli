@@ -57,11 +57,11 @@ var mysli;
                         var element;
                         switch (type) {
                             case Label.DEFAULT:
-                                this.input = false;
+                                this.input = null;
                                 element = $('<span />');
                                 break;
                             case Label.TITLE:
-                                this.input = false;
+                                this.input = null;
                                 element = $('<h2 />');
                                 break;
                             case Label.INPUT:

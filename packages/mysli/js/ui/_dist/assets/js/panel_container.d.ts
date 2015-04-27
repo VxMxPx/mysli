@@ -45,7 +45,7 @@ declare module mysli.js.ui {
         /**
          * Set element's size to DOM element's size.
          */
-        set_size_from_dom_element(selector: string): void;
+        set_size_from_dom_element(selector: any): void;
         /**
          * Remove old focus, and set new
          */

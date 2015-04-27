@@ -47,7 +47,6 @@ var mysli;
                             panel.element.css('z-index', 10000 - index);
                             panel.position = panel.position + value;
                             panel.animate();
-                            return;
                         });
                     }
                 };
@@ -135,13 +134,13 @@ var mysli;
                         panel.offset = -(panel_calculated + offset_so_far);
                         panel.animate();
                         offset_so_far += panel_calculated;
-                        return;
                     });
                 };
                 /**
                  * Push panel after particular panel of different ID.
                  */
                 PanelContainer.prototype.insert = function (panel, after_id) {
+                    var _this = this;
                     var index;
                     var size;
                     if (typeof after_id === 'string') {
@@ -149,7 +148,6 @@ var mysli;
                         this.collection.each_before(after_id, function (index, ipanel) {
                             ipanel.element.css('z-index', 10000 - index);
                             size += ipanel.width;
-                            return;
                         });
                         panel.position = size;
                     }
@@ -168,7 +166,6 @@ var mysli;
                                 ipanel.element.css('z-index', 10000 - index);
                                 ipanel.position = ipanel.position + panel.width;
                                 ipanel.animate();
-                                return;
                             });
                         }
                     }
@@ -178,10 +175,14 @@ var mysli;
                     this.element.append(panel.element);
                     index = this.collection.get_index(panel.uid);
                     panel.element.css('z-index', 10000 - index);
+                    // Connect panel's events
                     panel.connect('set-focus', this.switch_focus.bind(this));
                     panel.connect('set-expandable', function (status) {
-                        this.expandable_count + (status ? 1 : -1);
-                    }.bind(this));
+                        _this.expandable_count = _this.expandable_count + (status ? 1 : -1);
+                    });
+                    panel.connect('close', function () {
+                        _this.remove(panel.uid);
+                    });
                     panel.focus = true;
                     if (panel.expandable) {
                         this.expandable_count++;

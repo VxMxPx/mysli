@@ -6,13 +6,15 @@
 }
 .ui-box .ui-cell {
   display: table-cell;
-}
-.ui-box .ui-cell.collapsed {
   width: 1%;
+}
+.ui-box .ui-cell.expanded {
+  width: auto;
 }
 .ui-box .ui-row {
   display: table-row;
-}
-.ui-box .ui-row.collapsed {
   height: 1%;
+}
+.ui-box .ui-row.expanded {
+  height: auto;
 }

@@ -8,7 +8,6 @@ declare module mysli.js.ui {
         static SIZE_NORMAL: number;
         static SIZE_BIG: number;
         static SIZE_HUGE: number;
-        private connected;
         private closing;
         private old_zindex;
         private old_width;

@@ -15,7 +15,7 @@ var mysli;
                 __extends(Titlebar, _super);
                 function Titlebar(options) {
                     if (options === void 0) { options = {}; }
-                    options.orientation = ui.Box.HORIZONTAL;
+                    options.orientation = ui.Box.VERTICAL;
                     _super.call(this, options);
                     this.element.addClass('ui-titlebar');
                 }

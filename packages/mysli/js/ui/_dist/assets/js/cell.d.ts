@@ -2,23 +2,18 @@
 /// <reference path="_inc.common.d.ts" />
 declare module mysli.js.ui {
     class Cell {
-        private parent;
-        private $cell;
-        private prop;
-        constructor(parent: Container, $cell: JQuery);
+        protected parent: Container;
+        protected $cell: JQuery;
+        protected prop: any;
+        constructor(parent: Container, $cell: JQuery, options?: any);
         /**
          * Animate the cell.
-         * @param {any}    what
-         * @param {number} duration
-         * @param {any}    callback
+         * @param what
+         * @param duration
+         * @param callback
          */
         animate(what: any, duration?: number, callback?: any): void;
-        /**
-         * Change cell visibility
-         * @param  {boolean}  status
-         * @return {boolean}
-         */
-        visible(status?: boolean): boolean;
+        visible: boolean;
         /**
          * Remove cell from a collection.
          */

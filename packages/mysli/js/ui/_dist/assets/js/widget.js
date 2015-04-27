@@ -9,13 +9,13 @@ var mysli;
                 function Widget(options) {
                     if (options === void 0) { options = {}; }
                     this.events_count = 0;
-                    this.events_count_native = [];
+                    this.events_count_native = {};
                     this.events = {
                         // When widget is clicked
-                        // => ( object event, object this )
+                        // => ( event: any, widget: Widget )
                         click: {},
                         // When widget is destroyed (destroy method called)
-                        // => ( object this )
+                        // => ( widget: Widget )
                         destroyed: {}
                     };
                     // Extends properties
@@ -33,21 +33,19 @@ var mysli;
                     }
                     else {
                         if (Widget.uid_list.indexOf(this.prop.uid) > -1) {
-                            throw new Error('Moduel with such ID is already added: ' + this.prop.uid);
+                            throw new Error('Model with such ID is already added: ' + this.prop.uid);
                         }
                         else {
                             Widget.uid_list.push(this.prop.uid);
                         }
                     }
                     // Create element
-                    this.$element = $(this.constructor['template']);
+                    this.$element = $(this['constructor']['template']);
                     this.$element.prop('id', this.prop.uid);
                     // Apply default properties
-                    js.common.use(this.prop, this, {
-                        style: 'style',
-                        flat: 'flat',
-                        disabled: 'disabled'
-                    });
+                    this.style = this.prop.style;
+                    this.flat = this.prop.flat;
+                    this.disabled = this.prop.disabled;
                 }
                 /**
                  * Generate a new UID and return it.
@@ -78,61 +76,56 @@ var mysli;
                     enumerable: true,
                     configurable: true
                 });
+                Object.defineProperty(Widget.prototype, "disabled", {
+                    // Get/set disabled status
+                    get: function () {
+                        return this.prop.disabled;
+                    },
+                    set: function (status) {
+                        this.prop.disabled = status;
+                        this.element.prop('disabled', status);
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
+                Object.defineProperty(Widget.prototype, "flat", {
+                    // Get/set widget style to flat.
+                    get: function () {
+                        return this.prop.flat;
+                    },
+                    set: function (value) {
+                        this.element[value ? 'addClass' : 'removeClass']('style-flat');
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
+                Object.defineProperty(Widget.prototype, "style", {
+                    // Get/set widget's style (in general)
+                    get: function () {
+                        return this.prop.style;
+                    },
+                    set: function (style) {
+                        if (this['constructor']['allowed_styles'].indexOf(style) > -1) {
+                            this.element.removeClass("style-" + this.prop.style);
+                            this.prop.style = style;
+                            this.element.addClass("style-" + style);
+                        }
+                        else {
+                            throw new Error("Invalid style: " + style + ", please use one of the following: " + this['constructor']['allowed_styles'].join(', '));
+                        }
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
+                // Other
                 /**
                  * Destroy this widget. This will trigger the 'destroyed' event.
                  */
                 Widget.prototype.destroy = function () {
                     this.trigger('destroyed');
                     this.$element.remove();
-                    Widget.uid_list.slice(Widget.uid_list.indexOf(this.uid), 1);
-                    this.uid = -1;
-                };
-                /**
-                 * Get/get disabled status.
-                 * @param  {boolean} status
-                 * @return {boolean}
-                 */
-                Widget.prototype.disabled = function (status) {
-                    if (typeof status !== 'undefined') {
-                        this.prop.disabled = status;
-                        this.$element.prop('disabled', status);
-                    }
-                    return this.prop.disabled;
-                };
-                /**
-                 * Get/set widget's style to be flat
-                 * @param  {boolean} value
-                 * @return {boolean}
-                 */
-                Widget.prototype.flat = function (value) {
-                    if (typeof value !== 'undefined' && value !== this.prop.flat) {
-                        if (value) {
-                            this.$element.addClass('style-flat');
-                        }
-                        else {
-                            this.$element.removeClass('style-flat');
-                        }
-                        this.prop.flat = value;
-                    }
-                    return this.prop.flat;
-                };
-                /**
-                 * Get/set widget's style.
-                 * @param  {string} style
-                 * @return {string}
-                 */
-                Widget.prototype.style = function (style) {
-                    if (typeof style !== 'undefined') {
-                        if (this.constructor['allowed_styles'].indexOf(style) > -1) {
-                            this.prop.style = style;
-                            this.$element.removeClass(this.prop.style);
-                            this.$element.addClass("style-" + style);
-                        }
-                        else {
-                            throw new Error("Invalid style: `" + style + "`, please use one of the following: " + this.constructor['allowed_styles'].join(', '));
-                        }
-                    }
-                    return this.prop.style;
+                    Widget.uid_list.splice(Widget.uid_list.indexOf(this.uid), 1);
+                    this.prop.uid = -1;
                 };
                 // Events
                 /**
@@ -144,6 +137,7 @@ var mysli;
                  * @return {string}
                  */
                 Widget.prototype.connect = function (event, callback) {
+                    var _this = this;
                     var _ref = Widget.event_extract_name(event);
                     var id;
                     event = _ref[0];
@@ -155,23 +149,22 @@ var mysli;
                     id = "" + id + event + "--" + (++this.events_count);
                     this.events[event][id] = callback;
                     // Handle native events
-                    if (typeof Widget.events_native[event] !== 'undefined') {
+                    if (Widget.events_native.indexOf(event) > -1) {
                         this.events_count_native[event] =
                             typeof this.events_count_native[event] === 'undefined' ?
-                                0 :
+                                1 :
                                 this.events_count_native[event] + 1;
                         // Prevent registering event more than once
                         if (this.events_count_native[event] === 1) {
-                            this.$element.on(event.replace('-', ''), this.trigger.bind(this, event));
+                            this.element.on(event.replace('-', ''), function (e) {
+                                _this.trigger(event, e);
+                            });
                         }
                     }
                     return id;
                 };
                 /**
                  * Trigger an event.
-                 * @param  {string} event
-                 * @param  {array}  params
-                 * @return {array}
                  */
                 Widget.prototype.trigger = function (event, params) {
                     if (params === void 0) { params = []; }
@@ -181,7 +174,7 @@ var mysli;
                         throw new Error("Invalid event: " + event);
                     }
                     if (typeof params.push !== 'function') {
-                        throw new Error("Params needs to be an array!");
+                        params = [params];
                     }
                     params.push(this);
                     for (var id in this.events[event]) {
@@ -200,18 +193,22 @@ var mysli;
                 };
                 /**
                  * Disconnect particular event.
-                 * @param  {any} id
-                 *   string: full id, or specified id (eg *my_id)
-                 *   array:  [event, id] to disconnect specific event
-                 * @return {boolean}
+                 * @param id full id or specified id (eg *my_id) OR [event, id]
+                 * @returns {boolean}
                  */
                 Widget.prototype.disconnect = function (id) {
                     var event;
                     var eid;
-                    if (typeof id !== 'object' && id.substr(0, 1) === '*') {
+                    if (typeof id === 'string' && id.substr(0, 1) === '*') {
                         id = id + "*";
                         for (event in this.events) {
+                            if (!this.events.hasOwnProperty(event)) {
+                                continue;
+                            }
                             for (eid in this.events[event]) {
+                                if (!this.events[event].hasOwnProperty(eid)) {
+                                    continue;
+                                }
                                 if (eid.substr(0, id.length) === id) {
                                     this.event_disconnect_native(event);
                                     delete this.events[event][eid];
@@ -221,7 +218,7 @@ var mysli;
                         return true;
                     }
                     else {
-                        if (typeof id !== 'object') {
+                        if (typeof id === 'string') {
                             event = id.split('--', 2)[0];
                         }
                         else {
@@ -238,8 +235,8 @@ var mysli;
                     }
                 };
                 /**
-                 * Disconnect native event.
-                 * @param {string} event
+                 * Disconnect a native event.
+                 * @param event
                  */
                 Widget.prototype.event_disconnect_native = function (event) {
                     if (typeof Widget.events_native[event] !== 'undefined') {
@@ -254,8 +251,7 @@ var mysli;
                 };
                 /**
                  * Process event*special_id and return an array.
-                 * @param  {string} event
-                 * @return {array}        [event, id]
+                 * @param event
                  */
                 Widget.event_extract_name = function (event) {
                     var id;
@@ -270,25 +266,25 @@ var mysli;
                 // Events
                 Widget.events_native = [
                     // When widget is clicked
-                    // => ( object event, object this )
+                    // => ( event: any, widget: Widget )
                     'click',
                     // When mouse cursor enter (parent) widget
-                    // => ( object event, object this )
+                    // => ( event: event, widget: Widget )
                     'mouse-enter',
                     // When mouse cursor leave (parent) widget
-                    // => ( object event, object this )
+                    // => ( event: any, widget: Widget )
                     'mouse-leave',
                     // When mouse cursor move over widget
-                    // => ( object event, object this )
+                    // => ( event: any, widget: Widget )
                     'mouse-move',
                     // When mouse cursor move out of the widget (even to child)
-                    // => ( object event, object this )
+                    // => ( event: any, widget: Widget )
                     'mouse-out',
                     // Mouse enter (even when enter to child element)
-                    // => ( object event, object this )
+                    // => ( event: any, widget: Widget )
                     'mouse-over',
                     // Mouse up
-                    // => ( object event, object this )
+                    // => ( event: any, widget: Widget )
                     'mouse-up'
                 ];
                 // Widget's Unique ID

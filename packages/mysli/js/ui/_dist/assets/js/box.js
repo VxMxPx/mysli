@@ -5,6 +5,7 @@ var __extends = this.__extends || function (d, b) {
     d.prototype = new __();
 };
 /// <reference path="container.ts" />
+/// <reference path="cell.ts" />
 /// <reference path="_inc.common.ts" />
 var mysli;
 (function (mysli) {
@@ -17,12 +18,13 @@ var mysli;
                 function Box(options) {
                     if (options === void 0) { options = {}; }
                     _super.call(this, options);
+                    this.Cell_constructor = BoxCell;
                     // Apply own defaults first...
                     this.prop = js.common.mix({
                         orientation: Box.HORIZONTAL
                     }, this.prop);
                     this.element.addClass('ui-box');
-                    Box.element_wrapper = ui.Container.element_wrapper;
+                    this.element_wrapper_original = this.element_wrapper;
                     if (this.prop.orientation === Box.VERTICAL) {
                         var row = $('<div class="ui-row" />');
                         this.element.append(row);
@@ -40,41 +42,44 @@ var mysli;
                     configurable: true
                 });
                 /**
-                 * Override get, to support expanded method.
-                 */
-                Box.prototype.get = function () {
-                    var result = _super.prototype.get.apply(this, arguments);
-                    if (result instanceof ui.Cell) {
-                        result.expanded = Box.expanded.bind(result);
-                    }
-                    return result;
-                };
-                /**
                  * Override insert, to support horizontal/vertical layout.
                  */
                 Box.prototype.insert = function () {
+                    var args = [];
+                    for (var _i = 0; _i < arguments.length; _i++) {
+                        args[_i - 0] = arguments[_i];
+                    }
                     if (this.prop.orientation === Box.HORIZONTAL) {
-                        Box.element_wrapper = '<div class="ui-row"><div class="ui-cell container-target" /></div>';
+                        this.element_wrapper = '<div class="ui-row"><div class="ui-cell container-target" /></div>';
                     }
                     else {
-                        Box.element_wrapper = this.element_wrapper_original;
+                        this.element_wrapper = this.element_wrapper_original;
                     }
-                    return _super.prototype.insert.apply(this, arguments);
-                };
-                /**
-                 * Method to be appended to the Cell object.
-                 * @param  {boolean} status
-                 * @return {boolean}
-                 */
-                Box.expanded = function (status) {
-                    if (typeof status !== 'undefined') {
-                        this.$cell[status ? 'addClass' : 'removeClass']('cell-expanded');
-                    }
-                    return this.$cell.hasClass('cell-expanded');
+                    return _super.prototype.insert.apply(this, args);
                 };
                 return Box;
             })(ui.Container);
             ui.Box = Box;
+            var BoxCell = (function (_super) {
+                __extends(BoxCell, _super);
+                function BoxCell(parent, $cell, options) {
+                    if (options === void 0) { options = {}; }
+                    _super.call(this, parent, $cell, options);
+                    this.expanded = options.expanded || false;
+                }
+                Object.defineProperty(BoxCell.prototype, "expanded", {
+                    // Get/set expanded
+                    get: function () {
+                        return this.prop.expanded;
+                    },
+                    set: function (value) {
+                        this.$cell[value ? 'addClass' : 'removeClass']('expanded');
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
+                return BoxCell;
+            })(ui.Cell);
         })(ui = js.ui || (js.ui = {}));
     })(js = mysli.js || (mysli.js = {}));
 })(mysli || (mysli = {}));

@@ -19,45 +19,33 @@ var mysli;
                         busy: false,
                         visible: false
                     }, this.prop);
-                    js.common.use(this.prop, this, {
-                        busy: 'busy',
-                        visible: 'visible'
-                    });
+                    this.busy = this.prop.busy;
+                    this.visibility = this.prop.visible;
                 }
-                /**
-                 * Get/Set busy state.
-                 * @param  {boolean} status
-                 * @return {boolean}
-                 */
-                Overlay.prototype.busy = function (status) {
-                    if (typeof status !== 'undefined') {
+                Object.defineProperty(Overlay.prototype, "busy", {
+                    // Get/set busy state.
+                    get: function () {
+                        return this.prop.busy;
+                    },
+                    set: function (status) {
                         this.prop.busy = status;
-                        if (status) {
-                            this.element.addClass('status-busy');
-                        }
-                        else {
-                            this.element.removeClass('status-busy');
-                        }
-                    }
-                    return this.prop.busy;
-                };
-                /**
-                 * Get/Set visibility state.
-                 * @param  {boolean} status
-                 * @return {boolean}
-                 */
-                Overlay.prototype.visible = function (status) {
-                    if (typeof status !== 'undefined') {
-                        this.prop.visble = status;
-                        if (status) {
-                            this.element.fadeIn();
-                        }
-                        else {
-                            this.element.fadeOut(400);
-                        }
-                    }
-                    return this.element.is(':visible');
-                };
+                        this.element[status ? 'addClass' : 'removeClass']('status-busy');
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
+                Object.defineProperty(Overlay.prototype, "visibility", {
+                    // Get/set visibility
+                    get: function () {
+                        return this.element.is(':visible');
+                    },
+                    set: function (status) {
+                        this.prop.visible = status;
+                        this.element[status ? 'show' : 'hide']();
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
                 Overlay.template = '<div class="ui-overlay ui-widget"><div class="ui-overlay-busy"><i class="fa fa-cog fa-spin"></i></div></div>';
                 return Overlay;
             })(ui.Widget);

@@ -11,14 +11,14 @@
   color: inherit;
   background-color: transparent;
 }
-.ui-box.ui-titlebar .cell {
+.ui-box.ui-titlebar .ui-cell {
   vertical-align: middle;
   padding: 5px;
 }
-.ui-box.ui-titlebar .cell:first-child {
+.ui-box.ui-titlebar .ui-cell:first-child {
   padding-left: 15px;
 }
-.ui-box.ui-titlebar .cell:last-child {
+.ui-box.ui-titlebar .ui-cell:last-child {
   padding-right: 15px;
 }
 .ui-box.ui-titlebar .ui-button.style-flat {

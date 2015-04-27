@@ -18,53 +18,58 @@ var mysli;
                 function Container(options) {
                     if (options === void 0) { options = {}; }
                     _super.call(this, options);
+                    // Allows to replace cell interface when extending this class
+                    this.Cell_constructor = ui.Cell;
+                    // Collection of all contained elements
                     this.collection = new js.common.Arr();
+                    this.element_wrapper = '<div class="ui-cell container-target"></div>';
                     this.element.addClass('ui-container');
                     this.$target = this.element;
                 }
                 /**
                  * Push widget to the contaner
-                 * @param  {Widget} element
-                 * @param  {string} uid
-                 * @return {Widget}
+                 * @param widget
+                 * @param options
                  */
-                Container.prototype.push = function (widget, uid) {
-                    if (uid === void 0) { uid = null; }
-                    return this.insert(widget, -1, uid);
+                Container.prototype.push = function (widget, options) {
+                    if (options === void 0) { options = null; }
+                    return this.insert(widget, -1, options);
                 };
                 /**
                  * Insert widget to the container.
-                 * @param  {Widget} widget
-                 * @param  {number} at
-                 * @param  {string} uid
-                 * @return {Widget}
+                 * @param widget
+                 * @param at
+                 * @param options
                  */
-                Container.prototype.insert = function (widget, at, uid) {
-                    if (uid === void 0) { uid = null; }
+                Container.prototype.insert = function (widget, at, options) {
+                    if (options === void 0) { options = null; }
                     var at_index;
                     var class_id;
                     var pushable;
+                    var cell = null;
                     if (!(widget instanceof ui.Widget)) {
                         throw new Error('Instance of widget is required!');
                     }
-                    // If no UID is provided, the element's uid will be used
-                    if (uid === null) {
-                        uid = widget.uid;
+                    // UID only, no options
+                    if (!options) {
+                        options = { uid: widget.uid };
                     }
-                    // Set collection uid (which might be different from uid itself)
-                    // element.collection_uid = uid;
-                    // Either push after another element or at the end of the list
-                    if (at > -1) {
-                        at_index = this.collection.push_after(at, uid, widget);
+                    else if (typeof options === 'string') {
+                        options = { uid: options };
+                    }
+                    else if (typeof options === 'object') {
+                        if (typeof options.uid === 'undefined') {
+                            options.uid = widget.uid;
+                        }
                     }
                     else {
-                        at_index = this.collection.push(uid, widget);
+                        throw new Error('Invalid options provided. Null, string or {} allowed.');
                     }
-                    // If costume allows us to continue
-                    class_id = 'coll-euid-' + widget.uid + ' coll-uid-' + uid;
+                    // Create classes
+                    class_id = 'coll-euid-' + widget.uid + ' coll-uid-' + options.uid;
                     // Create wrapper, append at the end of the list
-                    if (this.constructor['element_wrapper']) {
-                        pushable = $(this.constructor['element_wrapper']);
+                    if (this.element_wrapper) {
+                        pushable = $(this.element_wrapper);
                         pushable.addClass(class_id);
                         if (pushable.filter('.container-target').length) {
                             pushable.filter('.container-target').append(widget.element);
@@ -75,10 +80,18 @@ var mysli;
                         else {
                             throw new Error("Cannot find .container-target!");
                         }
+                        cell = new this.Cell_constructor(this, pushable, options);
                     }
                     else {
                         widget.element.addClass(class_id);
                         pushable = widget.element;
+                    }
+                    // Either push after another element or at the end of the list
+                    if (at > -1) {
+                        at_index = this.collection.push_after(at, options.uid, [widget, cell]);
+                    }
+                    else {
+                        at_index = this.collection.push(options.uid, [widget, cell]);
                     }
                     // Either inster after particular element or just at the end
                     if (at > -1) {
@@ -93,29 +106,26 @@ var mysli;
                 };
                 /**
                 * Get elements from the collection. If `cell` is provided, get cell itself.
-                * @param  {string|number} uid  either string (uid) or number (index)
-                * @param  {boolean}       cell weather to get cell itself rather than containing element.
-                * @return {any}
+                * @param uid  either string (uid) or number (index)
+                * @param cell weather to get cell itself rather than containing element.
                 */
                 Container.prototype.get = function (uid, cell) {
-                    if (cell && this.constructor['element_wrapper']) {
-                        uid = '.coll-euid-' + this.collection.get(uid).uid;
-                        return new ui.Cell(this, this.$target.find(uid));
+                    if (cell) {
+                        return this.collection.get(uid)[1];
                     }
                     else {
-                        return this.collection.get(uid);
+                        return this.collection.get(uid)[0];
                     }
                 };
                 /**
                  * Remove particular cell (and the containing element)
-                 * @param {string|number} uid
+                 * @param uid
                  */
                 Container.prototype.remove = function (uid) {
                     uid = this.collection.get(uid).uid;
                     this.collection.remove(uid);
                     this.$target.find('.coll-euid-' + uid).remove();
                 };
-                Container.element_wrapper = '<div class="ui-cell container-target" />';
                 return Container;
             })(ui.Widget);
             ui.Container = Container;
