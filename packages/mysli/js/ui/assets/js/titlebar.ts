@@ -3,7 +3,7 @@
 module mysli.js.ui {
     export class Titlebar extends Box {
         constructor(options: any={}) {
-            options.orientation = Box.HORIZONTAL;
+            options.orientation = Box.VERTICAL;
             super(options);
             this.element.addClass('ui-titlebar');
         }
