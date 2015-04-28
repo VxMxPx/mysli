@@ -7,6 +7,6 @@ declare module mysli.js.ui {
         protected collection: common.Arr;
         protected container: Box;
         constructor(items: any, options?: any);
-        private static produce(title, id, sender);
+        private produce(title, id);
     }
 }

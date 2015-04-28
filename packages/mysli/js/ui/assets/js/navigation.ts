@@ -22,16 +22,16 @@ module mysli.js.ui {
 
             for (var item in items) {
                 if (items.hasOwnProperty(item)) {
-                    this.container.push(Navigation.produce(items[item], item, this), item);
+                    this.container.push(this.produce(items[item], item), item);
                 }
             }
         }
 
-        private static produce(title: string, id: string, sender: Navigation): Widget {
-            var button: Button = new Button({label: title});
-            button.connect('click', function (e) {
+        private produce(title: string, id: string): Widget {
+            var button: Button = new Button({flat: true, label: title, style: this.style});
+            button.connect('click', (e) => {
                 this.trigger('action', [id, e]);
-            }.bind(sender));
+            });
             return button;
         }
     }

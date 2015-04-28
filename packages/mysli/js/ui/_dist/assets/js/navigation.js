@@ -30,15 +30,16 @@ var mysli;
                     }, this.events);
                     for (var item in items) {
                         if (items.hasOwnProperty(item)) {
-                            this.container.push(Navigation.produce(items[item], item, this), item);
+                            this.container.push(this.produce(items[item], item), item);
                         }
                     }
                 }
-                Navigation.produce = function (title, id, sender) {
-                    var button = new ui.Button({ label: title });
+                Navigation.prototype.produce = function (title, id) {
+                    var _this = this;
+                    var button = new ui.Button({ flat: true, label: title, style: this.style });
                     button.connect('click', function (e) {
-                        this.trigger('action', [id, e]);
-                    }.bind(sender));
+                        _this.trigger('action', [id, e]);
+                    });
                     return button;
                 };
                 return Navigation;
