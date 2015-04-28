@@ -25,6 +25,7 @@ files:
             - css/variables.styl
             - css/common.styl
             - css/widget.styl
+            - css/cell.styl
             - css/panel_container.styl
             - css/panel.styl
             - css/panel_side.styl
