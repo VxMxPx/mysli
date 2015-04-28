@@ -14,13 +14,13 @@ var mysli;
             var Overlay = (function (_super) {
                 __extends(Overlay, _super);
                 function Overlay(options) {
+                    if (options === void 0) { options = {}; }
                     _super.call(this, options);
-                    this.prop = js.common.mix({
+                    this.prop.def({
                         busy: false,
-                        visible: false
-                    }, this.prop);
-                    this.busy = this.prop.busy;
-                    this.visibility = this.prop.visible;
+                        visible: true
+                    });
+                    this.prop.push(options, ['busy', 'visible']);
                 }
                 Object.defineProperty(Overlay.prototype, "busy", {
                     // Get/set busy state.
@@ -34,7 +34,7 @@ var mysli;
                     enumerable: true,
                     configurable: true
                 });
-                Object.defineProperty(Overlay.prototype, "visibility", {
+                Object.defineProperty(Overlay.prototype, "visible", {
                     // Get/set visibility
                     get: function () {
                         return this.element.is(':visible');

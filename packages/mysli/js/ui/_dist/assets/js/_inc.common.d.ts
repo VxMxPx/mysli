@@ -2,3 +2,4 @@
 /// <reference path="../../../../common/_dist/assets/js/arr.d.ts" />
 /// <reference path="../../../../common/_dist/assets/js/num.d.ts" />
 /// <reference path="../../../../common/_dist/assets/js/common.d.ts" />
+/// <reference path="../../../../common/_dist/assets/js/prop.d.ts" />

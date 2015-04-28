@@ -15,8 +15,9 @@ var mysli;
             var Label = (function (_super) {
                 __extends(Label, _super);
                 function Label(options) {
+                    if (options === void 0) { options = {}; }
                     _super.call(this, options);
-                    this.prop = js.common.mix({
+                    this.prop.def({
                         // Label's text
                         text: '',
                         // Type, see constants defined above
@@ -24,12 +25,8 @@ var mysli;
                         // Weather this label is connected to an input.
                         // Setting this to Widget, will force label's type to INPUT
                         input: null
-                    }, this.prop);
-                    this.type = this.prop.type;
-                    this.text = this.prop.text;
-                    if (this.prop.input) {
-                        this.input = this.prop.input;
-                    }
+                    });
+                    this.prop.push(options, ['type!', 'text!', 'input']);
                 }
                 Object.defineProperty(Label, "DEFAULT", {
                     get: function () { return 1; },

@@ -56,8 +56,7 @@ var mysli;
                         // => ( value: boolean, panel: Panel )
                         'set-expandable': {}
                     }, this.events);
-                    // Properties
-                    this.prop = js.common.mix({
+                    this.prop.def({
                         // position in px from left
                         position: 0,
                         // when there's a lot of panels, they start being pushed aside
@@ -89,7 +88,8 @@ var mysli;
                         focus: false,
                         // Weather panel can be flipped (back side exists!)
                         flippable: false
-                    }, this.prop);
+                    });
+                    this.prop.push(options);
                     this.element.width(this.prop.width);
                     // Proxy the click event to focus
                     this.element.on('click', function () {

@@ -19,6 +19,14 @@ var mysli;
                     _super.call(this, options);
                     this.element.addClass('ui-titlebar');
                 }
+                Titlebar.prototype.insert = function () {
+                    var options = [];
+                    for (var _i = 0; _i < arguments.length; _i++) {
+                        options[_i - 0] = arguments[_i];
+                    }
+                    options[0].flat = true;
+                    return _super.prototype.insert.apply(this, options);
+                };
                 return Titlebar;
             })(ui.Box);
             ui.Titlebar = Titlebar;

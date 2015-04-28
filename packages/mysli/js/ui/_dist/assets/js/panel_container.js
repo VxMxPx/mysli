@@ -28,7 +28,9 @@ var mysli;
                     this.offseted = false;
                     // width of container
                     this.container_width = 0;
+                    // Resize timer handle
                     this.resize_timer = null;
+                    // Collection of all constructed panels
                     this.collection = new js.common.Arr();
                     this.element.addClass('ui-panel-container');
                     this.set_resize_with_window(true);

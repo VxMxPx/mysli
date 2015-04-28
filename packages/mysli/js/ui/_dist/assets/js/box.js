@@ -19,10 +19,10 @@ var mysli;
                     if (options === void 0) { options = {}; }
                     _super.call(this, options);
                     this.Cell_constructor = BoxCell;
-                    // Apply own defaults first...
-                    this.prop = js.common.mix({
+                    this.prop.def({
                         orientation: Box.HORIZONTAL
-                    }, this.prop);
+                    });
+                    this.prop.push(options);
                     this.element.addClass('ui-box');
                     this.element_wrapper_original = this.element_wrapper;
                     if (this.prop.orientation === Box.VERTICAL) {
@@ -65,7 +65,8 @@ var mysli;
                 function BoxCell(parent, $cell, options) {
                     if (options === void 0) { options = {}; }
                     _super.call(this, parent, $cell, options);
-                    this.expanded = options.expanded || false;
+                    this.prop.def({ expanded: false });
+                    this.prop.push(options, ['expanded']);
                 }
                 Object.defineProperty(BoxCell.prototype, "expanded", {
                     // Get/set expanded

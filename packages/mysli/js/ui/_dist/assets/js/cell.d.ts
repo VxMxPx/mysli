@@ -13,6 +13,7 @@ declare module mysli.js.ui {
          * @param callback
          */
         animate(what: any, duration?: number, callback?: any): void;
+        padding: boolean | any[];
         visible: boolean;
         /**
          * Remove cell from a collection.

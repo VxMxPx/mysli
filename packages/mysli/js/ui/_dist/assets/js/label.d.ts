@@ -6,7 +6,7 @@ declare module mysli.js.ui {
         static TITLE: number;
         static INPUT: number;
         protected static template: string;
-        constructor(options: any);
+        constructor(options?: any);
         /**
          * Get/set type.
          */

@@ -2,8 +2,8 @@
 declare module mysli.js.ui {
     class Overlay extends Widget {
         protected static template: string;
-        constructor(options: any);
+        constructor(options?: any);
         busy: boolean;
-        visibility: boolean;
+        visible: boolean;
     }
 }

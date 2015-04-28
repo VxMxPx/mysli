@@ -17,17 +17,15 @@ var mysli;
                 function Button(options) {
                     if (options === void 0) { options = {}; }
                     _super.call(this, options);
-                    // Properties
-                    this.prop = js.common.mix({
+                    this.prop.def({
                         label: null,
                         icon: {
                             name: null,
                             position: 'left',
                             spin: false
                         }
-                    }, this.prop);
-                    this.label = this.prop.label;
-                    this.icon = this.prop.icon;
+                    });
+                    this.prop.push(options, ['icon!', 'label!']);
                 }
                 Object.defineProperty(Button.prototype, "label", {
                     // Get/set button's label
@@ -70,7 +68,7 @@ var mysli;
                             this.prop.icon.name = null;
                             return;
                         }
-                        this.prop.icon = js.common.mix(options, this.prop.icon);
+                        this.prop.icon = js.common.mix(this.prop.icon, options);
                         method = this.prop.icon.position === 'right' ? 'append' : 'prepend';
                         spin = this.prop.icon.spin ? ' fa-spin' : '';
                         this.element[method]($("<i class=\"fa fa-" + this.prop.icon.name + spin + "\" />"));
