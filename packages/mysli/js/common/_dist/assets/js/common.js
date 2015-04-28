@@ -10,42 +10,6 @@ var mysli;
                 return $.extend({}, defaults, options);
             }
             common.mix = mix;
-            /**
-             * Call object's method for each option defined in 'methods'.
-             * @param options
-             * @param context
-             * @param methods
-             */
-            function use(options, context, methods) {
-                if (methods === void 0) { methods = {}; }
-                var arg;
-                var call;
-                var expect;
-                var params;
-                var _i;
-                var _len;
-                if (typeof options !== 'object') {
-                    return;
-                }
-                for (call in methods) {
-                    if (!methods.hasOwnProperty(call)) {
-                        continue;
-                    }
-                    expect = methods[call];
-                    params = [];
-                    if (typeof expect === 'string') {
-                        params.push(options[expect]);
-                    }
-                    else {
-                        for (_i = 0, _len = expect.length; _i < _len; _i++) {
-                            arg = expect[_i];
-                            params.push(options[arg]);
-                        }
-                    }
-                    context[call].apply(context, params);
-                }
-            }
-            common.use = use;
         })(common = js.common || (js.common = {}));
     })(js = mysli.js || (mysli.js = {}));
 })(mysli || (mysli = {}));
