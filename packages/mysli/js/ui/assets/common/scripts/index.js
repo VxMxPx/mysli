@@ -2,8 +2,26 @@
 
     'use strict';
 
-    var panels = new mysli.js.ui.PanelContainer(),
-        creator = {
+    var mwu_dev_module = {
+        add: function (module, call) {
+            if (typeof creator[module] !== 'undefined') {
+                console.warn('Module is already registered.');
+            }
+            creator[module] = call;
+        },
+        run: function (module, panels) {
+            var panel;
+            panel = creator[module]();
+            if (module !== 'mk_introduction' && module !== 'mk_navigation') {
+                panel.connect('close', function () {
+                    creator[module] = undefined;
+                });
+            }
+            panels.insert(panel, 'mysli-cms-dash-navigation');
+        }
+    };
+    var panels = new mysli.js.ui.PanelContainer();
+    var creator = {
             mk_navigation: function() {
                 var ui = mysli.js.ui,
                     panel = new ui.Panel({
@@ -56,10 +74,6 @@
                     content.push(data);
                 });
 
-                panel.connect('set-focus', function (status) {
-                    console.log('Focus switched to: '+status);
-                });
-
                 return panel;
             }
         };
@@ -68,7 +82,7 @@
         var panel = panels.get("mysli-cms-dash-"+id);
         if (!panel) {
             if (typeof creator['mk_'+id] == 'function') {
-                panels.insert(creator['mk_'+id](), 'mysli-cms-dash-navigation');
+                mwu_dev_module.run('mk_'+id, panels);
             } else {
                 //nav.get(id).set_busy(true);
                 $.getScript('?js='+id, function (_, __, jqxhr) {
@@ -78,7 +92,7 @@
                         console.log('Request failed!');
                     } else {
                         if (typeof creator['mk_'+id] == 'function') {
-                            panels.insert(creator['mk_'+id](), 'mysli-cms-dash-navigation');
+                            mwu_dev_module.run('mk_'+id, panels);
                         }
                     }
                 });
@@ -89,17 +103,11 @@
     }
 
     $('body').prepend(panels.element);
-    panels.push(creator.mk_navigation());
-    panels.push(creator.mk_introduction());
-    // panels.show();
+    mwu_dev_module.run('mk_navigation', panels);
+    mwu_dev_module.run('mk_introduction', panels);
+    //panels.push(creator.mk_navigation());
+    //panels.push(creator.mk_introduction());
+     //panels.show();
 
-    // Export module register
-    window.mwu_dev_module = {
-        add: function (module, call) {
-            if (typeof creator[module] !== 'undefined') {
-                throw new Error('Module is already registered.');
-            }
-            creator[module] = call;
-        }
-    };
+    window.mwu_dev_module = mwu_dev_module;
 }());

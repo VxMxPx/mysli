@@ -2,35 +2,77 @@ mwu_dev_module.add('mk_buttons', function() {
 
     'use strict';
 
-    // var ui = mysli.js.ui,
-    //     panel = new ui.panel('mysli-cms-dash-buttons'),
-    //     titlebar = new ui.titlebar({color: 'default'}),
-    //     notebook = new ui.notebook({
-    //         examples: "Examples",
-    //         source: "Source"
-    //     });
+    var ui = mysli.js.ui;
+    var panel = new ui.Panel({uid: 'mysli-cms-dash-buttons', width: ui.Panel.SIZE_BIG});
+    var titlebar = new ui.Titlebar({style: 'default'});
 
-    // // Titlebar
-    // titlebar.push(new ui.button({
-    //     icon: 'close',
-    //     style_flat: true
-    // })).connect('click', function () {
-    //     panel.destroy();
-    // });
-    // titlebar.push(new ui.title("Buttons Examples"), true);
+    // Titlebar
+    titlebar.push(new ui.Button({
+        icon: 'close'
+    })).connect('click', function () {
+        panel.close();
+    });
 
-    // // Tabs
-    // notebook.connect('action', function (id, self) {
-    //     // Pass
-    // });
+    titlebar.push(new ui.Label({text: "Buttons Examples"}), {expanded: true});
 
-    // // Buttons
-    // var b_default = new ui.box();
-    // b_default.push(new ui.button('Default', {disabled: true}));
+    // Tabs
+    //notebook.connect('action', function (id, self) {
+    //    // Pass
+    //});
 
-    // // Source
+    var container = new ui.Container();
 
-    // panel.front.push(titlebar);
+    // Default
+    var b_default = new ui.Box({orientation: ui.Box.VERTICAL});
+    b_default.push(new ui.Button({label: 'Default'}));
+    b_default.push(new ui.Button({label: 'Flat', flat: true}));
+    b_default.push(new ui.Button({label: 'Disabled', disabled: true}));
+    b_default.push(new ui.Button({label: 'Flat Disabled', flat: true, disabled: true}));
 
-    // return panel;
+    // Alt
+    var b_alt = new ui.Box({orientation: ui.Box.VERTICAL});
+    b_alt.push(new ui.Button({label: 'Default', style: 'alt'}));
+    b_alt.push(new ui.Button({label: 'Flat', flat: true, style: 'alt'}));
+    b_alt.push(new ui.Button({label: 'Disabled', disabled: true, style: 'alt'}));
+    b_alt.push(new ui.Button({label: 'Flat Disabled', flat: true, disabled: true, style: 'alt'}));
+
+    // Primary
+    var b_primary = new ui.Box({orientation: ui.Box.VERTICAL});
+    b_primary.push(new ui.Button({label: 'Default', style: 'primary'}));
+    b_primary.push(new ui.Button({label: 'Flat', flat: true, style: 'primary'}));
+    b_primary.push(new ui.Button({label: 'Disabled', disabled: true, style: 'primary'}));
+    b_primary.push(new ui.Button({label: 'Flat Disabled', flat: true, disabled: true, style: 'primary'}));
+
+    // Attention
+    var b_attention = new ui.Box({orientation: ui.Box.VERTICAL});
+    b_attention.push(new ui.Button({label: 'Default', style: 'attention'}));
+    b_attention.push(new ui.Button({label: 'Flat', flat: true, style: 'attention'}));
+    b_attention.push(new ui.Button({label: 'Disabled', disabled: true, style: 'attention'}));
+    b_attention.push(new ui.Button({label: 'Flat Disabled', flat: true, disabled: true, style: 'attention'}));
+
+    // Confirm
+    var b_confirm = new ui.Box({orientation: ui.Box.VERTICAL});
+    b_confirm.push(new ui.Button({label: 'Default', style: 'confirm'}));
+    b_confirm.push(new ui.Button({label: 'Flat', flat: true, style: 'confirm'}));
+    b_confirm.push(new ui.Button({label: 'Disabled', disabled: true, style: 'confirm'}));
+    b_confirm.push(new ui.Button({label: 'Flat Disabled', flat: true, disabled: true, style: 'confirm'}));
+
+    container.push(new ui.Label({text: "Default Buttons:"}), {padding: [false, false, 5, false]});
+    container.push(b_default);
+    container.push(new ui.Label({text: "Alt Buttons:"}), {padding: [true, false, 5, false]});
+    container.push(b_alt);
+    container.push(new ui.Label({text: "Primary Buttons:"}), {padding: [true, false, 5, false]});
+    container.push(b_primary);
+    container.push(new ui.Label({text: "Attention Buttons:"}), {padding: [true, false, 5, false]});
+    container.push(b_attention);
+    container.push(new ui.Label({text: "Confirm Buttons:"}), {padding: [true, false, 5, false]});
+    container.push(b_confirm);
+
+    // Source
+
+    panel.front.push(titlebar);
+    panel.front.push(container, {padding: true});
+
+
+    return panel;
 });
