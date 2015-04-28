@@ -28,7 +28,9 @@ module mysli.js.ui {
         public back: PanelSide;
 
         constructor(options: any = {}) {
+
             super(options);
+
             this.element.addClass('ui-panel');
 
             // Add supported events
@@ -60,8 +62,7 @@ module mysli.js.ui {
                 'set-expandable': {}
             }, this.events);
 
-            // Properties
-            this.prop = common.mix({
+            this.prop.def({
                 // position in px from left
                 position: 0,
                 // when there's a lot of panels, they start being pushed aside
@@ -93,7 +94,8 @@ module mysli.js.ui {
                 focus: false,
                 // Weather panel can be flipped (back side exists!)
                 flippable: false
-            }, this.prop);
+            });
+            this.prop.push(options);
 
             this.element.width(this.prop.width);
 

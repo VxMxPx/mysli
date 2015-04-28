@@ -9,18 +9,15 @@ module mysli.js.ui {
 
             super(options);
 
-            // Properties
-            this.prop = common.mix({
+            this.prop.def({
                 label: null,
                 icon: {
                     name: null,
                     position: 'left',
                     spin: false
                 }
-            }, this.prop);
-
-            this.label = this.prop.label;
-            this.icon = this.prop.icon;
+            });
+            this.prop.push(options, ['icon!', 'label!']);
         }
 
         // Get/set button's label
@@ -68,7 +65,7 @@ module mysli.js.ui {
                 return;
             }
 
-            this.prop.icon = common.mix(options, this.prop.icon);
+            this.prop.icon = common.mix(this.prop.icon, options);
 
             method = this.prop.icon.position === 'right' ? 'append' : 'prepend';
             spin = this.prop.icon.spin ? ' fa-spin' : '';

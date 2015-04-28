@@ -51,37 +51,34 @@ module mysli.js.ui {
 
         constructor(options: any = {}) {
 
-            // Extends properties
-            this.prop = common.mix({
+            this.prop = new common.Prop({
                 // Weather widget is disabled.
                 disabled: false,
-
                 // Widget's style
                 style: 'default',
-
                 // Weather widget (style) is flat
-                flat: false
-            }, options);
+                flat: false,
+                // Unique identifier of an object
+                uid: null
+            }, this);
 
             // Check for uid
-            if (typeof this.prop.uid === 'undefined') {
-                this.prop.uid = Widget.next_uid();
+            if (typeof options.uid === 'undefined') {
+                options.uid = Widget.next_uid();
             } else {
-                if (Widget.uid_list.indexOf(this.prop.uid) > -1) {
-                    throw new Error('Model with such ID is already added: ' + this.prop.uid);
+                if (Widget.uid_list.indexOf(options.uid) > -1) {
+                    throw new Error('Model with such ID is already added: ' + options.uid);
                 } else {
-                    Widget.uid_list.push(this.prop.uid);
+                    Widget.uid_list.push(options.uid);
                 }
             }
 
             // Create element
             this.$element = $(this['constructor']['template']);
-            this.$element.prop('id', this.prop.uid);
+            this.$element.prop('id', options.uid);
 
-            // Apply default properties
-            this.style = this.prop.style;
-            this.flat = this.prop.flat;
-            this.disabled = this.prop.disabled;
+            // Push options finally!
+            this.prop.push(options, ['style!', 'flat!', 'disabled']);
         }
 
         /**

@@ -15,10 +15,10 @@ module mysli.js.ui {
         constructor(options: any = {}) {
             super(options);
 
-            // Apply own defaults first...
-            this.prop = common.mix({
-                orientation: Box.HORIZONTAL
-            }, this.prop);
+            this.prop.def({
+               orientation: Box.HORIZONTAL
+            });
+            this.prop.push(options);
 
             this.element.addClass('ui-box');
             this.element_wrapper_original = this.element_wrapper;
@@ -46,7 +46,8 @@ module mysli.js.ui {
     class BoxCell extends Cell {
         constructor(parent: Container, $cell: JQuery, options: any = {}) {
             super(parent, $cell, options);
-            this.expanded = options.expanded || false;
+            this.prop.def({expanded: false});
+            this.prop.push(options, ['expanded']);
         }
 
         // Get/set expanded

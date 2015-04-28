@@ -4,16 +4,15 @@ module mysli.js.ui {
 
         protected static template: string = '<div class="ui-overlay ui-widget"><div class="ui-overlay-busy"><i class="fa fa-cog fa-spin"></i></div></div>';
 
-        constructor(options) {
+        constructor(options: any = {}) {
+
             super(options);
 
-            this.prop = common.mix({
+            this.prop.def({
                 busy: false,
-                visible: false
-            }, this.prop);
-
-            this.busy = this.prop.busy;
-            this.visibility = this.prop.visible;
+                visible: true
+            });
+            this.prop.push(options, ['busy', 'visible']);
         }
 
         // Get/set busy state.
@@ -26,10 +25,10 @@ module mysli.js.ui {
         }
 
         // Get/set visibility
-        get visibility(): boolean {
+        get visible(): boolean {
             return this.element.is(':visible');
         }
-        set visibility(status: boolean) {
+        set visible(status: boolean) {
             this.prop.visible = status;
             this.element[status ? 'show' : 'hide']();
         }

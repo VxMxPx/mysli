@@ -14,13 +14,15 @@ module mysli.js.ui {
         private offseted: boolean = false;
         // width of container
         private container_width: number = 0;
-
+        // Resize timer handle
         private resize_timer: any = null;
-
+        // Collection of all constructed panels
         private collection: common.Arr = new common.Arr();
 
         constructor(options: any = {}) {
+
             super(options);
+
             this.element.addClass('ui-panel-container');
 
             this.set_resize_with_window(true);

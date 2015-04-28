@@ -10,10 +10,10 @@ module mysli.js.ui {
 
         protected static template: string = '<span class="ui-widget ui-title" />';
 
-        constructor(options:any) {
+        constructor(options: any = {}) {
             super(options);
 
-            this.prop = common.mix({
+            this.prop.def({
                 // Label's text
                 text: '',
                 // Type, see constants defined above
@@ -21,13 +21,8 @@ module mysli.js.ui {
                 // Weather this label is connected to an input.
                 // Setting this to Widget, will force label's type to INPUT
                 input: null
-            }, this.prop);
-
-            this.type = this.prop.type;
-            this.text = this.prop.text;
-            if (this.prop.input) {
-                this.input = this.prop.input;
-            }
+            });
+            this.prop.push(options, ['type!', 'text!', 'input']);
         }
 
         /**

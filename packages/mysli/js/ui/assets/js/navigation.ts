@@ -9,7 +9,9 @@ module mysli.js.ui {
         protected container: Box;
 
         constructor(items: any, options: any = {}) {
+
             super(options);
+
             this.container = new Box(options);
             this.$element = this.container.element;
             this.element.addClass('ui-navigation');
