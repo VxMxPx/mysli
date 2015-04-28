@@ -21,3 +21,4 @@ files:
             - js/common.ts
             - js/arr.ts
             - js/num.ts
+            - js/prop.ts
