@@ -4,6 +4,7 @@ module mysli.js.ui {
     export class Button extends Widget {
 
         protected static template: string = '<button class="ui-widget ui-button"></button>';
+        protected static allowed_styles: string[] = ['default', 'alt', 'primary', 'confirm', 'attention'];
 
         constructor(options: any = {}) {
 
@@ -45,7 +46,7 @@ module mysli.js.ui {
         }
 
         // Get/set icon
-        get icon(): any {
+        get icon(): string|{name?: string; position?: string; spin?: boolean} {
             return this.prop.icon;
         }
         set icon(options: string|{name?: string; position?: string; spin?: boolean}) {
