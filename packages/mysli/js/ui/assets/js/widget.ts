@@ -39,7 +39,6 @@ module mysli.js.ui {
 
         // Widget's Unique ID
         private static uid_count: number = 0;
-        private static uid_list: string[] = [];
 
         // Element's template & element
         protected static template: string = '<div class="ui-widget" />';
@@ -63,19 +62,11 @@ module mysli.js.ui {
             }, this);
 
             // Check for uid
-            if (typeof options.uid === 'undefined') {
-                options.uid = Widget.next_uid();
-            } else {
-                if (Widget.uid_list.indexOf(options.uid) > -1) {
-                    throw new Error('Model with such ID is already added: ' + options.uid);
-                } else {
-                    Widget.uid_list.push(options.uid);
-                }
-            }
+            options.uid = Widget.next_uid();
 
             // Create element
             this.$element = $(this['constructor']['template']);
-            this.$element.prop('id', options.uid);
+//            this.$element.prop('id', options.uid);
 
             // Push options finally!
             this.prop.push(options, ['style!', 'flat!', 'disabled']);
@@ -145,7 +136,6 @@ module mysli.js.ui {
         destroy() {
             this.trigger('destroyed');
             this.$element.remove();
-            Widget.uid_list.splice(Widget.uid_list.indexOf(this.uid), 1);
             this.prop.uid = -1;
         }
 
@@ -183,7 +173,7 @@ module mysli.js.ui {
                 // Prevent registering event more than once
                 if (this.events_count_native[event] === 1) {
                     this.element.on(event.replace('-', ''), (e) => {
-                        this.trigger(event, e);
+                        this.trigger(event, [e]);
                     });
                 }
             }
@@ -203,7 +193,7 @@ module mysli.js.ui {
             }
 
             if (typeof params.push !== 'function') {
-                params = [params];
+                throw new Error('Params must be an array!');
             }
 
             params.push(this);
