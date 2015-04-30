@@ -7,11 +7,9 @@ mjud.add('panel', function () {
         uid: 'mjud-panel',
         flippable: true
     });
-    var titlebar_front = new ui.Titlebar();
-    var titlebar_back = new ui.Titlebar();
 
     // Front side of the panel
-
+    var titlebar_front = new ui.Titlebar();
     titlebar_front.push(new ui.Button({
         icon: 'close'
     })).connect('click', function () {
@@ -28,11 +26,13 @@ mjud.add('panel', function () {
     panel.front.push(new ui.HTML("Hi! I'm a panel. Use `cog` button to flip me arround!"));
 
     // Backside of the panel!
+    var titlebar_back = new ui.Titlebar({flat: true});
     titlebar_back.push(new ui.Button({
         icon: 'arrow-left'
     })).connect('click', function () {
         panel.side = 'front';
     });
+    titlebar_back.push(new ui.Label({text: "Panel Example Back", type: ui.Label.TITLE}), {expanded: true});
 
     panel.back.style = 'alt';
     panel.back.push(titlebar_back);
