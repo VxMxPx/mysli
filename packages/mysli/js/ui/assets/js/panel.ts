@@ -12,6 +12,10 @@ module mysli.js.ui {
         public static get SIZE_BIG(): number { return 500; }
         public static get SIZE_HUGE(): number { return 800; }
 
+        private static valid_sides:string[] = ['front', 'back'];
+        public static get SIDE_FRONT(): string { return 'front'; }
+        public static get SIDE_BACK(): string { return 'back'; }
+
         // List of connected panels
         // private connected: common.Arr = new common.Arr();
 
@@ -32,6 +36,7 @@ module mysli.js.ui {
             super(options);
 
             this.element.addClass('ui-panel');
+            this.element.append('<div class="ui-panel-sides" />');
 
             // Add supported events
             this.events = common.mix({
@@ -93,7 +98,9 @@ module mysli.js.ui {
                 // Weather panel is in focus
                 focus: false,
                 // Weather panel can be flipped (back side exists!)
-                flippable: false
+                flippable: false,
+                // Which side is visible
+                side: Panel.SIDE_FRONT
             });
             this.prop.push(options);
 
@@ -108,11 +115,16 @@ module mysli.js.ui {
 
             // Add Sides
             this.front = new PanelSide();
-            this.element.append(this.front.element);
+            this.element.find('.ui-panel-sides').append(this.front.element);
 
             if (this.prop.flippable) {
+                // Add multi-panel class
+                this.element.addClass('multi');
+                // Add actual panel
                 this.back = new ui.PanelSide({style: 'alt'});
-                this.element.append(this.back.element);
+                this.element.find('.ui-panel-sides').append(this.back.element);
+                // Set desired side
+                this.side = this.prop.side;
             }
         }
 
@@ -134,6 +146,25 @@ module mysli.js.ui {
                     callback.call(this);
                 }
             });
+        }
+
+        /**
+         * Get/set panel's visible side
+         */
+        get side(): string {
+            return this.prop.side;
+        }
+        set side(value: string) {
+            if (Panel.valid_sides.indexOf(value) === -1) {
+                throw new Error(`Trying to set invalid side: ${value}`);
+            }
+            if (!this.prop.flippable) {
+                throw new Error(`Trying to flip a panel which is not flippable.`);
+            }
+
+            // Right now this is hard coded, there are only two sides.
+            // It's possible that in future more sides will be added?
+            this.element[value === Panel.SIDE_BACK ? 'addClass' : 'removeClass']('flipped');
         }
 
         /**
