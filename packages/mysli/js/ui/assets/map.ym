@@ -41,8 +41,11 @@ files:
         merge: No
         include:
             - common/scripts/index.js
-            - common/scripts/buttons.js
-            - common/scripts/tabs.js
+            - common/scripts/navigation.js
+            - common/scripts/introduction.js
+            - common/scripts/button.js
+            - common/scripts/tab.js
+            - common/scripts/panel.js
     # Main UI Scripts
     ui.js:
         compress: Yes
