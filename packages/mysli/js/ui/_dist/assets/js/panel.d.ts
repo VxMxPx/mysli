@@ -8,6 +8,9 @@ declare module mysli.js.ui {
         static SIZE_NORMAL: number;
         static SIZE_BIG: number;
         static SIZE_HUGE: number;
+        private static valid_sides;
+        static SIDE_FRONT: string;
+        static SIDE_BACK: string;
         private closing;
         private old_zindex;
         private old_width;
@@ -18,6 +21,10 @@ declare module mysli.js.ui {
          * Animate all the changes made to the element.
          */
         animate(callback?: () => any): void;
+        /**
+         * Get/set panel's visible side
+         */
+        side: string;
         /**
          * Get/set panel's width
          */

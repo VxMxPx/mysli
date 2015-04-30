@@ -28,6 +28,7 @@
 .ui-box.ui-titlebar .ui-button.style-flat:active {
   padding-top: 2px;
 }
-.ui-box.ui-titlebar h1 {
+.ui-box.ui-titlebar h1,
+.ui-box.ui-titlebar h2 {
   font-size: 20px;
 }

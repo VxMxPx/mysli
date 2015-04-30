@@ -2,7 +2,7 @@
 /// <reference path="_inc.common.d.ts" />
 declare module mysli.js.ui {
     class HTML extends Widget {
-        constructor(options?: any);
+        constructor(text?: any, options?: any);
         /**
          * Push new HTML to the container.
          * @param html

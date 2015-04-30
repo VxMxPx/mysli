@@ -59,7 +59,7 @@ var mysli;
                                 break;
                             case Label.TITLE:
                                 this.input = null;
-                                element = $('<h2 />');
+                                element = $('<h1 />');
                                 break;
                             case Label.INPUT:
                                 element = $('<label />');

@@ -1,9 +1,9 @@
-mwu_dev_module.add('mk_buttons', function() {
+mjud.add('button', function() {
 
     'use strict';
 
     var ui = mysli.js.ui;
-    var panel = new ui.Panel({uid: 'mysli-cms-dash-buttons', width: ui.Panel.SIZE_BIG});
+    var panel = new ui.Panel({uid: 'mjud-buttons', width: ui.Panel.SIZE_BIG});
     var titlebar = new ui.Titlebar({style: 'default'});
 
     // Titlebar
@@ -13,7 +13,7 @@ mwu_dev_module.add('mk_buttons', function() {
         panel.close();
     });
 
-    titlebar.push(new ui.Label({text: "Buttons Examples"}), {expanded: true});
+    titlebar.push(new ui.Label({text: "Buttons Examples", type: ui.Label.TITLE}), {expanded: true});
 
     // Tabs
     //notebook.connect('action', function (id, self) {
@@ -57,15 +57,15 @@ mwu_dev_module.add('mk_buttons', function() {
     b_confirm.push(new ui.Button({label: 'Disabled', disabled: true, style: 'confirm'}));
     b_confirm.push(new ui.Button({label: 'Flat Disabled', flat: true, disabled: true, style: 'confirm'}));
 
-    container.push(new ui.Label({text: "Default Buttons:"}), {padding: [false, false, 5, false]});
+    container.push(new ui.Label({text: "Default:"}), {padding: [false, false, 5, false]});
     container.push(b_default);
-    container.push(new ui.Label({text: "Alt Buttons:"}), {padding: [true, false, 5, false]});
+    container.push(new ui.Label({text: "Alt:"}), {padding: [true, false, 5, false]});
     container.push(b_alt);
-    container.push(new ui.Label({text: "Primary Buttons:"}), {padding: [true, false, 5, false]});
+    container.push(new ui.Label({text: "Primary:"}), {padding: [true, false, 5, false]});
     container.push(b_primary);
-    container.push(new ui.Label({text: "Attention Buttons:"}), {padding: [true, false, 5, false]});
+    container.push(new ui.Label({text: "Attention:"}), {padding: [true, false, 5, false]});
     container.push(b_attention);
-    container.push(new ui.Label({text: "Confirm Buttons:"}), {padding: [true, false, 5, false]});
+    container.push(new ui.Label({text: "Confirm:"}), {padding: [true, false, 5, false]});
     container.push(b_confirm);
 
     // Source

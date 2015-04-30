@@ -144,9 +144,10 @@ var mysli;
                 PanelContainer.prototype.insert = function (panel, after_id) {
                     var _this = this;
                     var index;
-                    var size;
+                    var size = 0;
                     if (typeof after_id === 'string') {
                         size = this.get(after_id).width;
+                        size = typeof size === 'number' ? size : 0;
                         this.collection.each_before(after_id, function (index, ipanel) {
                             ipanel.element.css('z-index', 10000 - index);
                             size += ipanel.width;

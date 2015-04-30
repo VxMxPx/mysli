@@ -28,6 +28,7 @@ var mysli;
                     this.old_zindex = 0;
                     this.old_width = 0;
                     this.element.addClass('ui-panel');
+                    this.element.append('<div class="ui-panel-sides" />');
                     // Add supported events
                     this.events = js.common.mix({
                         // When panel `close` method is called, just before panel's
@@ -87,7 +88,9 @@ var mysli;
                         // Weather panel is in focus
                         focus: false,
                         // Weather panel can be flipped (back side exists!)
-                        flippable: false
+                        flippable: false,
+                        // Which side is visible
+                        side: Panel.SIDE_FRONT
                     });
                     this.prop.push(options);
                     this.element.width(this.prop.width);
@@ -99,10 +102,15 @@ var mysli;
                     });
                     // Add Sides
                     this.front = new ui.PanelSide();
-                    this.element.append(this.front.element);
+                    this.element.find('.ui-panel-sides').append(this.front.element);
                     if (this.prop.flippable) {
+                        // Add multi-panel class
+                        this.element.addClass('multi');
+                        // Add actual panel
                         this.back = new ui.PanelSide({ style: 'alt' });
-                        this.element.append(this.back.element);
+                        this.element.find('.ui-panel-sides').append(this.back.element);
+                        // Set desired side
+                        this.side = this.prop.side;
                     }
                 }
                 Object.defineProperty(Panel, "SIZE_TINY", {
@@ -131,6 +139,16 @@ var mysli;
                     enumerable: true,
                     configurable: true
                 });
+                Object.defineProperty(Panel, "SIDE_FRONT", {
+                    get: function () { return 'front'; },
+                    enumerable: true,
+                    configurable: true
+                });
+                Object.defineProperty(Panel, "SIDE_BACK", {
+                    get: function () { return 'back'; },
+                    enumerable: true,
+                    configurable: true
+                });
                 /**
                  * Animate all the changes made to the element.
                  */
@@ -148,6 +166,27 @@ var mysli;
                         }
                     });
                 };
+                Object.defineProperty(Panel.prototype, "side", {
+                    /**
+                     * Get/set panel's visible side
+                     */
+                    get: function () {
+                        return this.prop.side;
+                    },
+                    set: function (value) {
+                        if (Panel.valid_sides.indexOf(value) === -1) {
+                            throw new Error("Trying to set invalid side: " + value);
+                        }
+                        if (!this.prop.flippable) {
+                            throw new Error("Trying to flip a panel which is not flippable.");
+                        }
+                        // Right now this is hard coded, there are only two sides.
+                        // It's possible that in future more sides will be added?
+                        this.element[value === Panel.SIDE_BACK ? 'addClass' : 'removeClass']('flipped');
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
                 Object.defineProperty(Panel.prototype, "width", {
                     /**
                      * Get/set panel's width
@@ -401,6 +440,7 @@ var mysli;
                         }
                     });
                 };
+                Panel.valid_sides = ['front', 'back'];
                 return Panel;
             })(ui.Widget);
             ui.Panel = Panel;
