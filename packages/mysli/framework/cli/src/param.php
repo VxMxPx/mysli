@@ -39,6 +39,7 @@ class param
         'help'       => null,  // help text
         'required'   => null,  // weather field is required
         'positional' => false, // weather this is positional parameter
+                               // this will be automatically set by id
         'allow_empty'=> false, // weather empty values are accepted.
                                // if no default, then this would mean:
                                // string: '', bool: false, int: 0,
@@ -751,7 +752,9 @@ class param
         {
             if ($type === 'positional' && $optv['positional'])
             {
-                return $optv;
+                if (!isset($this->values[$id])) {
+                    return $optv;
+                }
             }
             elseif ($optv[$type] === $argument)
             {
