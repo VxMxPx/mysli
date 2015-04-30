@@ -3,9 +3,16 @@
 module mysli.js.ui {
     export class HTML extends Widget {
 
-        constructor(options: any = {}) {
+        constructor(text: any = {}, options: any = {}) {
+            if (text !== null && typeof text === 'object') {
+                options = text;
+            }
             super(options);
             this.element.addClass('ui-html');
+
+            if (typeof text === 'string') {
+                this.push(text);
+            }
         }
 
         /**
@@ -13,7 +20,13 @@ module mysli.js.ui {
          * @param html
          */
         push(html: string): JQuery {
-            var element: JQuery = $(html);
+            var element: JQuery;
+
+            // Wrap HTML in a div
+            html = `<div class="ui-html-element">${html}</div>`;
+
+            element = $(html);
+
             this.element.append(element);
             return element;
         }
