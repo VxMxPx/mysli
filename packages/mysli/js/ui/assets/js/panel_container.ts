@@ -148,10 +148,12 @@ module mysli.js.ui {
          */
         insert(panel: Panel, after_id: string): Panel {
             let index: number;
-            var size: number;
+            var size: number = 0;
 
             if (typeof after_id === 'string') {
                 size = this.get(after_id).width;
+                size = typeof size === 'number' ? size : 0;
+
                 this.collection.each_before(after_id, function (index: number, ipanel: Panel) {
                     ipanel.element.css('z-index', 10000 - index);
                     size += ipanel.width;
