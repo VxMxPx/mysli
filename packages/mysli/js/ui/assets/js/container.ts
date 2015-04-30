@@ -103,9 +103,27 @@ module mysli.js.ui {
          /**
          * Get elements from the collection. If `cell` is provided, get cell itself.
          * @param uid  either string (uid) or number (index)
+         * You can chain IDs to get to the last, by using: id1 > id2 > id3
+         * All elements in chain must be of type Container for this to work.
          * @param cell weather to get cell itself rather than containing element.
          */
         get(uid: string|number, cell: boolean): Cell|Widget {
+            // Used in chain
+            var index_at: number;
+            
+            // Deal with a chained uid
+            // Get uid of first segment in a chain, example: uid > uid2 > uid3  
+            if (typeof uid === 'string' && (index_at = uid.indexOf('>')) > -1) {
+                var uidq: string = uid.substr(0, index_at).trim(); 
+                var ccontainer: any = this.collection.get(uidq)[0];
+                
+                if (ccontainer instanceof Container) {
+                    return ccontainer.get(uid.substr(index_at+1).trim(), cell);
+                } else {
+                    throw new Error(`Failed to acquire an element. Container needed: ${uidq}`);
+                }
+            }
+            
             if (cell) {
                 return this.collection.get(uid)[1];
             } else {
