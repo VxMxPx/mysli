@@ -18,21 +18,23 @@ function __init(array $args)
 {
     $params = new cparam('Mysli Config', $args);
     $params->command = 'config';
-    $params->add('--list/-l', [
-        'type' => 'bool',
-        'help' => 'List all packages with configuration values or all '.
-                  'configuration options for particular package.'
-    ]);
-    $params->add('--package/-p', [
+
+    $params->add('PACKAGE', [
         'type' => 'str',
-        'help' => 'Get all values, for package when in combination '.
-                  'with --list; set package when --set.'
+        'required' => false,
+        'help' => 'Package which will be affected. '.
+                  'If no KEY then list all values.'
     ]);
-    $params->add('--set/-s', [
-        'type'  => 'arr',
-        'min'   => 2,
-        'max'   => 2,
-        'help'  => 'Key value to be set. For example: -s key value'
+    $params->add('KEY', [
+        'type' => 'str',
+        'required' => false,
+        'help' => 'Configuration key which to get/set. ',
+                  'If no VALUE, then show current value.'
+    ]);
+    $params->add('VALUE', [
+        'type' => 'str',
+        'required' => false,
+        'help' => 'Configuration value which will be set.'
     ]);
     $params->add('--string', [
         'type' => 'bool',
@@ -49,23 +51,45 @@ function __init(array $args)
 
     $values = $params->values();
 
-    if ($values['list'])
+    if (!$values['package'])
     {
-        get_list($values['package']);
-    }
-    elseif (is_array($values['set']))
-    {
-        set_value(
-            $values['package'],
-            $values['set'][0],
-            $values['set'][1],
-            $values['string']
-        );
+        get_list(false);
     }
     else
     {
-        cout::line($params->help());
+        if (!$values['key'])
+        {
+            get_list($values['package']);
+        }
+        else
+        {
+            if (!$values['value'])
+            {
+                get_value($values['package'], $values['key']);
+            }
+            else
+            {
+                set_value(
+                    $values['package'],
+                    $values['key'],
+                    $values['value'],
+                    $values['string']
+                );
+            }
+        }
     }
+}
+/**
+ * Get value for package
+ * @param string $package
+ * @param string $key
+ */
+function get_value($package, $key)
+{
+    $values = config::select($package, $key);
+    $values = [$key => $values];
+    cout::nl();
+    cout::line(arr::readable($values, 2, 2, ' : ', "\n", true));
 }
 /**
  * Set value for package
@@ -152,7 +176,7 @@ function get_list($package)
 
         cout::nl();
         cout::line(
-            'Use `./dot config -l -p vendor/package` to see all options '.
+            'Use `./dot config vendor.package` to see all options '.
             'for particular package.'
         );
     }
