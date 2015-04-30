@@ -77,6 +77,7 @@ var mysli;
                     configurable: true
                 });
                 Button.template = '<button class="ui-widget ui-button"></button>';
+                Button.allowed_styles = ['default', 'alt', 'primary', 'confirm', 'attention'];
                 return Button;
             })(ui.Widget);
             ui.Button = Button;

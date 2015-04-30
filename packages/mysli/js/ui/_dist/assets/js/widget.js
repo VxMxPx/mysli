@@ -29,20 +29,10 @@ var mysli;
                         uid: null
                     }, this);
                     // Check for uid
-                    if (typeof options.uid === 'undefined') {
-                        options.uid = Widget.next_uid();
-                    }
-                    else {
-                        if (Widget.uid_list.indexOf(options.uid) > -1) {
-                            throw new Error('Model with such ID is already added: ' + options.uid);
-                        }
-                        else {
-                            Widget.uid_list.push(options.uid);
-                        }
-                    }
+                    options.uid = Widget.next_uid();
                     // Create element
                     this.$element = $(this['constructor']['template']);
-                    this.$element.prop('id', options.uid);
+                    //            this.$element.prop('id', options.uid);
                     // Push options finally!
                     this.prop.push(options, ['style!', 'flat!', 'disabled']);
                 }
@@ -123,7 +113,6 @@ var mysli;
                 Widget.prototype.destroy = function () {
                     this.trigger('destroyed');
                     this.$element.remove();
-                    Widget.uid_list.splice(Widget.uid_list.indexOf(this.uid), 1);
                     this.prop.uid = -1;
                 };
                 // Events
@@ -156,7 +145,7 @@ var mysli;
                         // Prevent registering event more than once
                         if (this.events_count_native[event] === 1) {
                             this.element.on(event.replace('-', ''), function (e) {
-                                _this.trigger(event, e);
+                                _this.trigger(event, [e]);
                             });
                         }
                     }
@@ -173,7 +162,7 @@ var mysli;
                         throw new Error("Invalid event: " + event);
                     }
                     if (typeof params.push !== 'function') {
-                        params = [params];
+                        throw new Error('Params must be an array!');
                     }
                     params.push(this);
                     for (var id in this.events[event]) {
@@ -288,7 +277,6 @@ var mysli;
                 ];
                 // Widget's Unique ID
                 Widget.uid_count = 0;
-                Widget.uid_list = [];
                 // Element's template & element
                 Widget.template = '<div class="ui-widget" />';
                 // Properties

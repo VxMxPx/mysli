@@ -3,8 +3,13 @@
 declare module mysli.js.ui {
     class Button extends Widget {
         protected static template: string;
+        protected static allowed_styles: string[];
         constructor(options?: any);
         label: string;
-        icon: any;
+        icon: string | {
+            name?: string;
+            position?: string;
+            spin?: boolean;
+        };
     }
 }

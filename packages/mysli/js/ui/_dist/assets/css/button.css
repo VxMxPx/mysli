@@ -15,6 +15,9 @@
 .ui-button:disabled:active {
   padding: 8px 10px;
 }
+.ui-button:focus {
+  outline: none;
+}
 .ui-button::-moz-focus-inner {
   border: 0;
 }

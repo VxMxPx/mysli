@@ -13,6 +13,9 @@ use mysli\js\jquery\tplp\util as jquery;
             overflow: hidden;
             background-color: #ebebe1;
         }
+        #mjud-navigation .ui-panel-side {
+            background-color: #3a2b2b;
+        }
     </style>
 </head>
 <body id="mysli-js-ui-developer" class="mysli-ui">

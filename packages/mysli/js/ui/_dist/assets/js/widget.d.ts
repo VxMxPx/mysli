@@ -9,7 +9,6 @@ declare module mysli.js.ui {
             destroyed: {};
         };
         private static uid_count;
-        private static uid_list;
         protected static template: string;
         protected $element: JQuery;
         protected static allowed_styles: string[];

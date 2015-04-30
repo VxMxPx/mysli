@@ -24,6 +24,8 @@ declare module mysli.js.ui {
         /**
         * Get elements from the collection. If `cell` is provided, get cell itself.
         * @param uid  either string (uid) or number (index)
+        * You can chain IDs to get to the last, by using: id1 > id2 > id3
+        * All elements in chain must be of type Container for this to work.
         * @param cell weather to get cell itself rather than containing element.
         */
         get(uid: string | number, cell: boolean): Cell | Widget;
