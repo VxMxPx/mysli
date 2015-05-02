@@ -13,14 +13,14 @@ declare module mysli.js.ui {
          * @param widget
          * @param options
          */
-        push(widget: Widget, options?: any): Widget;
+        push(widgets: Widget | Widget[], options?: any): Widget | Widget[];
         /**
          * Insert widget to the container.
          * @param widget
          * @param at
          * @param options
          */
-        insert(widget: Widget, at: number, options?: any): Widget;
+        insert(widgets: Widget | Widget[], at: number, options?: any): Widget | Widget[];
         /**
         * Get elements from the collection. If `cell` is provided, get cell itself.
         * @param uid  either string (uid) or number (index)
@@ -29,6 +29,11 @@ declare module mysli.js.ui {
         * @param cell weather to get cell itself rather than containing element.
         */
         get(uid: string | number, cell: boolean): Cell | Widget;
+        /**
+         * Get an element, andthen remove it from the collction and DOM.
+         * @param uid
+         */
+        pull(uid: string | number): Widget;
         /**
          * Remove particular cell (and the containing element)
          * @param uid

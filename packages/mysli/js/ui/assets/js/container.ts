@@ -27,8 +27,8 @@ module mysli.js.ui {
          * @param widget
          * @param options
          */
-        push(widget: Widget, options: any = null): Widget {
-            return this.insert(widget, -1, options);
+        push(widgets: Widget|Widget[], options: any = null): Widget|Widget[] {
+            return this.insert(widgets, -1, options);
         }
 
         /**
@@ -37,14 +37,24 @@ module mysli.js.ui {
          * @param at
          * @param options
          */
-        insert(widget: Widget, at: number, options: any = null): Widget {
+        insert(widgets: Widget|Widget[], at: number, options?: any): Widget|Widget[] {
             var at_index: number;
             var class_id: string;
             var pushable: JQuery;
+            var widget: Widget;
             var cell: Cell = null;
 
-            if (!(widget instanceof Widget)) {
-                throw new Error('Instance of widget is required!');
+            if (!(widgets instanceof Widget)) {
+                if (widgets.constructor === Array) {
+                    for (var i = 0; i < (<Widget[]> widgets).length; i++) {
+                        this.insert(widgets[i], at, options);
+                    }
+                    return widgets;
+                } else {
+                    throw new Error('Instance of widget|widgets[] is required!');
+                }
+            } else {
+                widget = widgets;
             }
 
             // UID only, no options
@@ -59,6 +69,10 @@ module mysli.js.ui {
             } else {
                 throw new Error('Invalid options provided. Null, string or {} allowed.');
             }
+            
+            if (this.collection.has(options.uid)) {
+                throw new Error(`Element with such ID already exists: ${options.id}`);
+            }           
 
             // Create classes
             class_id = 'coll-euid-'+widget.uid+' coll-uid-'+options.uid;
@@ -129,6 +143,16 @@ module mysli.js.ui {
             } else {
                 return this.collection.get(uid)[0];
             }
+        }
+
+        /**
+         * Get an element, andthen remove it from the collction and DOM.
+         * @param uid
+         */
+        pull(uid: string|number): Widget {
+            var element: Widget = <Widget> this.get(uid, false);
+            this.remove(uid);
+            return element;
         }
 
         /**

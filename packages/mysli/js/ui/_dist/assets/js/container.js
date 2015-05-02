@@ -31,9 +31,9 @@ var mysli;
                  * @param widget
                  * @param options
                  */
-                Container.prototype.push = function (widget, options) {
+                Container.prototype.push = function (widgets, options) {
                     if (options === void 0) { options = null; }
-                    return this.insert(widget, -1, options);
+                    return this.insert(widgets, -1, options);
                 };
                 /**
                  * Insert widget to the container.
@@ -41,14 +41,25 @@ var mysli;
                  * @param at
                  * @param options
                  */
-                Container.prototype.insert = function (widget, at, options) {
-                    if (options === void 0) { options = null; }
+                Container.prototype.insert = function (widgets, at, options) {
                     var at_index;
                     var class_id;
                     var pushable;
+                    var widget;
                     var cell = null;
-                    if (!(widget instanceof ui.Widget)) {
-                        throw new Error('Instance of widget is required!');
+                    if (!(widgets instanceof ui.Widget)) {
+                        if (widgets.constructor === Array) {
+                            for (var i = 0; i < widgets.length; i++) {
+                                this.insert(widgets[i], at, options);
+                            }
+                            return widgets;
+                        }
+                        else {
+                            throw new Error('Instance of widget|widgets[] is required!');
+                        }
+                    }
+                    else {
+                        widget = widgets;
                     }
                     // UID only, no options
                     if (!options) {
@@ -64,6 +75,9 @@ var mysli;
                     }
                     else {
                         throw new Error('Invalid options provided. Null, string or {} allowed.');
+                    }
+                    if (this.collection.has(options.uid)) {
+                        throw new Error("Element with such ID already exists: " + options.id);
                     }
                     // Create classes
                     class_id = 'coll-euid-' + widget.uid + ' coll-uid-' + options.uid;
@@ -132,6 +146,15 @@ var mysli;
                     else {
                         return this.collection.get(uid)[0];
                     }
+                };
+                /**
+                 * Get an element, andthen remove it from the collction and DOM.
+                 * @param uid
+                 */
+                Container.prototype.pull = function (uid) {
+                    var element = this.get(uid, false);
+                    this.remove(uid);
+                    return element;
                 };
                 /**
                  * Remove particular cell (and the containing element)
