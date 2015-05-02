@@ -18,15 +18,53 @@ var mysli;
                     if (options === void 0) { options = {}; }
                     _super.call(this, options);
                     this.prop.def({
+                        // Buttons label (if any)
                         label: null,
+                        // Weather button can be toggled
+                        toggle: false,
+                        // Weather button is pressed right now
+                        pressed: false,
+                        // Button's icon
                         icon: {
                             name: null,
                             position: 'left',
                             spin: false
                         }
                     });
-                    this.prop.push(options, ['icon!', 'label!']);
+                    this.prop.push(options, ['icon!', 'label!', 'toggle', 'pressed']);
                 }
+                Object.defineProperty(Button.prototype, "toggle", {
+                    // Get/set toggle state
+                    get: function () {
+                        return this.prop.toggle;
+                    },
+                    set: function (value) {
+                        var _this = this;
+                        this.prop.toggle = value;
+                        if (value) {
+                            this.connect('click*self-toggle', function () {
+                                _this.pressed = !_this.pressed;
+                            });
+                        }
+                        else {
+                            this.disconnect('click*self-toggle');
+                        }
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
+                Object.defineProperty(Button.prototype, "pressed", {
+                    // Get/set pressed state
+                    get: function () {
+                        return this.prop.pressed;
+                    },
+                    set: function (value) {
+                        this.prop.pressed = value;
+                        this.element[value ? 'addClass' : 'removeClass']('pressed');
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
                 Object.defineProperty(Button.prototype, "label", {
                     // Get/set button's label
                     get: function () {
