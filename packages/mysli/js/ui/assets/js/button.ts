@@ -11,14 +11,45 @@ module mysli.js.ui {
             super(options);
 
             this.prop.def({
+                // Buttons label (if any)
                 label: null,
+                // Weather button can be toggled
+                toggle: false,
+                // Weather button is pressed right now
+                pressed: false,
+                // Button's icon
                 icon: {
                     name: null,
                     position: 'left',
                     spin: false
                 }
             });
-            this.prop.push(options, ['icon!', 'label!']);
+            this.prop.push(options, ['icon!', 'label!', 'toggle', 'pressed']);
+        }
+
+        // Get/set toggle state
+        get toggle() : boolean {
+            return this.prop.toggle; 
+        }
+        set toggle(value: boolean) {
+            this.prop.toggle = value;
+            
+            if (value) {
+                this.connect('click*self-toggle', () => {
+                    this.pressed = !this.pressed;
+                });
+            } else {
+                this.disconnect('click*self-toggle');
+            }
+        }
+        
+        // Get/set pressed state
+        get pressed(): boolean {
+            return this.prop.pressed;
+        }
+        set pressed(value: boolean) {
+            this.prop.pressed = value;
+            this.element[value ? 'addClass' : 'removeClass']('pressed');
         }
 
         // Get/set button's label

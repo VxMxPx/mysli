@@ -5,6 +5,8 @@ declare module mysli.js.ui {
         protected static template: string;
         protected static allowed_styles: string[];
         constructor(options?: any);
+        toggle: boolean;
+        pressed: boolean;
         label: string;
         icon: string | {
             name?: string;
