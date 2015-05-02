@@ -8,7 +8,6 @@ authors:
 
 require:
     mysli.framework.fs:        1
-    mysli.framework.pkgm:      1
     mysli.framework.exception: 1
     mysli.util.config:         1
     mysli.web.assets:          1

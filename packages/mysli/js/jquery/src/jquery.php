@@ -4,7 +4,6 @@ namespace mysli\js\jquery;
 
 __use(__namespace__, '
     mysli.framework.fs/fs,file
-    mysli.framework.pkgm
     mysli.framework.exception/* -> framework\exception\*
     mysli.util.curl
     mysli.util.config
@@ -108,7 +107,7 @@ class jquery
     private static function fetch_library(
         $version, $dev, $destination, $remote_url)
     {
-        if (!pkgm::is_enabled('mysli.util.curl'))
+        if (!\core\pkg::is_enabled('mysli.util.curl'))
         {
             throw new framework\exception\not_found(
                 'You need to enable `mysli/framework/curl` '.
