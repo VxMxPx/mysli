@@ -497,6 +497,12 @@ class pkgm
         // Remove self from list of packages on which this package depends.
         foreach ($meta['require'] as $dependency => $version)
         {
+            if (substr($dependency, 0, 14) === 'php.extension.')
+            {
+                // No need to check when dealing with extensions
+                continue;
+            }
+            
             $rmeta = self::meta($dependency);
 
             if (!$rmeta || empty($rmeta['required_by']))
