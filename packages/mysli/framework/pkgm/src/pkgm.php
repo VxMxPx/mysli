@@ -420,6 +420,12 @@ class pkgm
         // Go through required package, and add itself to the required list
         foreach ($meta['require'] as $dependency => $need_version)
         {
+            if (substr($dependency, 0, 14) === 'php.extension.') 
+            {
+                // Nothing to do with extentions!
+                continue;
+            }
+            
             $dmeta = self::meta($dependency);
 
             if (!$dmeta)
