@@ -29,7 +29,12 @@ var mysli;
                         uid: null
                     }, this);
                     // Check for uid
-                    options.uid = Widget.next_uid();
+                    if (typeof options.uid === 'undefined') {
+                        options.uid = Widget.next_uid();
+                    }
+                    else if (typeof options.uid !== 'string') {
+                        throw new Error("UID needs to be a valid string, got: " + uid);
+                    }
                     // Create element
                     this.$element = $(this['constructor']['template']);
                     //            this.$element.prop('id', options.uid);
