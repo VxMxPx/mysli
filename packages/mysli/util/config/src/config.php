@@ -92,6 +92,17 @@ class config
         return arr_path::set($this->data, $path, $value);
     }
     /**
+     * This will insert new values into the config. 
+     * No keys will be perserved. 
+     * @param array $config
+     * @return null
+     */
+    function reset(array $config) 
+    {
+        $this->cache = [];
+        $this->data = $config;
+    }
+    /**
      * Append config to the file.
      * @param  array  $config
      * @return null
