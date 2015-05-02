@@ -10,7 +10,7 @@ __use(__namespace__, '
 function enable()
 {
     $c = config::select('mysli.util.curl');
-    $c->merge([
+    $c->reset([
         // Weather to acquire an agent from user...
         'user_agent' => true,
         // If user's agent's not set, or set to false, what to use as a fallback
