@@ -1,19 +1,21 @@
 @import "variables"
 
 .ui-button
-    // font-size: 12px
-    // font-weight: bold
     text-transform: uppercase
     border: 2px solid #fff
+    border-bottom: 4px solid #fff
     border-radius: 3px
     padding: 8px 10px
     display: block
-    //text-shadow: 1px 1px 1px rgba(0, 0, 0, .2)
-    &:active
-        padding: 10px 10px 6px 10px
+    // position: relative
+    &:active, &.pressed
+        border-bottom-width: 2px
+        border-top-width: 4px
     &:disabled
+        border-bottom-width: 4px
+        border-top-width: 2px
         text-shadow: none
-        opacity: .3
+        opacity: .7
         &:active
             padding: 8px 10px
     &:focus
@@ -23,7 +25,8 @@
     span.label + i.fa,
     i.fa + span.label
         margin-left: 6px
-    // Styles -----------------------------
+
+    // Color Variations, etc...
     &.style-default.style-flat,
     &.style-alt.style-flat,
     &.style-primary.style-flat,
@@ -32,6 +35,7 @@
         text-shadow: none
         background: transparent
         border-color: transparent
+        &.pressed,
         &:focus,
         &:hover,
         &:active,
@@ -49,7 +53,7 @@
             border-color: #dedede
         &:focus
             border-color: #00a07b
-        &:active
+        &:active, &.pressed
             background: #e8e8e8
             border-color: #c0c0c0
         &:disabled
@@ -67,7 +71,7 @@
             border-color: #544c4c
         &:focus
             border-color: #00a07b
-        &:active
+        &:active, &.pressed
             background: #544c4c
             border-color: #4a4242
         &:disabled
@@ -85,7 +89,7 @@
             border-color: #018cf7
         &:focus
             border-color: #0168b3
-        &:active
+        &:active, &.pressed
             background: #018cf7
             border-color: #017edb
         &:disabled
@@ -103,7 +107,7 @@
             border-color: #289010
         &:focus
             border-color: #1e6e0a
-        &:active
+        &:active, &.pressed
             background: #289010
             border-color: #278010
         &:disabled
@@ -121,7 +125,7 @@
             border-color: #8d3b13
         &:focus
             border-color: #793113
-        &:active
+        &:active, &.pressed
             background: #8d3b13
             border-color: #7d3313
         &:disabled
