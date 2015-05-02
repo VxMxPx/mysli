@@ -3,7 +3,6 @@
 /// <reference path="_inc.common.d.ts" />
 declare module mysli.js.ui {
     class Box extends Container {
-        protected Cell_constructor: any;
         protected element_wrapper: string;
         private element_wrapper_original;
         static HORIZONTAL: number;
@@ -12,6 +11,6 @@ declare module mysli.js.ui {
         /**
          * Override insert, to support horizontal/vertical layout.
          */
-        insert(...args: any[]): Widget;
+        insert(...args: any[]): Widget | Widget[];
     }
 }

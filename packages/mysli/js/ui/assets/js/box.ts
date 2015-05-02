@@ -4,8 +4,6 @@
 module mysli.js.ui {
     export class Box extends Container {
 
-        protected Cell_constructor: any = BoxCell;
-
         protected element_wrapper: string;
         private element_wrapper_original: string;
 
@@ -13,7 +11,9 @@ module mysli.js.ui {
         public static get VERTICAL(): number { return 2; }
 
         constructor(options: any = {}) {
+            
             super(options);
+            this.Cell_constructor = BoxCell;
 
             this.prop.def({
                orientation: Box.HORIZONTAL
@@ -33,7 +33,7 @@ module mysli.js.ui {
         /**
          * Override insert, to support horizontal/vertical layout.
          */
-        insert(...args): Widget {
+        insert(...args): Widget|Widget[] {
             if (this.prop.orientation === Box.HORIZONTAL) {
                 this.element_wrapper = '<div class="ui-row"><div class="ui-cell container-target" /></div>';
             } else {

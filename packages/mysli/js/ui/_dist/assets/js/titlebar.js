@@ -19,13 +19,18 @@ var mysli;
                     _super.call(this, options);
                     this.element.addClass('ui-titlebar');
                 }
-                Titlebar.prototype.insert = function () {
-                    var options = [];
-                    for (var _i = 0; _i < arguments.length; _i++) {
-                        options[_i - 0] = arguments[_i];
+                Titlebar.prototype.insert = function (widgets, at, options) {
+                    if (widgets.constructor === Array) {
+                        for (var i = 0; i < widgets.length; i++) {
+                            widgets[i].flat = true;
+                            _super.prototype.insert.call(this, widgets[i], at, options);
+                        }
+                        return widgets;
                     }
-                    options[0].flat = true;
-                    return _super.prototype.insert.apply(this, options);
+                    else {
+                        widgets.flat = true;
+                        return _super.prototype.insert.call(this, widgets, at, options);
+                    }
                 };
                 return Titlebar;
             })(ui.Box);

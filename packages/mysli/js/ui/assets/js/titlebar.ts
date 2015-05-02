@@ -8,9 +8,17 @@ module mysli.js.ui {
             this.element.addClass('ui-titlebar');
         }
 
-        insert(...options): Widget {
-            options[0].flat = true;
-            return super.insert.apply(this, options);
+        insert(widgets: Widget|Widget[], at: number, options?: any): Widget|Widget[] {
+            if (widgets.constructor === Array) {
+                for (var i = 0; i < (<Widget[]> widgets).length; i++) {
+                    widgets[i].flat = true;
+                    super.insert(widgets[i], at, options);
+                }
+                return widgets;
+            } else {
+                (<Widget> widgets).flat = true;
+                return super.insert(widgets, at, options);
+            }
         }
     }
 }
