@@ -71,6 +71,18 @@ var mysli;
                     }
                 };
                 /**
+                 * Check if element with such ID exists.
+                 * @param id
+                 */
+                Arr.prototype.has = function (id) {
+                    if (typeof id === 'number') {
+                        return typeof this.ids[id] === 'string';
+                    }
+                    else {
+                        return typeof this.stack[id] !== 'undefined';
+                    }
+                };
+                /**
                  * Get element by id or index.
                  */
                 Arr.prototype.get = function (id) {

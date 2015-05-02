@@ -69,6 +69,18 @@ module mysli.js.common {
         }
 
         /**
+         * Check if element with such ID exists.
+         * @param id
+         */
+        has(id: string|number): boolean {
+            if (typeof id === 'number') {
+                return typeof this.ids[id] === 'string';
+            } else {
+                return typeof this.stack[id] !== 'undefined';
+            }
+        }
+
+        /**
          * Get element by id or index.
          */
         get(id: string|number): any {

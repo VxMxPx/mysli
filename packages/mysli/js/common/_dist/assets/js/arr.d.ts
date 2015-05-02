@@ -25,6 +25,11 @@ declare module mysli.js.common {
          */
         get_index_from(id: string, step: number): number;
         /**
+         * Check if element with such ID exists.
+         * @param id
+         */
+        has(id: string | number): boolean;
+        /**
          * Get element by id or index.
          */
         get(id: string | number): any;
