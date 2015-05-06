@@ -160,11 +160,15 @@ var mysli;
                         left: this.position + this.offset,
                         width: this.width + this.expand,
                         opacity: 1
-                    }, 400, 'swing', function () {
-                        if (callback) {
-                            callback.call(this);
+                    }, {
+                        duration: 400,
+                        queue: false,
+                        always: function () {
+                            if (callback) {
+                                callback.call(this);
+                            }
                         }
-                    });
+                    }).css({ overflow: 'visible' });
                 };
                 Object.defineProperty(Panel.prototype, "side", {
                     /**
@@ -430,12 +434,12 @@ var mysli;
                     }
                     this.insensitive = true;
                     this.prop.closing = true;
+                    this.trigger('close');
                     this.element.stop(true, false).animate({
                         left: (this.position + this.offset) - (this.width + this.expand) - 10,
                         opacity: 0
                     }, {
                         done: function () {
-                            _this.trigger('close');
                             _this.destroy();
                         }
                     });
