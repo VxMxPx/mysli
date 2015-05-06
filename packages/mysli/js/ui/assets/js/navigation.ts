@@ -5,7 +5,6 @@
 module mysli.js.ui {
     export class Navigation extends Widget {
 
-        protected collection: common.Arr = new common.Arr();
         protected container: Box;
 
         constructor(items: any, options: any = {}) {
@@ -17,8 +16,8 @@ module mysli.js.ui {
             this.element.addClass('ui-navigation');
 
             this.events = common.mix({
-                // Respond to a navigation element click!
-                // => ( id: string, event: any, navigation: Navigation )
+                // Respond to a navigation action (element click)!
+                // => ( id: string, event: any, widget: Navigation )
                 action: {}
             }, this.events);
 

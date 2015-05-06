@@ -19,13 +19,12 @@ var mysli;
                 function Navigation(items, options) {
                     if (options === void 0) { options = {}; }
                     _super.call(this, options);
-                    this.collection = new js.common.Arr();
                     this.container = new ui.Box(options);
                     this.$element = this.container.element;
                     this.element.addClass('ui-navigation');
                     this.events = js.common.mix({
-                        // Respond to a navigation element click!
-                        // => ( id: string, event: any, navigation: Navigation )
+                        // Respond to a navigation action (element click)!
+                        // => ( id: string, event: any, widget: Navigation )
                         action: {}
                     }, this.events);
                     for (var item in items) {

@@ -4,7 +4,6 @@
 /// <reference path="_inc.common.d.ts" />
 declare module mysli.js.ui {
     class Navigation extends Widget {
-        protected collection: common.Arr;
         protected container: Box;
         constructor(items: any, options?: any);
         private produce(title, id);
