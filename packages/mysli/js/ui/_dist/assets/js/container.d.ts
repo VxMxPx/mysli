@@ -28,12 +28,17 @@ declare module mysli.js.ui {
         * All elements in chain must be of type Container for this to work.
         * @param cell weather to get cell itself rather than containing element.
         */
-        get(uid: string | number, cell: boolean): Cell | Widget;
+        get(uid: string | number, cell?: boolean): Cell | Widget;
         /**
          * Get an element, andthen remove it from the collction and DOM.
          * @param uid
          */
         pull(uid: string | number): Widget;
+        /**
+         * Check if uid is in the collection.
+         * @param uid
+         */
+        has(uid: string | number): boolean;
         /**
          * Remove particular cell (and the containing element)
          * @param uid

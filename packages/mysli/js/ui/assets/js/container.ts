@@ -121,7 +121,7 @@ module mysli.js.ui {
          * All elements in chain must be of type Container for this to work.
          * @param cell weather to get cell itself rather than containing element.
          */
-        get(uid: string|number, cell: boolean): Cell|Widget {
+        get(uid: string|number, cell: boolean = false): Cell|Widget {
             // Used in chain
             var index_at: number;
             
@@ -153,6 +153,14 @@ module mysli.js.ui {
             var element: Widget = <Widget> this.get(uid, false);
             this.remove(uid);
             return element;
+        }
+        
+        /**
+         * Check if uid is in the collection.
+         * @param uid
+         */
+        has(uid: string|number): boolean {
+            return this.collection.has(uid);
         }
 
         /**

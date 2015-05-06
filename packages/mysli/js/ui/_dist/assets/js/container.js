@@ -126,6 +126,7 @@ var mysli;
                 * @param cell weather to get cell itself rather than containing element.
                 */
                 Container.prototype.get = function (uid, cell) {
+                    if (cell === void 0) { cell = false; }
                     // Used in chain
                     var index_at;
                     // Deal with a chained uid
@@ -155,6 +156,13 @@ var mysli;
                     var element = this.get(uid, false);
                     this.remove(uid);
                     return element;
+                };
+                /**
+                 * Check if uid is in the collection.
+                 * @param uid
+                 */
+                Container.prototype.has = function (uid) {
+                    return this.collection.has(uid);
                 };
                 /**
                  * Remove particular cell (and the containing element)
