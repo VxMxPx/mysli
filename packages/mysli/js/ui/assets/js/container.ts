@@ -69,10 +69,10 @@ module mysli.js.ui {
             } else {
                 throw new Error('Invalid options provided. Null, string or {} allowed.');
             }
-            
+
             if (this.collection.has(options.uid)) {
                 throw new Error(`Element with such ID already exists: ${options.id}`);
-            }           
+            }
 
             // Create classes
             class_id = 'coll-euid-'+widget.uid+' coll-uid-'+options.uid;
@@ -124,20 +124,20 @@ module mysli.js.ui {
         get(uid: string|number, cell: boolean = false): Cell|Widget {
             // Used in chain
             var index_at: number;
-            
+
             // Deal with a chained uid
-            // Get uid of first segment in a chain, example: uid > uid2 > uid3  
+            // Get uid of first segment in a chain, example: uid > uid2 > uid3
             if (typeof uid === 'string' && (index_at = uid.indexOf('>')) > -1) {
-                var uidq: string = uid.substr(0, index_at).trim(); 
+                var uidq: string = uid.substr(0, index_at).trim();
                 var ccontainer: any = this.collection.get(uidq)[0];
-                
+
                 if (ccontainer instanceof Container) {
                     return ccontainer.get(uid.substr(index_at+1).trim(), cell);
                 } else {
                     throw new Error(`Failed to acquire an element. Container needed: ${uidq}`);
                 }
             }
-            
+
             if (cell) {
                 return this.collection.get(uid)[1];
             } else {
@@ -154,7 +154,7 @@ module mysli.js.ui {
             this.remove(uid);
             return element;
         }
-        
+
         /**
          * Check if uid is in the collection.
          * @param uid

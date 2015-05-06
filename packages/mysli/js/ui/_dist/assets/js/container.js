@@ -130,7 +130,7 @@ var mysli;
                     // Used in chain
                     var index_at;
                     // Deal with a chained uid
-                    // Get uid of first segment in a chain, example: uid > uid2 > uid3  
+                    // Get uid of first segment in a chain, example: uid > uid2 > uid3
                     if (typeof uid === 'string' && (index_at = uid.indexOf('>')) > -1) {
                         var uidq = uid.substr(0, index_at).trim();
                         var ccontainer = this.collection.get(uidq)[0];
