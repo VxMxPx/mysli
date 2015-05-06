@@ -11,7 +11,7 @@ module mysli.js.ui {
         public static get VERTICAL(): number { return 2; }
 
         constructor(options: any = {}) {
-            
+
             super(options);
             this.Cell_constructor = BoxCell;
 
