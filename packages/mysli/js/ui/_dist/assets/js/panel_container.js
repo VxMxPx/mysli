@@ -68,8 +68,12 @@ var mysli;
                         return;
                     }
                     active_panel = this.get(this.active_id);
+                    if (active_panel.width > this.container_width) {
+                        this.sum_size = this.sum_size + (this.container_width - active_panel.width);
+                        active_panel.width = this.container_width;
+                    }
                     overflow = this.container_width - this.sum_size;
-                    overflow_part = this.expandable_count > 0 ? Math.ceil(overflow / this.expandable_count) : 0;
+                    overflow_part = this.expandable_count > 0 ? Math.floor(overflow / this.expandable_count) : 0;
                     screen_left = this.container_width - active_panel.width;
                     overflow_percent = 100 - js.common.Num.get_percent(screen_left, this.sum_size - active_panel.width);
                     offset_so_far = 0;
