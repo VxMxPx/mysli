@@ -1,27 +1,28 @@
 .ui-button {
-  text-transform: uppercase;
-  border: 2px solid #fff;
-  border-bottom: 4px solid #fff;
+  font-size: 16px;
+  border: none;
   border-radius: 3px;
-  padding: 8px 10px;
+  padding: 10px 12px;
   display: block;
-}
-.ui-button:active,
-.ui-button.pressed {
-  border-bottom-width: 2px;
-  border-top-width: 4px;
+  box-shadow: inset 0 -1px 0 2px rgba(0,0,0,0.2);
 }
 .ui-button:disabled {
-  border-bottom-width: 4px;
-  border-top-width: 2px;
-  text-shadow: none;
+  box-shadow: none;
   opacity: 0.7;
 }
-.ui-button:disabled:active {
-  padding: 8px 10px;
+.ui-button:disabled:hover {
+  box-shadow: none;
+}
+.ui-button:hover {
+  box-shadow: inset 0 -1px 0 2px rgba(0,0,0,0.3);
 }
 .ui-button:focus {
   outline: none;
+  box-shadow: inset 0 -1px 0 2px rgba(0,0,0,0.5);
+}
+.ui-button:active,
+.ui-button.pressed {
+  box-shadow: inset 0 0 3px 1px rgba(0,0,0,0.7);
 }
 .ui-button::-moz-focus-inner {
   border: 0;
@@ -37,7 +38,7 @@
 .ui-button.style-attention.style-flat {
   text-shadow: none;
   background: transparent;
-  border-color: transparent;
+  box-shadow: none;
 }
 .ui-button.style-default.style-flat.pressed,
 .ui-button.style-alt.style-flat.pressed,
@@ -65,125 +66,97 @@
 .ui-button.style-confirm.style-flat:disabled,
 .ui-button.style-attention.style-flat:disabled {
   background: transparent;
-  border-color: transparent;
+  box-shadow: none;
 }
 .ui-button.style-default {
   background: #fff;
-  border-color: #dedede;
-  text-shadow: none;
 }
 .ui-button.style-default.style-flat {
   color: #5a5a5a;
 }
 .ui-button.style-default:hover {
   background: #f4f4f4;
-  border-color: #dedede;
 }
 .ui-button.style-default:focus {
-  border-color: #00a07b;
+  box-shadow: inset 0 -1px 0 2px #00a07b;
 }
 .ui-button.style-default:active,
 .ui-button.style-default.pressed {
+  box-shadow: inset 0 0 3px 1px rgba(0,0,0,0.7);
   background: #e8e8e8;
-  border-color: #c0c0c0;
 }
 .ui-button.style-default:disabled {
   background: #dedede;
-  border-color: #dedede;
 }
 .ui-button.style-alt {
   color: #f7f7f7;
   background: #686060;
-  border-color: #726a6a;
 }
 .ui-button.style-alt.style-flat {
   color: #f7f7f7;
 }
 .ui-button.style-alt:hover {
   background: #5e5656;
-  border-color: #544c4c;
 }
 .ui-button.style-alt:focus {
-  border-color: #00a07b;
+  box-shadow: inset 0 -1px 0 2px #00a07b;
 }
 .ui-button.style-alt:active,
 .ui-button.style-alt.pressed {
+  box-shadow: inset 0 0 3px 1px rgba(0,0,0,0.7);
   background: #544c4c;
-  border-color: #4a4242;
 }
 .ui-button.style-alt:disabled {
   background: #6e6e6e;
-  border-color: #6e6e6e;
 }
 .ui-button.style-primary {
   color: #f7f7f7;
   background: #3eadfe;
-  border-color: #22a0fe;
 }
 .ui-button.style-primary.style-flat {
   color: #22a0fe;
 }
 .ui-button.style-primary:hover {
   background: #22a0fe;
-  border-color: #018cf7;
-}
-.ui-button.style-primary:focus {
-  border-color: #0168b3;
 }
 .ui-button.style-primary:active,
 .ui-button.style-primary.pressed {
   background: #018cf7;
-  border-color: #017edb;
 }
 .ui-button.style-primary:disabled {
   background: #93a0a9;
-  border-color: #93a0a9;
 }
 .ui-button.style-confirm {
   color: #f7f7f7;
   background: #32b810;
-  border-color: #2da410;
 }
 .ui-button.style-confirm.style-flat {
   color: #2da410;
 }
 .ui-button.style-confirm:hover {
   background: #2da410;
-  border-color: #289010;
-}
-.ui-button.style-confirm:focus {
-  border-color: #1e6e0a;
 }
 .ui-button.style-confirm:active,
 .ui-button.style-confirm.pressed {
   background: #289010;
-  border-color: #278010;
 }
 .ui-button.style-confirm:disabled {
   background: #839a7e;
-  border-color: #839a7e;
 }
 .ui-button.style-attention {
   color: #f7f7f7;
   background: #c94f13;
-  border-color: #ad4b13;
 }
 .ui-button.style-attention.style-flat {
   color: #ad4b13;
 }
 .ui-button.style-attention:hover {
   background: #ad4b13;
-  border-color: #8d3b13;
-}
-.ui-button.style-attention:focus {
-  border-color: #793113;
 }
 .ui-button.style-attention:active,
 .ui-button.style-attention.pressed {
   background: #8d3b13;
-  border-color: #7d3313;
 }
 .ui-button.style-attention:disabled {
   background: #b4a0a0;
-  border-color: #b4a0a0;
 }
