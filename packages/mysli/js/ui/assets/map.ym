@@ -32,6 +32,7 @@ files:
             - css/html.styl
             - css/box.styl
             - css/button.styl
+            - css/tabbar.styl
             - css/titlebar.styl
             - css/overlay.styl
             - css/navigation.styl
@@ -44,7 +45,7 @@ files:
             - common/scripts/navigation.js
             - common/scripts/introduction.js
             - common/scripts/button.js
-            - common/scripts/tab.js
+            - common/scripts/tabbar.js
             - common/scripts/panel.js
     # Main UI Scripts
     ui.js:
@@ -60,6 +61,7 @@ files:
             - js/html.ts
             - js/overlay.ts
             - js/label.ts
+            - js/tabbar.ts
             - js/titlebar.ts
             - js/navigation.ts
             # Panel
