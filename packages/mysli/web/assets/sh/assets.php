@@ -208,23 +208,23 @@ function assets_merge(array $map, $t_file, $assets, $dest, array $changes)
 
             if (!file::exists($src_file))
             {
-                cout::warn('[!] File not found: `'.$src_file.'`');
+                cout::warn("[!] File not found: `{$src_file}`");
                 continue;
             }
 
             if (!arr::key_in($changes, $file))
             {
+                // Does it exists?
+                if (!file::exists($dest_file)) {
+                    cout::warn("[!] Cannot append file: `{$dest_file}`, not found!");
+                    continue;
+                }
+                
                 // Still needs to be appened, but doesn't count as change...
                 if ($props['merge'])
                 {
                     $merged .= "\n\n" . file::read($dest_file);
                 }
-                continue;
-            }
-
-            if (!file::exists($src_file))
-            {
-                cout::warn("[!] File not found: {$src_file}");
                 continue;
             }
 
