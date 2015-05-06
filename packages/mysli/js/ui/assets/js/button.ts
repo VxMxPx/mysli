@@ -29,11 +29,11 @@ module mysli.js.ui {
 
         // Get/set toggle state
         get toggle() : boolean {
-            return this.prop.toggle; 
+            return this.prop.toggle;
         }
         set toggle(value: boolean) {
             this.prop.toggle = value;
-            
+
             if (value) {
                 this.connect('click*self-toggle', () => {
                     this.pressed = !this.pressed;
@@ -42,7 +42,7 @@ module mysli.js.ui {
                 this.disconnect('click*self-toggle');
             }
         }
-        
+
         // Get/set pressed state
         get pressed(): boolean {
             return this.prop.pressed;

@@ -2,7 +2,7 @@
   font-size: 16px;
   border: none;
   border-radius: 3px;
-  padding: 10px 12px;
+  padding: 8px 12px;
   display: block;
   box-shadow: inset 0 -1px 0 2px rgba(0,0,0,0.2);
 }
@@ -10,19 +10,21 @@
   box-shadow: none;
   opacity: 0.7;
 }
-.ui-button:disabled:hover {
+.ui-button:disabled:hover,
+.ui-button:disabled:active,
+.ui-button:disabled.pressed {
   box-shadow: none;
-}
-.ui-button:hover {
-  box-shadow: inset 0 -1px 0 2px rgba(0,0,0,0.3);
 }
 .ui-button:focus {
   outline: none;
   box-shadow: inset 0 -1px 0 2px rgba(0,0,0,0.5);
 }
+.ui-button:hover {
+  box-shadow: inset 0 -1px 0 2px rgba(0,0,0,0.3);
+}
 .ui-button:active,
 .ui-button.pressed {
-  box-shadow: inset 0 0 3px 1px rgba(0,0,0,0.7);
+  box-shadow: inset 0 1px 3px 1px rgba(0,0,0,0.7);
 }
 .ui-button::-moz-focus-inner {
   border: 0;
@@ -74,16 +76,16 @@
 .ui-button.style-default.style-flat {
   color: #5a5a5a;
 }
-.ui-button.style-default:hover {
-  background: #f4f4f4;
-}
 .ui-button.style-default:focus {
   box-shadow: inset 0 -1px 0 2px #00a07b;
 }
+.ui-button.style-default:hover {
+  background: #f4f4f4;
+}
 .ui-button.style-default:active,
 .ui-button.style-default.pressed {
-  box-shadow: inset 0 0 3px 1px rgba(0,0,0,0.7);
-  background: #e8e8e8;
+  box-shadow: inset 0 1px 3px 1px rgba(0,0,0,0.7);
+  background: #e4e4e4;
 }
 .ui-button.style-default:disabled {
   background: #dedede;
@@ -95,16 +97,16 @@
 .ui-button.style-alt.style-flat {
   color: #f7f7f7;
 }
-.ui-button.style-alt:hover {
-  background: #5e5656;
-}
 .ui-button.style-alt:focus {
   box-shadow: inset 0 -1px 0 2px #00a07b;
 }
+.ui-button.style-alt:hover {
+  background: #5e5656;
+}
 .ui-button.style-alt:active,
 .ui-button.style-alt.pressed {
-  box-shadow: inset 0 0 3px 1px rgba(0,0,0,0.7);
-  background: #544c4c;
+  box-shadow: inset 0 1px 3px 1px rgba(0,0,0,0.9);
+  background: #4d4747;
 }
 .ui-button.style-alt:disabled {
   background: #6e6e6e;
@@ -121,7 +123,7 @@
 }
 .ui-button.style-primary:active,
 .ui-button.style-primary.pressed {
-  background: #018cf7;
+  background: #2c7ab3;
 }
 .ui-button.style-primary:disabled {
   background: #93a0a9;
@@ -138,7 +140,7 @@
 }
 .ui-button.style-confirm:active,
 .ui-button.style-confirm.pressed {
-  background: #289010;
+  background: #23800b;
 }
 .ui-button.style-confirm:disabled {
   background: #839a7e;
@@ -155,7 +157,7 @@
 }
 .ui-button.style-attention:active,
 .ui-button.style-attention.pressed {
-  background: #8d3b13;
+  background: #80320c;
 }
 .ui-button.style-attention:disabled {
   background: #b4a0a0;
