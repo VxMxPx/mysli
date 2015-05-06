@@ -6,15 +6,13 @@ use mysli\js\jquery\tplp\util as jquery;
 <html>
 <head>
     <title><?php echo ucfirst($page); ?> :: Mysli Web Ui :: Developer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=0" />
     <?php echo assets::tags('mysli.js.ui/css-min/ui.css'); ?>
 
     <style type="text/css">
         body {
             overflow: hidden;
             background-color: #ebebe1;
-        }
-        #mjud-navigation .ui-panel-side {
-            background-color: #3a2b2b;
         }
     </style>
 </head>
