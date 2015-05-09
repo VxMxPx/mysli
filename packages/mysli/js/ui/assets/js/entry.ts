@@ -2,7 +2,7 @@
 /// <reference path="_inc.common.ts" />
 
 module mysli.js.ui {
-    export class Input extends Widget {
+    export class Entry extends Widget {
         protected static template: string = '<input />';
         protected $input: JQuery;
 
@@ -12,10 +12,10 @@ module mysli.js.ui {
         constructor (options: any = {}) {
             super(options);
 
-            this.element.addClass('ui-input');
+            this.element.addClass('ui-entry');
             this.$input = this.element;
             this.prop.def({
-                type: Input.TYPE_TEXT,
+                type: Entry.TYPE_TEXT,
                 placeholder: null,
                 label: null
             });
@@ -28,11 +28,11 @@ module mysli.js.ui {
         }
         set type(value: string) {
             switch (value) {
-                case Input.TYPE_TEXT:
+                case Entry.TYPE_TEXT:
                     this.$input.prop('type', 'text');
                     break;
 
-                case Input.TYPE_PASSWORD:
+                case Entry.TYPE_PASSWORD:
                     this.$input.prop('type', 'password');
                     break;
 

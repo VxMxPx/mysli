@@ -11,7 +11,7 @@ mjud.add('navigation', function () {
     var navigation = new ui.Navigation({
         introduction: "Introduction",
         button: "Button",
-        input: "Input",
+        entry: "Entry",
         tabbar: "Tabbar",
         panel: "Panel"
     }, {style: 'alt'});
