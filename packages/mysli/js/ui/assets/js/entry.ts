@@ -1,10 +1,9 @@
-/// <reference path="widget.ts" />
+/// <reference path="generic_input.ts" />
 /// <reference path="_inc.common.ts" />
 
 module mysli.js.ui {
-    export class Entry extends Widget {
-        protected static template: string = '<input />';
-        protected $input: JQuery;
+    export class Entry extends GenericInput {
+        protected static template: string = '<label><span></span><input class="ui-gi-input" /></label>';
 
         public static get TYPE_TEXT(): string { return 'text'; }
         public static get TYPE_PASSWORD(): string { return 'password'; }
@@ -13,13 +12,11 @@ module mysli.js.ui {
             super(options);
 
             this.element.addClass('ui-entry');
-            this.$input = this.element;
             this.prop.def({
                 type: Entry.TYPE_TEXT,
-                placeholder: null,
-                label: null
+                placeholder: null
             });
-            this.prop.push(options, ['type!', 'label!', 'placeholder']);
+            this.prop.push(options, ['type!', 'placeholder']);
         }
 
         // Get/set type
@@ -50,30 +47,6 @@ module mysli.js.ui {
         set placeholder(value: string) {
             this.prop.placeholder = value;
             this.$input.prop('placeholder', value);
-        }
-        
-        // Get/set label
-        get label(): string {
-            return this.prop.label;
-        }
-        set label(value: string) {
-            if (this.prop.label) {
-                if (!value) {
-                    this.$input.unwrap();
-                    this.$element = this.$input;
-                } else {
-                    this.element.find('span').text(value);
-                }
-                this.prop.label = value;
-                return;
-            } else {
-                if (value) {
-                    this.$input.wrap('<label />'); 
-                    this.$element = this.$input.parent();
-                    this.element.prepend(`<span>${value}</span>`);
-                    this.prop.label = value;
-                }
-            }
         }
     }
 }

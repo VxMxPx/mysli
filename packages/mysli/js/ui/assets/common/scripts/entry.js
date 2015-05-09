@@ -16,7 +16,7 @@ mjud.add('entry', function() {
 
     // Container
     var container = new ui.Container();
-    container.push(new ui.Label({text: "Default Style"}), {padding: true});
+    container.push(new ui.Label({text: "Default Style"}), {padding: [true, false, false, false]});
     container.push(new ui.Entry(), {padding: true});
     container.push(new ui.Entry({placeholder: "I have placeholder..."}), {padding: true});
     container.push(new ui.Entry({label: "I have label..."}), {padding: true});
@@ -24,14 +24,13 @@ mjud.add('entry', function() {
     container.push(new ui.Entry({placeholder: "I'm disabled...", disabled: true}), {padding: true});
     container.push(new ui.Entry({placeholder: "I'm flat...", flat: true}), {padding: true});
 
-    container.push(new ui.Label({text: "Alt Style"}), {padding: true});
+    container.push(new ui.Label({text: "Alt Style"}), {padding: [true, false, false, false]});
     container.push(new ui.Entry({style: 'alt'}), {padding: true});
     container.push(new ui.Entry({style: 'alt', placeholder: "I have placeholder..."}), {padding: true});
     container.push(new ui.Entry({style: 'alt', label: "I have label..."}), {padding: true});
     container.push(new ui.Entry({style: 'alt', placeholder: "I'm a password...", type: ui.Entry.TYPE_PASSWORD}), {padding: true});
     container.push(new ui.Entry({style: 'alt', placeholder: "I'm disabled...", disabled: true}), {padding: true});
     container.push(new ui.Entry({style: 'alt', placeholder: "I'm flat...", flat: true}), {padding: true});
-
 
     // Source
     panel.front.push(titlebar);
