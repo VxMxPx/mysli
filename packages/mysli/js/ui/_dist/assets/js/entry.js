@@ -1,4 +1,4 @@
-/// <reference path="widget.ts" />
+/// <reference path="generic_input.ts" />
 /// <reference path="_inc.common.ts" />
 var __extends = this.__extends || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -18,13 +18,11 @@ var mysli;
                     if (options === void 0) { options = {}; }
                     _super.call(this, options);
                     this.element.addClass('ui-entry');
-                    this.$input = this.element;
                     this.prop.def({
                         type: Entry.TYPE_TEXT,
-                        placeholder: null,
-                        label: null
+                        placeholder: null
                     });
-                    this.prop.push(options, ['type!', 'label!', 'placeholder']);
+                    this.prop.push(options, ['type!', 'placeholder']);
                 }
                 Object.defineProperty(Entry, "TYPE_TEXT", {
                     get: function () { return 'text'; },
@@ -69,38 +67,9 @@ var mysli;
                     enumerable: true,
                     configurable: true
                 });
-                Object.defineProperty(Entry.prototype, "label", {
-                    // Get/set label
-                    get: function () {
-                        return this.prop.label;
-                    },
-                    set: function (value) {
-                        if (this.prop.label) {
-                            if (!value) {
-                                this.$input.unwrap();
-                                this.$element = this.$input;
-                            }
-                            else {
-                                this.element.find('span').text(value);
-                            }
-                            this.prop.label = value;
-                            return;
-                        }
-                        else {
-                            if (value) {
-                                this.$input.wrap('<label />');
-                                this.$element = this.$input.parent();
-                                this.element.prepend("<span>" + value + "</span>");
-                                this.prop.label = value;
-                            }
-                        }
-                    },
-                    enumerable: true,
-                    configurable: true
-                });
-                Entry.template = '<input />';
+                Entry.template = '<label><span></span><input class="ui-gi-input" /></label>';
                 return Entry;
-            })(ui.Widget);
+            })(ui.GenericInput);
             ui.Entry = Entry;
         })(ui = js.ui || (js.ui = {}));
     })(js = mysli.js || (mysli.js = {}));
