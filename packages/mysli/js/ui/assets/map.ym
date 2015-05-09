@@ -20,35 +20,47 @@ files:
     css-min/ui.css:
         compress: Yes
         include :
+            # Commong
             - css/fonts.css
             - css/font-awesome.css
             - css/variables.styl
             - css/common.styl
-            - css/widget.styl
+            # Internal
             - css/cell.styl
-            - css/panel_container.styl
-            - css/panel.styl
-            - css/panel_side.styl
+            # Widgets
+            - css/widget.styl
             - css/html.styl
             - css/box.styl
-            - css/button.styl
             - css/tabbar.styl
             - css/titlebar.styl
-            - css/entry.styl
             - css/navigation.styl
             - css/overlay.styl
+            - css/button.styl
+            # Form
+            - css/generic_input.styl
+            - css/entry.styl
+            - css/checkbox.styl
+            # Panel
+            - css/panel_side.styl
+            - css/panel.styl
+            - css/panel_container.styl
     # Dev Scripts, Needs to be copied to _dist, but not processed in any way
     dev:
         compress: No
         merge: No
         include:
+            # Commong
             - common/scripts/index.js
             - common/scripts/navigation.js
             - common/scripts/introduction.js
+            # Widgets
             - common/scripts/button.js
             - common/scripts/tabbar.js
-            - common/scripts/panel.js
+            # Form
             - common/scripts/entry.js
+            - common/scripts/checkbox.js
+            # Panel
+            - common/scripts/panel.js
     # Main UI Scripts
     ui.js:
         compress: Yes
@@ -62,11 +74,14 @@ files:
             - js/button.ts
             - js/html.ts
             - js/overlay.ts
-            - js/entry.ts
             - js/label.ts
             - js/tabbar.ts
             - js/titlebar.ts
             - js/navigation.ts
+            # Form
+            - js/generic_input.ts
+            - js/checkbox.ts
+            - js/entry.ts
             # Panel
             - js/panel.ts
             - js/panel_side.ts
