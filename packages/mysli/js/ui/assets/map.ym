@@ -34,8 +34,9 @@ files:
             - css/button.styl
             - css/tabbar.styl
             - css/titlebar.styl
-            - css/overlay.styl
+            - css/input.styl
             - css/navigation.styl
+            - css/overlay.styl
     # Dev Scripts, Needs to be copied to _dist, but not processed in any way
     dev:
         compress: No
@@ -47,6 +48,7 @@ files:
             - common/scripts/button.js
             - common/scripts/tabbar.js
             - common/scripts/panel.js
+            - common/scripts/input.js
     # Main UI Scripts
     ui.js:
         compress: Yes
@@ -60,6 +62,7 @@ files:
             - js/button.ts
             - js/html.ts
             - js/overlay.ts
+            - js/input.ts
             - js/label.ts
             - js/tabbar.ts
             - js/titlebar.ts
