@@ -30,5 +30,6 @@ module mysli.js.ui {
         set checked(value: boolean) {
             this.prop.checked = value;
             this.$input[value ? 'addClass' : 'removeClass']('checked');
+        }
     }
 }
