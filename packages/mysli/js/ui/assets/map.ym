@@ -40,6 +40,7 @@ files:
             - css/generic_input.styl
             - css/entry.styl
             - css/checkbox.styl
+            - css/radio.styl
             # Panel
             - css/panel_side.styl
             - css/panel.styl
@@ -59,6 +60,7 @@ files:
             # Form
             - common/scripts/entry.js
             - common/scripts/checkbox.js
+            - common/scripts/radio.js
             # Panel
             - common/scripts/panel.js
     # Main UI Scripts
@@ -81,6 +83,7 @@ files:
             # Form
             - js/generic_input.ts
             - js/checkbox.ts
+            - js/radio.ts
             - js/entry.ts
             # Panel
             - js/panel.ts

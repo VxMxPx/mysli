@@ -13,17 +13,12 @@ mjud.add('button', function() {
         panel.close();
     });
 
-    titlebar.push(new ui.Label({text: "Buttons Examples", type: ui.Label.TITLE}), {expanded: true});
-
-    // Tabs
-    //notebook.connect('action', function (id, self) {
-    //    // Pass
-    //});
+    titlebar.push(new ui.Label({text: "Button", type: ui.Label.TITLE}), {expanded: true});
 
     var container = new ui.Container();
 
     // Default
-    container.push(new ui.Label({text: "Default:"}), {padding: [false, false, 5, false]});    
+    container.push(new ui.Label({text: "Default:"}), {padding: [false, false, 5, false]});
     var b_default = new ui.Box({orientation: ui.Box.VERTICAL});
     b_default.push([
         new ui.Button({label: 'Default'}),
@@ -31,10 +26,10 @@ mjud.add('button', function() {
         new ui.Button({label: 'Disabled', disabled: true}),
         new ui.Button({label: 'Flat Disabled', flat: true, disabled: true})
     ]);
-    container.push(b_default);    
+    container.push(b_default);
 
     // Alt
-    container.push(new ui.Label({text: "Alt:"}), {padding: [true, false, 5, false]});    
+    container.push(new ui.Label({text: "Alt:"}), {padding: [true, false, 5, false]});
     var b_alt = new ui.Box({orientation: ui.Box.VERTICAL});
     b_alt.push([
         new ui.Button({label: 'Default', style: 'alt'}),
@@ -42,10 +37,10 @@ mjud.add('button', function() {
         new ui.Button({label: 'Disabled', disabled: true, style: 'alt'}),
         new ui.Button({label: 'Flat Disabled', flat: true, disabled: true, style: 'alt'})
     ]);
-    container.push(b_alt);    
+    container.push(b_alt);
 
     // Primary
-    container.push(new ui.Label({text: "Primary:"}), {padding: [true, false, 5, false]});    
+    container.push(new ui.Label({text: "Primary:"}), {padding: [true, false, 5, false]});
     var b_primary = new ui.Box({orientation: ui.Box.VERTICAL});
     b_primary.push([
         new ui.Button({label: 'Default', style: 'primary'}),
@@ -53,10 +48,10 @@ mjud.add('button', function() {
         new ui.Button({label: 'Disabled', disabled: true, style: 'primary'}),
         new ui.Button({label: 'Flat Disabled', flat: true, disabled: true, style: 'primary'})
     ]);
-    container.push(b_primary);    
+    container.push(b_primary);
 
     // Attention
-    container.push(new ui.Label({text: "Attention:"}), {padding: [true, false, 5, false]});    
+    container.push(new ui.Label({text: "Attention:"}), {padding: [true, false, 5, false]});
     var b_attention = new ui.Box({orientation: ui.Box.VERTICAL});
     b_attention.push([
         new ui.Button({label: 'Default', style: 'attention'}),
@@ -65,7 +60,7 @@ mjud.add('button', function() {
         new ui.Button({label: 'Flat Disabled', flat: true, disabled: true, style: 'attention'})
     ]);
     container.push(b_attention);
-    
+
     // Confirm
     container.push(new ui.Label({text: "Confirm:"}), {padding: [true, false, 5, false]});
     var b_confirm = new ui.Box({orientation: ui.Box.VERTICAL});
@@ -75,7 +70,7 @@ mjud.add('button', function() {
         new ui.Button({label: 'Disabled', disabled: true, style: 'confirm'}),
         new ui.Button({label: 'Flat Disabled', flat: true, disabled: true, style: 'confirm'})
     ]);
-    container.push(b_confirm);    
+    container.push(b_confirm);
 
     // Toggle
     container.push(new ui.Label({text: "Toggle:"}), {padding: [true, false, 5, false]});
@@ -87,7 +82,7 @@ mjud.add('button', function() {
         new ui.Button({label: 'Attention', toggle: true, style: 'attention'}),
         new ui.Button({label: 'Confirm', toggle: true, style: 'confirm'})
     ]);
-    container.push(b_toggle);    
+    container.push(b_toggle);
 
     // Source
     panel.front.push(titlebar);

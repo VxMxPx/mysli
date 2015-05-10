@@ -33,7 +33,7 @@ class ui
         }
         elseif ($js = request::get('js'))
         {
-            if ($js != preg_replace('/[^a-z]/i', '', $js))
+            if ($js != preg_replace('/[^a-z_]/i', '', $js))
             {
                 response::set_status(400);
                 output::add("Bad request: `{$js}`");

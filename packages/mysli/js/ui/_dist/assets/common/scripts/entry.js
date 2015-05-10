@@ -12,7 +12,7 @@ mjud.add('entry', function() {
     })).connect('click', function () {
         panel.close();
     });
-    titlebar.push(new ui.Label({text: "Entry Examples", type: ui.Label.TITLE}), {expanded: true});
+    titlebar.push(new ui.Label({text: "Entry", type: ui.Label.TITLE}), {expanded: true});
 
     // Container
     var container = new ui.Container();
