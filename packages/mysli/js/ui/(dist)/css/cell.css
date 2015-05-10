@@ -1,0 +1,19 @@
+.ui-cell.scroll-x {
+  overflow-x: auto;
+}
+.ui-cell.scroll-y {
+  overflow-y: auto;
+  height: 100%;
+}
+.ui-cell.padtop {
+  padding-top: 15px;
+}
+.ui-cell.padbottom {
+  padding-bottom: 15px;
+}
+.ui-cell.padleft {
+  padding-left: 15px;
+}
+.ui-cell.padright {
+  padding-right: 15px;
+}

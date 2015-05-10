@@ -1,0 +1,37 @@
+.mysli-ui,
+.mysli-ui * {
+  padding: 0;
+  margin: 0;
+}
+.mysli-ui,
+.mysli-ui *,
+.mysli-ui *:before,
+.mysli-ui *:after {
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}
+.mysli-ui {
+  font-family: "PT Sans", Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.4em;
+}
+.mysli-ui h1,
+.mysli-ui h2,
+.mysli-ui h3,
+.mysli-ui h4,
+.mysli-ui h5,
+.mysli-ui h6 {
+  font-family: "PT Sans", Helvetica, Arial, sans-serif;
+  font-weight: normal;
+}
+.mysli-ui code,
+.mysli-ui .code {
+  font-family: "PT Mono", monospace;
+}
+.mysli-ui code {
+  line-height: 1.2em;
+}
+.mysli-ui pre code {
+  display: block;
+  overflow: hidden;
+}

@@ -1,0 +1,34 @@
+.ui-box.ui-titlebar {
+  color: #fff;
+  background-color: #9c3c18;
+  width: 100%;
+  height: 48px;
+  box-shadow: inset 0 -1px 0 rgba(0,0,0,0.1);
+}
+.ui-box.ui-titlebar.style-flat {
+  box-shadow: inset 0 -1px 0 rgba(0,0,0,0.4);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  color: inherit;
+  background-color: transparent;
+}
+.ui-box.ui-titlebar .ui-cell {
+  vertical-align: middle;
+  padding: 5px;
+}
+.ui-box.ui-titlebar .ui-cell:first-child {
+  padding-left: 15px;
+}
+.ui-box.ui-titlebar .ui-cell:last-child {
+  padding-right: 15px;
+}
+.ui-box.ui-titlebar .ui-button.style-flat {
+  color: rgba(255,255,255,0.75);
+  padding: 0;
+}
+.ui-box.ui-titlebar .ui-button.style-flat:active {
+  padding-top: 2px;
+}
+.ui-box.ui-titlebar h1,
+.ui-box.ui-titlebar h2 {
+  font-size: 20px;
+}

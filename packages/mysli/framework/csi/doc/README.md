@@ -12,7 +12,7 @@ Include `csi`:
     __use(__namespace__, 'mysli/framework/csi');
 
 Create new instance and add fields, in this example,
-we'll use it in `mysli/cms/dash/setup`:
+we'll use it in `mysli/cms/dash/__init`:
 
     static function enable() {
         $csi = new csi('mysli/cms/dash/enable');

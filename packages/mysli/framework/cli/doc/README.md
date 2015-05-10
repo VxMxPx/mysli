@@ -10,10 +10,10 @@ Cli will be automatically run when you execute ./dot (which you can find in the
 private path of your application). It will scan all enabled packages, for
 available scripts.
 
-If you want to create new scrip put it into the `src/` folder of your package,
+If you want to create new scrip put it into the `src/php/` folder of your package,
 it can be called anyway you want, namespace, must follow directory structure
-convention, e.g. script in folder `vendor/package/src/script/my_script.php` must
-contain class: `namespace vendor\package\script { class my_script {} }`.
+convention, e.g. script in folder `vendor/package/src/php/sh/my_script.php` must
+contain class: `namespace vendor\package\sh { class my_script {} }`.
 The class should contain static method `run` which will get passed arguments.
 
 ## Helper Classes

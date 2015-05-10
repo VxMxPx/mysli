@@ -1,0 +1,101 @@
+@import "variables"
+
+.ui-button
+    font-size: 16px
+    border: none
+    border-radius: 3px
+    padding: 8px 12px
+    box-shadow: inset 0 -1px 0 2px rgba(0, 0, 0, .2)
+    &:disabled
+        box-shadow: none
+        opacity: .7
+        &:hover, &:active, &.pressed
+            box-shadow: none
+    &:focus
+        outline: none
+        box-shadow: inset 0 -1px 0 2px rgba(0, 0, 0, .5)
+    &:hover
+        box-shadow: inset 0 -1px 0 2px rgba(0, 0, 0, .3)
+    &:active, &.pressed
+        box-shadow: inset 0 1px 3px 1px rgba(0, 0, 0, .7)
+    &::-moz-focus-inner
+        border: 0
+    span.label + i.fa,
+    i.fa + span.label
+        margin-left: 6px
+    // Color Variations, etc...
+    &.style-default.style-flat,
+    &.style-alt.style-flat,
+    &.style-primary.style-flat,
+    &.style-confirm.style-flat,
+    &.style-attention.style-flat
+        text-shadow: none
+        background: transparent
+        box-shadow: none
+        &.pressed,
+        &:focus,
+        &:hover,
+        &:active,
+        &:disabled
+            background: transparent
+            box-shadow: none
+    &.style-default
+        background: #fff
+        &.style-flat
+            color: #5a5a5a
+        &:focus
+            box-shadow: inset 0 -1px 0 2px #00a07b
+        &:hover
+            background: #f4f4f4
+        &:active, &.pressed
+            box-shadow: inset 0 1px 3px 1px rgba(0, 0, 0, .7)
+            background: #e4e4e4
+        &:disabled
+            background: #dedede
+    &.style-alt
+        color: #f7f7f7
+        background: #686060
+        &.style-flat
+            color: #f7f7f7
+        &:focus
+            box-shadow: inset 0 -1px 0 2px #00a07b
+        &:hover
+            background: #5e5656
+        &:active, &.pressed
+            box-shadow: inset 0 1px 3px 1px rgba(0, 0, 0, .9)
+            background: #4d4747
+        &:disabled
+            background: #6e6e6e
+    &.style-primary
+        color: #f7f7f7
+        background: #3eadfe
+        &.style-flat
+            color: #22a0fe
+        &:hover
+            background: #22a0fe
+        &:active, &.pressed
+            background: #2c7ab3
+        &:disabled
+            background: #93a0a9
+    &.style-confirm
+        color: #f7f7f7
+        background: #32b810
+        &.style-flat
+            color: #2da410
+        &:hover
+            background: #2da410
+        &:active, &.pressed
+            background: #23800b
+        &:disabled
+            background: #839a7e
+    &.style-attention
+        color: #f7f7f7
+        background: #c94f13
+        &.style-flat
+            color: #ad4b13
+        &:hover
+            background: #ad4b13
+        &:active, &.pressed
+            background: #80320c
+        &:disabled
+            background: #b4a0a0

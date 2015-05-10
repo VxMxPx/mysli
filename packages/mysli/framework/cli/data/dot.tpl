@@ -42,8 +42,8 @@ else
 }
 
 $core = $boot_r['boot']['core'];
-$core_source = $pkgpath.'/'.str_replace('.', '/', $core).'/src/__init.php';
-$core_phar   = "phar://{$pkgpath}/{$core}.phar/src/__init.php";
+$core_source = $pkgpath.'/'.str_replace('.', '/', $core).'/src/php/__init.php';
+$core_phar   = "phar://{$pkgpath}/{$core}.phar/src/php/__init.php";
 
 if (file_exists($core_source) && file_exists($core_phar))
 {
@@ -64,7 +64,7 @@ else
 }
 
 call_user_func_array(
-    str_replace('.', '\\', $core) . '\\__init',
+    str_replace('.', '\\', $core) . '\\__init::__init',
     [$datpath, $pkgpath]
 );
 

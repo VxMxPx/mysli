@@ -1,0 +1,9 @@
+.ui-panel-side {
+  height: 100%;
+  background: #f6f5f4;
+  color: #323232;
+}
+.ui-panel-side.style-alt {
+  background: #392b3a;
+  color: #fff;
+}
