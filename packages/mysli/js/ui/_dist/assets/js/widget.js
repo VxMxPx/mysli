@@ -33,7 +33,7 @@ var mysli;
                         options.uid = Widget.next_uid();
                     }
                     else if (typeof options.uid !== 'string') {
-                        throw new Error("UID needs to be a valid string, got: " + uid);
+                        throw new Error("UID needs to be a valid string, got: " + options.uid);
                     }
                     // Create element
                     this.$element = $(this['constructor']['template']);
@@ -51,7 +51,6 @@ var mysli;
                     // Widget handling
                     /**
                      * Return a main element.
-                     * @return {JQuery}
                      */
                     get: function () {
                         return this.$element;
@@ -62,10 +61,26 @@ var mysli;
                 Object.defineProperty(Widget.prototype, "uid", {
                     /**
                      * Return element's uid.
-                     * @return {string}
                      */
                     get: function () {
                         return this.prop.uid;
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
+                Object.defineProperty(Widget.prototype, "wid", {
+                    /**
+                     * Return widget's id.
+                     */
+                    get: function () {
+                        if (typeof this['constructor']['name'] === 'string') {
+                            return this['constructor']['name'];
+                        }
+                        else {
+                            var func_name_regex = /function\s([^(]{1,})\(/;
+                            var results = (func_name_regex).exec((this).toString());
+                            return (results && results.length > 1) ? results[1].trim() : "";
+                        }
                     },
                     enumerable: true,
                     configurable: true
@@ -123,11 +138,10 @@ var mysli;
                 // Events
                 /**
                  * Connect callback with an event.
-                 * @param  {string}   event    event*id (id can be assigned,
+                 * @param event event*id (id can be assigned,
                  * to disconnect all events with that particular id,
                  * by calling: disconnect('*id'))
-                 * @param  {Function} callback
-                 * @return {string}
+                 * @param callback
                  */
                 Widget.prototype.connect = function (event, callback) {
                     var _this = this;
@@ -187,7 +201,6 @@ var mysli;
                 /**
                  * Disconnect particular event.
                  * @param id full id or specified id (eg *my_id) OR [event, id]
-                 * @returns {boolean}
                  */
                 Widget.prototype.disconnect = function (id) {
                     var event;
@@ -285,7 +298,7 @@ var mysli;
                 // Element's template & element
                 Widget.template = '<div class="ui-widget" />';
                 // Properties
-                Widget.allowed_styles = ['default', 'alt', 'primary', 'confirm', 'attention'];
+                Widget.allowed_styles = ['default', 'alt'];
                 return Widget;
             })();
             ui.Widget = Widget;

@@ -20,14 +20,16 @@ declare module mysli.js.ui {
         static next_uid(): string;
         /**
          * Return a main element.
-         * @return {JQuery}
          */
         element: JQuery;
         /**
          * Return element's uid.
-         * @return {string}
          */
         uid: string;
+        /**
+         * Return widget's id.
+         */
+        wid: string;
         disabled: boolean;
         flat: boolean;
         style: string;
@@ -37,11 +39,10 @@ declare module mysli.js.ui {
         destroy(): void;
         /**
          * Connect callback with an event.
-         * @param  {string}   event    event*id (id can be assigned,
+         * @param event event*id (id can be assigned,
          * to disconnect all events with that particular id,
          * by calling: disconnect('*id'))
-         * @param  {Function} callback
-         * @return {string}
+         * @param callback
          */
         connect(event: string, callback: (...args) => any): string;
         /**
@@ -51,7 +52,6 @@ declare module mysli.js.ui {
         /**
          * Disconnect particular event.
          * @param id full id or specified id (eg *my_id) OR [event, id]
-         * @returns {boolean}
          */
         disconnect(id: string | [string, string]): boolean;
         /**

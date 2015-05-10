@@ -45,7 +45,7 @@ module mysli.js.ui {
         protected $element: JQuery;
 
         // Properties
-        protected static allowed_styles: string[] = ['default', 'alt', 'primary', 'confirm', 'attention'];
+        protected static allowed_styles: string[] = ['default', 'alt'];
         protected prop: any;
 
         constructor(options: any = {}) {
@@ -65,7 +65,7 @@ module mysli.js.ui {
             if (typeof options.uid === 'undefined') {
                 options.uid = Widget.next_uid();
             } else if (typeof options.uid !== 'string') {
-                throw new Error(`UID needs to be a valid string, got: ${uid}`);
+                throw new Error(`UID needs to be a valid string, got: ${options.uid}`);
             }
 
             // Create element
@@ -87,7 +87,6 @@ module mysli.js.ui {
 
         /**
          * Return a main element.
-         * @return {JQuery}
          */
         get element(): JQuery {
             return this.$element;
@@ -95,10 +94,22 @@ module mysli.js.ui {
 
         /**
          * Return element's uid.
-         * @return {string}
          */
         get uid(): string {
             return this.prop.uid;
+        }
+        
+        /**
+         * Return widget's id.
+         */
+        get wid(): string {
+            if (typeof this['constructor']['name'] === 'string') {
+                return this['constructor']['name'];
+            } else {
+                var func_name_regex: RegExp = /function\s([^(]{1,})\(/;
+                var results: RegExpExecArray = (func_name_regex).exec((this).toString());
+                return (results && results.length > 1) ? results[1].trim() : "";
+            }
         }
 
         // Get/set disabled status
@@ -147,11 +158,10 @@ module mysli.js.ui {
 
         /**
          * Connect callback with an event.
-         * @param  {string}   event    event*id (id can be assigned,
+         * @param event event*id (id can be assigned,
          * to disconnect all events with that particular id,
          * by calling: disconnect('*id'))
-         * @param  {Function} callback
-         * @return {string}
+         * @param callback
          */
         connect(event: string, callback: (...args) => any): string {
             var _ref: string[] = Widget.event_extract_name(event);
@@ -222,7 +232,6 @@ module mysli.js.ui {
         /**
          * Disconnect particular event.
          * @param id full id or specified id (eg *my_id) OR [event, id]
-         * @returns {boolean}
          */
         disconnect(id: string|[string, string]): boolean {
             var event: any;
@@ -255,7 +264,7 @@ module mysli.js.ui {
 
                 if (typeof this.events[event] !== 'undefined') {
                     this.event_disconnect_native(event);
-                    return delete this.events[event][id];
+                    return delete this.events[event][<string> id];
                 } else {
                     return false;
                 }
