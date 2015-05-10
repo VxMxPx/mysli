@@ -1,3 +1,10 @@
+.ui-cell.scroll-x {
+  overflow-x: auto;
+}
+.ui-cell.scroll-y {
+  overflow-y: auto;
+  height: 100%;
+}
 .ui-cell.padtop {
   padding-top: 15px;
 }

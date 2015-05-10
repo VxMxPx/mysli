@@ -13,10 +13,31 @@ var mysli;
                     this.$cell = $cell;
                     this.prop = new js.common.Prop({
                         visible: true,
-                        padding: false
+                        padding: false,
+                        scroll: Cell.SCROLL_NONE
                     }, this);
-                    this.prop.push(options, ['visible', 'padding']);
+                    this.prop.push(options, ['visible', 'padding', 'scroll']);
                 }
+                Object.defineProperty(Cell, "SCROLL_Y", {
+                    get: function () { return 'scroll-y'; },
+                    enumerable: true,
+                    configurable: true
+                });
+                Object.defineProperty(Cell, "SCROLL_X", {
+                    get: function () { return 'scroll-x'; },
+                    enumerable: true,
+                    configurable: true
+                });
+                Object.defineProperty(Cell, "SCROLL_BOTH", {
+                    get: function () { return 'scroll-both'; },
+                    enumerable: true,
+                    configurable: true
+                });
+                Object.defineProperty(Cell, "SCROLL_NONE", {
+                    get: function () { return 'scroll-none'; },
+                    enumerable: true,
+                    configurable: true
+                });
                 /**
                  * Animate the cell.
                  * @param what
@@ -62,6 +83,41 @@ var mysli;
                         }
                         this.prop.visible = status;
                         this.$cell[status ? 'show' : 'hide']();
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
+                Object.defineProperty(Cell.prototype, "scroll", {
+                    // Get/set scroll
+                    get: function () {
+                        return this.prop.scroll;
+                    },
+                    set: function (value) {
+                        switch (value) {
+                            case Cell.SCROLL_X:
+                                this.$cell.addClass('scroll-x');
+                                this.$cell.removeClass('scroll-y');
+                                this.prop.scroll = value;
+                                break;
+                            case Cell.SCROLL_Y:
+                                this.$cell.addClass('scroll-y');
+                                this.$cell.removeClass('scroll-x');
+                                this.prop.scroll = value;
+                                break;
+                            case Cell.SCROLL_BOTH:
+                                this.$cell.removeClass('scroll-x');
+                                this.$cell.removeClass('scroll-y');
+                                this.prop.scroll = value;
+                                break;
+                            case Cell.SCROLL_BOTH:
+                                this.$cell.addClass('scroll-x');
+                                this.$cell.addClass('scroll-y');
+                                this.prop.scroll = value;
+                                break;
+                            default:
+                                throw new Error("Invalid value required: Cell.(SCROLL_X|SCROLL_Y|SCROLL_BOTH|SCROLL_NONE)");
+                                break;
+                        }
                     },
                     enumerable: true,
                     configurable: true

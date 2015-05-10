@@ -6,6 +6,11 @@ module mysli.js.ui {
         protected parent: Container;
         protected $cell: JQuery;
         protected prop: any;
+        
+        public static get SCROLL_Y(): string { return 'scroll-y'; }
+        public static get SCROLL_X(): string { return 'scroll-x'; }
+        public static get SCROLL_BOTH(): string { return 'scroll-both'; }
+        public static get SCROLL_NONE(): string { return 'scroll-none'; }
 
         constructor(parent: Container, $cell: JQuery, options: any = {}) {
             this.parent = parent;
@@ -13,9 +18,10 @@ module mysli.js.ui {
 
             this.prop = new common.Prop({
                 visible: true,
-                padding: false
+                padding: false,
+                scroll: Cell.SCROLL_NONE
             }, this);
-            this.prop.push(options, ['visible', 'padding']);
+            this.prop.push(options, ['visible', 'padding', 'scroll']);
         }
 
         /**
@@ -59,6 +65,42 @@ module mysli.js.ui {
 
             this.prop.visible = status;
             this.$cell[status ? 'show' : 'hide']();
+        }
+
+        // Get/set scroll
+        get scroll(): string {
+            return this.prop.scroll;
+        }
+        set scroll(value: string) {
+            switch (value) {
+                case Cell.SCROLL_X:
+                    this.$cell.addClass('scroll-x');
+                    this.$cell.removeClass('scroll-y');
+                    this.prop.scroll = value;
+                    break;
+
+                case Cell.SCROLL_Y:
+                    this.$cell.addClass('scroll-y');
+                    this.$cell.removeClass('scroll-x');
+                    this.prop.scroll = value;
+                    break;
+
+                case Cell.SCROLL_BOTH:
+                    this.$cell.removeClass('scroll-x');
+                    this.$cell.removeClass('scroll-y');
+                    this.prop.scroll = value;
+                    break;
+
+                case Cell.SCROLL_BOTH:
+                    this.$cell.addClass('scroll-x');
+                    this.$cell.addClass('scroll-y');
+                    this.prop.scroll = value;
+                    break;
+            
+                default:
+                    throw new Error("Invalid value required: Cell.(SCROLL_X|SCROLL_Y|SCROLL_BOTH|SCROLL_NONE)")
+                    break;
+            }
         }
 
         /**
