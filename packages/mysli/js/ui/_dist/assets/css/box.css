@@ -2,7 +2,6 @@
   background-color: transparent;
   display: table;
   position: relative;
-  overflow: hidden;
 }
 .ui-box .ui-cell {
   display: table-cell;

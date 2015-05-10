@@ -20,13 +20,16 @@ module mysli.js.ui {
             });
             this.prop.push(options);
 
-            this.element.addClass('ui-box');
+            this.element.addClass('ui-box'));
             this.element_wrapper_original = this.element_wrapper;
 
             if (this.prop.orientation === Box.VERTICAL) {
                 var row:JQuery = $('<div class="ui-row" />');
                 this.element.append(row);
+                this.element.addClass('ui-orientation-vertical');
                 this.$target = row;
+            } else {
+                this.element.addClass('ui-orientation-horizontal');
             }
         }
 
