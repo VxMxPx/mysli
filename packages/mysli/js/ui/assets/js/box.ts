@@ -20,7 +20,7 @@ module mysli.js.ui {
             });
             this.prop.push(options);
 
-            this.element.addClass('ui-box'));
+            this.element.addClass('ui-box');
             this.element_wrapper_original = this.element_wrapper;
 
             if (this.prop.orientation === Box.VERTICAL) {
