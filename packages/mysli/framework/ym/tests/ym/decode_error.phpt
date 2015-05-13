@@ -11,6 +11,6 @@ EOT
 
 ?>
 --EXPECTF--
-Fatal error: Uncaught exception 'mysli\framework\exception\parser' with message 'Missing colon (:) or dash (-).
+Fatal error: Uncaught exception 'mysli\framework\exception\parser' with message 'Missing colon (:).
 >>1. this makes no sense...
 %a

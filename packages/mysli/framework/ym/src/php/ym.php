@@ -71,10 +71,10 @@ class ym
                 // List item...
                 if (substr(trim($line), 0, 1) === '-')
                 {
-                    list($key, $value) = self::proc_line(ltrim($line, "\t -"), true);
+                    list($_, $value) = self::proc_line(ltrim($line, "\t -"), true);
 
                     // just one - meaning sub category
-                    if (!($key.$value))
+                    if (!$value)
                     {
                         $key = count($stack[$level]);
                         $stack[$level][$key] = [];
@@ -82,9 +82,7 @@ class ym
                     }
                     else
                     {
-                        $key
-                            ? $stack[$level][$key] = $value
-                            : $stack[$level][]     = $value;
+                        $stack[$level][] = $value;
                     }
 
                     continue;
@@ -195,30 +193,28 @@ class ym
      */
     private static function proc_line($line, $li)
     {
-        $segments = explode(':', trim($line), 2);
-        $key   = null;
-        $value = null;
+        if (!$li) {
+            $segments = explode(':', trim($line), 2);
+            $key   = null;
+            $value = null;
 
-        if (!isset($segments[1]))
-        {
-            if (!$li)
+            if (!isset($segments[1]))
             {
-                throw new framework\exception\data(
-                    "Missing colon (:) or dash (-).", 1
-                );
+                throw new framework\exception\data("Missing colon (:).", 1);
             }
             else
             {
-                $value = $segments[0];
+                $key = $segments[0];
+                $value = $segments[1];
             }
+            $key = trim($key,   "\t \"");
         }
         else
         {
-            $key = $segments[0];
-            $value = $segments[1];
+            $key = null;
+            $value = $line;
         }
 
-        $key   = trim($key,   "\t \"");
         $value = trim($value, "\t ");
 
         if ($value)
