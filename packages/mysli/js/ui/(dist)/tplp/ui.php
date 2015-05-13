@@ -1,7 +1,7 @@
 <?php
 namespace m;
 use mysli\web\assets\tplp\util as assets;
-use mysli\js\jquery\tplp\util as jquery;
+use mysli\js\external\tplp\util as external;
 ?><!DOCTYPE html>
 <html>
 <head>
@@ -17,7 +17,7 @@ use mysli\js\jquery\tplp\util as jquery;
     </style>
 </head>
 <body id="mysli-js-ui-developer" class="mysli-ui">
-    <?php echo jquery::tag(); ?>
+    <?php echo external::tags('mysli.js.ui', 'js'); ?>
     <?php echo assets::tags('mysli.js.common/js/common.js'); ?>
     <?php echo assets::tags('mysli.js.ui/js/ui.js'); ?>
     <script>

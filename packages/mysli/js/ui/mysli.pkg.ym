@@ -15,5 +15,9 @@ require:
     mysli.web.response:    1
     mysli.web.request:     1
     # JS
-    mysli.js.jquery:       1
+    mysli.js.external:     1
     mysli.js.common:       1
+
+js.external:
+    require:
+        - jquery

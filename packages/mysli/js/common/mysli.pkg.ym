@@ -5,5 +5,9 @@ license:     GPL-3.0
 authors:
     - Marko Gajšt (Developer) <m@gaj.st>
 require:
-    mysli.web.assets: 1
-    mysli.js.jquery:  1
+    mysli.web.assets:  1
+    mysli.js.external: 1
+
+js.external:
+    require:
+        - jquery

@@ -1,5 +1,5 @@
 ::use mysli.web.assets
-::use mysli.js.jquery
+::use mysli.js.external
 <!DOCTYPE html>
 <html>
 <head>
@@ -16,7 +16,7 @@
     }}}
 </head>
 <body id="mysli-js-ui-developer" class="mysli-ui">
-    {|jquery/tag}
+    {'mysli.js.ui'|external/tags:'js'}
     {'mysli.js.common/js/common.js'|assets/tags}
     {'mysli.js.ui/js/ui.js'|assets/tags}
     <script>
