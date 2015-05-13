@@ -1,0 +1,40 @@
+libraries:
+    jquery:
+        dev:
+            - //code.jquery.com/jquery-{version}.min.js
+        min:
+            - //code.jquery.com/jquery-{version}.js
+        version: 2.1.4
+        require: No
+    bootstrap:
+        dev: No
+        min:
+            - //maxcdn.bootstrapcdn.com/bootstrap/{version}/css/bootstrap.min.css
+            - //maxcdn.bootstrapcdn.com/bootstrap/{version}/js/bootstrap.min.js
+        version: 3.3.4
+        require: No
+    font-awesome:
+        dev: No
+        min:
+            - //maxcdn.bootstrapcdn.com/font-awesome/{version}/css/font-awesome.min.css
+        version: 4.3.0
+        require: No
+    zepto:
+        dev:
+            - http://zeptojs.com/zepto.js
+        min:
+            - http://zeptojs.com/zepto.min.js
+        version: latest
+        require: No
+    moment:
+        dev: No
+        min:
+            - //cdnjs.cloudflare.com/ajax/libs/moment.js/{version}/moment.min.js
+        version: 2.10.2
+        require: No
+    moment-timezone:
+        dev: No
+        min:
+            - //cdnjs.cloudflare.com/ajax/libs/moment-timezone/{version}/moment-timezone.min.js
+        version: 0.3.1
+        require: No

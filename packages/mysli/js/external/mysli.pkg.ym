@@ -1,0 +1,21 @@
+package:     mysli.js.external
+version:     1
+description: Helps you manage external JavaScript libraries.
+license:
+    - GPL-3.0
+authors:
+    - Marko Gajšt (Package Developer) <m@gaj.st>
+
+require:
+    mysli.framework.ym:        1
+    mysli.framework.pkgm:      1
+    mysli.framework.fs:        1
+    mysli.framework.exception: 1
+    mysli.framework.type:      1
+    mysli.util.config:         1
+    mysli.web.assets:          1
+
+require-recommend:
+    mysli.util.curl:
+        verison:     1
+        description: To save a library as a local file.
