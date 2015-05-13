@@ -538,9 +538,9 @@ class pkgm
     {
         $files = [];
 
-        if (dir::exists(fs::pkgreal($package, 'sh')))
+        if (dir::exists(fs::pkgreal($package, 'src/php/sh')))
         {
-            foreach (fs::ls(fs::pkgreal($package, 'sh'), '/\\.php$/') as $file)
+            foreach (fs::ls(fs::pkgreal($package, 'src/php/sh'), '/\\.php$/') as $file)
             {
                 $files[] = substr($file, 0, -4);
             }
