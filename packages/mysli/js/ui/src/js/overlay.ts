@@ -1,11 +1,13 @@
 /// <reference path="widget.ts" />
-module mysli.js.ui {
-    export class Overlay extends Widget {
 
+module mysli.js.ui
+{
+    export class Overlay extends Widget
+    {
         protected static template: string = '<div class="ui-overlay ui-widget"><div class="ui-overlay-busy"><i class="fa fa-cog fa-spin"></i></div></div>';
 
-        constructor(options: any = {}) {
-
+        constructor(options: any = {})
+        {
             super(options);
 
             this.prop.def({
@@ -16,19 +18,23 @@ module mysli.js.ui {
         }
 
         // Get/set busy state.
-        get busy(): boolean {
+        get busy(): boolean
+        {
             return this.prop.busy;
         }
-        set busy(status: boolean) {
+        set busy(status: boolean)
+        {
             this.prop.busy = status;
             this.element[status ? 'addClass' : 'removeClass']('status-busy');
         }
 
         // Get/set visibility
-        get visible(): boolean {
+        get visible(): boolean
+        {
             return this.element.is(':visible');
         }
-        set visible(status: boolean) {
+        set visible(status: boolean)
+        {
             this.prop.visible = status;
             this.element[status ? 'show' : 'hide']();
         }

@@ -1,14 +1,17 @@
 /// <reference path="generic_input.ts" />
 /// <reference path="_inc.common.ts" />
 
-module mysli.js.ui {
-    export class Entry extends GenericInput {
+module mysli.js.ui
+{
+    export class Entry extends GenericInput
+    {
         protected static template: string = '<label><span></span><input class="ui-gi-input" /></label>';
 
         public static get TYPE_TEXT(): string { return 'text'; }
         public static get TYPE_PASSWORD(): string { return 'password'; }
 
-        constructor (options: any = {}) {
+        constructor (options: any = {})
+        {
             super(options);
 
             this.element.addClass('ui-entry');
@@ -20,11 +23,14 @@ module mysli.js.ui {
         }
 
         // Get/set type
-        get type(): string {
+        get type(): string
+        {
             return this.prop.type;
         }
-        set type(value: string) {
-            switch (value) {
+        set type(value: string)
+        {
+            switch (value)
+            {
                 case Entry.TYPE_TEXT:
                     this.$input.prop('type', 'text');
                     break;
@@ -41,10 +47,12 @@ module mysli.js.ui {
         }
         
         // Get/set placeholder
-        get placeholder(): string {
+        get placeholder(): string
+        {
             return this.prop.placeholder;
         }
-        set placeholder(value: string) {
+        set placeholder(value: string)
+        {
             this.prop.placeholder = value;
             this.$input.prop('placeholder', value);
         }

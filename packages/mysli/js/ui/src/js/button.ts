@@ -1,13 +1,15 @@
 /// <reference path="widget.ts" />
 /// <reference path="_inc.common.ts" />
-module mysli.js.ui {
-    export class Button extends Widget {
 
+module mysli.js.ui
+{
+    export class Button extends Widget
+    {
         protected static template: string = '<button class="ui-widget ui-button"></button>';
         protected static allowed_styles: string[] = ['default', 'alt', 'primary', 'confirm', 'attention'];
 
-        constructor(options: any = {}) {
-
+        constructor(options: any = {})
+        {
             super(options);
 
             this.prop.def({
@@ -28,48 +30,59 @@ module mysli.js.ui {
         }
 
         // Get/set toggle state
-        get toggle() : boolean {
+        get toggle() : boolean
+        {
             return this.prop.toggle;
         }
-        set toggle(value: boolean) {
+        set toggle(value: boolean)
+        {
             this.prop.toggle = value;
 
-            if (value) {
+            if (value) 
+            {
                 this.connect('click*self-toggle', () => {
                     this.pressed = !this.pressed;
                 });
-            } else {
+            }
+            else
+            {
                 this.disconnect('click*self-toggle');
             }
         }
 
         // Get/set pressed state
-        get pressed(): boolean {
+        get pressed(): boolean
+        {
             return this.prop.pressed;
         }
-        set pressed(value: boolean) {
+        set pressed(value: boolean)
+        {
             this.prop.pressed = value;
             this.element[value ? 'addClass' : 'removeClass']('pressed');
         }
 
         // Get/set button's label
-        get label(): string {
+        get label(): string
+        {
             return this.prop.label;
         }
-        set label(value: string) {
+        set label(value: string)
+        {
             var $label: JQuery = this.element.find('span.label');
             var method: string;
 
             this.prop.label = value;
 
-            if (!value) {
+            if (!value)
+            {
                 $label.remove();
                 return;
             }
 
-            if (!$label.length) {
+            if (!$label.length)
+            {
                 $label = $('<span class="label" />');
-                method = this.icon.position === 'right' ? 'prepend' : 'append';
+                method = this.icon['position'] === 'right' ? 'prepend' : 'append';
                 this.element[method]($label);
             }
 
@@ -77,10 +90,12 @@ module mysli.js.ui {
         }
 
         // Get/set icon
-        get icon(): string|{name?: string; position?: string; spin?: boolean} {
+        get icon(): string|{name?: string; position?: string; spin?: boolean}
+        {
             return this.prop.icon;
         }
-        set icon(options: string|{name?: string; position?: string; spin?: boolean}) {
+        set icon(options: string|{name?: string; position?: string; spin?: boolean})
+        {
             var $icon: JQuery;
             var method: string;
             var spin: string;
@@ -88,11 +103,11 @@ module mysli.js.ui {
             $icon = this.element.find('i.fa');
             $icon.remove();
 
-            if (typeof  options === 'string') {
+            if (typeof  options === 'string')
                 options = {name: <string> options};
-            }
 
-            if (!options['name']) {
+            if (!options['name'])
+            {
                 this.prop.icon.name = null;
                 return;
             }

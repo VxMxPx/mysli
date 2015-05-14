@@ -2,13 +2,15 @@
 /// <reference path="box.ts" />
 /// <reference path="widget.ts" />
 /// <reference path="_inc.common.ts" />
-module mysli.js.ui {
-    export class Navigation extends Widget {
 
+module mysli.js.ui
+{
+    export class Navigation extends Widget
+    {
         protected container: Box;
 
-        constructor(items: any, options: any = {}) {
-
+        constructor(items: any, options: any = {})
+        {
             super(options);
 
             this.container = new Box(options);
@@ -21,14 +23,15 @@ module mysli.js.ui {
                 action: {}
             }, this.events);
 
-            for (var item in items) {
-                if (items.hasOwnProperty(item)) {
+            for (var item in items)
+            {
+                if (items.hasOwnProperty(item))
                     this.container.push(this.produce(items[item], item), item);
-                }
             }
         }
 
-        private produce(title: string, id: string): Widget {
+        private produce(title: string, id: string): Widget
+        {
             var button: Button = new Button({flat: true, label: title, style: this.style});
             button.connect('click', (e) => {
                 this.trigger('action', [id, e]);

@@ -2,9 +2,10 @@
 /// <reference path="panel_side.ts" />
 /// <reference path="_inc.common.ts" />
 
-module mysli.js.ui {
-    export class Panel extends Widget {
-
+module mysli.js.ui
+{
+    export class Panel extends Widget
+    {
         // Predefined panel sizes
         public static get SIZE_TINY(): number { return 160; }
         public static get SIZE_SMALL(): number { return 260; }
@@ -12,7 +13,7 @@ module mysli.js.ui {
         public static get SIZE_BIG(): number { return 500; }
         public static get SIZE_HUGE(): number { return 800; }
 
-        private static valid_sides:string[] = ['front', 'back'];
+        private static valid_sides: string[] = ['front', 'back'];
         public static get SIDE_FRONT(): string { return 'front'; }
         public static get SIDE_BACK(): string { return 'back'; }
 
@@ -31,8 +32,8 @@ module mysli.js.ui {
         public front: PanelSide;
         public back: PanelSide;
 
-        constructor(options: any = {}) {
-
+        constructor(options: any = {})
+        {
             super(options);
 
             this.element.addClass('ui-panel');
@@ -108,16 +109,16 @@ module mysli.js.ui {
 
             // Proxy the click event to focus
             this.element.on('click', () => {
-                if (!this.prop.closing && !this.locked) {
+                if (!this.prop.closing && !this.locked)
                     this.focus = true;
-                }
             });
 
             // Add Sides
             this.front = new PanelSide();
             this.element.find('.ui-panel-sides').append(this.front.element);
 
-            if (this.prop.flippable) {
+            if (this.prop.flippable)
+            {
                 // Add multi-panel class
                 this.element.addClass('multi');
                 // Add actual panel
@@ -132,10 +133,10 @@ module mysli.js.ui {
         /**
          * Animate all the changes made to the element.
          */
-        animate(callback?: () => any): void {
-            if (this.prop.closing) {
+        animate(callback?: () => any): void
+        {
+            if (this.prop.closing)
                 return;
-            }
 
             this.element.stop(true, false).animate({
                 left: this.position + this.offset,
@@ -155,16 +156,17 @@ module mysli.js.ui {
         /**
          * Get/set panel's visible side
          */
-        get side(): string {
+        get side(): string
+        {
             return this.prop.side;
         }
-        set side(value: string) {
-            if (Panel.valid_sides.indexOf(value) === -1) {
+        set side(value: string)
+        {
+            if (Panel.valid_sides.indexOf(value) === -1)
                 throw new Error(`Trying to set invalid side: ${value}`);
-            }
-            if (!this.prop.flippable) {
+
+            if (!this.prop.flippable)
                 throw new Error(`Trying to flip a panel which is not flippable.`);
-            }
 
             // Right now this is hard coded, there are only two sides.
             // It's possible that in future more sides will be added?
@@ -174,15 +176,16 @@ module mysli.js.ui {
         /**
          * Get/set panel's width
          */
-        get width(): number {
+        get width(): number
+        {
             return this.prop.width;
         }
-        set width(value: number) {
+        set width(value: number)
+        {
             var diff: number;
 
-            if (value === this.width) {
+            if (value === this.width)
                 return;
-            }
 
             diff = -(this.width - value);
             this.prop.width = value;
@@ -193,25 +196,31 @@ module mysli.js.ui {
         /**
          * Get/set away status for panel.
          */
-        get away(): boolean {
+        get away(): boolean
+        {
             return this.prop.away;
         }
-        set away(status: boolean) {
+        set away(status: boolean)
+        {
             var width: number;
 
-            if (status === this.away) {
+            if (status === this.away)
                 return;
-            }
 
-            if (status) {
-                if (this.focus || this.away) {
+            if (status)
+            {
+                if (this.focus || this.away)
+                {
                     this.prop.away_on_blur = true;
                     return;
                 }
                 this.prop.away = true;
                 width = -(this.width - this.away_width);
-            } else {
-                if (!this.away) {
+            }
+            else
+            {
+                if (!this.away)
+                {
                     this.prop.away_on_blur = false;
                     return;
                 }
@@ -226,23 +235,26 @@ module mysli.js.ui {
         /**
          * Get/set panel's popout status.
          */
-        get popout(): boolean {
+        get popout(): boolean
+        {
             return this.prop.popout;
         }
-        set popout(status: boolean) {
-
-            if (status === this.popout) {
+        set popout(status: boolean)
+        {
+            if (status === this.popout)
                 return;
-            }
 
-            if (status) {
+            if (status)
+            {
                 this.prop.popout = true;
                 this.focus = true;
                 this.old_zindex = +this.element.css('z-index');
                 this.old_width = this.width;
                 this.element.css('z-index', 10005);
                 this.width = this.prop.popout_size;
-            } else {
+            }
+            else
+            {
                 this.prop.popout = false;
                 this.element.css('z-index', this.old_zindex);
                 this.width = this.old_width;
@@ -254,19 +266,24 @@ module mysli.js.ui {
         /**
          * Get/get insensitive status.
          */
-        get insensitive(): boolean {
+        get insensitive(): boolean
+        {
             return this.prop.insensitive;
         }
-        set insensitive(value: boolean) {
-            if (value === this.insensitive) {
+        set insensitive(value: boolean)
+        {
+            if (value === this.insensitive)
                 return;
-            }
-            if (value) {
-                if (this.focus) {
+
+            if (value)
+            {
+                if (this.focus)
                     this.focus = false;
-                }
+
                 this.prop.insensitive = true;
-            } else {
+            }
+            else
+            {
                 this.prop.insensitive = false;
             }
 
@@ -276,13 +293,15 @@ module mysli.js.ui {
         /**
          * Get/set panel's min size.
          */
-        get min_size(): number {
+        get min_size(): number
+        {
             return this.prop.min_size;
         }
-        set min_size(size: number) {
-            if (this.min_size === size) {
+        set min_size(size: number)
+        {
+            if (this.min_size === size)
                 return;
-            }
+
             this.prop.min_size = size;
             this.trigger('set-min-size', [size]);
         }
@@ -290,26 +309,31 @@ module mysli.js.ui {
         /**
          * Get/set focus.
          */
-        get focus(): boolean {
+        get focus(): boolean
+        {
             return this.prop.focus;
         }
-        set focus(value: boolean) {
-            if (value === this.focus) {
+        set focus(value: boolean)
+        {
+            if (value === this.focus)
                 return;
-            }
-            if (value) {
+
+            if (value)
+            {
                 this.prop.focus = true;
                 this.element.addClass('focused');
-                if (this.away) {
+                if (this.away)
+                {
                     this.away = false;
                     this.prop.away_on_blur = true;
                 }
-            } else {
+            }
+            else
+            {
                 this.prop.focus = false;
                 this.element.removeClass('focused');
-                if (this.prop.away_on_blur) {
+                if (this.prop.away_on_blur)
                     this.away = true;
-                }
             }
 
             this.trigger('set-focus', [value]);
@@ -318,11 +342,14 @@ module mysli.js.ui {
         /**
          * Get/set expandable status.
          */
-        get expandable(): boolean {
+        get expandable(): boolean
+        {
             return this.prop.expandable;
         }
-        set expandable(value: boolean) {
-            if (value !== this.expandable) {
+        set expandable(value: boolean)
+        {
+            if (value !== this.expandable)
+            {
                 this.prop.expandable = value;
                 this.trigger('set-expandable', [value]);
             }
@@ -331,62 +358,72 @@ module mysli.js.ui {
         /**
          * Get/set panel's position
          */
-        get position(): number {
+        get position(): number
+        {
             return this.prop.position;
         }
-        set position(value: number) {
+        set position(value: number)
+        {
             this.prop.position = value;
         }
 
         /**
          * Get/set panel's offset
          */
-        get offset(): number {
+        get offset(): number
+        {
             return this.prop.offset;
         }
-        set offset(value: number) {
+        set offset(value: number)
+        {
             this.prop.offset = value;
         }
 
         /**
          * Get/set panel's locked state
          */
-        get locked(): boolean {
+        get locked(): boolean
+        {
             return this.prop.locked;
         }
-        set locked(value: boolean) {
+        set locked(value: boolean)
+        {
             this.prop.locked = value;
         }
 
         /**
          * Get/set panel's locked state
          */
-        get expand(): number {
+        get expand(): number
+        {
             return this.prop.expanded_for;
         }
-        set expand(value: number) {
+        set expand(value: number)
+        {
             this.prop.expanded_for = value;
         }
 
         /**
          * Get away width
          */
-        get away_width(): number {
+        get away_width(): number
+        {
             return this.prop.away_width;
         }
 
         /**
          * Close the panel.
          */
-        close(): void {
-            if (this.locked) {
+        close(): void
+        {
+            if (this.locked)
                 return;
-            }
 
             this.insensitive = true;
             this.prop.closing = true;
 
             this.trigger('close');
+
             this.element.stop(true, false).animate({
                 left: (this.position + this.offset) - (this.width + this.expand) - 10,
                 opacity: 0

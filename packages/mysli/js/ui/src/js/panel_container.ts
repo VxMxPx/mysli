@@ -1,9 +1,11 @@
 /// <reference path="widget.ts" />
 /// <reference path="panel.ts" />
 /// <reference path="_inc.common.ts" />
-module mysli.js.ui {
-    export class PanelContainer extends Widget {
 
+module mysli.js.ui
+{
+    export class PanelContainer extends Widget
+    {
         // sum of all panels (widths, px)
         private sum_size: number = 0;
         // number of panels which are expandable
@@ -19,8 +21,8 @@ module mysli.js.ui {
         // Collection of all constructed panels
         private collection: common.Arr = new common.Arr();
 
-        constructor(options: any = {}) {
-
+        constructor(options: any = {})
+        {
             super(options);
 
             this.element.addClass('ui-panel-container');
@@ -35,10 +37,12 @@ module mysli.js.ui {
          * @param modify_before_id, if provided, panels before an id
          * will update position to fit difference.
          */
-        update_sum(value: number, modify_before_id?: string): void {
+        update_sum(value: number, modify_before_id?: string): void
+        {
             this.sum_size = this.sum_size + value;
 
-            if (typeof modify_before_id !== 'undefined') {
+            if (typeof modify_before_id !== 'undefined')
+            {
                 this.collection.each_after(modify_before_id, function (index: number, panel: Panel) {
                     panel.element.css('z-index', 10000 - index);
                     panel.position = panel.position + value;
@@ -50,7 +54,8 @@ module mysli.js.ui {
         /**
          * Update view when panel is added/removed or window is resized.
          */
-        update_view(): void {
+        update_view(): void
+        {
             var active_panel: Panel;
             var overflow: number;
             var overflow_part: number;
@@ -60,13 +65,13 @@ module mysli.js.ui {
             var panel_calculated: number;
             var diff: number;
 
-            if (!this.active_id) {
+            if (!this.active_id)
                 return;
-            }
 
             active_panel = this.get(this.active_id);
 
-            if (active_panel.width > this.container_width) {
+            if (active_panel.width > this.container_width)
+            {
                 this.sum_size = this.sum_size + (this.container_width - active_panel.width)
                 active_panel.width = this.container_width;
             }
@@ -78,19 +83,23 @@ module mysli.js.ui {
             offset_so_far = 0;
             panel_calculated = 0;
 
-            if (overflow_part <= 0) {
+            if (overflow_part <= 0)
                 overflow_part = overflow;
-            }
 
-            if (overflow > 0) {
+            if (overflow > 0)
+            {
                 overflow_percent = 0;
                 this.offseted = false;
-            } else {
+            }
+            else
+            {
                 this.offseted = true;
             }
 
             this.collection.each(function (index: number, panel: Panel) {
-                if (panel.away && !panel.focus) {
+                
+                if (panel.away && !panel.focus)
+                {
                     panel.expand = 0;
                     panel.offset = -(panel.width - panel.away_width + offset_so_far);
                     panel.animate();
@@ -98,20 +107,25 @@ module mysli.js.ui {
                     return;
                 }
 
-                if (panel.expandable) {
-                    if (overflow > 0) {
+                if (panel.expandable)
+                {
+                    if (overflow > 0)
+                    {
                         panel.offset = -(offset_so_far);
                         panel.expand = overflow_part;
                         panel.animate();
                         offset_so_far += -(overflow_part);
                         return;
-                    } else {
+                    }
+                    else
+                    {
                         panel.expand = 0;
                         panel.animate();
                     }
                 }
 
-                if (panel.focus) {
+                if (panel.focus)
+                {
                     panel.expand = 0;
                     panel.offset = -(offset_so_far);
                     panel.animate();
@@ -122,16 +136,20 @@ module mysli.js.ui {
                 panel_calculated = common.Num.set_percent(overflow_percent, panel.width);
 
                 // is shrinkable and still can be shrinked
-                if (panel.min_size && panel.width + panel.expand > panel.min_size) {
+                if (panel.min_size && panel.width + panel.expand > panel.min_size)
+                {
                     // can whole offset be shrinked?
-                    if (panel.min_size > panel.width - panel_calculated) {
+                    if (panel.min_size > panel.width - panel_calculated)
+                    {
                         diff = panel_calculated - (panel.width - panel.min_size);
                         panel.expand = -(diff);
                         panel.offset = -(panel_calculated - diff + offset_so_far);
                         panel.animate();
                         offset_so_far += panel_calculated;
                         return;
-                    } else {
+                    }
+                    else
+                    {
                         panel.expand = -(panel_calculated);
                         panel.offset = -(offset_so_far);
                         panel.animate();
@@ -150,11 +168,13 @@ module mysli.js.ui {
         /**
          * Push panel after particular panel of different ID.
          */
-        insert(panel: Panel, after_id: string): Panel {
+        insert(panel: Panel, after_id: string): Panel
+        {
             let index: number;
             var size: number = 0;
 
-            if (typeof after_id === 'string') {
+            if (typeof after_id === 'string')
+            {
                 size = this.get(after_id).width;
                 size = typeof size === 'number' ? size : 0;
 
@@ -163,7 +183,9 @@ module mysli.js.ui {
                     size += ipanel.width;
                 });
                 panel.position = size;
-            } else {
+            }
+            else
+            {
                 panel.position = this.sum_size;
             }
 
@@ -174,16 +196,20 @@ module mysli.js.ui {
                 left: (panel.position + panel.offset) - (panel.width + panel.expand)
             });
 
-            if (after_id) {
+            if (after_id)
+            {
                 this.collection.push_after(after_id, panel.uid, panel);
-                if (panel.uid !== this.collection.get_last().uid) {
+                if (panel.uid !== this.collection.get_last().uid)
+                {
                     this.collection.each_after(panel.uid, function (index: number, ipanel: Panel) {
                         ipanel.element.css('z-index', 10000 - index);
                         ipanel.position = ipanel.position + panel.width;
                         ipanel.animate();
                     });
                 }
-            } else {
+            }
+            else
+            {
                 this.collection.push(panel.uid, panel);
             }
 
@@ -203,9 +229,8 @@ module mysli.js.ui {
 
             panel.focus = true;
 
-            if (panel.expandable) {
+            if (panel.expandable)
                 this.expandable_count++;
-            }
 
             return panel;
         }
@@ -213,37 +238,42 @@ module mysli.js.ui {
         /**
          * Add a new panel to the collection.
          */
-        push(panel: Panel): Panel {
+        push(panel: Panel): Panel
+        {
             return this.insert(panel, null);
         }
 
         /**
          * Get panel by id.
          */
-        get(id:string): Panel {
+        get(id:string): Panel
+        {
             return this.collection.get(id);
         }
 
         /**
          * Remove panel by id.
          */
-        remove(id: string): void {
+        remove(id: string): void
+        {
             var panel: Panel = this.get(id);
             var width = panel.width;
             var next_panel: Panel;
 
-            if (panel.expandable) {
+            if (panel.expandable)
                 this.expandable_count--;
-            }
 
             this.update_sum(-(width), id);
 
-            if (id == this.active_id) {
+            if (id == this.active_id)
+            {
                 this.active_id = null;
                 next_panel = this.collection.get_from(id, -1);
                 this.collection.remove(id);
                 next_panel.focus = true;
-            } else {
+            }
+            else
+            {
                 this.collection.remove(id);
                 this.update_view();
             }
@@ -252,26 +282,29 @@ module mysli.js.ui {
         /**
          * Element will resize according to window resize.
          */
-        set_resize_with_window(status: boolean, timeout: number = 500): void {
-            if (status) {
+        set_resize_with_window(status: boolean, timeout: number = 500): void
+        {
+            if (status)
+            {
                 $(window).on('resize', function () {
-                    if (this.resize_timer) {
+                    if (this.resize_timer)
                         clearTimeout(this.resize_timer);
-                    }
+                        
                     this.resize_timer = setTimeout(this.set_size_from_dom_element.bind(this, window), timeout);
                 }.bind(this));
-            } else {
-                if (this.resize_timer) {
+            }
+            else
+            {
+                if (this.resize_timer)
                     clearTimeout(this.resize_timer);
-                }
             }
         }
 
         /**
          * Set element's size to DOM element's size.
          */
-        set_size_from_dom_element(selector: any): void {
-
+        set_size_from_dom_element(selector: any): void
+        {
             var width: number = $(selector).outerWidth();
             var height: number = $(selector).outerHeight();
 
@@ -287,15 +320,16 @@ module mysli.js.ui {
         /**
          * Remove old focus, and set new
          */
-        switch_focus(status: boolean, panel: Panel): void {
-            if (status) {
-                if (this.active_id) {
+        switch_focus(status: boolean, panel: Panel): void
+        {
+            if (status)
+            {
+                if (this.active_id)
                     this.get(this.active_id).focus = false;
-                }
+
                 this.active_id = panel.uid;
                 this.update_view();
             }
         }
-
     }
 }

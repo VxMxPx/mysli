@@ -1,12 +1,15 @@
 /// <reference path="generic_input.ts" />
 /// <reference path="_inc.common.ts" />
 
-module mysli.js.ui {
-    export class Checkbox extends GenericInput {
+module mysli.js.ui
+{
+    export class Checkbox extends GenericInput
+    {
         protected static template: string = '<label><div class="ui-gi-input"><i class="fa fa-check" /></div><span></span></label>';
         protected $checked: JQuery;
         
-        constructor(options: any = {}) {
+        constructor(options: any = {})
+        {
             super(options);
             
             this.$checked = this.$input.find('i');
@@ -24,10 +27,12 @@ module mysli.js.ui {
         }
         
         // Get/set checked value
-        get checked(): boolean {
+        get checked(): boolean
+        {
             return this.prop.checked;
         }
-        set checked(value: boolean) {
+        set checked(value: boolean)
+        {
             this.prop.checked = value;
             this.$input[value ? 'addClass' : 'removeClass']('checked');
         }
