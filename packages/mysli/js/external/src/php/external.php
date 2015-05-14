@@ -29,17 +29,14 @@ class external
         $libraries = [];
 
         if (isset($meta['js.external']))
-        {
             $defaults = arr::merge($defaults, $meta['js.external']);
-        }
 
 
         if (!isset($defaults['require']))
-        {
             return [];
-        }
 
-        foreach ($defaults['require'] as $library) {
+        foreach ($defaults['require'] as $library) 
+        {
             $libraries = array_merge(
                 $libraries, self::get_lib_links($library, $type, $defaults)
             );
@@ -58,28 +55,24 @@ class external
     static function get_lib_links($library, $type=null, array $defaults=null)
     {
         if (!$defaults)
-        {
             $defaults = __init::defaults();
-        }
+        
         $c = config::select(__namespace__);
         $links = [];
 
         // Do we have a library?
         if (!isset($defaults['libraries'][$library]))
-        {
             throw new framework\exception\not_found(
                 "Tying to use undefined library: `{$library}`.", 10
             );
-        }
         else
-        {
             $library_meta = $defaults['libraries'][$library];
-        }
 
         // Do we have dependencies?
         if (isset($library_meta['require']) && is_array($library_meta['require']))
         {
-            foreach ($library_meta['require'] as $require) {
+            foreach ($library_meta['require'] as $require) 
+            {
                 $links = array_merge($links, self::get_lib_links($require, $type));
             }
         }
@@ -93,20 +86,15 @@ class external
         $version = $library_meta['version'];
 
         if ($is_dev && isset($library_meta['dev']) && $library_meta['dev'])
-        {
             $urls = $library_meta['dev'];
-        }
         else
-        {
             $urls = $library_meta['min'];
-        }
 
         if ($is_local)
         {
             if (!self::has_local($library, $version, $urls))
-            {
                 self::fetch_library($library, $version, $urls);
-            }
+                
             $links = array_merge($links, self::get_local($library, $version, $urls));
         }
         else
@@ -118,9 +106,7 @@ class external
         {
             foreach ($links as $id => &$link) {
                 if (substr($link, -(strlen($type))) !== $type)
-                {
                     unset($links[$id]);
-                }
             }
             unset($link);
         }
@@ -157,12 +143,10 @@ class external
         $downloaded = 0;
 
         if (!\core\pkg::is_enabled('mysli.util.curl'))
-        {
             throw new framework\exception\not_found(
                 'You need to enable `mysli.util.curl` '.
                 "to fetch `{$library}` and save it locally."
             );
-        }
 
         $public_dir = fs::ds(
             assets::get_public_url('mysli.js.external'),
@@ -170,26 +154,22 @@ class external
         );
 
         if (!dir::exists($public_dir))
-        {
             dir::create($public_dir);
-        }
 
-        foreach ($urls as $url) {
+        foreach ($urls as $url) 
+        {
             $url = str_replace('{version}', $version, $url);
+        
             if (substr($url, 0, 2) === '//')
-            {
                 $url = "http:{$url}";
-            }
 
             $fetched = curl::get($url);
 
             if ($fetched)
-            {
                 $downloaded =+ file::write(
                     fs::ds($public_dir, file::name($url, true)),
                     $fetched
                 );
-            }
         }
 
         return $downloaded;
@@ -209,7 +189,8 @@ class external
             assets::get_public_url('mysli.js.external')
             ."/{$library}-{$version}";
 
-        foreach ($urls as $url) {
+        foreach ($urls as $url) 
+        {
             $links[] = $public_url."/".file::name(
                 str_replace('{version}', $version, $url), true
             );
@@ -229,7 +210,8 @@ class external
     {
         $links = [];
 
-        foreach ($urls as $url) {
+        foreach ($urls as $url) 
+        {
             $links[] = str_replace('{version}', $version, $url);
         }
 
