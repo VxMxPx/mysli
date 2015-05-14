@@ -41,6 +41,7 @@ files:
             - css/navigation.styl
             - css/overlay.styl
             - css/button.styl
+            - css/popup.styl
             # Form
             - css/generic_input.styl
             - css/entry.styl
@@ -67,6 +68,7 @@ files:
             - js/tabbar.ts
             - js/titlebar.ts
             - js/navigation.ts
+            - js/popup.ts
             # Form
             - js/generic_input.ts
             - js/checkbox.ts
