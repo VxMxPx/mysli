@@ -11,19 +11,16 @@ class util
     static function tags($package, $type=null)
     {
         $links = self::resolve_package_or_library($package, $type);
-
         $output = '';
+        
         foreach ($links as $link)
         {
             if ($type === 'css')
-            {
                 $output .= "\n<link rel=\"stylesheet\" href=\"{$link}\" />";
-            }
             else
-            {
                 $output .= "\n<script src=\"{$link}\"></script>";
-            }
         }
+        
         return $output;
     }
 
@@ -39,9 +36,7 @@ class util
         {
             // Need only links for one library
             if (substr($package, 0, 1) === '\\')
-            {
                 $package = substr($package, 1);
-            }
 
             return js\external::get_lib_links($package, $type);
         }

@@ -1,11 +1,13 @@
 /// <reference path="common.ts" />
 
-module mysli.js.common {
-    export class Prop {
-
+module mysli.js.common
+{
+    export class Prop
+    {
         private _context: any;
 
-        constructor(properties: any, context: any) {
+        constructor(properties: any, context: any)
+        {
             this._context = context;
             this.def(properties);
         }
@@ -13,10 +15,12 @@ module mysli.js.common {
         /**
          * Get/set any property
          */
-        get(property: string): any {
+        get(property: string): any
+        {
             return this[property];
         }
-        set(property: string, value: any) {
+        set(property: string, value: any)
+        {
             this[property] = value;
         }
 
@@ -25,18 +29,19 @@ module mysli.js.common {
          * It will not append those values that are already set.
          * @param properties
          */
-        def(properties: any): void {
+        def(properties: any): void
+        {
             var property: string;
-            for (property in properties) {
-                if (!properties.hasOwnProperty(property)) {
-                    continue;
-                }
 
-                if (typeof this[property] === 'undefined') {
+            for (property in properties)
+            {
+                if (!properties.hasOwnProperty(property))
+                    continue;
+
+                if (typeof this[property] === 'undefined')
                     this[property] = properties[property];
-                } else {
+                else
                     console.warn('Setting a default property which is already there: '+property);
-                }
             }
         }
 
@@ -50,27 +55,34 @@ module mysli.js.common {
          * @param properties
          * @param use
          */
-        push(properties: any, use: string[] = []): void {
-
+        push(properties: any, use: string[] = []): void
+        {
             var property: string;
             var force: boolean;
 
             // Check which options to set with setter
-            if (use.length) {
-                for (var i = 0; i < use.length; i++) {
+            if (use.length)
+            {
+                for (var i = 0; i < use.length; i++)
+                {
                     property = use[i];
                     force = (property.substr(property.length - 1, 1) === '!');
-                    if (force) {
+                
+                    if (force)
+                    {
                         property = property.substr(0, property.length - 1);
                         use[i] = property;
                     }
 
-                    if (typeof this[property] !== 'undefined') {
-                        if (typeof properties[property] !== 'undefined') {
-                            if (properties[property] !== this[property] || force) {
+                    if (typeof this[property] !== 'undefined')
+                    {
+                        if (typeof properties[property] !== 'undefined')
+                        {
+                            if (properties[property] !== this[property] || force)
                                 this._context[property] = properties[property];
-                            }
-                        } else if (force) {
+                        }
+                        else if (force)
+                        {
                             this._context[property] = this[property];
                         }
                     }
@@ -78,18 +90,20 @@ module mysli.js.common {
             }
 
             // Run through the rest of the properties
-            for (property in properties) {
-
-                if (!properties.hasOwnProperty(property)) {
+            for (property in properties)
+            {
+                if (!properties.hasOwnProperty(property))
                     continue;
-                }
 
-                if (typeof this[property] !== 'undefined' && use.indexOf(property) === -1) {
+                if (typeof this[property] !== 'undefined' && use.indexOf(property) === -1)
+                {
                     if (this[property] && typeof this[property] === 'object' &&
                         properties[property] && typeof properties[property] === 'object')
                     {
                         this[property] = mix(this[property], properties[property]);
-                    } else {
+                    }
+                    else
+                    {
                         this[property] = properties[property];
                     }
                 }
@@ -101,16 +115,17 @@ module mysli.js.common {
          * @param path
          * @param def
          */
-        q(path: string, def?: any): any {
+        q(path: string, def?: any): any
+        {
             var last: any = this;
             var segments: string[] = path.split('.');
 
-            for (var i=0; i<segments.length; i++) {
-                if (typeof last[segments[i]] === 'undefined') {
+            for (var i=0; i<segments.length; i++)
+            {
+                if (typeof last[segments[i]] === 'undefined')
                     return def;
-                } else {
+                else
                     last = last[segments[i]];
-                }
             }
 
             return last;

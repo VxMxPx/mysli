@@ -1,8 +1,10 @@
-module mysli.js.common {
-    export class Num {
-
-        static to_fixed_fix(n:number, prec:number):string {
-            var k:number;
+module mysli.js.common
+{
+    export class Num
+    {
+        static to_fixed_fix(n: number, prec: number): string
+        {
+            var k: number;
             k = Math.pow(10, prec);
             return '' + Math.round(n * k) / k;
         }
@@ -15,7 +17,8 @@ module mysli.js.common {
          * @param  {string} thousands_sep
          * @return {string}
          */
-        static format(num: number, decimals: number, dec_point: string = '.', thousands_sep: string = ','): string {
+        static format(num: number, decimals: number, dec_point: string = '.', thousands_sep: string = ','): string
+        {
             var s_num: string;
             var o_num: number;
             var perc: number;
@@ -29,11 +32,11 @@ module mysli.js.common {
             final = perc ? Num.to_fixed_fix(o_num, perc) : '' + Math.round(o_num);
             final_seg = final.split('.');
 
-            if (final_seg[0].length > 3) {
+            if (final_seg[0].length > 3)
                 final_seg[0] = final_seg[0].replace(/\B(?=(?:\d{3})+(?!\d))/g, thousands_sep);
-            }
 
-            if ((final_seg[1] || '').length < perc) {
+            if ((final_seg[1] || '').length < perc)
+            {
                 final_seg[1] = final_seg[1] || '';
                 final_seg[1] += new Array(perc - final_seg[1].length + 1).join('0');
             }
@@ -48,12 +51,12 @@ module mysli.js.common {
          * @param  {number} percision
          * @return {number}
          */
-        static get_percent(amount:number, total:number, percision:number=2):number {
+        static get_percent(amount: number, total: number, percision: number = 2): number
+        {
             var count: number;
 
-            if (!amount || !total) {
+            if (!amount || !total)
                 return amount;
-            }
 
             count = amount / total;
             count = count * 100;
@@ -68,12 +71,12 @@ module mysli.js.common {
          * @param {number} total
          * @param {number} percision
          */
-        static set_percent(percent:number, total:number, percision:number=2):number {
+        static set_percent(percent: number, total: number, percision: number = 2): number
+        {
             var result: number;
 
-            if (!percent || !total) {
+            if (!percent || !total)
                 return 0;
-            }
 
             result = parseFloat(Num.format((total / 100) * percent, percision));
 
