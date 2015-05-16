@@ -14,6 +14,7 @@ mjud.add('navigation', function () {
         entry: "Entry",
         checkbox: "Checkbox",
         radio: "Radio",
+        popup: "Popup",
         tabbar: "Tabbar",
         panel: "Panel"
     }, {style: 'alt'});
