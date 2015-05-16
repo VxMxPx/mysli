@@ -65,9 +65,13 @@ module mysli.js.ui
 
             // Check for uid
             if (typeof options.uid === 'undefined')
+            {
                 options.uid = Widget.next_uid();
+            }
             else if (typeof options.uid !== 'string')
+            {
                 throw new Error(`UID needs to be a valid string, got: ${options.uid}`);
+            }
 
             // Create element
             this.$element = $(this['constructor']['template']);
@@ -190,7 +194,9 @@ module mysli.js.ui
             id = _ref[1];
 
             if (typeof this.events[event] === 'undefined')
+            {
                 throw new Error('No such event available: '+event);
+            }
 
             // Create new ID
             id = "" + id + event + "--" + (++this.events_count);
@@ -203,6 +209,7 @@ module mysli.js.ui
                     typeof this.events_count_native[event] === 'undefined' ?
                         1 :
                         this.events_count_native[event]+1;
+
                 // Prevent registering event more than once
                 if (this.events_count_native[event] === 1)
                 {
@@ -224,24 +231,34 @@ module mysli.js.ui
             var _results: any[] = [];
 
             if (typeof this.events[event] === 'undefined')
+            {
                 throw new Error("Invalid event: "+event);
+            }
 
             if (typeof params.push !== 'function')
+            {
                 throw new Error('Params must be an array!');
+            }
 
             params.push(this);
 
             for (var id in this.events[event])
             {
                 if (!this.events[event].hasOwnProperty(id))
+                {
                     continue;
+                }
 
                 call = this.events[event][id];
 
                 if (typeof call === 'function')
+                {
                     _results.push(call.apply(this, params));
+                }
                 else
+                {
                     throw new Error("Invalid type of callback: "+id);
+                }
             }
 
             return _results;
@@ -262,12 +279,16 @@ module mysli.js.ui
                 for (event in this.events)
                 {
                     if (!this.events.hasOwnProperty(event))
+                    {
                         continue;
+                    }
                     
                     for (eid in this.events[event])
                     {
                         if (!this.events[event].hasOwnProperty(eid))
+                        {
                             continue;
+                        }
                             
                         if (eid.substr(0, id.length) === id)
                         {
@@ -316,7 +337,9 @@ module mysli.js.ui
                         this.events_count_native[event]-1;
 
                 if (this.events_count_native[event] === 0)
+                {
                     this.$element.off(event.replace('-', ''));
+                }
             }
         }
 

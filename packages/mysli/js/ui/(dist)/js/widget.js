@@ -37,7 +37,7 @@ var mysli;
                     }
                     // Create element
                     this.$element = $(this['constructor']['template']);
-                    //            this.$element.prop('id', options.uid);
+                    // this.$element.prop('id', options.uid);
                     // Push options finally!
                     this.prop.push(options, ['style!', 'flat!', 'disabled']);
                 }
@@ -269,7 +269,7 @@ var mysli;
                     }
                     return [event, idr];
                 };
-                // Events
+                // List of native DOM events
                 Widget.events_native = [
                     // When widget is clicked
                     // => ( event: any, widget: Widget )
