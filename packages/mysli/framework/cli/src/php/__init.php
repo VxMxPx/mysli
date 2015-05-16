@@ -10,7 +10,7 @@ class __init
 {
     static function enable()
     {
-        $dot = file::read(__DIR__.'/../data/dot.tpl');
+        $dot = file::read(__DIR__.'/../../data/dot.tpl');
 
         $dot = str_replace(
             '{{PKGPATH}}',

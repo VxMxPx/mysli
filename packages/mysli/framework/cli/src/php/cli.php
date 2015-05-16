@@ -96,7 +96,7 @@ class cli
         $namespace  = str_replace('.', '\\', $scripts[$script]['package']);
         $namespace .= "\\sh\\{$script}";
 
-        if (!method_exists($namespace, '__init'))
+        if (!class_exists($namespace, false))
         {
             $file = fs::pkgreal($scripts[$script]['package'], 'src/php/sh', $script.'.php');
 
@@ -111,7 +111,7 @@ class cli
             }
         }
 
-        if (method_exists($namespace, '__init'))
+        if (class_exists($namespace) && method_exists($namespace, '__init'))
         {
             call_user_func_array($namespace.'::__init', [$arguments]);
         }

@@ -588,9 +588,9 @@ class pkgm
     static function run_setup($pkg, $action)
     {
         $setup_file = fs::pkgreal($pkg, 'src/php/__init.php');
-        $setup_fnc  = str_replace('.', '\\', $pkg) . '\\__init::' . $action;
+        $setup_cls = str_replace('.', '\\', $pkg) . '\\__init';
 
-        if (!function_exists($setup_fnc))
+        if (!class_exists($setup_cls, false))
         {
             if (!file_exists($setup_file))
             {
@@ -602,27 +602,21 @@ class pkgm
             }
         }
 
-        if (!function_exists($setup_fnc))
+        if (!method_exists($setup_cls, $action))
         {
             return true;
         }
 
-        return (self::call_setup_function($setup_fnc) !== false);
+        return (self::call_setup_function([$setup_cls, $action]) !== false);
     }
     /**
      * Execute setup step, and handle `csi`.
-     * @param  string $class
-     * @param  string $method
+     * @param  array  $class [class, method]
      * @param  array  $values
      * @return boolean
      */
-    static function call_setup_function($call, array $values=null)
+    static function call_setup_function(array $call, array $values=null)
     {
-        if (!function_exists($call))
-        {
-            return true;
-        }
-
         $csi = null;
 
         do
@@ -636,9 +630,7 @@ class pkgm
                 if (substr($class, -4) === '\\csi')
                 {
                     if ($values)
-                    {
                         $csi->set_multiple($values);
-                    }
 
                     $csi_result = self::csi_process($csi);
                     continue;

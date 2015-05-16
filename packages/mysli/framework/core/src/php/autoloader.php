@@ -333,7 +333,7 @@ class autoloader
             include($path);
         }
 
-        if (method_exists($class, '__init'))
+        if (class_exists($class, false) && method_exists($class, '__init'))
         {
             call_user_func([$class, '__init']);
         }
