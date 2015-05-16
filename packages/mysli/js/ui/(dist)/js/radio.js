@@ -31,9 +31,8 @@ var mysli;
                     this.prop.push(options, ['toggle', 'checked']);
                     this.connect('click', function () {
                         if (!_this.disabled) {
-                            if (!_this.prop.toggle && _this.checked) {
+                            if (!_this.prop.toggle && _this.checked)
                                 return;
-                            }
                             _this.checked = !_this.checked;
                         }
                     });
@@ -78,17 +77,14 @@ var mysli;
                     for (var i = 0; i < elements.length; i++) {
                         radio = new Radio(elements[i]);
                         if (radio.checked) {
-                            if (this.checked) {
+                            if (this.checked)
                                 throw new Error("Cannot have two checked radios.");
-                            }
-                            else {
+                            else
                                 this.checked = radio;
-                            }
                         }
                         radio.connect('click', function (e, self) {
-                            if (_this.checked && (self.uid !== _this.checked.uid)) {
+                            if (_this.checked && (self.uid !== _this.checked.uid))
                                 _this.checked.checked = false;
-                            }
                             _this.checked = self;
                         });
                         this.box.push(radio);

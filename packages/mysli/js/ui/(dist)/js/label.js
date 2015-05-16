@@ -106,9 +106,8 @@ var mysli;
                         }
                         else {
                             this.prop.input = widget;
-                            if (!widget.element.prop('id')) {
+                            if (!widget.element.prop('id'))
                                 widget.element.prop('id', widget.uid);
-                            }
                             this.type = Label.INPUT;
                             this.element.find('label').prop('for', widget.uid);
                         }

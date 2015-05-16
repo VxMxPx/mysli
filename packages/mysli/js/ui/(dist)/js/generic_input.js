@@ -31,9 +31,8 @@ var mysli;
                         return this.prop.disabled;
                     },
                     set: function (value) {
-                        if (!this.$input) {
+                        if (!this.$input)
                             return;
-                        }
                         this.prop.disabled = value;
                         this.$input[value ? 'addClass' : 'removeClass']('disabled');
                         this.$input.prop('disabled', value);

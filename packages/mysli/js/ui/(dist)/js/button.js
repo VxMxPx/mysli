@@ -1,11 +1,11 @@
+/// <reference path="widget.ts" />
+/// <reference path="_inc.common.ts" />
 var __extends = this.__extends || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     __.prototype = b.prototype;
     d.prototype = new __();
 };
-/// <reference path="widget.ts" />
-/// <reference path="_inc.common.ts" />
 var mysli;
 (function (mysli) {
     var js;
@@ -80,7 +80,7 @@ var mysli;
                         }
                         if (!$label.length) {
                             $label = $('<span class="label" />');
-                            method = this.icon.position === 'right' ? 'prepend' : 'append';
+                            method = this.icon['position'] === 'right' ? 'prepend' : 'append';
                             this.element[method]($label);
                         }
                         $label.text(value);
@@ -99,9 +99,8 @@ var mysli;
                         var spin;
                         $icon = this.element.find('i.fa');
                         $icon.remove();
-                        if (typeof options === 'string') {
+                        if (typeof options === 'string')
                             options = { name: options };
-                        }
                         if (!options['name']) {
                             this.prop.icon.name = null;
                             return;

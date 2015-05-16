@@ -1,13 +1,13 @@
+/// <reference path="button.ts" />
+/// <reference path="box.ts" />
+/// <reference path="widget.ts" />
+/// <reference path="_inc.common.ts" />
 var __extends = this.__extends || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     __.prototype = b.prototype;
     d.prototype = new __();
 };
-/// <reference path="button.ts" />
-/// <reference path="box.ts" />
-/// <reference path="widget.ts" />
-/// <reference path="_inc.common.ts" />
 var mysli;
 (function (mysli) {
     var js;
@@ -28,9 +28,8 @@ var mysli;
                         action: {}
                     }, this.events);
                     for (var item in items) {
-                        if (items.hasOwnProperty(item)) {
+                        if (items.hasOwnProperty(item))
                             this.container.push(this.produce(items[item], item), item);
-                        }
                     }
                 }
                 Navigation.prototype.produce = function (title, id) {

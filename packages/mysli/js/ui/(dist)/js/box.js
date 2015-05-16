@@ -1,12 +1,12 @@
+/// <reference path="container.ts" />
+/// <reference path="cell.ts" />
+/// <reference path="_inc.common.ts" />
 var __extends = this.__extends || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     __.prototype = b.prototype;
     d.prototype = new __();
 };
-/// <reference path="container.ts" />
-/// <reference path="cell.ts" />
-/// <reference path="_inc.common.ts" />
 var mysli;
 (function (mysli) {
     var js;
@@ -53,12 +53,10 @@ var mysli;
                     for (var _i = 0; _i < arguments.length; _i++) {
                         args[_i - 0] = arguments[_i];
                     }
-                    if (this.prop.orientation === Box.HORIZONTAL) {
+                    if (this.prop.orientation === Box.HORIZONTAL)
                         this.element_wrapper = '<div class="ui-row"><div class="ui-cell container-target" /></div>';
-                    }
-                    else {
+                    else
                         this.element_wrapper = this.element_wrapper_original;
-                    }
                     return _super.prototype.insert.apply(this, args);
                 };
                 return Box;

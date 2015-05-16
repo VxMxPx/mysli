@@ -1,12 +1,12 @@
+/// <reference path="widget.ts" />
+/// <reference path="panel.ts" />
+/// <reference path="_inc.common.ts" />
 var __extends = this.__extends || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     __.prototype = b.prototype;
     d.prototype = new __();
 };
-/// <reference path="widget.ts" />
-/// <reference path="panel.ts" />
-/// <reference path="_inc.common.ts" />
 var mysli;
 (function (mysli) {
     var js;
@@ -64,9 +64,8 @@ var mysli;
                     var offset_so_far;
                     var panel_calculated;
                     var diff;
-                    if (!this.active_id) {
+                    if (!this.active_id)
                         return;
-                    }
                     active_panel = this.get(this.active_id);
                     if (active_panel.width > this.container_width) {
                         this.sum_size = this.sum_size + (this.container_width - active_panel.width);
@@ -78,9 +77,8 @@ var mysli;
                     overflow_percent = 100 - js.common.Num.get_percent(screen_left, this.sum_size - active_panel.width);
                     offset_so_far = 0;
                     panel_calculated = 0;
-                    if (overflow_part <= 0) {
+                    if (overflow_part <= 0)
                         overflow_part = overflow;
-                    }
                     if (overflow > 0) {
                         overflow_percent = 0;
                         this.offseted = false;
@@ -191,9 +189,8 @@ var mysli;
                         _this.remove(panel.uid);
                     });
                     panel.focus = true;
-                    if (panel.expandable) {
+                    if (panel.expandable)
                         this.expandable_count++;
-                    }
                     return panel;
                 };
                 /**
@@ -215,9 +212,8 @@ var mysli;
                     var panel = this.get(id);
                     var width = panel.width;
                     var next_panel;
-                    if (panel.expandable) {
+                    if (panel.expandable)
                         this.expandable_count--;
-                    }
                     this.update_sum(-(width), id);
                     if (id == this.active_id) {
                         this.active_id = null;
@@ -237,16 +233,14 @@ var mysli;
                     if (timeout === void 0) { timeout = 500; }
                     if (status) {
                         $(window).on('resize', function () {
-                            if (this.resize_timer) {
+                            if (this.resize_timer)
                                 clearTimeout(this.resize_timer);
-                            }
                             this.resize_timer = setTimeout(this.set_size_from_dom_element.bind(this, window), timeout);
                         }.bind(this));
                     }
                     else {
-                        if (this.resize_timer) {
+                        if (this.resize_timer)
                             clearTimeout(this.resize_timer);
-                        }
                     }
                 };
                 /**
@@ -267,9 +261,8 @@ var mysli;
                  */
                 PanelContainer.prototype.switch_focus = function (status, panel) {
                     if (status) {
-                        if (this.active_id) {
+                        if (this.active_id)
                             this.get(this.active_id).focus = false;
-                        }
                         this.active_id = panel.uid;
                         this.update_view();
                     }

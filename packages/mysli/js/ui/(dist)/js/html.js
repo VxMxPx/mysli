@@ -1,11 +1,11 @@
+/// <reference path="widget.ts" />
+/// <reference path="_inc.common.ts" />
 var __extends = this.__extends || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     __.prototype = b.prototype;
     d.prototype = new __();
 };
-/// <reference path="widget.ts" />
-/// <reference path="_inc.common.ts" />
 var mysli;
 (function (mysli) {
     var js;
@@ -17,14 +17,12 @@ var mysli;
                 function HTML(text, options) {
                     if (text === void 0) { text = {}; }
                     if (options === void 0) { options = {}; }
-                    if (text !== null && typeof text === 'object') {
+                    if (text !== null && typeof text === 'object')
                         options = text;
-                    }
                     _super.call(this, options);
                     this.element.addClass('ui-html');
-                    if (typeof text === 'string') {
+                    if (typeof text === 'string')
                         this.push(text);
-                    }
                 }
                 /**
                  * Push new HTML to the container.

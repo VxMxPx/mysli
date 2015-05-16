@@ -57,16 +57,13 @@ var mysli;
                     set: function (value) {
                         var positions = ['top', 'right', 'bottom', 'left'];
                         this.$cell.css('padding', '');
-                        if (typeof value === 'boolean') {
+                        if (typeof value === 'boolean')
                             value = [value, value, value, value];
-                        }
                         for (var i = 0; i < positions.length; i++) {
-                            if (typeof value[i] === 'number') {
+                            if (typeof value[i] === 'number')
                                 this.$cell.css("padding-" + positions[i], value[i]);
-                            }
-                            else {
+                            else
                                 this.$cell[value[i] ? 'addClass' : 'removeClass']("pad" + positions[i]);
-                            }
                         }
                     },
                     enumerable: true,
@@ -78,9 +75,8 @@ var mysli;
                         return this.prop.visible;
                     },
                     set: function (status) {
-                        if (status === this.prop.visible) {
+                        if (status === this.prop.visible)
                             return;
-                        }
                         this.prop.visible = status;
                         this.$cell[status ? 'show' : 'hide']();
                     },
