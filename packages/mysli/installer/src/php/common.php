@@ -16,12 +16,13 @@ function exe_setup($pkg, $pkgpath, $datpath, callable $errout)
     $pkgpath   = pkgroot($pkgpath, $pkg);
     $setupfile = dst($pkgpath, 'src/php/__init.php');
 
-    if (file_exists($setupfile) && !method_exists($ns.'\\__init', 'enable'))
+    if (file_exists($setupfile) && !class_exists($ns.'\\__init', false))
     {
         include $setupfile;
     }
 
-    if (method_exists($ns.'\\__init', 'enable'))
+    if (class_exists($ns.'\\__init', false) &&
+        method_exists($ns.'\\__init', 'enable'))
     {
         if (!call_user_func_array($ns.'\\__init::enable', [$pkgpath, $datpath]))
         {
@@ -52,12 +53,12 @@ function pkg_class($pkg, $class, $pkgpath, callable $errout)
         return false;
     }
 
-    if (!class_exists("{$ns}\\{$class}"))
+    if (!class_exists("{$ns}\\{$class}", false))
     {
         include $classfile;
     }
 
-    if (!class_exists("{$ns}\\{$class}"))
+    if (!class_exists("{$ns}\\{$class}", false))
     {
         $errout(
             "Main file was loaded, but function not found: `{$ns}\\{$class}`"

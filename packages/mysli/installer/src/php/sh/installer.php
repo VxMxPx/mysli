@@ -23,9 +23,9 @@ function __init()
 
     // Minimal core packages required for system to work
     $packages = [
-        'core'   => 'mysli.framework.core',
-        'cli'    => 'mysli.framework.cli',
-        'pkgm'   => 'mysli.framework.pkgm',
+        'core' => 'mysli.framework.core',
+        'cli'  => 'mysli.framework.cli',
+        'pkgm' => 'mysli.framework.pkgm',
     ];
 
     $is_yes  = !get_parameter($options, 'y', false, true); // Need to invert it
@@ -144,7 +144,7 @@ function __init()
     }
 
     $core = c\pkg_class($packages['core'], '__init', $pkgpath, $func_fatal);
-    $core($datpath, $pkgpath);
+    $core::__init($datpath, $pkgpath);
 
     // Run pkgm's setup
     if (c\exe_setup($packages['pkgm'], $pkgpath, $datpath, $func_fatal))
@@ -171,8 +171,8 @@ function __init()
 
     print_line('    All done!');
 
-    include c\pkgroot($pkgpath, $packages['pkgm']).'/sh/pkgm.php';
-    call_user_func(substr($pkgm, 0, strrpos($pkgm, '\\')).'\\sh\\pkgm\\repair');
+    include c\pkgroot($pkgpath, $packages['pkgm']).'/src/php/sh/pkgm.php';
+    call_user_func(substr($pkgm, 0, strrpos($pkgm, '\\')).'\\sh\\pkgm::repair');
 }
 
 /**

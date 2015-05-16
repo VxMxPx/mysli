@@ -12,7 +12,7 @@ function __init()
     else
     {
         // ROOT!
-        $base_dir = dirname(dirname($base_dir));
+        $base_dir = dirname(dirname(dirname($base_dir)));
     }
 
     // common.php
@@ -21,7 +21,7 @@ function __init()
     // Is cli?
     if (php_sapi_name() === 'cli' || defined('STDIN'))
     {
-        try_to_include($base_dir.'/sh/installer.php');
+        try_to_include($base_dir.'/src/php/sh/installer.php');
         \mysli\installer\sh\installer\__init($_SERVER['argv']);
     }
     else
