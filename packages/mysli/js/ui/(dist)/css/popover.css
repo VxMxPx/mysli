@@ -1,0 +1,22 @@
+.ui-popover {
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: inset 0 1px 0 2px rgba(0,0,0,0.2);
+  opacity: 0;
+  position: absolute;
+  z-index: 11000;
+  top: 0;
+  left: 0;
+}
+.ui-popover.pointer.top:after {
+  content: "";
+  border-style: solid;
+  border-width: 11px;
+  border-color: #aaa;
+  border-bottom-width: 0;
+  position: absolute;
+  left: 50%;
+  margin-left: -11px;
+  display: block;
+  z-index: 11001;
+}

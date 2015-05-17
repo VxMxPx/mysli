@@ -10,13 +10,13 @@ mjud.add('navigation', function () {
     var usermeta = new ui.Titlebar({flat: true});
     var navigation = new ui.Navigation({
         introduction: "Introduction",
-        button: "Button",
-        entry: "Entry",
+        button:   "Button",
+        entry:    "Entry",
         checkbox: "Checkbox",
-        radio: "Radio",
-        popup: "Popup",
-        tabbar: "Tabbar",
-        panel: "Panel"
+        radio:    "Radio",
+        popover:  "Popover",
+        tabbar:   "Tabbar",
+        panel:    "Panel"
     }, {style: 'alt'});
 
     panel.front.style = 'alt';

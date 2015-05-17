@@ -1,13 +1,13 @@
-mjud.add('popup', function() {
+mjud.add('popover', function() {
 
     'use strict';
 
     var ui = mysli.js.ui;
-    var panel = new ui.Panel({uid: 'mjud-popup'});
+    var panel = new ui.Panel({uid: 'mjud-popover'});
     var titlebar = new ui.Titlebar({style: 'default'});
-    var popup = new ui.Popup();
+    var popover = new ui.Popover();
 
-    popup.push(new ui.HTML('Hello world!'));
+    popover.push(new ui.HTML('Hello world!'));
 
     // Titlebar
     titlebar.push(new ui.Button({
@@ -16,18 +16,18 @@ mjud.add('popup', function() {
         panel.close();
     });
 
-    titlebar.push(new ui.Label({text: "Popup", type: ui.Label.TITLE}), {expanded: true});
+    titlebar.push(new ui.Label({text: "Popover", type: ui.Label.TITLE}), {expanded: true});
 
     var container = new ui.Container();
 
     // Default
     var container = new ui.Box({orientation: ui.Box.VERTICAL});
     container.push([
-        new ui.Button({label: 'Display popup'})
+        new ui.Button({label: 'Display popover'})
     ]);
 
-    container.get(0).connect('click', function (e) {
-        popup.show(e);
+    container.get(0).connect('click', function (e, self) {
+        popover.show(self);
     });
 
     panel.front.push(titlebar);

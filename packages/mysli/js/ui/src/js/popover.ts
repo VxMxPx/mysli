@@ -3,36 +3,39 @@
 
 module mysli.js.ui
 {
-    export class Popup extends Container
+    export class Popover extends Container
     {
         // Placement consts
         static get POSITION_TOP(): string { return 'top'; }
         static get POSITION_LEFT(): string { return 'left'; }
         static get POSITION_RIGHT(): string { return 'right'; }
         static get POSITION_BOTTOM(): string { return 'bottom'; }
-        
-        // Weather popup is visible at the moment
+
+        // Weather popover is visible at the moment
         private visible: boolean = false;
-        
+
         constructor(options: any = {})
         {
             super(options);
-            this.element.addClass('ui-popup');
-            
+            this.element.addClass('ui-popover');
+            this.element.on('click', (e) => {
+                e.stopPropagation();
+            });
+
             this.prop.def({
                 position: [
-                    Popup.POSITION_TOP, 
-                    Popup.POSITION_BOTTOM, 
-                    Popup.POSITION_LEFT, 
-                    Popup.POSITION_RIGHT
+                    Popover.POSITION_TOP,
+                    Popover.POSITION_BOTTOM,
+                    Popover.POSITION_LEFT,
+                    Popover.POSITION_RIGHT
                 ],
                 width: null,
-                pointer: false,
+                pointer: true,
                 margin: [0, 0]
             });
-            this.prop.push(options, ['position', 'width', 'pointer', 'position', 'margin']);
+            this.prop.push(options, ['position', 'width', 'pointer!', 'margin']);
         }
-        
+
         // Get/set place
         get position(): string[]|string
         {
@@ -41,19 +44,19 @@ module mysli.js.ui
         set position(where: string[]|string)
         {
             var available: string[] = ['top', 'left', 'bottom', 'right'];
-            
-            if (typeof where === 'string' || where.length < 4) 
+
+            if (typeof where === 'string' || where.length < 4)
             {
                 if (typeof where === 'string')
                 {
                     where = [<string> where];
                 }
-                
+
                 this.prop.position = where;
-    
-                for (var i = available.length - 1; i >= 0; i--) 
+
+                for (var i = available.length - 1; i >= 0; i--)
                 {
-                    if (where.indexOf(available[i]) > -1) 
+                    if (where.indexOf(available[i]) > -1)
                     {
                         continue;
                     }
@@ -65,7 +68,7 @@ module mysli.js.ui
                 this.prop.position = where;
             }
         }
-        
+
         // Get/set pointer
         get pointer(): boolean
         {
@@ -74,6 +77,7 @@ module mysli.js.ui
         set pointer(value: boolean)
         {
             this.prop.pointer = value;
+
             if (value)
             {
                 this.element.addClass('pointer');
@@ -83,7 +87,7 @@ module mysli.js.ui
                 this.element.removeClass('pointer');
             }
         }
-        
+
         // Get/set margin
         get margin(): [number, number]
         {
@@ -93,7 +97,7 @@ module mysli.js.ui
         {
             this.prop.margin = to;
         }
-        
+
         /**
          * Set place on element.
          * See show for more information.
@@ -111,7 +115,7 @@ module mysli.js.ui
                 width:  $(window).width(),
                 height: $(window).height() + $(document).scrollTop()
             };
-            
+
             var final_placement = {};
 
             // Remove position classes
@@ -138,33 +142,35 @@ module mysli.js.ui
                 var width: number  = placement.element.outerWidth();
                 var height: number = placement.element.outerHeight();
 
-                placement  = {};
-
+                placement = {};
+console.log( top, left, width, height );
                 // Calculate top point
                 placement.top = {
                     top:  top,
                     left: left + parseInt(String(height / 2), 10)
                 };
-                
+
                 // Calculate bottom point
                 placement.bottom = {
                     left : left + parseInt(String(height / 2), 10),
                     top  : top  + height
                 };
-                
+
                 // Calculate left point
                 placement.left = {
                     top  : top + parseInt(String(height / 2), 10),
                     left : left
                 };
-                
+
                 // Calculate right point
                 placement.right = {
                     left : left + width,
                     top  : top + parseInt(String(height / 2), 10)
                 };
+
+                console.log(placement);
             }
-            else if (typeof placement.top === 'number') 
+            else if (typeof placement.top === 'number')
             {
                 // Number, we have valid absolute point
                 placement = {
@@ -175,7 +181,7 @@ module mysli.js.ui
                 placement.left   = placement.top;
                 placement.right  = placement.top;
             }
-            else 
+            else
             {
                 throw new Error('You need to provide a valid placement.');
             }
@@ -185,7 +191,7 @@ module mysli.js.ui
             {
                 var current: string = this.prop.position[i];
 
-                if (current === 'top') 
+                if (current === Popover.POSITION_TOP)
                 {
                     if (placement.top.top - element_dimension.height < $(document).scrollTop())
                     {
@@ -203,12 +209,12 @@ module mysli.js.ui
                     }
 
                     final_placement = placement.top;
-                    final_placement['position'] = 'top';
-                    
+                    final_placement['position'] = Popover.POSITION_TOP;
+
                     break;
                 }
 
-                if (current === 'bottom')
+                if (current === Popover.POSITION_BOTTOM)
                 {
                     if (placement.bottom.top + element_dimension.height > window_dimension.height)
                     {
@@ -226,12 +232,12 @@ module mysli.js.ui
                     }
 
                     final_placement = placement.bottom;
-                    final_placement['position'] = 'bottom';
-                    
+                    final_placement['position'] = Popover.POSITION_BOTTOM;
+
                     break;
                 }
 
-                if (current === 'left')
+                if (current === Popover.POSITION_LEFT)
                 {
                     if (placement.left.top - parseInt(String(element_dimension.height / 2), 10) < $(document).scrollTop())
                     {
@@ -249,12 +255,12 @@ module mysli.js.ui
                     }
 
                     final_placement = placement.left;
-                    final_placement['position'] = 'left';
-                    
+                    final_placement['position'] = Popover.POSITION_LEFT;
+
                     break;
                 }
 
-                if (current === 'right')
+                if (current === Popover.POSITION_RIGHT)
                 {
                    if (placement.right.top - parseInt(String(element_dimension.height / 2), 10) < $(document).scrollTop())
                    {
@@ -272,8 +278,8 @@ module mysli.js.ui
                     }
 
                     final_placement = placement.right;
-                    final_placement['position'] = 'right';
-                    
+                    final_placement['position'] = Popover.POSITION_RIGHT;
+
                     break;
                 }
             }
@@ -285,34 +291,34 @@ module mysli.js.ui
                 final_placement = placement[this.prop.position[0]];
                 final_placement['position'] = this.prop.position[0];
             }
-            
+
             // Apply margin
-            final_placement['top'] =+ this.prop.margin[0];
-            final_placement['left'] =+ this.prop.margin[1];
+            final_placement['top'] += this.prop.margin[0];
+            final_placement['left'] += this.prop.margin[1];
 
             // Finally position element accordingly...
-            if (final_placement['position'] === 'top')
+            if (final_placement['position'] === Popover.POSITION_TOP)
             {
                 this.element.css({
                     top:  final_placement['top']  - element_dimension.height,
                     left: final_placement['left'] - parseInt(String(element_dimension.width / 2), 10)
                 }).addClass('top');
             }
-            else if (final_placement['position'] === 'left')
+            else if (final_placement['position'] === Popover.POSITION_LEFT)
             {
                 this.element.css({
                     top:  final_placement['top'] - parseInt(String(element_dimension.height / 2), 10),
                     left: final_placement['left'] - element_dimension.width
                 }).addClass('left');
             }
-            else if (final_placement['position'] === 'bottom')
+            else if (final_placement['position'] === Popover.POSITION_BOTTOM)
             {
                 this.element.css({
                     top:  final_placement['top'],
                     left: final_placement['left'] - parseInt(String(element_dimension.width / 2), 10)
                 }).addClass('bottom');
             }
-            else if (final_placement['position'] === 'right')
+            else if (final_placement['position'] === Popover.POSITION_RIGHT)
             {
                 this.element.css({
                     top:  final_placement['top'] - parseInt(String(element_dimension.height / 2), 10),
@@ -320,47 +326,51 @@ module mysli.js.ui
                 }).addClass('right');
             }
         }
-        
+
         /**
-         * Show the popup.
-         * @param placement use one of the following: 
+         * Show the popover.
+         * @param placement use one of the following:
          *   Click event (e), to position to mouse cursor,
          *   Widget, to position to widget
          *   Array [top, left]
          */
         show(placement: any): void
         {
+            if (this.visible)
+            {
+                return;
+            }
+
             // Costume width?
             if (this.prop.width)
             {
                 this.element.width(this.prop.width);
             }
-            
+
             // Place element to the correct position
             this.place(placement);
-            
+
             // Element is appended each time, this is
             // so that when panel is closed and hence
-            // instance of popup not used anymore,
+            // instance of popover not used anymore,
             // the poput doesn't hang in DOM
             this.element.appendTo('body');
             this.element.animate({
                 opacity: 1
             });
-            
-            // Register events to hide popup when clicked outside
+
+            this.visible = true;
+
+            // Register events to hide popover when clicked outside
             setTimeout(() => {
-                this.element.one('click', (e) => {
-                    e.stopPropagation();
-                });
                 $('body').one('click', () => {
                     this.hide();
                 });
             }, 1000);
         }
-        
+
         /**
-         * Hide the popup.
+         * Hide the popover.
          */
         hide(): void
         {
@@ -368,9 +378,10 @@ module mysli.js.ui
                 opacity: 0
             }, {
                 always: () => {
+                    this.visible = false;
                     // See `show` method.
                     this.element.remove();
-                } 
+                }
             });
         }
     }

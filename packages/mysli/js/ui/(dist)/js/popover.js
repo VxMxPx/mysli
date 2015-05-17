@@ -12,52 +12,52 @@ var mysli;
     (function (js) {
         var ui;
         (function (ui) {
-            var Popup = (function (_super) {
-                __extends(Popup, _super);
-                function Popup(options) {
+            var Popover = (function (_super) {
+                __extends(Popover, _super);
+                function Popover(options) {
                     if (options === void 0) { options = {}; }
                     _super.call(this, options);
-                    // Weather popup is visible at the moment
+                    // Weather popover is visible at the moment
                     this.visible = false;
-                    this.element.addClass('ui-popup');
+                    this.element.addClass('ui-popover');
                     this.element.on('click', function (e) {
                         e.stopPropagation();
                     });
                     this.prop.def({
                         position: [
-                            Popup.POSITION_TOP,
-                            Popup.POSITION_BOTTOM,
-                            Popup.POSITION_LEFT,
-                            Popup.POSITION_RIGHT
+                            Popover.POSITION_TOP,
+                            Popover.POSITION_BOTTOM,
+                            Popover.POSITION_LEFT,
+                            Popover.POSITION_RIGHT
                         ],
                         width: null,
                         pointer: true,
                         margin: [0, 0]
                     });
-                    this.prop.push(options, ['position', 'width', 'pointer', 'position', 'margin']);
+                    this.prop.push(options, ['position', 'width', 'pointer!', 'margin']);
                 }
-                Object.defineProperty(Popup, "POSITION_TOP", {
+                Object.defineProperty(Popover, "POSITION_TOP", {
                     // Placement consts
                     get: function () { return 'top'; },
                     enumerable: true,
                     configurable: true
                 });
-                Object.defineProperty(Popup, "POSITION_LEFT", {
+                Object.defineProperty(Popover, "POSITION_LEFT", {
                     get: function () { return 'left'; },
                     enumerable: true,
                     configurable: true
                 });
-                Object.defineProperty(Popup, "POSITION_RIGHT", {
+                Object.defineProperty(Popover, "POSITION_RIGHT", {
                     get: function () { return 'right'; },
                     enumerable: true,
                     configurable: true
                 });
-                Object.defineProperty(Popup, "POSITION_BOTTOM", {
+                Object.defineProperty(Popover, "POSITION_BOTTOM", {
                     get: function () { return 'bottom'; },
                     enumerable: true,
                     configurable: true
                 });
-                Object.defineProperty(Popup.prototype, "position", {
+                Object.defineProperty(Popover.prototype, "position", {
                     // Get/set place
                     get: function () {
                         return this.prop.position;
@@ -83,7 +83,7 @@ var mysli;
                     enumerable: true,
                     configurable: true
                 });
-                Object.defineProperty(Popup.prototype, "pointer", {
+                Object.defineProperty(Popover.prototype, "pointer", {
                     // Get/set pointer
                     get: function () {
                         return this.prop.pointer;
@@ -100,7 +100,7 @@ var mysli;
                     enumerable: true,
                     configurable: true
                 });
-                Object.defineProperty(Popup.prototype, "margin", {
+                Object.defineProperty(Popover.prototype, "margin", {
                     // Get/set margin
                     get: function () {
                         return this.prop.margin;
@@ -116,7 +116,7 @@ var mysli;
                  * See show for more information.
                  * @param placement
                  */
-                Popup.prototype.place = function (placement) {
+                Popover.prototype.place = function (placement) {
                     // Declare variables
                     var element_dimension = {
                         width: this.element.outerWidth(),
@@ -186,7 +186,7 @@ var mysli;
                     // Try to set placement now
                     for (var i = 0, l = this.prop.position.length; i < l; i++) {
                         var current = this.prop.position[i];
-                        if (current === Popup.POSITION_TOP) {
+                        if (current === Popover.POSITION_TOP) {
                             if (placement.top.top - element_dimension.height < $(document).scrollTop()) {
                                 continue;
                             }
@@ -197,10 +197,10 @@ var mysli;
                                 continue;
                             }
                             final_placement = placement.top;
-                            final_placement['position'] = Popup.POSITION_TOP;
+                            final_placement['position'] = Popover.POSITION_TOP;
                             break;
                         }
-                        if (current === Popup.POSITION_BOTTOM) {
+                        if (current === Popover.POSITION_BOTTOM) {
                             if (placement.bottom.top + element_dimension.height > window_dimension.height) {
                                 continue;
                             }
@@ -211,10 +211,10 @@ var mysli;
                                 continue;
                             }
                             final_placement = placement.bottom;
-                            final_placement['position'] = Popup.POSITION_BOTTOM;
+                            final_placement['position'] = Popover.POSITION_BOTTOM;
                             break;
                         }
-                        if (current === Popup.POSITION_LEFT) {
+                        if (current === Popover.POSITION_LEFT) {
                             if (placement.left.top - parseInt(String(element_dimension.height / 2), 10) < $(document).scrollTop()) {
                                 continue;
                             }
@@ -225,10 +225,10 @@ var mysli;
                                 continue;
                             }
                             final_placement = placement.left;
-                            final_placement['position'] = Popup.POSITION_LEFT;
+                            final_placement['position'] = Popover.POSITION_LEFT;
                             break;
                         }
-                        if (current === Popup.POSITION_RIGHT) {
+                        if (current === Popover.POSITION_RIGHT) {
                             if (placement.right.top - parseInt(String(element_dimension.height / 2), 10) < $(document).scrollTop()) {
                                 continue;
                             }
@@ -239,7 +239,7 @@ var mysli;
                                 continue;
                             }
                             final_placement = placement.right;
-                            final_placement['position'] = Popup.POSITION_RIGHT;
+                            final_placement['position'] = Popover.POSITION_RIGHT;
                             break;
                         }
                     }
@@ -253,25 +253,25 @@ var mysli;
                     final_placement['top'] += this.prop.margin[0];
                     final_placement['left'] += this.prop.margin[1];
                     // Finally position element accordingly...
-                    if (final_placement['position'] === Popup.POSITION_TOP) {
+                    if (final_placement['position'] === Popover.POSITION_TOP) {
                         this.element.css({
                             top: final_placement['top'] - element_dimension.height,
                             left: final_placement['left'] - parseInt(String(element_dimension.width / 2), 10)
                         }).addClass('top');
                     }
-                    else if (final_placement['position'] === Popup.POSITION_LEFT) {
+                    else if (final_placement['position'] === Popover.POSITION_LEFT) {
                         this.element.css({
                             top: final_placement['top'] - parseInt(String(element_dimension.height / 2), 10),
                             left: final_placement['left'] - element_dimension.width
                         }).addClass('left');
                     }
-                    else if (final_placement['position'] === Popup.POSITION_BOTTOM) {
+                    else if (final_placement['position'] === Popover.POSITION_BOTTOM) {
                         this.element.css({
                             top: final_placement['top'],
                             left: final_placement['left'] - parseInt(String(element_dimension.width / 2), 10)
                         }).addClass('bottom');
                     }
-                    else if (final_placement['position'] === Popup.POSITION_RIGHT) {
+                    else if (final_placement['position'] === Popover.POSITION_RIGHT) {
                         this.element.css({
                             top: final_placement['top'] - parseInt(String(element_dimension.height / 2), 10),
                             left: final_placement['left']
@@ -279,13 +279,13 @@ var mysli;
                     }
                 };
                 /**
-                 * Show the popup.
+                 * Show the popover.
                  * @param placement use one of the following:
                  *   Click event (e), to position to mouse cursor,
                  *   Widget, to position to widget
                  *   Array [top, left]
                  */
-                Popup.prototype.show = function (placement) {
+                Popover.prototype.show = function (placement) {
                     var _this = this;
                     if (this.visible) {
                         return;
@@ -298,14 +298,14 @@ var mysli;
                     this.place(placement);
                     // Element is appended each time, this is
                     // so that when panel is closed and hence
-                    // instance of popup not used anymore,
+                    // instance of popover not used anymore,
                     // the poput doesn't hang in DOM
                     this.element.appendTo('body');
                     this.element.animate({
                         opacity: 1
                     });
                     this.visible = true;
-                    // Register events to hide popup when clicked outside
+                    // Register events to hide popover when clicked outside
                     setTimeout(function () {
                         $('body').one('click', function () {
                             _this.hide();
@@ -313,9 +313,9 @@ var mysli;
                     }, 1000);
                 };
                 /**
-                 * Hide the popup.
+                 * Hide the popover.
                  */
-                Popup.prototype.hide = function () {
+                Popover.prototype.hide = function () {
                     var _this = this;
                     this.element.animate({
                         opacity: 0
@@ -327,9 +327,9 @@ var mysli;
                         }
                     });
                 };
-                return Popup;
+                return Popover;
             })(ui.Container);
-            ui.Popup = Popup;
+            ui.Popover = Popover;
         })(ui = js.ui || (js.ui = {}));
     })(js = mysli.js || (mysli.js = {}));
 })(mysli || (mysli = {}));
