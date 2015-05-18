@@ -23,10 +23,26 @@ mjud.add('popover', function() {
     // Default
     var container = new ui.Box({orientation: ui.Box.VERTICAL});
     container.push([
-        new ui.Button({label: 'Display popover'})
+        new ui.Button({label: 'Top'}),
+        new ui.Button({label: 'Bottom'}),
+        new ui.Button({label: 'Left'}),
+        new ui.Button({label: 'Right'}),
     ]);
 
     container.get(0).connect('click', function (e, self) {
+        popover.position = ui.Popover.POSITION_TOP;
+        popover.show(self);
+    });
+    container.get(1).connect('click', function (e, self) {
+        popover.position = ui.Popover.POSITION_BOTTOM;
+        popover.show(self);
+    });
+    container.get(2).connect('click', function (e, self) {
+        popover.position = ui.Popover.POSITION_LEFT;
+        popover.show(self);
+    });
+    container.get(3).connect('click', function (e, self) {
+        popover.position = ui.Popover.POSITION_RIGHT;
         popover.show(self);
     });
 

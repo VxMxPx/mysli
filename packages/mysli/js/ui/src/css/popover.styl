@@ -3,22 +3,44 @@
 .ui-popover
     background-color: #fff
     border-radius: 4px
-    // border: 1px solid #a0a0a0
-    box-shadow: inset 0 1px 0 2px rgba(0, 0, 0, .2)
+    box-shadow: inset 0 -1px 0 2px rgba(0, 0, 0, .2)
     opacity: 0
     position: absolute
     z-index: 11000
     top: 0
     left: 0
-    &.pointer
-        &.top:after
-            content: ""
-            border-style: solid
-            border-width: 11px
-            border-color: #aaa
-            border-bottom-width: 0
-            position: absolute
-            left: 50%
-            margin-left: -11px
-            display: block
-            z-index: 11001
+    &.pointer:after
+        content: ""
+        border: 8px solid #ccc
+        display: block
+        height: 8px
+        position: absolute
+        width: 16px
+    &.pointer.top:after
+        left: 50%
+        margin-left: -8px
+        bottom: -8px
+        border-left-color: transparent
+        border-right-color: transparent
+        border-bottom: none
+    &.pointer.bottom:after
+        left: 50%
+        margin-left: -8px
+        border-left-color: transparent
+        border-right-color: transparent
+        border-top: none
+        top: -8px
+    &.pointer.left:after
+        border-right: none
+        top: 50%
+        margin-top: -8px
+        border-top-color: transparent
+        border-bottom-color: transparent
+        right: -16px
+    &.pointer.right:after
+        border-left: none
+        top: 50%
+        margin-top: -8px
+        border-top-color: transparent
+        border-bottom-color: transparent
+        left: -16px

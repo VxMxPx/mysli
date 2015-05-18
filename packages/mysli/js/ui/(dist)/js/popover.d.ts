@@ -19,12 +19,12 @@ declare module mysli.js.ui {
         private place(placement);
         /**
          * Show the popover.
-         * @param placement use one of the following:
+         * @param align_to use one of the following:
          *   Click event (e), to position to mouse cursor,
          *   Widget, to position to widget
          *   Array [top, left]
          */
-        show(placement: any): void;
+        show(align_to: any): void;
         /**
          * Hide the popover.
          */

@@ -103,20 +103,18 @@ module mysli.js.ui
          * See show for more information.
          * @param placement
          */
-        private place(placement: any)
+        private place(placement: any): {position: string, left: number, top: number}
         {
             // Declare variables
             var element_dimension: {width: number, height: number} = {
                 width:  this.element.outerWidth(),
-                height: this.element.outerHeight() + 20
+                height: this.element.outerHeight()
             };
-
             var window_dimension: {width: number, height: number} = {
                 width:  $(window).width(),
-                height: $(window).height() + $(document).scrollTop()
+                height: $(window).height() /*+ $(document).scrollTop()*/
             };
-
-            var final_placement = {};
+            var final_placement: {position: string, left: number, top: number};
 
             // Remove position classes
             this.element.removeClass('top left bottom right');
@@ -143,7 +141,7 @@ module mysli.js.ui
                 var height: number = placement.element.outerHeight();
 
                 placement = {};
-console.log( top, left, width, height );
+
                 // Calculate top point
                 placement.top = {
                     top:  top,
@@ -167,8 +165,6 @@ console.log( top, left, width, height );
                     left : left + width,
                     top  : top + parseInt(String(height / 2), 10)
                 };
-
-                console.log(placement);
             }
             else if (typeof placement.top === 'number')
             {
@@ -208,9 +204,11 @@ console.log( top, left, width, height );
                         continue;
                     }
 
-                    final_placement = placement.top;
-                    final_placement['position'] = Popover.POSITION_TOP;
-
+                    final_placement = {
+                        top: placement.top.top,
+                        left: placement.top.left,
+                        position: Popover.POSITION_TOP
+                    };
                     break;
                 }
 
@@ -231,9 +229,11 @@ console.log( top, left, width, height );
                         continue;
                     }
 
-                    final_placement = placement.bottom;
-                    final_placement['position'] = Popover.POSITION_BOTTOM;
-
+                    final_placement = {
+                        left: placement.bottom.left,
+                        top: placement.bottom.top,
+                        position: Popover.POSITION_BOTTOM
+                    }
                     break;
                 }
 
@@ -254,9 +254,11 @@ console.log( top, left, width, height );
                         continue;
                     }
 
-                    final_placement = placement.left;
-                    final_placement['position'] = Popover.POSITION_LEFT;
-
+                    final_placement = {
+                        left: placement.left.left,
+                        top: placement.left.top,
+                        position: Popover.POSITION_LEFT
+                    }
                     break;
                 }
 
@@ -277,19 +279,24 @@ console.log( top, left, width, height );
                         continue;
                     }
 
-                    final_placement = placement.right;
-                    final_placement['position'] = Popover.POSITION_RIGHT;
-
+                    final_placement = {
+                        left: placement.right.left,
+                        top: placement.right.top,
+                        position: Popover.POSITION_RIGHT
+                    }
                     break;
                 }
             }
 
             // If we was unable to calculate actual placement,
             // then we'll use the default one.
-            if (typeof final_placement['position'] === 'undefined')
+            if (typeof final_placement.position === 'undefined')
             {
-                final_placement = placement[this.prop.position[0]];
-                final_placement['position'] = this.prop.position[0];
+                final_placement = {
+                    left: placement[this.prop.position[0]].left,
+                    top: placement[this.prop.position[0]].top,
+                    position: this.prop.position[0]
+                }
             }
 
             // Apply margin
@@ -325,17 +332,24 @@ console.log( top, left, width, height );
                     left: final_placement['left']
                 }).addClass('right');
             }
+
+            return final_placement;
         }
 
         /**
          * Show the popover.
-         * @param placement use one of the following:
+         * @param align_to use one of the following:
          *   Click event (e), to position to mouse cursor,
          *   Widget, to position to widget
          *   Array [top, left]
          */
-        show(placement: any): void
+        show(align_to: any): void
         {
+            var placement: { position: string, left: number, top: number; };
+            var animation: any = {
+                opacity: 1
+            };
+
             if (this.visible)
             {
                 return;
@@ -347,18 +361,38 @@ console.log( top, left, width, height );
                 this.element.width(this.prop.width);
             }
 
-            // Place element to the correct position
-            this.place(placement);
-
             // Element is appended each time, this is
             // so that when panel is closed and hence
             // instance of popover not used anymore,
             // the poput doesn't hang in DOM
             this.element.appendTo('body');
-            this.element.animate({
-                opacity: 1
-            });
 
+            // Place element to the correct placement
+            // Element MUST be appended before placed.
+            placement = this.place(align_to);
+
+console.log(placement);
+            // Animate position a bit
+            // switch (placement.position)
+            // {
+            //     case Popover.POSITION_TOP:
+            //         animation['top'] = placement.top - 10;
+            //         break;
+
+            //     case Popover.POSITION_BOTTOM:
+            //         animation['top'] = placement.top + 10;
+            //         break;
+
+            //     case Popover.POSITION_LEFT:
+            //         animation['left'] = placement.left - 10;
+            //         break;
+
+            //     case Popover.POSITION_RIGHT:
+            //         animation['left'] = placement.left + 10;
+            //         break;
+            // }
+
+            this.element.animate(animation);
             this.visible = true;
 
             // Register events to hide popover when clicked outside
