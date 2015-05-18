@@ -429,7 +429,7 @@ class phpt
         if (!dir::exists($path))
         {
             cout::warn("No tests available for: `{$pkg}` in `{$spath}`");
-            return;
+            exit(1);
         }
 
         if ($method)
@@ -446,7 +446,7 @@ class phpt
         if (!count($tests))
         {
             cout::warn("No tests found for: `{$pkg}` in `{$spath}{$method}`");
-            return;
+            exit(2);
         }
 
         foreach ($tests as $test)
@@ -496,6 +496,15 @@ class phpt
             "TOTAL TIME: %s",
             [$total, $failed, $success, $skipped, $run_time]
         );
+
+        if ($failed > 0)
+        {
+            exit(3);
+        }
+        else
+        {
+            exit(0);
+        }
     }
     /**
     * Output diff.
