@@ -9,6 +9,8 @@ declare module mysli.js.ui {
         static SCROLL_X: string;
         static SCROLL_BOTH: string;
         static SCROLL_NONE: string;
+        static ALIGN_LEFT: string;
+        static ALIGN_RIGHT: string;
         constructor(parent: Container, $cell: JQuery, options?: any);
         /**
          * Animate the cell.
@@ -19,6 +21,8 @@ declare module mysli.js.ui {
         animate(what: any, duration?: number, callback?: any): void;
         padding: boolean | any[];
         visible: boolean;
+        align: string;
+        fill: boolean;
         scroll: string;
         /**
          * Remove cell from a collection.

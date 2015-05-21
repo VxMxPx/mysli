@@ -8,11 +8,14 @@ module mysli.js.ui
         protected parent: Container;
         protected $cell: JQuery;
         protected prop: any;
-        
+
         public static get SCROLL_Y(): string { return 'scroll-y'; }
         public static get SCROLL_X(): string { return 'scroll-x'; }
         public static get SCROLL_BOTH(): string { return 'scroll-both'; }
         public static get SCROLL_NONE(): string { return 'scroll-none'; }
+
+        public static get ALIGN_LEFT(): string { return 'left'; }
+        public static get ALIGN_RIGHT(): string { return 'right'; }
 
         constructor(parent: Container, $cell: JQuery, options: any = {})
         {
@@ -20,11 +23,18 @@ module mysli.js.ui
             this.$cell = $cell;
 
             this.prop = new common.Prop({
+                // Weather cell is visible
                 visible: true,
+                // Cell's padding
                 padding: false,
+                // Weather content should be filled to full width
+                fill: false,
+                // Where to align cell's content
+                align: Cell.ALIGN_LEFT,
+                // Weather content can be scrolled
                 scroll: Cell.SCROLL_NONE
             }, this);
-            this.prop.push(options, ['visible', 'padding', 'scroll']);
+            this.prop.push(options, ['visible', 'padding', 'fill', 'align', 'scroll']);
         }
 
         /**
@@ -75,6 +85,37 @@ module mysli.js.ui
             this.$cell[status ? 'show' : 'hide']();
         }
 
+        // Get/set align
+        get align(): string
+        {
+            return this.prop.align;
+        }
+        set align(value: string)
+        {
+            this.prop.align = value;
+            if (value === Cell.ALIGN_LEFT)
+            {
+                this.$cell.removeClass('align-right');
+                this.$cell.addClass('align-left');
+            }
+            else
+            {
+                this.$cell.addClass('align-right');
+                this.$cell.removeClass('align-left');
+            }
+        }
+
+        // Get/set fill
+        get fill(): boolean
+        {
+            return this.prop.fill;
+        }
+        set fill(value: boolean)
+        {
+            this.prop.fill = value;
+            this.$cell[value ? 'addClass' : 'removeClass']('content-fill');
+        }
+
         // Get/set scroll
         get scroll(): string
         {
@@ -107,10 +148,9 @@ module mysli.js.ui
                     this.$cell.addClass('scroll-y');
                     this.prop.scroll = value;
                     break;
-            
+
                 default:
-                    throw new Error("Invalid value required: Cell.(SCROLL_X|SCROLL_Y|SCROLL_BOTH|SCROLL_NONE)")
-                    break;
+                    throw new Error("Invalid value required: Cell.(SCROLL_X|SCROLL_Y|SCROLL_BOTH|SCROLL_NONE)");
             }
         }
 

@@ -5,6 +5,15 @@
   overflow-y: auto;
   height: 100%;
 }
+.ui-cell.content-fill *:first-child {
+  width: 100%;
+}
+.ui-cell.align-right {
+  text-align: right;
+}
+.ui-cell.align-left {
+  text-align: left;
+}
 .ui-cell.padtop {
   padding-top: 15px;
 }

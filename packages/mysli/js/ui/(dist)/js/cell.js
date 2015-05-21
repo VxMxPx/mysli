@@ -12,11 +12,18 @@ var mysli;
                     this.parent = parent;
                     this.$cell = $cell;
                     this.prop = new js.common.Prop({
+                        // Weather cell is visible
                         visible: true,
+                        // Cell's padding
                         padding: false,
+                        // Weather content should be filled to full width
+                        fill: false,
+                        // Where to align cell's content
+                        align: Cell.ALIGN_LEFT,
+                        // Weather content can be scrolled
                         scroll: Cell.SCROLL_NONE
                     }, this);
-                    this.prop.push(options, ['visible', 'padding', 'scroll']);
+                    this.prop.push(options, ['visible', 'padding', 'fill', 'align', 'scroll']);
                 }
                 Object.defineProperty(Cell, "SCROLL_Y", {
                     get: function () { return 'scroll-y'; },
@@ -35,6 +42,16 @@ var mysli;
                 });
                 Object.defineProperty(Cell, "SCROLL_NONE", {
                     get: function () { return 'scroll-none'; },
+                    enumerable: true,
+                    configurable: true
+                });
+                Object.defineProperty(Cell, "ALIGN_LEFT", {
+                    get: function () { return 'left'; },
+                    enumerable: true,
+                    configurable: true
+                });
+                Object.defineProperty(Cell, "ALIGN_RIGHT", {
+                    get: function () { return 'right'; },
                     enumerable: true,
                     configurable: true
                 });
@@ -83,6 +100,37 @@ var mysli;
                     enumerable: true,
                     configurable: true
                 });
+                Object.defineProperty(Cell.prototype, "align", {
+                    // Get/set align
+                    get: function () {
+                        return this.prop.align;
+                    },
+                    set: function (value) {
+                        this.prop.align = value;
+                        if (value === Cell.ALIGN_LEFT) {
+                            this.$cell.removeClass('align-right');
+                            this.$cell.addClass('align-left');
+                        }
+                        else {
+                            this.$cell.addClass('align-right');
+                            this.$cell.removeClass('align-left');
+                        }
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
+                Object.defineProperty(Cell.prototype, "fill", {
+                    // Get/set fill
+                    get: function () {
+                        return this.prop.fill;
+                    },
+                    set: function (value) {
+                        this.prop.fill = value;
+                        this.$cell[value ? 'addClass' : 'removeClass']('content-fill');
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
                 Object.defineProperty(Cell.prototype, "scroll", {
                     // Get/set scroll
                     get: function () {
@@ -112,7 +160,6 @@ var mysli;
                                 break;
                             default:
                                 throw new Error("Invalid value required: Cell.(SCROLL_X|SCROLL_Y|SCROLL_BOTH|SCROLL_NONE)");
-                                break;
                         }
                     },
                     enumerable: true,
