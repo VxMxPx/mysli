@@ -8,6 +8,7 @@ declare module mysli.js.ui {
         static POSITION_BOTTOM: string;
         private visible;
         constructor(options?: any);
+        width: number;
         position: string[] | string;
         pointer: boolean;
         margin: [number, number];

@@ -5,9 +5,28 @@ mjud.add('popover', function() {
     var ui = mysli.js.ui;
     var panel = new ui.Panel({uid: 'mjud-popover'});
     var titlebar = new ui.Titlebar({style: 'default'});
-    var popover = new ui.Popover();
 
-    popover.push(new ui.HTML('Hello world!'));
+    function popover(widget, position)
+    {
+        if (typeof widget.popover === 'undefined')
+        {
+            var buttons = new ui.Box({ orientation: ui.Box.VERTICAL });
+            buttons.push(new ui.Button({ label: 'Close', flat: true }));
+            buttons.push(new ui.Button({ label: 'Confirm!', style: 'confirm' }), {align: ui.Cell.ALIGN_RIGHT});
+            widget.popover = new ui.Popover({ width: 200 });
+            // widget.popover = new ui.Popover({
+            //     cell: {
+            //         padding: [10, 10, 10, 10],
+            //         smart_padding: true
+            //     }
+            // });
+            widget.popover.push(new ui.Label({ text: 'Hi there!' }), {padding: [10, 10, 10, 10]});
+            widget.popover.push(new ui.Entry({ placeholder: 'Enter your name...' }), {padding: [null, 10, 10, 10]});
+            widget.popover.push(buttons, {padding: [null, 10, 10, 10]});
+            widget.popover.position = position;
+        }
+        widget.popover.show(widget);
+    }
 
     // Titlebar
     titlebar.push(new ui.Button({
@@ -29,25 +48,29 @@ mjud.add('popover', function() {
         new ui.Button({label: 'Right'}),
     ]);
 
+    container.get(2, true).align = ui.Cell.ALIGN_RIGHT;
+    container.get(3, true).align = ui.Cell.ALIGN_RIGHT;
+
     container.get(0).connect('click', function (e, self) {
-        popover.position = ui.Popover.POSITION_TOP;
-        popover.show(self);
+        popover(self, ui.Popover.POSITION_TOP);
     });
     container.get(1).connect('click', function (e, self) {
-        popover.position = ui.Popover.POSITION_BOTTOM;
-        popover.show(self);
+        popover(self, ui.Popover.POSITION_BOTTOM);
     });
     container.get(2).connect('click', function (e, self) {
-        popover.position = ui.Popover.POSITION_LEFT;
-        popover.show(self);
+        popover(self, ui.Popover.POSITION_LEFT);
     });
     container.get(3).connect('click', function (e, self) {
-        popover.position = ui.Popover.POSITION_RIGHT;
-        popover.show(self);
+        popover(self, ui.Popover.POSITION_RIGHT);
     });
 
     panel.front.push(titlebar);
     panel.front.push(container, {padding: true});
+    panel.front
+        .push(new ui.Button({label: "Hello"}), {padding: true, fill: true})
+        .connect('click', function (e, self) {
+            popover(self, [ui.Popover.POSITION_TOP, ui.Popover.POSITION_BOTTOM]);
+        })
 
     return panel;
 });
