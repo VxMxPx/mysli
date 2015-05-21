@@ -83,12 +83,15 @@ var mysli;
                     if (this.element_wrapper) {
                         pushable = $(this.element_wrapper);
                         pushable.addClass(class_id);
-                        if (pushable.filter('.container-target').length)
-                            pushable.filter('.container-target').append(widget.element);
-                        else if (pushable.find('.container-target').length)
-                            pushable.find('.container-target').append(widget.element);
-                        else
+                        if (pushable.filter('.container-target').length) {
+                            pushable.filter('.container-target:first-child').append(widget.element);
+                        }
+                        else if (pushable.find('.container-target').length) {
+                            pushable.find('.container-target:first-child').append(widget.element);
+                        }
+                        else {
                             throw new Error("Cannot find .container-target!");
+                        }
                         cell = new this.Cell_constructor(this, pushable, options);
                     }
                     else {
@@ -96,17 +99,21 @@ var mysli;
                         pushable = widget.element;
                     }
                     // Either push after another element or at the end of the list
-                    if (at > -1)
+                    if (at > -1) {
                         at_index = this.collection.push_after(at, options.uid, [widget, cell]);
-                    else
+                    }
+                    else {
                         at_index = this.collection.push(options.uid, [widget, cell]);
+                    }
                     // Either inster after particular element or just at the end
-                    if (at > -1)
+                    if (at > -1) {
                         this.$target
                             .find('.coll-euid-' + this.collection.get_from(at_index, -1).uid)
                             .after(pushable);
-                    else
+                    }
+                    else {
                         this.$target.append(pushable);
+                    }
                     return widget;
                 };
                 /**
@@ -125,15 +132,19 @@ var mysli;
                     if (typeof uid === 'string' && (index_at = uid.indexOf('>')) > -1) {
                         var uidq = uid.substr(0, index_at).trim();
                         var ccontainer = this.collection.get(uidq)[0];
-                        if (ccontainer instanceof Container)
+                        if (ccontainer instanceof Container) {
                             return ccontainer.get(uid.substr(index_at + 1).trim(), cell);
-                        else
+                        }
+                        else {
                             throw new Error("Failed to acquire an element. Container needed: " + uidq);
+                        }
                     }
-                    if (cell)
+                    if (cell) {
                         return this.collection.get(uid)[1];
-                    else
+                    }
+                    else {
                         return this.collection.get(uid)[0];
+                    }
                 };
                 /**
                  * Get an element, andthen remove it from the collction and DOM.
