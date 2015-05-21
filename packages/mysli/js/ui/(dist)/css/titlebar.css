@@ -28,6 +28,16 @@
 .ui-box.ui-titlebar .ui-button.style-flat:active {
   padding-top: 2px;
 }
+.ui-box.ui-titlebar .ui-entry.style-flat .ui-gi-input {
+  font-size: 16px;
+  color: #fff;
+}
+.ui-box.ui-titlebar .ui-entry.style-flat input::-webkit-input-placeholder {
+  color: rgba(255,255,255,0.75);
+}
+.ui-box.ui-titlebar .ui-entry.style-flat input::-moz-placeholder {
+  color: rgba(255,255,255,0.75);
+}
 .ui-box.ui-titlebar h1,
 .ui-box.ui-titlebar h2 {
   font-size: 20px;
