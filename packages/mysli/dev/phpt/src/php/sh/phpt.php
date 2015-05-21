@@ -21,8 +21,8 @@ class phpt
         $param->command = 'phpt';
         $param->add('-t/--test', [
             'help'    => 'Run test(s). Package(+:method) to be run '.
-                        '(vendor.package or vendor.package:method or '.
-                        'vendor.package/class:method)',
+                         '(vendor.package or vendor.package:method or '.
+                         'vendor.package/class:method)',
             'type'    => 'bool',
             'default' => false
         ]);
