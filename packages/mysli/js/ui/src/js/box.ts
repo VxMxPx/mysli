@@ -12,7 +12,7 @@ module mysli.js.ui
         public static get HORIZONTAL(): number { return 1; }
         public static get VERTICAL(): number { return 2; }
 
-        constructor(options: any = {}) 
+        constructor(options: any = {})
         {
             super(options);
             this.Cell_constructor = BoxCell;
@@ -27,7 +27,7 @@ module mysli.js.ui
 
             if (this.prop.orientation === Box.VERTICAL)
             {
-                var row:JQuery = $('<div class="ui-row" />');
+                var row: JQuery = $('<div class="ui-row" />');
                 this.element.append(row);
                 this.element.addClass('ui-orientation-vertical');
                 this.$target = row;
@@ -44,9 +44,13 @@ module mysli.js.ui
         insert(...args): Widget|Widget[]
         {
             if (this.prop.orientation === Box.HORIZONTAL)
+            {
                 this.element_wrapper = '<div class="ui-row"><div class="ui-cell container-target" /></div>';
+            }
             else
+            {
                 this.element_wrapper = this.element_wrapper_original;
+            }
 
             return super.insert.apply(this, args);
         }

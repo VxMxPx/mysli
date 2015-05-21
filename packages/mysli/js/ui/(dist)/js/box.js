@@ -53,10 +53,12 @@ var mysli;
                     for (var _i = 0; _i < arguments.length; _i++) {
                         args[_i - 0] = arguments[_i];
                     }
-                    if (this.prop.orientation === Box.HORIZONTAL)
+                    if (this.prop.orientation === Box.HORIZONTAL) {
                         this.element_wrapper = '<div class="ui-row"><div class="ui-cell container-target" /></div>';
-                    else
+                    }
+                    else {
                         this.element_wrapper = this.element_wrapper_original;
+                    }
                     return _super.prototype.insert.apply(this, args);
                 };
                 return Box;
