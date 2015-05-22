@@ -20,17 +20,53 @@ module mysli.js.ui
             this.element.addClass('ui-popover');
 
             this.prop.def({
+                // Preferred position(s)
                 position: [
                     Popover.POSITION_TOP,
                     Popover.POSITION_BOTTOM,
                     Popover.POSITION_LEFT,
                     Popover.POSITION_RIGHT
                 ],
+                // Weather to center relative to the cursor / element
+                center: true,
+                // Force popout width
                 width: null,
+                // Weather to show pointer (v)
                 pointer: true,
+                // Margin [top, left], can be negative
                 margin: [0, 0]
             });
-            this.prop.push(options, ['position', 'width', 'pointer!', 'margin']);
+
+            this.prop.push(
+                options,
+                ['position', 'center', 'width', 'pointer!', 'margin']);
+
+            // Append element to the body
+            this.element.appendTo('body');
+
+            // Register events to hide popover when clicked outside
+            $('body').on('click.internal-' + this.uid, (e) => {
+                // Nothing to do if not visible...
+                if (!this.visible) {
+                    e.stopPropagation();
+                }
+                // Hide if clicked outside this element
+                if (!this.element.is(e.target) &&
+                    this.element.has(e.target).length === 0)
+                {
+                    this.hide();
+                }
+            });
+        }
+
+        // Get/set center
+        get center(): boolean
+        {
+            return this.prop.center;
+        }
+        set center(value: boolean)
+        {
+            this.prop.center = value;
         }
 
         // Get/set width
@@ -132,7 +168,8 @@ module mysli.js.ui
                 placement = {
                     top: {
                         top:  placement.pageY,
-                        left: placement.pageX
+                        // Adjust for center
+                        left: this.prop.center ? placement.pageX : placement.pageX + parseInt(String(element_dimension.width / 2), 10)
                     }
                 };
                 placement.bottom = placement.top;
@@ -152,25 +189,25 @@ module mysli.js.ui
                 // Calculate top point
                 placement.top = {
                     top:  top,
-                    left: left + parseInt(String(width / 2), 10)
+                    left: this.prop.center ? left + parseInt(String(width / 2), 10) : left
                 };
 
                 // Calculate bottom point
                 placement.bottom = {
-                    left : left + parseInt(String(width / 2), 10),
-                    top  : top  + height
+                    top  : top  + height,
+                    left : this.prop.center ? left + parseInt(String(width / 2), 10) : left
                 };
 
                 // Calculate left point
                 placement.left = {
-                    top  : top + parseInt(String(height / 2), 10),
+                    top  : this.prop.center ? top + parseInt(String(height / 2), 10) : top,
                     left : left
                 };
 
                 // Calculate right point
                 placement.right = {
-                    left : left + width,
-                    top  : top + parseInt(String(height / 2), 10)
+                    top  : this.prop.center ? top + parseInt(String(height / 2), 10) : top,
+                    left : left + width
                 };
             }
             else if (typeof placement.top === 'number')
@@ -374,12 +411,6 @@ module mysli.js.ui
                 this.element.width(this.prop.width);
             }
 
-            // Element is appended each time, this is
-            // so that when panel is closed and hence
-            // instance of popover not used anymore,
-            // the poput doesn't hang in DOM
-            this.element.appendTo('body');
-
             // Place element to the correct placement
             // Element MUST be appended before placed.
             placement = this.place(align_to);
@@ -404,19 +435,13 @@ module mysli.js.ui
                     break;
             }
 
-            this.element.animate(animation);
-            this.visible = true;
-
-            // Register events to hide popover when clicked outside
-            setTimeout(() => {
-                this.element.on('click', function (e) {
-                    e.stopImmediatePropagation();
-                    e.stopPropagation();
-                });
-                $('body').one('click', () => {
-                    this.hide();
-                });
-            }, 100);
+            this.element.css('display', 'block');
+            this.element.animate(animation, {
+                always: () => {
+                    this.visible = true;
+                }
+            });
+            // this.visible = true;
         }
 
         /**
@@ -424,16 +449,28 @@ module mysli.js.ui
          */
         hide(): void
         {
+            if (!this.visible)
+            {
+                return;
+            }
+
             this.element.animate({
                 opacity: 0
+                top: "-=10px"
             }, {
+                always: () => {
+                    this.element.hide();
+                    this.visible = false;
+                }
+            });
+            /*, {
                 always: () => {
                     this.visible = false;
                     // See `show` method.
                     this.element.remove();
-                    this.element.off('click');
+                    $('body').off('click.internal-' + this.uid);
                 }
-            });
+            }*/
         }
     }
 }
