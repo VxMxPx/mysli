@@ -75,8 +75,9 @@ var mysli;
                     else {
                         throw new Error('Invalid options provided. Null, string or {} allowed.');
                     }
-                    if (this.collection.has(options.uid))
-                        throw new Error("Element with such ID already exists: " + options.id);
+                    if (this.collection.has(options.uid)) {
+                        throw new Error("Element with such ID already exists: " + options.uid);
+                    }
                     // Create classes
                     class_id = 'coll-euid-' + widget.uid + ' coll-uid-' + options.uid;
                     // Create wrapper, append at the end of the list
@@ -132,8 +133,13 @@ var mysli;
                     if (typeof uid === 'string' && (index_at = uid.indexOf('>')) > -1) {
                         var uidq = uid.substr(0, index_at).trim();
                         var ccontainer = this.collection.get(uidq)[0];
+                        var item;
                         if (ccontainer instanceof Container) {
-                            return ccontainer.get(uid.substr(index_at + 1).trim(), cell);
+                            item = uid.substr(index_at + 1).trim();
+                            if ($.isNumeric(item)) {
+                                item = parseInt(item, 10);
+                            }
+                            return ccontainer.get(item, cell);
                         }
                         else {
                             throw new Error("Failed to acquire an element. Container needed: " + uidq);
@@ -147,13 +153,44 @@ var mysli;
                     }
                 };
                 /**
-                 * Get an element, andthen remove it from the collction and DOM.
+                 * Loop through each element in collection.
+                 * @param callback
+                 */
+                Container.prototype.each = function (callback, cell) {
+                    if (cell === void 0) { cell = false; }
+                    return this.collection.each(function (index, wid_cell) {
+                        var element = wid_cell[(cell ? 1 : 0)];
+                        return callback(index, element);
+                    });
+                };
+                /**
+                 * Get an element, and then remove it from the collction and DOM.
                  * @param uid
                  */
                 Container.prototype.pull = function (uid) {
                     var element = this.get(uid, false);
                     this.remove(uid);
                     return element;
+                };
+                /**
+                 * Replace an element.
+                 * @param uid
+                 */
+                Container.prototype.replace = function (uid, widget) {
+                    this.collection.replace(uid, widget);
+                    // this.collection.replace(uid, widget);
+                    if (this.element_wrapper) {
+                        this.$target
+                            .find('coll-euid-' + uid)
+                            .empty()
+                            .append(widget.element);
+                    }
+                    else {
+                        this.$target
+                            .find('.coll-euid-' + uid)
+                            .replaceWith(widget.element);
+                    }
+                    return widget;
                 };
                 /**
                  * Check if uid is in the collection.

@@ -37,6 +37,13 @@ var mysli;
                     return element;
                 };
                 /**
+                 * Replace all content in the container, with a new content...
+                 */
+                HTML.prototype.replace = function (html) {
+                    this.element.html('');
+                    return this.push(html);
+                };
+                /**
                  * Remove element(s) by specific jQuery selector.
                  * @param selector
                  */

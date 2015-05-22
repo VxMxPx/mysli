@@ -27,15 +27,12 @@ var mysli;
                 Prop.prototype.def = function (properties) {
                     var property;
                     for (property in properties) {
-                        if (!properties.hasOwnProperty(property)) {
+                        if (!properties.hasOwnProperty(property))
                             continue;
-                        }
-                        if (typeof this[property] === 'undefined') {
+                        if (typeof this[property] === 'undefined')
                             this[property] = properties[property];
-                        }
-                        else {
+                        else
                             console.warn('Setting a default property which is already there: ' + property);
-                        }
                     }
                 };
                 /**
@@ -63,9 +60,8 @@ var mysli;
                             }
                             if (typeof this[property] !== 'undefined') {
                                 if (typeof properties[property] !== 'undefined') {
-                                    if (properties[property] !== this[property] || force) {
+                                    if (properties[property] !== this[property] || force)
                                         this._context[property] = properties[property];
-                                    }
                                 }
                                 else if (force) {
                                     this._context[property] = this[property];
@@ -75,9 +71,8 @@ var mysli;
                     }
                     // Run through the rest of the properties
                     for (property in properties) {
-                        if (!properties.hasOwnProperty(property)) {
+                        if (!properties.hasOwnProperty(property))
                             continue;
-                        }
                         if (typeof this[property] !== 'undefined' && use.indexOf(property) === -1) {
                             if (this[property] && typeof this[property] === 'object' &&
                                 properties[property] && typeof properties[property] === 'object') {
@@ -98,12 +93,10 @@ var mysli;
                     var last = this;
                     var segments = path.split('.');
                     for (var i = 0; i < segments.length; i++) {
-                        if (typeof last[segments[i]] === 'undefined') {
+                        if (typeof last[segments[i]] === 'undefined')
                             return def;
-                        }
-                        else {
+                        else
                             last = last[segments[i]];
-                        }
                     }
                     return last;
                 };

@@ -9,6 +9,10 @@ declare module mysli.js.ui {
          */
         push(html: string): JQuery;
         /**
+         * Replace all content in the container, with a new content...
+         */
+        replace(html: string): JQuery;
+        /**
          * Remove element(s) by specific jQuery selector.
          * @param selector
          */

@@ -3,7 +3,7 @@
 declare module mysli.js.ui {
     class Cell {
         protected parent: Container;
-        protected $cell: JQuery;
+        protected $element: JQuery;
         protected prop: any;
         static SCROLL_Y: string;
         static SCROLL_X: string;
@@ -12,6 +12,7 @@ declare module mysli.js.ui {
         static ALIGN_LEFT: string;
         static ALIGN_RIGHT: string;
         constructor(parent: Container, $cell: JQuery, options?: any);
+        element: JQuery;
         /**
          * Animate the cell.
          * @param what

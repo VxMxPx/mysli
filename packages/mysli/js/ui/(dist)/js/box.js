@@ -78,7 +78,7 @@ var mysli;
                         return this.prop.expanded;
                     },
                     set: function (value) {
-                        this.$cell[value ? 'addClass' : 'removeClass']('expanded');
+                        this.$element[value ? 'addClass' : 'removeClass']('expanded');
                     },
                     enumerable: true,
                     configurable: true

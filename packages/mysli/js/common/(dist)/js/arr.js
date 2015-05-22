@@ -19,6 +19,21 @@ var mysli;
                     return this.ids.length - 1;
                 };
                 /**
+                 * Replace particular element by id or index.
+                 * @param id
+                 */
+                Arr.prototype.replace = function (id, element) {
+                    if (this.has(id)) {
+                        if (typeof id === 'number') {
+                            id = this.ids[id];
+                        }
+                        this.stack[id] = element;
+                    }
+                    else {
+                        throw new Error("Cannot replace element, no such ID: " + id);
+                    }
+                };
+                /**
                  * Push element after particular element.
                  * @return inserted index
                  */
@@ -49,9 +64,8 @@ var mysli;
                 Arr.prototype.get_index = function (id) {
                     if (typeof this.ids.indexOf !== 'function') {
                         for (var i = this.ids.length - 1; i >= 0; i--) {
-                            if (this.ids[i] === id) {
+                            if (this.ids[i] === id)
                                 return i;
-                            }
                         }
                     }
                     else {
@@ -63,12 +77,10 @@ var mysli;
                  */
                 Arr.prototype.get_index_from = function (id, step) {
                     var index = this.get_index(id);
-                    if (index > 0) {
+                    if (index > 0)
                         return index + step;
-                    }
-                    else {
+                    else
                         return -1;
-                    }
                 };
                 /**
                  * Check if element with such ID exists.
@@ -86,27 +98,22 @@ var mysli;
                  * Get element by id or index.
                  */
                 Arr.prototype.get = function (id) {
-                    if (typeof id === 'number') {
+                    if (typeof id === 'number')
                         id = this.ids[id];
-                    }
-                    if (typeof this.stack[id] !== 'undefined') {
+                    if (typeof this.stack[id] !== 'undefined')
                         return this.stack[id];
-                    }
-                    else {
+                    else
                         return false;
-                    }
                 };
                 /**
                  * Get element n positions from id.
                  */
                 Arr.prototype.get_from = function (id, step) {
                     var index = typeof id === 'string' ? this.get_index_from(id, step) : id + step;
-                    if (index > -1) {
+                    if (index > -1)
                         return this.get(this.ids[index]);
-                    }
-                    else {
+                    else
                         return false;
-                    }
                 };
                 /**
                  * Number of elements.
@@ -128,9 +135,8 @@ var mysli;
                     var r;
                     for (var i = 0; i < this.ids.length; i++) {
                         r = callback(i, this.stack[this.ids[i]]);
-                        if (typeof r !== 'undefined') {
+                        if (typeof r !== 'undefined')
                             return r;
-                        }
                     }
                 };
                 /**
@@ -142,9 +148,8 @@ var mysli;
                     var r;
                     for (var i = this.get_index(id) + 1; i < this.ids.length; i++) {
                         r = callback(i, this.stack[this.ids[i]]);
-                        if (typeof r !== 'undefined') {
+                        if (typeof r !== 'undefined')
                             return r;
-                        }
                     }
                 };
                 /**
@@ -156,9 +161,8 @@ var mysli;
                     var r;
                     for (var i = 0; i < this.get_index(id); i++) {
                         r = callback(i, this.stack[this.ids[i]]);
-                        if (typeof r !== 'undefined') {
+                        if (typeof r !== 'undefined')
                             return r;
-                        }
                     }
                 };
                 return Arr;

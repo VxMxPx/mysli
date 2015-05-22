@@ -33,9 +33,8 @@ var mysli;
                     perc = isFinite(+decimals) ? Math.abs(decimals) : 0;
                     final = perc ? Num.to_fixed_fix(o_num, perc) : '' + Math.round(o_num);
                     final_seg = final.split('.');
-                    if (final_seg[0].length > 3) {
+                    if (final_seg[0].length > 3)
                         final_seg[0] = final_seg[0].replace(/\B(?=(?:\d{3})+(?!\d))/g, thousands_sep);
-                    }
                     if ((final_seg[1] || '').length < perc) {
                         final_seg[1] = final_seg[1] || '';
                         final_seg[1] += new Array(perc - final_seg[1].length + 1).join('0');
@@ -52,9 +51,8 @@ var mysli;
                 Num.get_percent = function (amount, total, percision) {
                     if (percision === void 0) { percision = 2; }
                     var count;
-                    if (!amount || !total) {
+                    if (!amount || !total)
                         return amount;
-                    }
                     count = amount / total;
                     count = count * 100;
                     count = parseFloat(Num.format(count, percision));
@@ -69,9 +67,8 @@ var mysli;
                 Num.set_percent = function (percent, total, percision) {
                     if (percision === void 0) { percision = 2; }
                     var result;
-                    if (!percent || !total) {
+                    if (!percent || !total)
                         return 0;
-                    }
                     result = parseFloat(Num.format((total / 100) * percent, percision));
                     return result;
                 };

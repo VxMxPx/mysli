@@ -16,6 +16,11 @@ var mysli;
                 __extends(Label, _super);
                 function Label(options) {
                     if (options === void 0) { options = {}; }
+                    if (typeof options === 'string') {
+                        options = {
+                            text: options
+                        };
+                    }
                     _super.call(this, options);
                     this.prop.def({
                         // Label's text

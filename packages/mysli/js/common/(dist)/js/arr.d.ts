@@ -1,12 +1,17 @@
 declare module mysli.js.common {
     class Arr {
-        stack: {};
-        ids: string[];
+        private stack;
+        private ids;
         /**
          * Push element to the end of an array.
          * @return inserted index
          */
         push(id: string, element: any): number;
+        /**
+         * Replace particular element by id or index.
+         * @param id
+         */
+        replace(id: string | number, element: any): void;
         /**
          * Push element after particular element.
          * @return inserted index

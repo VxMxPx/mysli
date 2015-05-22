@@ -30,10 +30,20 @@ declare module mysli.js.ui {
         */
         get(uid: string | number, cell?: boolean): Cell | Widget;
         /**
-         * Get an element, andthen remove it from the collction and DOM.
+         * Loop through each element in collection.
+         * @param callback
+         */
+        each(callback: (index?: number, element?: Widget | Cell) => any, cell?: boolean): any;
+        /**
+         * Get an element, and then remove it from the collction and DOM.
          * @param uid
          */
         pull(uid: string | number): Widget;
+        /**
+         * Replace an element.
+         * @param uid
+         */
+        replace(uid: string | number, widget: Widget): Widget;
         /**
          * Check if uid is in the collection.
          * @param uid

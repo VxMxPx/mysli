@@ -10,7 +10,7 @@ var mysli;
                 function Cell(parent, $cell, options) {
                     if (options === void 0) { options = {}; }
                     this.parent = parent;
-                    this.$cell = $cell;
+                    this.$element = $cell;
                     this.prop = new js.common.Prop({
                         // Weather cell is visible
                         visible: true,
@@ -57,6 +57,14 @@ var mysli;
                     enumerable: true,
                     configurable: true
                 });
+                Object.defineProperty(Cell.prototype, "element", {
+                    // Element
+                    get: function () {
+                        return this.$element;
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
                 /**
                  * Animate the cell.
                  * @param what
@@ -66,7 +74,7 @@ var mysli;
                 Cell.prototype.animate = function (what, duration, callback) {
                     if (duration === void 0) { duration = 500; }
                     if (callback === void 0) { callback = false; }
-                    this.$cell.animate(what, duration, callback);
+                    this.element.animate(what, duration, callback);
                 };
                 Object.defineProperty(Cell.prototype, "padding", {
                     // Get/set padded
@@ -76,7 +84,7 @@ var mysli;
                     set: function (value) {
                         var positions = ['top', 'right', 'bottom', 'left'];
                         var current;
-                        this.$cell.css('padding', '');
+                        this.element.css('padding', '');
                         // Value is Boolean e.g.: element.padding = false
                         if (typeof value === 'boolean') {
                             value = { top: value, right: value, bottom: value, left: value };
@@ -93,10 +101,10 @@ var mysli;
                                 current = null;
                             }
                             if (typeof current === 'number') {
-                                this.$cell.css("padding-" + positions[i], current);
+                                this.element.css("padding-" + positions[i], current);
                             }
                             else {
-                                this.$cell[current ? 'addClass' : 'removeClass']("padding-" + positions[i]);
+                                this.element[current ? 'addClass' : 'removeClass']("padding-" + positions[i]);
                             }
                         }
                     },
@@ -126,7 +134,7 @@ var mysli;
                             else {
                                 current = null;
                             }
-                            this.$cell[current ? 'addClass' : 'removeClass']("border-" + positions[i]);
+                            this.element[current ? 'addClass' : 'removeClass']("border-" + positions[i]);
                         }
                     },
                     enumerable: true,
@@ -138,11 +146,8 @@ var mysli;
                         return this.prop.visible;
                     },
                     set: function (status) {
-                        if (status === this.prop.visible) {
-                            return;
-                        }
                         this.prop.visible = status;
-                        this.$cell[status ? 'show' : 'hide']();
+                        this.element[status ? 'show' : 'hide']();
                     },
                     enumerable: true,
                     configurable: true
@@ -155,12 +160,12 @@ var mysli;
                     set: function (value) {
                         this.prop.align = value;
                         if (value === Cell.ALIGN_LEFT) {
-                            this.$cell.removeClass('align-right');
-                            this.$cell.addClass('align-left');
+                            this.element.removeClass('align-right');
+                            this.element.addClass('align-left');
                         }
                         else {
-                            this.$cell.addClass('align-right');
-                            this.$cell.removeClass('align-left');
+                            this.element.addClass('align-right');
+                            this.element.removeClass('align-left');
                         }
                     },
                     enumerable: true,
@@ -173,7 +178,7 @@ var mysli;
                     },
                     set: function (value) {
                         this.prop.fill = value;
-                        this.$cell[value ? 'addClass' : 'removeClass']('content-fill');
+                        this.element[value ? 'addClass' : 'removeClass']('content-fill');
                     },
                     enumerable: true,
                     configurable: true
@@ -186,23 +191,23 @@ var mysli;
                     set: function (value) {
                         switch (value) {
                             case Cell.SCROLL_X:
-                                this.$cell.addClass('scroll-x');
-                                this.$cell.removeClass('scroll-y');
+                                this.element.addClass('scroll-x');
+                                this.element.removeClass('scroll-y');
                                 this.prop.scroll = value;
                                 break;
                             case Cell.SCROLL_Y:
-                                this.$cell.addClass('scroll-y');
-                                this.$cell.removeClass('scroll-x');
+                                this.element.addClass('scroll-y');
+                                this.element.removeClass('scroll-x');
                                 this.prop.scroll = value;
                                 break;
                             case Cell.SCROLL_BOTH:
-                                this.$cell.removeClass('scroll-x');
-                                this.$cell.removeClass('scroll-y');
+                                this.element.removeClass('scroll-x');
+                                this.element.removeClass('scroll-y');
                                 this.prop.scroll = value;
                                 break;
                             case Cell.SCROLL_BOTH:
-                                this.$cell.addClass('scroll-x');
-                                this.$cell.addClass('scroll-y');
+                                this.element.addClass('scroll-x');
+                                this.element.addClass('scroll-y');
                                 this.prop.scroll = value;
                                 break;
                             default:
@@ -216,7 +221,7 @@ var mysli;
                  * Remove cell from a collection.
                  */
                 Cell.prototype.remove = function () {
-                    this.$cell.remove();
+                    this.element.remove();
                 };
                 return Cell;
             })();
