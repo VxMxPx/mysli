@@ -31,7 +31,7 @@ class ui
                 output::add($template->render($html));
             }
         }
-        elseif ($js = request::get('js'))
+        elseif ($js = (request::get('js') ?: request::get('src')))
         {
             if ($js != preg_replace('/[^a-z_]/i', '', $js))
             {
@@ -53,6 +53,11 @@ class ui
                     output::add(file::read($file));
                 }
             }
+        }
+        elseif ($doc = request::get('doc'))
+        {
+            response::set_status(200);
+            output::add('Yo, DOC!');
         }
         else
         {
