@@ -13,6 +13,13 @@ module mysli.js.ui
 
         constructor(options: any = {})
         {
+            if (typeof options === 'string')
+            {
+                options = {
+                    text: options
+                };
+            }
+
             super(options);
 
             this.prop.def({
