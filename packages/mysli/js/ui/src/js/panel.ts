@@ -110,7 +110,9 @@ module mysli.js.ui
             // Proxy the click event to focus
             this.element.on('click', () => {
                 if (!this.prop.closing && !this.locked)
+                {
                     this.focus = true;
+                }
             });
 
             // Add Sides
@@ -136,7 +138,9 @@ module mysli.js.ui
         animate(callback?: () => any): void
         {
             if (this.prop.closing)
+            {
                 return;
+            }
 
             this.element.stop(true, false).animate({
                 left: this.position + this.offset,
@@ -163,10 +167,14 @@ module mysli.js.ui
         set side(value: string)
         {
             if (Panel.valid_sides.indexOf(value) === -1)
+            {
                 throw new Error(`Trying to set invalid side: ${value}`);
+            }
 
             if (!this.prop.flippable)
+            {
                 throw new Error(`Trying to flip a panel which is not flippable.`);
+            }
 
             // Right now this is hard coded, there are only two sides.
             // It's possible that in future more sides will be added?
@@ -185,7 +193,9 @@ module mysli.js.ui
             var diff: number;
 
             if (value === this.width)
+            {
                 return;
+            }
 
             diff = -(this.width - value);
             this.prop.width = value;
@@ -205,7 +215,9 @@ module mysli.js.ui
             var width: number;
 
             if (status === this.away)
+            {
                 return;
+            }
 
             if (status)
             {
@@ -242,7 +254,9 @@ module mysli.js.ui
         set popout(status: boolean)
         {
             if (status === this.popout)
+            {
                 return;
+            }
 
             if (status)
             {
@@ -273,12 +287,16 @@ module mysli.js.ui
         set insensitive(value: boolean)
         {
             if (value === this.insensitive)
+            {
                 return;
+            }
 
             if (value)
             {
                 if (this.focus)
+                {
                     this.focus = false;
+                }
 
                 this.prop.insensitive = true;
             }
@@ -300,7 +318,9 @@ module mysli.js.ui
         set min_size(size: number)
         {
             if (this.min_size === size)
+            {
                 return;
+            }
 
             this.prop.min_size = size;
             this.trigger('set-min-size', [size]);
@@ -316,7 +336,9 @@ module mysli.js.ui
         set focus(value: boolean)
         {
             if (value === this.focus)
+            {
                 return;
+            }
 
             if (value)
             {
@@ -333,7 +355,9 @@ module mysli.js.ui
                 this.prop.focus = false;
                 this.element.removeClass('focused');
                 if (this.prop.away_on_blur)
+                {
                     this.away = true;
+                }
             }
 
             this.trigger('set-focus', [value]);
@@ -417,7 +441,9 @@ module mysli.js.ui
         close(): void
         {
             if (this.locked)
+            {
                 return;
+            }
 
             this.insensitive = true;
             this.prop.closing = true;
