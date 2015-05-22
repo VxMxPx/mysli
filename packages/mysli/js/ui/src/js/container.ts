@@ -71,11 +71,11 @@ module mysli.js.ui
             // UID only, no options
             if (!options)
             {
-                options = {uid: widget.uid}
+                options = { uid: widget.uid }
             }
             else if (typeof options === 'string')
             {
-                options = {uid: options};
+                options = { uid: options };
             }
             else if (typeof options === 'object')
             {
@@ -88,10 +88,12 @@ module mysli.js.ui
             }
 
             if (this.collection.has(options.uid))
-                throw new Error(`Element with such ID already exists: ${options.id}`);
+            {
+                throw new Error(`Element with such ID already exists: ${options.uid}`);
+            }
 
             // Create classes
-            class_id = 'coll-euid-'+widget.uid+' coll-uid-'+options.uid;
+            class_id = 'coll-euid-' + widget.uid + ' coll-uid-' + options.uid;
 
             // Create wrapper, append at the end of the list
             if (this.element_wrapper)
@@ -134,8 +136,8 @@ module mysli.js.ui
             if (at > -1)
             {
                 this.$target
-                    .find('.coll-euid-'+this.collection.get_from(at_index, -1).uid)
-                        .after(pushable);
+                    .find('.coll-euid-' + this.collection.get_from(at_index, -1).uid)
+                    .after(pushable);
             }
             else
             {
@@ -145,13 +147,13 @@ module mysli.js.ui
             return widget;
         }
 
-         /**
-         * Get elements from the collection. If `cell` is provided, get cell itself.
-         * @param uid  either string (uid) or number (index)
-         * You can chain IDs to get to the last, by using: id1 > id2 > id3
-         * All elements in chain must be of type Container for this to work.
-         * @param cell weather to get cell itself rather than containing element.
-         */
+        /**
+        * Get elements from the collection. If `cell` is provided, get cell itself.
+        * @param uid  either string (uid) or number (index)
+        * You can chain IDs to get to the last, by using: id1 > id2 > id3
+        * All elements in chain must be of type Container for this to work.
+        * @param cell weather to get cell itself rather than containing element.
+        */
         get(uid: string|number, cell: boolean = false): Cell|Widget
         {
             // Used in chain
@@ -163,10 +165,16 @@ module mysli.js.ui
             {
                 var uidq: string = uid.substr(0, index_at).trim();
                 var ccontainer: any = this.collection.get(uidq)[0];
+                var item: string;
 
                 if (ccontainer instanceof Container)
                 {
-                    return ccontainer.get(uid.substr(index_at+1).trim(), cell);
+                    item = uid.substr(index_at + 1).trim();
+                    if ($.isNumeric(item))
+                    {
+                        item = parseInt(item, 10);
+                    }
+                    return ccontainer.get(item, cell);
                 }
                 else
                 {
@@ -185,7 +193,20 @@ module mysli.js.ui
         }
 
         /**
-         * Get an element, andthen remove it from the collction and DOM.
+         * Loop through each element in collection.
+         * @param callback
+         */
+        each(callback: (index?: number, element?: Widget|Cell) => any, cell: boolean = false): any
+        {
+            return this.collection.each(function(index: number, wid_cell: [Widget, Cell]): any
+            {
+                var element: Cell|Widget = wid_cell[( cell ? 1 : 0 )];
+                return callback(index, element);
+            });
+        }
+
+        /**
+         * Get an element, and then remove it from the collction and DOM.
          * @param uid
          */
         pull(uid: string|number): Widget
@@ -193,6 +214,32 @@ module mysli.js.ui
             var element: Widget = <Widget> this.get(uid, false);
             this.remove(uid);
             return element;
+        }
+
+        /**
+         * Replace an element.
+         * @param uid
+         */
+        replace(uid: string|number, widget: Widget): Widget
+        {
+            this.collection.replace(uid, widget);
+            // this.collection.replace(uid, widget);
+
+            if (this.element_wrapper)
+            {
+                this.$target
+                    .find('coll-euid-' + uid)
+                    .empty()
+                    .append(widget.element);
+            }
+            else
+            {
+                this.$target
+                    .find('.coll-euid-' + uid)
+                    .replaceWith(widget.element);
+            }
+
+            return widget;
         }
 
         /**
