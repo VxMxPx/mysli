@@ -35,6 +35,15 @@ module mysli.js.ui
         }
 
         /**
+         * Replace all content in the container, with a new content...
+         */
+        replace(html: string): JQuery
+        {
+            this.element.html('');
+            return this.push(html);
+        }
+
+        /**
          * Remove element(s) by specific jQuery selector.
          * @param selector
          */
