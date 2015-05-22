@@ -72,7 +72,7 @@ module mysli.js.ui
         }
         set expanded(value: boolean)
         {
-            this.$cell[value ? 'addClass' : 'removeClass']('expanded');
+            this.$element[value ? 'addClass' : 'removeClass']('expanded');
         }
     }
 }

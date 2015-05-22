@@ -6,7 +6,7 @@ module mysli.js.ui
     export class Cell
     {
         protected parent: Container;
-        protected $cell: JQuery;
+        protected $element: JQuery;
         protected prop: any;
 
         public static get SCROLL_Y(): string { return 'scroll-y'; }
@@ -20,7 +20,7 @@ module mysli.js.ui
         constructor(parent: Container, $cell: JQuery, options: any = {})
         {
             this.parent = parent;
-            this.$cell = $cell;
+            this.$element = $cell;
 
             this.prop = new common.Prop({
                 // Weather cell is visible
@@ -42,6 +42,12 @@ module mysli.js.ui
                 ['visible', 'padding', 'border', 'fill', 'align', 'scroll']);
         }
 
+        // Element
+        get element(): JQuery
+        {
+            return this.$element;
+        }
+
         /**
          * Animate the cell.
          * @param what
@@ -50,7 +56,7 @@ module mysli.js.ui
          */
         animate(what: any, duration: number = 500, callback: any = false): void
         {
-            this.$cell.animate(what, duration, callback);
+            this.element.animate(what, duration, callback);
         }
 
         // Get/set padded
@@ -63,7 +69,7 @@ module mysli.js.ui
             var positions: string[] = ['top', 'right', 'bottom', 'left'];
             var current: number|boolean;
 
-            this.$cell.css('padding', '');
+            this.element.css('padding', '');
 
             // Value is Boolean e.g.: element.padding = false
             if (typeof value === 'boolean')
@@ -89,11 +95,11 @@ module mysli.js.ui
 
                 if (typeof current === 'number')
                 {
-                    this.$cell.css(`padding-${positions[i]}`, current);
+                    this.element.css(`padding-${positions[i]}`, current);
                 }
                 else
                 {
-                    this.$cell[current ? 'addClass' : 'removeClass'](`padding-${positions[i]}`);
+                    this.element[current ? 'addClass' : 'removeClass'](`padding-${positions[i]}`);
                 }
             }
         }
@@ -130,7 +136,7 @@ module mysli.js.ui
                     current = null;
                 }
 
-                this.$cell[current ? 'addClass' : 'removeClass'](`border-${positions[i]}`);
+                this.element[current ? 'addClass' : 'removeClass'](`border-${positions[i]}`);
             }
         }
 
@@ -141,13 +147,8 @@ module mysli.js.ui
         }
         set visible(status: boolean)
         {
-            if (status === this.prop.visible)
-            {
-                return;
-            }
-
             this.prop.visible = status;
-            this.$cell[status ? 'show' : 'hide']();
+            this.element[status ? 'show' : 'hide']();
         }
 
         // Get/set align
@@ -160,13 +161,13 @@ module mysli.js.ui
             this.prop.align = value;
             if (value === Cell.ALIGN_LEFT)
             {
-                this.$cell.removeClass('align-right');
-                this.$cell.addClass('align-left');
+                this.element.removeClass('align-right');
+                this.element.addClass('align-left');
             }
             else
             {
-                this.$cell.addClass('align-right');
-                this.$cell.removeClass('align-left');
+                this.element.addClass('align-right');
+                this.element.removeClass('align-left');
             }
         }
 
@@ -178,7 +179,7 @@ module mysli.js.ui
         set fill(value: boolean)
         {
             this.prop.fill = value;
-            this.$cell[value ? 'addClass' : 'removeClass']('content-fill');
+            this.element[value ? 'addClass' : 'removeClass']('content-fill');
         }
 
         // Get/set scroll
@@ -191,26 +192,26 @@ module mysli.js.ui
             switch (value)
             {
                 case Cell.SCROLL_X:
-                    this.$cell.addClass('scroll-x');
-                    this.$cell.removeClass('scroll-y');
+                    this.element.addClass('scroll-x');
+                    this.element.removeClass('scroll-y');
                     this.prop.scroll = value;
                     break;
 
                 case Cell.SCROLL_Y:
-                    this.$cell.addClass('scroll-y');
-                    this.$cell.removeClass('scroll-x');
+                    this.element.addClass('scroll-y');
+                    this.element.removeClass('scroll-x');
                     this.prop.scroll = value;
                     break;
 
                 case Cell.SCROLL_BOTH:
-                    this.$cell.removeClass('scroll-x');
-                    this.$cell.removeClass('scroll-y');
+                    this.element.removeClass('scroll-x');
+                    this.element.removeClass('scroll-y');
                     this.prop.scroll = value;
                     break;
 
                 case Cell.SCROLL_BOTH:
-                    this.$cell.addClass('scroll-x');
-                    this.$cell.addClass('scroll-y');
+                    this.element.addClass('scroll-x');
+                    this.element.addClass('scroll-y');
                     this.prop.scroll = value;
                     break;
 
@@ -224,7 +225,7 @@ module mysli.js.ui
          */
         remove():void
         {
-            this.$cell.remove();
+            this.element.remove();
         }
     }
 }
