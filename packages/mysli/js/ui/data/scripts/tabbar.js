@@ -1,40 +1,62 @@
+// Register this module
 mjud.add('tabbar', function() {
 
     'use strict';
-    
+
+    var sid = 'tabbar';
+
     var ui = mysli.js.ui;
-    var panel = new ui.Panel({uid: 'mjud-tabbar', width: ui.Panel.SIZE_BIG});
-    var titlebar = new ui.Titlebar({style: 'default'});
+    var panel = new ui.Panel({
+        uid: 'mjud-tabbar',
+        width: ui.Panel.SIZE_BIG,
+        expandable: true
+    });
 
     // Titlebar
-    titlebar.push(new ui.Button({
-        icon: 'close'
-    })).connect('click', function () {
-        panel.close();
-    });
-    titlebar.push(new ui.Label({text: "Tabbar Examples", type: ui.Label.TITLE}), {expanded: true});
-
-//    var container = new ui.Container();
-
-    // Default
-//    container.push(new ui.Label({text: "Default:"}), {padding: [false, false, 5, false]});    
-//    var b_default = new ui.Box({orientation: ui.Box.VERTICAL});
-//    b_default.push([
-//        new ui.Button({label: 'Default'}),
-//        new ui.Button({label: 'Flat', flat: true}),
-//        new ui.Button({label: 'Disabled', disabled: true}),
-//        new ui.Button({label: 'Flat Disabled', flat: true, disabled: true})
-//    ]);
-//    container.push(b_default);
-
-    // Source
+    var titlebar = new ui.Titlebar();
+    titlebar
+        .push(new ui.Button({icon: 'close'}))
+        .connect('click', function () {
+            panel.close();
+        });
+    titlebar
+        .push(
+            new ui.Label({
+                text: "Tabbar Examples",
+                type: ui.Label.TITLE
+            }),
+            {expanded: true});
     panel.front.push(titlebar);
-    panel.front.push(new ui.Tabbar({
-        examples: 'Examples',
-        source: 'Source',
-        doc: 'Documentation'
-    }, {active: 'examples'}));
-//    panel.front.push(container, {padding: true});
+
+
+    // TABBAR
+    var tabbar = new ui.Tabbar({
+        add: {
+            exa: 'Examples',
+            src: 'Source',
+            doc: 'Documentation'
+        },
+        // Set active tab to be examples
+        active: 'exa',
+        stack: new ui.Stack()
+    });
+    panel.front.push(tabbar);
+    panel.front.push(tabbar.stack, { scroll: ui.Cell.SCROLL_Y });
+
+    tabbar.stack.get('exa').push(new ui.Label("The tabbar above is an example for now...."), {padding: true});
+    tabbar.stack.get('src').push(new ui.HTML(), {padding: true});
+    tabbar.stack.get('doc').push(new ui.HTML(), {padding: true});
+
+    tabbar.connect('action', function (id) {
+        if (id === 'src' || id === 'doc')
+        {
+            tabbar.stack.get(id+' > 0').replace('Loading...');
+
+            mjud.request('tabbar', id, function (data) {
+                tabbar.stack.get(id+' > 0').replace('<pre>'+data+'</pre>');
+            });
+        }
+    });
 
     return panel;
 });

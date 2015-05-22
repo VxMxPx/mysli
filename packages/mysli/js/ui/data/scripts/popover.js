@@ -47,8 +47,6 @@ mjud.add('popover', function() {
 
     titlebar.push(new ui.Label({text: "Popover", type: ui.Label.TITLE}), {expanded: true});
 
-    var container = new ui.Container();
-
     // Default
     var container = new ui.Box({orientation: ui.Box.VERTICAL});
     container.push([
@@ -79,7 +77,7 @@ mjud.add('popover', function() {
         .push(new ui.Button({label: "Hello"}), {padding: true, fill: true})
         .connect('click', function (e, self) {
             popover(self, [ui.Popover.POSITION_TOP, ui.Popover.POSITION_BOTTOM]);
-        })
+        });
     panel.front.push(new ui.Label({ text: "Try to right click anywhere on this panel." }), {padding: true});
     panel.front.push(container, {padding: [80, true, true, true]});
 

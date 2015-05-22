@@ -7,25 +7,48 @@
         var panels = new mysli.js.ui.PanelContainer();
         var collection = {};
 
-        function add(module, call) {
-            if (typeof collection[module] !== 'undefined') {
+        /**
+         * Add a new module to the collection
+         * @param {string}   id
+         * @param {function} call
+         */
+        function add(id, call) {
+            if (typeof collection[id] !== 'undefined') {
                 console.warn('Module is already registered.');
             }
-            collection[module] = call;
+            collection[id] = call;
         }
 
-        function run(module) {
+        /**
+         * Run a particular module
+         * @param  {string} id
+         */
+        function run(id) {
             var panel;
-            panel = collection[module]();
+            panel = collection[id]();
 
-            if (module !== 'navigation') {
+            if (id !== 'navigation') {
                 panel.connect('close', function () {
-                    collection[module] = undefined;
+                    collection[id] = undefined;
                 });
             }
             panels.insert(panel, 'mjud-navigation');
         }
 
+        /**
+         * Request documentation or source (as a string) for particular module.
+         * @param {string} id
+         * @param {string} what doc|src
+         * @param {function} call
+         */
+        function request(id, what, call) {
+            $.get('?'+what+'='+id, call);
+        }
+
+        /**
+         * Open a panel for particula module
+         * @param  {string} id
+         */
         function open(id) {
             var panel = panels.get("mjud-"+id);
             if (!panel) {
@@ -51,11 +74,15 @@
         }
 
         // Export Public Methods
-        return { panels: panels, add: add, open: open };
+        return {
+            panels: panels,
+            add: add,
+            request: request,
+            open: open
+        };
     }());
 
     $('body').prepend(mjud.panels.element);
     mjud.open('navigation');
-    // mjud.open('introduction');
 
 }());
