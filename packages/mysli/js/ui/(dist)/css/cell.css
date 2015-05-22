@@ -14,15 +14,27 @@
 .ui-cell.align-left {
   text-align: left;
 }
-.ui-cell.padtop {
+.ui-cell.padding-top {
   padding-top: 15px;
 }
-.ui-cell.padbottom {
+.ui-cell.padding-bottom {
   padding-bottom: 15px;
 }
-.ui-cell.padleft {
+.ui-cell.padding-left {
   padding-left: 15px;
 }
-.ui-cell.padright {
+.ui-cell.padding-right {
   padding-right: 15px;
+}
+.ui-cell.border-top {
+  border-top: 1px solid rgba(0,0,0,0.3);
+}
+.ui-cell.border-bottom {
+  border-bottom: 1px solid rgba(0,0,0,0.3);
+}
+.ui-cell.border-left {
+  border-left: 1px solid rgba(0,0,0,0.3);
+}
+.ui-cell.border-right {
+  border-right: 1px solid rgba(0,0,0,0.3);
 }

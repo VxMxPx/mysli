@@ -96,8 +96,9 @@ var mysli;
                     this.element.width(this.prop.width);
                     // Proxy the click event to focus
                     this.element.on('click', function () {
-                        if (!_this.prop.closing && !_this.locked)
+                        if (!_this.prop.closing && !_this.locked) {
                             _this.focus = true;
+                        }
                     });
                     // Add Sides
                     this.front = new ui.PanelSide();
@@ -152,8 +153,9 @@ var mysli;
                  * Animate all the changes made to the element.
                  */
                 Panel.prototype.animate = function (callback) {
-                    if (this.prop.closing)
+                    if (this.prop.closing) {
                         return;
+                    }
                     this.element.stop(true, false).animate({
                         left: this.position + this.offset,
                         width: this.width + this.expand,
@@ -176,10 +178,12 @@ var mysli;
                         return this.prop.side;
                     },
                     set: function (value) {
-                        if (Panel.valid_sides.indexOf(value) === -1)
+                        if (Panel.valid_sides.indexOf(value) === -1) {
                             throw new Error("Trying to set invalid side: " + value);
-                        if (!this.prop.flippable)
+                        }
+                        if (!this.prop.flippable) {
                             throw new Error("Trying to flip a panel which is not flippable.");
+                        }
                         // Right now this is hard coded, there are only two sides.
                         // It's possible that in future more sides will be added?
                         this.element[value === Panel.SIDE_BACK ? 'addClass' : 'removeClass']('flipped');
@@ -196,8 +200,9 @@ var mysli;
                     },
                     set: function (value) {
                         var diff;
-                        if (value === this.width)
+                        if (value === this.width) {
                             return;
+                        }
                         diff = -(this.width - value);
                         this.prop.width = value;
                         this.trigger('set-width', [value, diff]);
@@ -214,8 +219,9 @@ var mysli;
                     },
                     set: function (status) {
                         var width;
-                        if (status === this.away)
+                        if (status === this.away) {
                             return;
+                        }
                         if (status) {
                             if (this.focus || this.away) {
                                 this.prop.away_on_blur = true;
@@ -246,8 +252,9 @@ var mysli;
                         return this.prop.popout;
                     },
                     set: function (status) {
-                        if (status === this.popout)
+                        if (status === this.popout) {
                             return;
+                        }
                         if (status) {
                             this.prop.popout = true;
                             this.focus = true;
@@ -274,11 +281,13 @@ var mysli;
                         return this.prop.insensitive;
                     },
                     set: function (value) {
-                        if (value === this.insensitive)
+                        if (value === this.insensitive) {
                             return;
+                        }
                         if (value) {
-                            if (this.focus)
+                            if (this.focus) {
                                 this.focus = false;
+                            }
                             this.prop.insensitive = true;
                         }
                         else {
@@ -297,8 +306,9 @@ var mysli;
                         return this.prop.min_size;
                     },
                     set: function (size) {
-                        if (this.min_size === size)
+                        if (this.min_size === size) {
                             return;
+                        }
                         this.prop.min_size = size;
                         this.trigger('set-min-size', [size]);
                     },
@@ -313,8 +323,9 @@ var mysli;
                         return this.prop.focus;
                     },
                     set: function (value) {
-                        if (value === this.focus)
+                        if (value === this.focus) {
                             return;
+                        }
                         if (value) {
                             this.prop.focus = true;
                             this.element.addClass('focused');
@@ -326,8 +337,9 @@ var mysli;
                         else {
                             this.prop.focus = false;
                             this.element.removeClass('focused');
-                            if (this.prop.away_on_blur)
+                            if (this.prop.away_on_blur) {
                                 this.away = true;
+                            }
                         }
                         this.trigger('set-focus', [value]);
                     },
@@ -417,8 +429,9 @@ var mysli;
                  */
                 Panel.prototype.close = function () {
                     var _this = this;
-                    if (this.locked)
+                    if (this.locked) {
                         return;
+                    }
                     this.insensitive = true;
                     this.prop.closing = true;
                     this.trigger('close');

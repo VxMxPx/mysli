@@ -20,6 +20,7 @@ declare module mysli.js.ui {
          */
         animate(what: any, duration?: number, callback?: any): void;
         padding: boolean | any[];
+        border: boolean | any[];
         visible: boolean;
         align: string;
         fill: boolean;

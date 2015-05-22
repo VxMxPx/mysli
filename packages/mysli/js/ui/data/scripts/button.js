@@ -3,7 +3,7 @@ mjud.add('button', function() {
     'use strict';
 
     var ui = mysli.js.ui;
-    var panel = new ui.Panel({uid: 'mjud-buttons', width: ui.Panel.SIZE_BIG});
+    var panel = new ui.Panel({uid: 'mjud-button', width: ui.Panel.SIZE_BIG});
     var titlebar = new ui.Titlebar({style: 'default'});
 
     // Titlebar

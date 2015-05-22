@@ -274,6 +274,9 @@ var mysli;
                     // When widget is clicked
                     // => ( event: any, widget: Widget )
                     'click',
+                    // When right mouse button is clicked
+                    // => ( event: any, widget: Widget )
+                    'context-menu',
                     // When mouse cursor enter (parent) widget
                     // => ( event: event, widget: Widget )
                     'mouse-enter',

@@ -5,6 +5,15 @@ mjud.add('popover', function() {
     var ui = mysli.js.ui;
     var panel = new ui.Panel({uid: 'mjud-popover'});
     var titlebar = new ui.Titlebar({style: 'default'});
+    var right_menu = new ui.Popover({ center: false, pointer: false, position: ui.Popover.POSITION_BOTTOM });
+
+    right_menu.push(new ui.Label({text: 'You have activated right click!'}), {padding: true});
+    right_menu.push(new ui.Button({
+        label: 'Close!'
+    }), {padding: true}).connect('click', function (e) {
+        right_menu.hide();
+        panel.close();
+    });
 
     function popover(widget, position)
     {
@@ -20,9 +29,10 @@ mjud.add('popover', function() {
             //         smart_padding: true
             //     }
             // });
-            widget.popover.push(new ui.Label({ text: 'Hi there!' }), {padding: [10, 10, 10, 10]});
-            widget.popover.push(new ui.Entry({ placeholder: 'Enter your name...' }), {padding: [null, 10, 10, 10]});
-            widget.popover.push(buttons, {padding: [null, 10, 10, 10]});
+            widget.popover.push(new ui.Label({ text: 'Hi there!' }), {padding: true});
+            widget.popover.push(new ui.Entry({ placeholder: 'Enter your name...' }), {padding: [null, true, true, true]});
+            widget.popover.push(new ui.Divider(), {padding: {bottom: true}});
+            widget.popover.push(buttons, {padding: [null, true, true, true]});
             widget.popover.position = position;
         }
         widget.popover.show(widget);
@@ -65,12 +75,19 @@ mjud.add('popover', function() {
     });
 
     panel.front.push(titlebar);
-    panel.front.push(container, {padding: true});
     panel.front
         .push(new ui.Button({label: "Hello"}), {padding: true, fill: true})
         .connect('click', function (e, self) {
             popover(self, [ui.Popover.POSITION_TOP, ui.Popover.POSITION_BOTTOM]);
         })
+    panel.front.push(new ui.Label({ text: "Try to right click anywhere on this panel." }), {padding: true});
+    panel.front.push(container, {padding: [80, true, true, true]});
+
+    // panel.connect('on-context-menu', function () { return false; });
+    panel.element.on('contextmenu', function (e) {
+        right_menu.show(e);
+        return false;
+    });
 
     return panel;
 });

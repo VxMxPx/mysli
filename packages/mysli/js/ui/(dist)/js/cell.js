@@ -16,6 +16,8 @@ var mysli;
                         visible: true,
                         // Cell's padding
                         padding: false,
+                        // Cell's border
+                        border: false,
                         // Weather content should be filled to full width
                         fill: false,
                         // Where to align cell's content
@@ -23,7 +25,7 @@ var mysli;
                         // Weather content can be scrolled
                         scroll: Cell.SCROLL_NONE
                     }, this);
-                    this.prop.push(options, ['visible', 'padding', 'fill', 'align', 'scroll']);
+                    this.prop.push(options, ['visible', 'padding', 'border', 'fill', 'align', 'scroll']);
                 }
                 Object.defineProperty(Cell, "SCROLL_Y", {
                     get: function () { return 'scroll-y'; },
@@ -73,14 +75,58 @@ var mysli;
                     },
                     set: function (value) {
                         var positions = ['top', 'right', 'bottom', 'left'];
+                        var current;
                         this.$cell.css('padding', '');
-                        if (typeof value === 'boolean')
-                            value = [value, value, value, value];
+                        // Value is Boolean e.g.: element.padding = false
+                        if (typeof value === 'boolean') {
+                            value = { top: value, right: value, bottom: value, left: value };
+                        }
+                        // Map values
                         for (var i = 0; i < positions.length; i++) {
-                            if (typeof value[i] === 'number')
-                                this.$cell.css("padding-" + positions[i], value[i]);
-                            else
-                                this.$cell[value[i] ? 'addClass' : 'removeClass']("pad" + positions[i]);
+                            if (typeof value[i] !== 'undefined') {
+                                current = value[i];
+                            }
+                            else if (typeof value[positions[i]] !== 'undefined') {
+                                current = value[positions[i]];
+                            }
+                            else {
+                                current = null;
+                            }
+                            if (typeof current === 'number') {
+                                this.$cell.css("padding-" + positions[i], current);
+                            }
+                            else {
+                                this.$cell[current ? 'addClass' : 'removeClass']("padding-" + positions[i]);
+                            }
+                        }
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
+                Object.defineProperty(Cell.prototype, "border", {
+                    // Get/set border
+                    get: function () {
+                        return this.prop.border;
+                    },
+                    set: function (value) {
+                        var positions = ['top', 'right', 'bottom', 'left'];
+                        var current;
+                        // Value is Boolean e.g.: element.border = false
+                        if (typeof value === 'boolean') {
+                            value = { top: value, right: value, bottom: value, left: value };
+                        }
+                        // Map values
+                        for (var i = 0; i < positions.length; i++) {
+                            if (typeof value[i] !== 'undefined') {
+                                current = value[i];
+                            }
+                            else if (typeof value[positions[i]] !== 'undefined') {
+                                current = value[positions[i]];
+                            }
+                            else {
+                                current = null;
+                            }
+                            this.$cell[current ? 'addClass' : 'removeClass']("border-" + positions[i]);
                         }
                     },
                     enumerable: true,
@@ -92,8 +138,9 @@ var mysli;
                         return this.prop.visible;
                     },
                     set: function (status) {
-                        if (status === this.prop.visible)
+                        if (status === this.prop.visible) {
                             return;
+                        }
                         this.prop.visible = status;
                         this.$cell[status ? 'show' : 'hide']();
                     },

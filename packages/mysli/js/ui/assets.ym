@@ -42,6 +42,7 @@ files:
             - css/overlay.styl
             - css/button.styl
             - css/popover.styl
+            - css/divider.styl
             # Form
             - css/generic_input.styl
             - css/entry.styl
@@ -69,6 +70,7 @@ files:
             - js/titlebar.ts
             - js/navigation.ts
             - js/popover.ts
+            - js/divider.ts
             # Form
             - js/generic_input.ts
             - js/checkbox.ts

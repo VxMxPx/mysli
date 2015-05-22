@@ -5,8 +5,7 @@ mjud.add('introduction', function() {
     var ui = mysli.js.ui,
         panel = new ui.Panel({
             uid: 'mjud-introduction',
-            width: ui.Panel.SIZE_BIG,
-            min_size: ui.Panel.SIZE_NORMAL
+            width: ui.Panel.SIZE_BIG
         }),
         titlebar = new ui.Titlebar(),
         content = new ui.HTML();
