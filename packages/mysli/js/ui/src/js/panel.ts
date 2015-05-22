@@ -131,7 +131,6 @@ module mysli.js.ui
             }
         }
 
-
         /**
          * Animate all the changes made to the element.
          */
