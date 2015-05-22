@@ -27,6 +27,8 @@ module mysli.js.ui
                 visible: true,
                 // Cell's padding
                 padding: false,
+                // Cell's border
+                border: false,
                 // Weather content should be filled to full width
                 fill: false,
                 // Where to align cell's content
@@ -34,7 +36,10 @@ module mysli.js.ui
                 // Weather content can be scrolled
                 scroll: Cell.SCROLL_NONE
             }, this);
-            this.prop.push(options, ['visible', 'padding', 'fill', 'align', 'scroll']);
+
+            this.prop.push(
+                options,
+                ['visible', 'padding', 'border', 'fill', 'align', 'scroll']);
         }
 
         /**
@@ -56,18 +61,76 @@ module mysli.js.ui
         set padding(value: boolean|any[])
         {
             var positions: string[] = ['top', 'right', 'bottom', 'left'];
+            var current: number|boolean;
 
             this.$cell.css('padding', '');
 
+            // Value is Boolean e.g.: element.padding = false
             if (typeof value === 'boolean')
-                value = [value, value, value, value];
+            {
+                value = {top: value, right: value, bottom: value, left: value};
+            }
 
+            // Map values
             for (var i=0; i<positions.length; i++)
             {
-                if (typeof value[i] === 'number')
-                    this.$cell.css(`padding-${positions[i]}`, value[i]);
+                if (typeof value[i] !== 'undefined')
+                {
+                    current = value[i];
+                }
+                else if (typeof value[positions[i]] !== 'undefined')
+                {
+                    current = value[positions[i]];
+                }
                 else
-                    this.$cell[value[i] ? 'addClass' : 'removeClass'](`pad${positions[i]}`);
+                {
+                    current = null;
+                }
+
+                if (typeof current === 'number')
+                {
+                    this.$cell.css(`padding-${positions[i]}`, current);
+                }
+                else
+                {
+                    this.$cell[current ? 'addClass' : 'removeClass'](`padding-${positions[i]}`);
+                }
+            }
+        }
+
+        // Get/set border
+        get border(): boolean|any[]
+        {
+            return this.prop.border;
+        }
+        set border(value: boolean|any[])
+        {
+            var positions: string[] = ['top', 'right', 'bottom', 'left'];
+            var current: number|boolean;
+
+            // Value is Boolean e.g.: element.border = false
+            if (typeof value === 'boolean')
+            {
+                value = {top: value, right: value, bottom: value, left: value};
+            }
+
+            // Map values
+            for (var i=0; i<positions.length; i++)
+            {
+                if (typeof value[i] !== 'undefined')
+                {
+                    current = value[i];
+                }
+                else if (typeof value[positions[i]] !== 'undefined')
+                {
+                    current = value[positions[i]];
+                }
+                else
+                {
+                    current = null;
+                }
+
+                this.$cell[current ? 'addClass' : 'removeClass'](`border-${positions[i]}`);
             }
         }
 
@@ -79,7 +142,9 @@ module mysli.js.ui
         set visible(status: boolean)
         {
             if (status === this.prop.visible)
+            {
                 return;
+            }
 
             this.prop.visible = status;
             this.$cell[status ? 'show' : 'hide']();
