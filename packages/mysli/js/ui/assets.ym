@@ -37,6 +37,7 @@ files:
             - css/html.styl
             - css/box.styl
             - css/tabbar.styl
+            - css/stack.styl
             - css/titlebar.styl
             - css/navigation.styl
             - css/overlay.styl
@@ -67,6 +68,7 @@ files:
             - js/overlay.ts
             - js/label.ts
             - js/tabbar.ts
+            - js/stack.ts
             - js/titlebar.ts
             - js/navigation.ts
             - js/popover.ts
