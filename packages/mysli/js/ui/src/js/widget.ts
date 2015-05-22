@@ -9,6 +9,9 @@ module mysli.js.ui
             // When widget is clicked
             // => ( event: any, widget: Widget )
             'click',
+            // When right mouse button is clicked
+            // => ( event: any, widget: Widget )
+            'context-menu',
             // When mouse cursor enter (parent) widget
             // => ( event: event, widget: Widget )
             'mouse-enter',
@@ -106,7 +109,7 @@ module mysli.js.ui
         {
             return this.prop.uid;
         }
-        
+
         /**
          * Return widget's id.
          */
@@ -282,14 +285,14 @@ module mysli.js.ui
                     {
                         continue;
                     }
-                    
+
                     for (eid in this.events[event])
                     {
                         if (!this.events[event].hasOwnProperty(eid))
                         {
                             continue;
                         }
-                            
+
                         if (eid.substr(0, id.length) === id)
                         {
                             this.event_disconnect_native(event);
