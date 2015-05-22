@@ -2,8 +2,8 @@ module mysli.js.common
 {
     export class Arr
     {
-        stack = {};
-        ids:string[] = [];
+        private stack: any = {};
+        private ids: string[] = [];
 
         /**
          * Push element to the end of an array.
@@ -17,12 +17,32 @@ module mysli.js.common
         }
 
         /**
+         * Replace particular element by id or index.
+         * @param id
+         */
+        replace(id: string|number, element: any): void
+        {
+            if (this.has(id))
+            {
+                if (typeof id === 'number')
+                {
+                    id = this.ids[id];
+                }
+                this.stack[id] = element;
+            }
+            else
+            {
+                throw new Error(`Cannot replace element, no such ID: ${id}`);
+            }
+        }
+
+        /**
          * Push element after particular element.
          * @return inserted index
          */
         push_after(after_id: string|number, id: string, element: any): number
         {
-            var index_to:number = typeof after_id === 'string' ? this.get_index(after_id) + 1 : after_id + 1;
+            var index_to: number = typeof after_id === 'string' ? this.get_index(after_id) + 1 : after_id + 1;
             this.stack[id] = element;
             this.ids.splice(index_to, 0, id);
             return index_to;
@@ -74,7 +94,7 @@ module mysli.js.common
         get_index_from(id: string, step: number): number
         {
             var index: number = this.get_index(id);
-        
+
             if (index > 0)
                 return index + step;
             else
@@ -88,9 +108,13 @@ module mysli.js.common
         has(id: string|number): boolean
         {
             if (typeof id === 'number')
+            {
                 return typeof this.ids[id] === 'string';
+            }
             else
+            {
                 return typeof this.stack[id] !== 'undefined';
+            }
         }
 
         /**
@@ -113,7 +137,7 @@ module mysli.js.common
         get_from(id: string|number, step: number): any
         {
             var index: number = typeof id === 'string' ? this.get_index_from(id, step) : id + step;
-        
+
             if (index > -1)
                 return this.get(this.ids[index]);
             else
