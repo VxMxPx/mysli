@@ -156,7 +156,7 @@ class pkgc
 
             if (substr(file::name($rpath, true), 0, 1) === '.')
             {
-                cout::format('+yellow+right SKIP');
+                cout::format("<yellow><right>SKIP\n");
                 return fs::map_continue;
             }
 
@@ -164,20 +164,20 @@ class pkgc
             {
                 if (in_array($rpath.'/', $ignore))
                 {
-                    cout::format('+yellow+right IGNORED');
+                    cout::format("<yellow><right>IGNORED\n");
                     return fs::map_continue;
                 }
                 else
                 {
                     $phar->addEmptyDir($rpath);
-                    cout::format('+green+right DIR');
+                    cout::format("<green><right>DIR\n");
                 }
             }
             else
             {
                 if (in_array($rpath, $ignore))
                 {
-                    cout::format('+yellow+right IGNORED');
+                    cout::format("<yellow><right>IGNORED\n");
                     return;
                 }
                 else
@@ -185,12 +185,12 @@ class pkgc
                     if (substr($rpath, -4) === '.php' && !$whitespace)
                     {
                         $phar->addFromString($rpath, php_strip_whitespace($apath));
-                        cout::format('+green+right COMPRESSED');
+                        cout::format("<green><right>COMPRESSED\n");
                     }
                     else
                     {
                         $phar->addFile($apath, $rpath);
-                        cout::format('+green+right FILE');
+                        cout::format("<green><right>FILE\n");
                     }
                 }
             }
@@ -318,11 +318,11 @@ class pkgc
 
                 if (file::remove($file))
                 {
-                    cout::format('+green+right OK');
+                    cout::format("<green><right>OK\n");
                 }
                 else
                 {
-                    cout::format('+red+right FAILED');
+                    cout::format("<red><right>FAILED\n");
                 }
             }
         }
@@ -348,12 +348,12 @@ class pkgc
             cout::line("    File {$filename}", false);
             $phar = new \Phar($path, 0, $filename);
             $phar->setStub($stub);
-            cout::format('+green+right OK');
+            cout::format("<green><right>OK\n");
             return $phar;
         }
         catch (\Exception $e)
         {
-            cout::format('+red+right FAILED');
+            cout::format("<red><right>FAILED\n");
             cout::line('    [!] '.$e->getMessage());
             return false;
         }
@@ -372,7 +372,7 @@ class pkgc
 
         if (!file::exists($filename))
         {
-            cout::format("    [!] Failed! File not found: `{$filename}`.");
+            cout::line("    [!] Failed! File not found: `{$filename}`.");
             return false;
         }
 
