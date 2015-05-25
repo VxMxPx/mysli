@@ -135,11 +135,11 @@ class config
 
         if ($c->save())
         {
-            cout::format("+green OK:-all  {$key} => {$original_value}");
+            cout::format("<green>OK:</green> {$key} => {$original_value}\n");
         }
         else
         {
-            cout::format("+red FAILED:-all  {$key} => {$original_value}");
+            cout::format("<red>FAILED</red> {$key} => {$original_value}\n");
         }
     }
     /**
