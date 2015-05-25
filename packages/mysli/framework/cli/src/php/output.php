@@ -103,10 +103,10 @@ class output
         return str_repeat(' ', $pos) . $message;
     }
     /**
-     * Format output, to open tag use plus(+), to close use minus(-) e.g.:
-     * +bold+red %s -bold-red
-     * see self::$format for list of available formats, addional to that:
-     * to close all use: -all, e.g.: +bold+red+bg_blue %s -all
+     * Format output, see above for list of avilable formats.
+     * Use: <green>GREEN!</green>
+     * <right>OK
+     * Tags can be left open.
      * @param  string $format
      * @param  array $params
      * @return null
@@ -114,17 +114,17 @@ class output
     static function format($format, array $params=[])
     {
         $format = preg_replace_callback(
-            '/([\+\-])([a-z_]{3,})\ ?/i',
+            '/<(\/)?([a-z_]{3,})>/i',
             function ($match)
             {
                 if (isset(self::$format[$match[2]]))
                 {
-                    $f = self::$format[$match[2]][(int) ($match[1] == '-')];
+                    $f = self::$format[$match[2]][(int) ($match[1] === '/')];
                     return "\e[{$f}m";
                 }
                 elseif ($match[2] === 'right')
                 {
-                    return '+right';
+                    return '[[[right/]]]';
                 }
             },
             $format
@@ -132,15 +132,15 @@ class output
 
         $output = vsprintf($format, $params);
 
-        if (strpos($format, '+right') !== false)
+        if (strpos($format, '[[[right/]]]') !== false)
         {
-            $output = explode('+right', $output, 2);
+            $output = explode('[[[right/]]]', $output, 2);
             self::line($output[0], false);
-            self::line(self::right($output[1]), true);
+            self::line(self::right($output[1]), false);
         }
         else
         {
-            self::line($output, true);
+            self::line($output, false);
         }
     }
     /**
@@ -164,49 +164,49 @@ class output
     }
 
     // format shortcuts
-    static function info($s)            { self::line($s); }
-    static function warn($s)            { self::yellow($s); }
-    static function error($s)           { self::red($s); }
-    static function success($s)         { self::green($s); }
+    static function info($s, $n=true)             { self::line($s, $n); }
+    static function warn($s, $n=true)             { self::yellow($s, $n); }
+    static function error($s, $n=true)            { self::red($s, $n); }
+    static function success($s, $n=true)          { self::green($s, $n); }
     // basic formatting
-    static function bold($s)            { self::line("\e[1m{$s}\e[21m"); }
-    static function dim($s)             { self::line("\e[2m{$s}\e[22m"); }
-    static function underline($s)       { self::line("\e[4m{$s}\e[24m"); }
-    static function blink($s)           { self::line("\e[5m{$s}\e[25m"); }
-    static function invert($s)          { self::line("\e[7m{$s}\e[27m"); }
-    static function hidden($s)          { self::line("\e[8m{$s}\e[28m"); }
+    static function bold($s, $n=true)             { self::line("\e[1m{$s}\e[21m", $n); }
+    static function dim($s, $n=true)              { self::line("\e[2m{$s}\e[22m", $n); }
+    static function underline($s, $n=true)        { self::line("\e[4m{$s}\e[24m", $n); }
+    static function blink($s, $n=true)            { self::line("\e[5m{$s}\e[25m", $n); }
+    static function invert($s, $n=true)           { self::line("\e[7m{$s}\e[27m", $n); }
+    static function hidden($s, $n=true)           { self::line("\e[8m{$s}\e[28m", $n); }
     // foreground (text) colors
-    static function black($s)           { self::line("\e[30m{$s}\e[39m"); }
-    static function red($s)             { self::line("\e[31m{$s}\e[39m"); }
-    static function green($s)           { self::line("\e[32m{$s}\e[39m"); }
-    static function yellow($s)          { self::line("\e[33m{$s}\e[39m"); }
-    static function blue($s)            { self::line("\e[34m{$s}\e[39m"); }
-    static function magenta($s)         { self::line("\e[35m{$s}\e[39m"); }
-    static function cyan($s)            { self::line("\e[36m{$s}\e[39m"); }
-    static function light_gray($s)      { self::line("\e[37m{$s}\e[39m"); }
-    static function dark_gray($s)       { self::line("\e[90m{$s}\e[39m"); }
-    static function light_red($s)       { self::line("\e[91m{$s}\e[39m"); }
-    static function light_green($s)     { self::line("\e[92m{$s}\e[39m"); }
-    static function light_yellow($s)    { self::line("\e[93m{$s}\e[39m"); }
-    static function light_blue($s)      { self::line("\e[94m{$s}\e[39m"); }
-    static function light_magenta($s)   { self::line("\e[95m{$s}\e[39m"); }
-    static function light_cyan($s)      { self::line("\e[96m{$s}\e[39m"); }
-    static function white($s)           { self::line("\e[97m{$s}\e[39m"); }
+    static function black($s, $n=true)            { self::line("\e[30m{$s}\e[39m", $n); }
+    static function red($s, $n=true)              { self::line("\e[31m{$s}\e[39m", $n); }
+    static function green($s, $n=true)            { self::line("\e[32m{$s}\e[39m", $n); }
+    static function yellow($s, $n=true)           { self::line("\e[33m{$s}\e[39m", $n); }
+    static function blue($s, $n=true)             { self::line("\e[34m{$s}\e[39m", $n); }
+    static function magenta($s, $n=true)          { self::line("\e[35m{$s}\e[39m", $n); }
+    static function cyan($s, $n=true)             { self::line("\e[36m{$s}\e[39m", $n); }
+    static function light_gray($s, $n=true)       { self::line("\e[37m{$s}\e[39m", $n); }
+    static function dark_gray($s, $n=true)        { self::line("\e[90m{$s}\e[39m", $n); }
+    static function light_red($s, $n=true)        { self::line("\e[91m{$s}\e[39m", $n); }
+    static function light_green($s, $n=true)      { self::line("\e[92m{$s}\e[39m", $n); }
+    static function light_yellow($s, $n=true)     { self::line("\e[93m{$s}\e[39m", $n); }
+    static function light_blue($s, $n=true)       { self::line("\e[94m{$s}\e[39m", $n); }
+    static function light_magenta($s, $n=true)    { self::line("\e[95m{$s}\e[39m", $n); }
+    static function light_cyan($s, $n=true)       { self::line("\e[96m{$s}\e[39m", $n); }
+    static function white($s, $n=true)            { self::line("\e[97m{$s}\e[39m", $n); }
     // background colors
-    static function bg_black($s)        { self::line("\e[40m{$s}\e[49m"); }
-    static function bg_red($s)          { self::line("\e[41m{$s}\e[49m"); }
-    static function bg_green($s)        { self::line("\e[42m{$s}\e[49m"); }
-    static function bg_yellow($s)       { self::line("\e[43m{$s}\e[49m"); }
-    static function bg_blue($s)         { self::line("\e[44m{$s}\e[49m"); }
-    static function bg_magenta($s)      { self::line("\e[45m{$s}\e[49m"); }
-    static function bg_cyan($s)         { self::line("\e[46m{$s}\e[49m"); }
-    static function bg_light_gray($s)   { self::line("\e[47m{$s}\e[49m"); }
-    static function bg_dark_gray($s)    { self::line("\e[100m{$s}\e[49m"); }
-    static function bg_light_red($s)    { self::line("\e[101m{$s}\e[49m"); }
-    static function bg_light_green($s)  { self::line("\e[102m{$s}\e[49m"); }
-    static function bg_light_yellow($s) { self::line("\e[103m{$s}\e[49m"); }
-    static function bg_light_blue($s)   { self::line("\e[104m{$s}\e[49m"); }
-    static function bg_light_magenta($s){ self::line("\e[105m{$s}\e[49m"); }
-    static function bg_light_cyan($s)   { self::line("\e[106m{$s}\e[49m"); }
-    static function bg_white($s)        { self::line("\e[107m{$s}\e[49m"); }
+    static function bg_black($s, $n=true)         { self::line("\e[40m{$s}\e[49m", $n); }
+    static function bg_red($s, $n=true)           { self::line("\e[41m{$s}\e[49m", $n); }
+    static function bg_green($s, $n=true)         { self::line("\e[42m{$s}\e[49m", $n); }
+    static function bg_yellow($s, $n=true)        { self::line("\e[43m{$s}\e[49m", $n); }
+    static function bg_blue($s, $n=true)          { self::line("\e[44m{$s}\e[49m", $n); }
+    static function bg_magenta($s, $n=true)       { self::line("\e[45m{$s}\e[49m", $n); }
+    static function bg_cyan($s, $n=true)          { self::line("\e[46m{$s}\e[49m", $n); }
+    static function bg_light_gray($s, $n=true)    { self::line("\e[47m{$s}\e[49m", $n); }
+    static function bg_dark_gray($s, $n=true)     { self::line("\e[100m{$s}\e[49m", $n); }
+    static function bg_light_red($s, $n=true)     { self::line("\e[101m{$s}\e[49m", $n); }
+    static function bg_light_green($s, $n=true)   { self::line("\e[102m{$s}\e[49m", $n); }
+    static function bg_light_yellow($s, $n=true)  { self::line("\e[103m{$s}\e[49m", $n); }
+    static function bg_light_blue($s, $n=true)    { self::line("\e[104m{$s}\e[49m", $n); }
+    static function bg_light_magenta($s, $n=true) { self::line("\e[105m{$s}\e[49m", $n); }
+    static function bg_light_cyan($s, $n=true)    { self::line("\e[106m{$s}\e[49m", $n); }
+    static function bg_white($s, $n=true)         { self::line("\e[107m{$s}\e[49m", $n); }
 }

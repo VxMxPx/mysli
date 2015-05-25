@@ -21,13 +21,18 @@ class cli
             if ($arguments[1] === '--help')
             {
                 self::list_scripts();
+                exit(0);
             }
 
-            self::execute($arguments[1], array_slice($arguments, 2));
+            $r = self::execute($arguments[1], array_slice($arguments, 2));
+
+            if ($r === true)  { exit(0); }
+            if ($r === false) { exit(1); }
         }
         else
         {
             self::list_scripts();
+            exit(0);
         }
     }
     /**
@@ -113,12 +118,12 @@ class cli
 
         if (class_exists($namespace) && method_exists($namespace, '__init'))
         {
-            call_user_func_array($namespace.'::__init', [$arguments]);
+            return call_user_func_array($namespace.'::__init', [$arguments]);
         }
         else
         {
             output::format(
-                '+yellow Method `__init` not found for `%s`.', [$script]
+                "<yellow>Method `__init` not found for `%s`.\n", [$script]
             );
         }
     }

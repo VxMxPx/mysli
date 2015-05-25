@@ -78,7 +78,7 @@ class util
 
         if ($pid === -1)
         {
-            cout::format('+red Cannot fork the process...');
+            cout::format("<red>Cannot fork the process...\n");
             exit(1);
         }
         elseif ($pid === 0)

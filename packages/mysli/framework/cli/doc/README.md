@@ -10,20 +10,20 @@ Cli will be automatically run when you execute ./dot (which you can find in the
 private path of your application). It will scan all enabled packages, for
 available scripts.
 
-If you want to create new scrip put it into the `src/php/` folder of your package,
-it can be called anyway you want, namespace, must follow directory structure
+If you want to create new scrip put it into the `src/php/sh` folder of your package,
+it can be called anyway you want. Namespace must follow directory structure
 convention, e.g. script in folder `vendor/package/src/php/sh/my_script.php` must
-contain class: `namespace vendor\package\sh { class my_script {} }`.
-The class should contain static method `run` which will get passed arguments.
+contain a class: `namespace vendor\package\sh { class my_script {} }`.
+The class should contain a static method `__init` which will get passed arguments.
 
 ## Helper Classes
 
-Cli package, offers couple of classes to help you manage input, output and
+Cli package offers couple of classes to help you manage input, output and
 input parameters...
 
 ### Input
 
-To include it use: `__use(__namespace__, 'mysli/framework/cli/input')`.
+To include it use: `__use(__namespace__, 'mysli.framework.cli/input')`.
 
 To grab single line input, you can use `line` method:
 
@@ -46,7 +46,7 @@ list($uname, $domain) = input::line('Enter an email: ', function ($input) {
 ```
 
 Additional to `line`, there are also `multiline` and `password`
-methods available. They accept the same arguments, the difference being,
+methods. They accept the same arguments, the difference being,
 `multiline` will terminate on two new lines, and password will hide input.
 
 Finally `confirm` is available which will print `y/n` to the user, and return
@@ -59,9 +59,9 @@ $answer = input::confirm('Are you sure?', false);
 
 ### Output
 
-To include it use: `__use(__namespace__, 'mysli/framework/cli/output')`.
+To include it use: `__use(__namespace__, 'mysli.framework.cli/output')`.
 
-To output a single line of regular text, you can use:
+To output a single line of a regular text, you can use:
 
 ```php
 output::line('Hello world!');
@@ -74,16 +74,13 @@ To fill full width of terminal window with a particular character you can use
 output::fill('-');
 ```
 
-To format (change text color, background color,...) a string,
-you can use `format`:
+To format a string (change text color, background color,...), you can use `format`:
 
 ```php
-output::format("Today is a +bold%s-bold day!", ['nice']);
+output::format("Today is a <bold>%s</bold> day!", ['nice']);
 ```
 
-To open a tag, plus (+) is used, and for closing it minus (-), e.g:
-`+bold` text `-bold`, alternatively `-all` can be used,
-to close all opened tags.
+Tags need not to be closed. To close all opened tags, you can use </all>.
 
 Available tags are:
 
@@ -118,7 +115,7 @@ output::success('Text!'); // => green
 This class can be used to define parameters which you scripts accepts,
 and then to parse arguments.
 
-To include it use: `__use(__namespace__, 'mysli/framework/cli/param')`.
+To include it use: `__use(__namespace__, 'mysli.framework.cli/param')`.
 
 This class cannot be called statically, so you need to construct it with:
 
@@ -245,7 +242,7 @@ $param->add('-m', ['action' => function (&$value, &$is_valid, &$messages) {
 
 ### Util
 
-To include it use: `__use(__namespace__, 'mysli/framework/cli/util')`.
+To include it use: `__use(__namespace__, 'mysli.framework.cli/util')`.
 
 Util class has only couple of methods: `terminal_width`, `execute` and
 `fork_command` (will fork a command and return _pid_).
