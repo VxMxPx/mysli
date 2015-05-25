@@ -8,8 +8,7 @@ mjud.add('tabbar', function() {
     var ui = mysli.js.ui;
     var panel = new ui.Panel({
         uid: 'mjud-tabbar',
-        width: ui.Panel.SIZE_BIG,
-        expandable: true
+        width: ui.Panel.SIZE_BIG
     });
 
     // Titlebar
@@ -53,7 +52,11 @@ mjud.add('tabbar', function() {
             tabbar.stack.get(id+' > 0').replace('Loading...');
 
             mjud.request('tabbar', id, function (data) {
-                tabbar.stack.get(id+' > 0').replace('<pre>'+data+'</pre>');
+                if (id === 'src')
+                {
+                    data = '<pre>' + data + '</pre>';
+                }
+                tabbar.stack.get(id+' > 0').replace(data);
             });
         }
     });
