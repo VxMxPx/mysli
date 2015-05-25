@@ -119,17 +119,17 @@ class assets
 
             if (preg_match($expect, $result))
             {
-                cout::format("    {$id}+right+green OK");
+                cout::format("    {$id}<right><green>OK\n");
             }
             else
             {
                 if ($params['level'] === 'warn')
                 {
-                    cout::format("    {$id}+right+yellow WARNING");
+                    cout::format("    {$id}<right><yellow>WARNING\n");
                 }
                 else
                 {
-                    cout::format("    {$id}+right+red FAILED");
+                    cout::format("    {$id}<right><red>FAILED\n");
                 }
 
                 $message = str_replace(
@@ -272,11 +272,11 @@ class assets
 
                     if (!dir::create(dirname($dest_file)))
                     {
-                        cout::format("+red+right FAILED");
+                        cout::format("<red><right>FAILED\n");
                     }
                     else
                     {
-                        cout::format("+green+right OK");
+                        cout::format("<green><right>OK\n");
                     }
                 }
 
@@ -303,7 +303,7 @@ class assets
             cout::line("    > `{$main}`");
             if (!$props['merge'])
             {
-                cout::format('        Done');
+                cout::format("        Done\n");
             }
             elseif ($modified)
             {
@@ -321,7 +321,7 @@ class assets
                     continue;
                 }
 
-                cout::format('        Saving+right+green OK');
+                cout::format("        Saving<right><green>OK\n");
 
                 if ($props['compress'] && arr::key_in($sett['compress'], $main_ext))
                 {
@@ -333,7 +333,7 @@ class assets
             }
             else
             {
-                cout::format('        Nothing to do...');
+                cout::format("        Nothing to do...\n");
             }
         }
 
@@ -546,11 +546,11 @@ class assets
                         cout::line("\n* Publishing changes:");
                         if (root\assets::publish($package, $dest, $map))
                         {
-                            cout::format("+green     DONE");
+                            cout::format("<green>     DONE\n");
                         }
                         else
                         {
-                            cout::format("+red     FAILED");
+                            cout::format("<red>     FAILED\n");
                         }
                     }
                 }

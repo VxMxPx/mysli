@@ -116,11 +116,11 @@ class i18n
 
                 if (self::process($package, $source, $destination))
                 {
-                    cout::format('i18n: %s +right+green OK', [$package]);
+                    cout::format("i18n: %s<right><green>OK\n", [$package]);
                 }
                 else
                 {
-                    cout::format('i18n: %s +right+red FAILED', [$package]);
+                    cout::format("i18n: %s<right><red>FAILED\n", [$package]);
                 }
             }
 

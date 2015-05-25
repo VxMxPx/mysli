@@ -163,7 +163,7 @@ class tplp
 
                         if ($change === 'Removed')
                         {
-                            cout::format("+right+green OK");
+                            cout::format("<right><green>OK\n");
                             continue;
                         }
 
@@ -182,12 +182,12 @@ class tplp
                         }
                         catch (\Exception $e)
                         {
-                            cout::format("+right+red FAILED");
+                            cout::format("<right><red>FAILED\n");
                             cout::line($e->getMessage());
                             continue;
                         }
 
-                        cout::format("+right+green OK");
+                        cout::format("<right><green>OK\n");
                     }
                 }
             }
