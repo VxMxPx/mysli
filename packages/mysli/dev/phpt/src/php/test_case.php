@@ -4,6 +4,7 @@ namespace mysli\dev\phpt;
 
 __use(__namespace__, '
     mysli.framework.fs/fs,file
+    mysli.framework.type/str
     mysli.framework.exception/* -> framework\exception\*
 ');
 
@@ -166,17 +167,29 @@ class test_case
     }
     /**
      * Get diff for this test.
+     * @param  boolean $adjust_line_numbers, will display line numbers as in
+     *                 test, (from EXPECT statement on...)
      * @return array
      */
-    function diff()
+    function diff($adjust_line_numbers=true)
     {
+        if ($adjust_line_numbers)
+        {
+            $expect_start = $this->find_expext_line_number()+1;
+        }
+        else
+        {
+            $expect_start = 1;
+        }
+
         if (empty($this->diff) && ($this->status === 0))
         {
             $this->diff = diff::generate(
                 $this->parsed['expect'],
                 $this->parsed['expect_raw'],
                 $this->output,
-                ($this->parsed['expect_type'] === 'expectregex')
+                ($this->parsed['expect_type'] === 'expectregex'),
+                $expect_start
             );
         }
 
@@ -279,6 +292,26 @@ class test_case
         return $this->rel_filename;
     }
 
+    /**
+     * Find on which line --EXPECT statement is located
+     * @return integer
+     */
+    private function find_expext_line_number()
+    {
+        $lines = explode(
+            "\n",
+            str::to_unix_line_endings(
+                file::read($this->filename)
+            )
+        );
+
+        foreach ($lines as $line_num => $line) {
+            if (preg_match('/^--EXPECT[A-Z_]*--$/', $line))
+            {
+                return $line_num+1;
+            }
+        }
+    }
     /**
      * Compare two strings to determine if they're the same.
      * @param  string  $expect
