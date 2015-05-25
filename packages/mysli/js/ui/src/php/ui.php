@@ -56,8 +56,27 @@ class ui
         }
         elseif ($doc = request::get('doc'))
         {
-            response::set_status(200);
-            output::add('Yo, DOC!');
+            if ($doc != preg_replace('/[^a-z_]/i', '', $doc))
+            {
+                response::set_status(400);
+                output::add("Bad request: `{$doc}`");
+            }
+            else
+            {
+                $file = fs::pkgroot(__DIR__, "doc/README.{$doc}.md");
+                response::set_status(200);
+
+                if (!file::exists($file))
+                {
+                    output::add(
+                        "<p>No documentation available for this component at this time.</p>"
+                    );
+                }
+                else
+                {
+                    output::add(file::read($file));
+                }
+            }
         }
         else
         {
