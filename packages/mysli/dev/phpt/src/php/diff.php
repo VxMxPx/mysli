@@ -22,14 +22,22 @@ class diff
      * @param  string  $expect_raw
      * @param  string  $output
      * @param  boolean $regex
+     * @param  integer $shift_lines considering that --EXPECT statement start
+     *                               at line other than -1-, it can be adjusted.
      * @return array
      */
-    static function generate($expect, $expect_raw, $output, $regex)
+    static function generate($expect, $expect_raw, $output, $regex, $shift_lines)
     {
         $expect     = $expect     ? explode("\n", $expect)     : [];
         $expect_raw = $expect_raw ? explode("\n", $expect_raw) : [];
         $output     = explode("\n", $output);
-        $diff = self::generate_array($expect, $expect_raw, $output, $regex);
+        $diff = self::generate_array(
+            $expect,
+            $expect_raw,
+            $output,
+            $regex,
+            $shift_lines
+        );
 
         return $diff;
     }
@@ -124,10 +132,12 @@ class diff
      * @param  array   $expect_raw
      * @param  array   $output
      * @param  boolean $regex
+     * @param  integer $shift_lines considering that --EXPECT statement start
+     *                               at line other than -1-, it can be adjusted.
      * @return array
      */
     private static function generate_array(
-        array $expect, array $expect_raw, array $output, $regex)
+        array $expect, array $expect_raw, array $output, $regex, $shift_lines)
     {
         $idx1 = 0; $ofs1 = 0; $cnt1 = count($expect);
         $idx2 = 0; $ofs2 = 0; $cnt2 = count($output);
@@ -155,24 +165,40 @@ class diff
                 if ($c1 > $c2)
                 {
                     $old1[$idx1] = array(
-                        $idx1, '-', $before, $expect_raw[$idx1++], $after
+                        ($idx1+$shift_lines),
+                        '-',
+                        $before,
+                        $expect_raw[$idx1++],
+                        $after
                     );
                     $last = 1;
                 }
                 elseif ($c2 > 0)
                 {
                     $old2[$idx2] = array(
-                        $idx2, '+', $before, $output[$idx2++], $after
+                        ($idx2+$shift_lines),
+                        '+',
+                        $before,
+                        $output[$idx2++],
+                        $after
                     );
                     $last = 2;
                 }
                 else
                 {
                     $old1[$idx1] = array(
-                        $idx1, '-', $before, $expect_raw[$idx1++], $after
+                        ($idx1+$shift_lines),
+                        '-',
+                        $before,
+                        $expect_raw[$idx1++],
+                        $after
                     );
                     $old2[$idx2] = array(
-                        $idx2, '+', $before, $output[$idx2++], $after
+                        ($idx2+$shift_lines),
+                        '+',
+                        $before,
+                        $output[$idx2++],
+                        $after
                     );
                 }
             }
@@ -214,7 +240,11 @@ class diff
             $before = isset($output[$idx2-1]) ? $output[$idx2-1] : null;
             $after  = isset($output[$idx2+1]) ? $output[$idx2+1] : null;
             $diff[] = array(
-                $idx1, '-',  $before, $expect_raw[$idx1++], $after
+                ($idx1 + $shift_lines),
+                '-',
+                $before,
+                $expect_raw[$idx1++],
+                $after
             );
         }
 
@@ -223,7 +253,11 @@ class diff
             $before = isset($output[$idx2-1]) ? $output[$idx2-1] : null;
             $after  = isset($output[$idx2+1]) ? $output[$idx2+1] : null;
             $diff[] = array(
-                $idx2, '+',  $before, $output[$idx2++], $after
+                ($idx2 + $shift_lines),
+                '+',
+                $before,
+                $output[$idx2++],
+                $after
             );
         }
 
