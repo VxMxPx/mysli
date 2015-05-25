@@ -364,11 +364,14 @@ class file
      * @param  string  $directory
      * @param  string  $filter regular expression filter, e.g. /.*\.jpg/i
      * @param  boolean $deep include sub-directories
-     * @param  integer $cutoff relative path (cut off root directory segment)
+     * @param  integer $mrel relative path (cut off root directory segment)
      *                         will require whole segment to match.
+     * @param  integer $rootlen use internally for length of a root, you can
+     * pass a walue, to set how much of the file path should be removed, default
+     * is strlen($directory)
      * @return array
      */
-    static function find($directory, $filter=null, $deep=true, $cutoff=false)
+    static function find($directory, $filter=null, $deep=true, $mrel=false, $rootlen=null)
     {
         if (!dir::exists($directory))
         {
@@ -393,38 +396,36 @@ class file
             return [];
         }
 
-        if ($cutoff === true)
-        {
-            $cutoff = strlen($directory)+1;
-        }
+        $rootlen = $rootlen ?: strlen($directory)+1;
 
         foreach ($collection as $file)
         {
             if (dir::exists(fs::ds($directory, $file)))
             {
-                if (!$deep) {
+                if (!$deep)
+                {
                     continue;
                 }
 
                 $matched_sub = self::find(
-                    fs::ds($directory, $file), $filter, $deep, $cutoff
+                    fs::ds($directory, $file), $filter, $deep, $mrel, $rootlen
                 );
                 $matched = array_merge($matched_sub, $matched);
                 continue;
             }
 
-            if ($cutoff)
-            {
-                $file = fs::ds($directory, $file);
-                $file = $cutoff ? substr($file, $cutoff) : $file;
-            }
+            // Full file path
+            $ffile  = fs::ds($directory, $file);
+            // Relative file path
+            $rfile = substr($ffile, $rootlen);
 
-            if ($filter && !preg_match($filter, $file))
+            // Match either to relative, or filename itself
+            if ($filter && !preg_match($filter, ($mrel ? $rfile : $file)))
             {
                 continue;
             }
 
-            $matched[] = $file;
+            $matched[$rfile] = $ffile;
         }
 
         return $matched;
