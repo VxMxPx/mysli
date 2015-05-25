@@ -17,8 +17,8 @@
   -webkit-border-radius: 0;
   -moz-border-radius: 0;
   border-radius: 0;
-  outline: none;
-  border: none;
+  outline: 0;
+  border: 0;
   width: 100%;
   text-transform: none;
   text-align: left;
@@ -29,7 +29,7 @@
 .ui-navigation .ui-button:active,
 .ui-navigation .ui-button:hover:active,
 .ui-navigation .ui-button:focus:active {
-  padding: 17px 15px 13px 15px;
+  padding: 17px 15px 13px;
 }
 .ui-navigation .ui-navigation-options.collapsed {
   display: none;

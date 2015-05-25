@@ -7,6 +7,8 @@ declare module mysli.js.ui {
         static ANI_SLIDE_DOWN: string;
         static ANI_SLIDE_LEFT: string;
         static ANI_SLIDE_RIGHT: string;
+        static ANI_SLIDE_DIRECTION_VERTICAL: string;
+        static ANI_SLIDE_DIRECTION_HORIZONTAL: string;
         static ANI_FADE: string;
         constructor(options?: any);
         animation: string;
@@ -18,8 +20,10 @@ declare module mysli.js.ui {
         /**
          * Animate cell(s)
          * @param cell
-         * @param type
+         * @param visibility show|hide
+         * @param animation_type
+         * @param direction positive|negative
          */
-        private animate(cell, type);
+        private animate(cell, visibility, animation_type, direction);
     }
 }

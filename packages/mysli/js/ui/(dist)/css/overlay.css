@@ -16,7 +16,6 @@
   margin-top: -10px;
   margin-left: -20px;
   text-align: center;
-  display: none;
 }
 .ui-overlay.status-busy .ui-overlay-busy {
   display: block;

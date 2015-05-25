@@ -21,8 +21,9 @@ var mysli;
                     this.element.addClass('ui-stack');
                     this.prop.def({
                         // Which animation to use, when switching between tabs...
-                        animation: Stack.ANI_SLIDE_LEFT
+                        animation: Stack.ANI_SLIDE_DIRECTION_HORIZONTAL
                     });
+                    this.prop.push(options, ['animation']);
                 }
                 Object.defineProperty(Stack, "ANI_SLIDE_UP", {
                     // CONSTANTS
@@ -42,6 +43,16 @@ var mysli;
                 });
                 Object.defineProperty(Stack, "ANI_SLIDE_RIGHT", {
                     get: function () { return 'animate-slide-right'; },
+                    enumerable: true,
+                    configurable: true
+                });
+                Object.defineProperty(Stack, "ANI_SLIDE_DIRECTION_VERTICAL", {
+                    get: function () { return 'animate-slide-direction-vertical'; },
+                    enumerable: true,
+                    configurable: true
+                });
+                Object.defineProperty(Stack, "ANI_SLIDE_DIRECTION_HORIZONTAL", {
+                    get: function () { return 'animate-slide-direction-horizontal'; },
                     enumerable: true,
                     configurable: true
                 });
@@ -68,24 +79,167 @@ var mysli;
                  * @param id
                  */
                 Stack.prototype.to = function (id) {
+                    var direction;
                     if (this.current !== id) {
                         if (this.current) {
-                            this.animate(this.get(this.current, true), 'hide');
+                            var from = this.collection.get_index(this.current);
+                            var to = this.collection.get_index(id);
+                            direction = from < to ? 'positive' : 'negative';
+                            this.animate(this.get(this.current, true), 'hide', this.prop.animation, direction);
+                        }
+                        else {
+                            direction = 'positive';
                         }
                         this.current = id;
-                        this.animate(this.get(id, true), 'show');
+                        this.animate(this.get(id, true), 'show', this.prop.animation, direction);
                     }
                 };
                 /**
                  * Animate cell(s)
                  * @param cell
-                 * @param type
+                 * @param visibility show|hide
+                 * @param animation_type
+                 * @param direction positive|negative
                  */
-                Stack.prototype.animate = function (cell, type) {
-                    cell.element.css('position', 'absolute');
-                    cell.element['fade' + (type === 'show' ? 'In' : 'Out')]({
+                Stack.prototype.animate = function (cell, visibility, animation_type, direction) {
+                    var animation;
+                    if (animation_type === Stack.ANI_SLIDE_DIRECTION_HORIZONTAL) {
+                        animation_type = direction === 'positive' ? Stack.ANI_SLIDE_LEFT : Stack.ANI_SLIDE_RIGHT;
+                    }
+                    else if (animation_type === Stack.ANI_SLIDE_DIRECTION_VERTICAL) {
+                        animation_type = direction === 'positive' ? Stack.ANI_SLIDE_DOWN : Stack.ANI_SLIDE_UP;
+                    }
+                    switch (animation_type) {
+                        case Stack.ANI_FADE:
+                            if (visibility === 'show') {
+                                animation = [
+                                    {
+                                        position: 'absolute',
+                                        display: 'block',
+                                        opacity: 0
+                                    },
+                                    {
+                                        opacity: 1
+                                    },
+                                    {
+                                        position: 'relative'
+                                    }
+                                ];
+                            }
+                            else {
+                                animation = [
+                                    {
+                                        position: 'absolute'
+                                    },
+                                    {
+                                        opacity: 0
+                                    },
+                                    {
+                                        display: 'none',
+                                        opacity: 1,
+                                        position: 'relative'
+                                    }
+                                ];
+                            }
+                            break;
+                        case Stack.ANI_SLIDE_LEFT:
+                        case Stack.ANI_SLIDE_RIGHT:
+                            var left = [this.element.outerWidth() + 20];
+                            if (animation_type === Stack.ANI_SLIDE_LEFT) {
+                                left[1] = -(left[0]);
+                            }
+                            else {
+                                left[1] = left[0];
+                                left[0] = -(left[0]);
+                            }
+                            if (visibility === 'show') {
+                                animation = [
+                                    {
+                                        position: 'absolute',
+                                        width: this.element.width() ? this.element.width() : 'auto',
+                                        display: 'block',
+                                        opacity: 0,
+                                        left: left[0]
+                                    },
+                                    {
+                                        left: 0,
+                                        opacity: 1
+                                    },
+                                    {
+                                        position: 'relative'
+                                    }
+                                ];
+                            }
+                            else {
+                                animation = [
+                                    {
+                                        position: 'absolute'
+                                    },
+                                    {
+                                        left: left[1],
+                                        opacity: 0
+                                    },
+                                    {
+                                        position: 'relative',
+                                        display: 'none',
+                                        opacity: 1,
+                                        left: 0
+                                    }
+                                ];
+                            }
+                            break;
+                        case Stack.ANI_SLIDE_UP:
+                        case Stack.ANI_SLIDE_DOWN:
+                            var top = [this.element.outerHeight() + 20];
+                            if (animation_type === Stack.ANI_SLIDE_UP) {
+                                top[1] = -(top[0]);
+                            }
+                            else {
+                                top[1] = top[0];
+                                top[0] = -(top[0]);
+                            }
+                            if (visibility === 'show') {
+                                animation = [
+                                    {
+                                        position: 'absolute',
+                                        width: this.element.width() ? this.element.width() : 'auto',
+                                        display: 'block',
+                                        opacity: 0,
+                                        top: top[0]
+                                    },
+                                    {
+                                        top: 0,
+                                        opacity: 1
+                                    },
+                                    {
+                                        position: 'relative'
+                                    }
+                                ];
+                            }
+                            else {
+                                animation = [
+                                    {
+                                        position: 'absolute'
+                                    },
+                                    {
+                                        top: top[1],
+                                        opacity: 0
+                                    },
+                                    {
+                                        position: 'relative',
+                                        display: 'none',
+                                        opacity: 1,
+                                        top: 0
+                                    }
+                                ];
+                            }
+                            break;
+                    }
+                    // Preform the actual animation...
+                    cell.element.css(animation[0]);
+                    cell.element.animate(animation[1], {
                         always: function () {
-                            cell.element.css('position', 'relative');
+                            cell.element.css(animation[2]);
                         }
                     });
                 };
