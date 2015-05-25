@@ -16,10 +16,11 @@ script:
   - cd private
   - ./dot pkgm -e mysli.dev.phpt
   - # Run tests...
-  - ./dot phpt -t mysli.dev.phpt
-  - ./dot phpt -t mysli.framework.cli
-  - ./dot phpt -t mysli.framework.type
-  - ./dot phpt -t mysli.framework.ym
-  - ./dot phpt -t mysli.util.datetime
-  - ./dot phpt -t mysli.util.i18n
-  - ./dot phpt -t mysli.util.tplp
+  - ./dot phpt -t --std-diff mysli.dev.phpt
+  - ./dot phpt -t --std-diff mysli.framework.cli
+  - ./dot phpt -t --std-diff mysli.framework.type
+  - ./dot phpt -t --std-diff mysli.framework.ym
+  - ./dot phpt -t --std-diff mysli.util.datetime
+  - ./dot phpt -t --std-diff mysli.util.i18n
+  - ./dot phpt -t --std-diff mysli.util.markdown
+  - ./dot phpt -t --std-diff mysli.util.tplp
