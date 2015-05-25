@@ -154,7 +154,7 @@ class pkgm
         if (!empty($dependencies['missing']))
         {
             cout::format(
-                "+red [!] Cannot enable, ".
+                "<red>[!] Cannot enable, ".
                 "following packages/extensions are missing:\n\n%s\n",
                 [arr::readable_list($dependencies['missing'], 4)]
             );
@@ -300,12 +300,12 @@ class pkgm
         {
             if (root\pkgm::disable($package))
             {
-                cout::format("+green+right DISABLED");
+                cout::format("<green><right>DISABLED\n");
                 return true;
             }
             else
             {
-                cout::format("+red+right FAILED TO DISABLE");
+                cout::format("<red><right>FAILED TO DISABLE\n");
                 return false;
             }
         }
@@ -340,7 +340,7 @@ class pkgm
             {
                 cout::error(cout::right('FAILED'));
                 cout::format(
-                    "+red [!] Missing packages:\n%s\n",
+                    "<red>[!] Missing packages:\n%s\n",
                     [arr::readable_list($dependencies['missing'], 4)]
                 );
             }
