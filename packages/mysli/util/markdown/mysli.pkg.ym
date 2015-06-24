@@ -5,4 +5,5 @@ license:     GPL-3.0
 authors:
     - Marko Gajšt (Developer) <m@gaj.st>
 require:
-    mysli.framework.type: ~1
+    mysli.framework.type:      ~1
+    mysli.framework.exception: ~1

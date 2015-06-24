@@ -2,9 +2,9 @@
 --DESCRIPTION--
 --FILE--
 <?php
-use mysli\util\markdown\parser;
+use mysli\util\markdown;
 
-$parser = new parser(<<<EOF
+echo markdown::process(<<<EOF
 1. One
 2. Two
 3. Three
@@ -24,32 +24,22 @@ $parser = new parser(<<<EOF
 500000. Five
 EOF
 );
-
-$parser->process();
-echo $parser->as_string();
-
 ?>
 --EXPECT--
 <ol>
-<li>One</li>
-<li>Two</li>
-<li>Three</li>
-<li>Four</li>
-<li>Five</li>
-</ol>
-
-<ol>
-<li>One</li>
-<li>Two</li>
-<li>Three</li>
-<li>Four</li>
-<li>Five</li>
-</ol>
-
-<ol>
-<li>One</li>
-<li>Two</li>
-<li>Three</li>
-<li>Four</li>
-<li>Five</li>
+    <li>One</li>
+    <li>Two</li>
+    <li>Three</li>
+    <li>Four</li>
+    <li>Five</li>
+    <li>One</li>
+    <li>Two</li>
+    <li>Three</li>
+    <li>Four</li>
+    <li>Five</li>
+    <li>One</li>
+    <li>Two</li>
+    <li>Three</li>
+    <li>Four</li>
+    <li>Five</li>
 </ol>

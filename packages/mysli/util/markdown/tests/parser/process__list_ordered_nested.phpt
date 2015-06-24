@@ -2,9 +2,9 @@
 --DESCRIPTION--
 --FILE--
 <?php
-use mysli\util\markdown\parser;
+use mysli\util\markdown;
 
-$parser = new parser(<<<EOF
+echo markdown::process(<<<EOF
 1. One
     1. Sub 1
     2. Sub 2
@@ -18,34 +18,36 @@ $parser = new parser(<<<EOF
 4. Four
 EOF
 );
-
-$parser->process();
-echo $parser->as_string();
-
 ?>
 --EXPECT--
 <ol>
-<li>One
-<ol>
-<li>Sub 1</li>
-<li>Sub 2</li>
-</ol></li>
-<li>Two
-<ol>
-<li>Sub 1
-<ol>
-<li>Sub 2
-<ol>
-<li>Sub 3
-<ol>
-<li>Sub 4
-<ol>
-<li>Sub 5</li>
-</ol></li>
-</ol></li>
-</ol></li>
-</ol></li>
-</ol></li>
-<li>Three</li>
-<li>Four</li>
+    <li>One
+        <ol>
+            <li>Sub 1</li>
+            <li>Sub 2</li>
+        </ol>
+    </li>
+    <li>Two
+        <ol>
+            <li>Sub 1
+                <ol>
+                    <li>Sub 2
+                        <ol>
+                            <li>Sub 3
+                                <ol>
+                                    <li>Sub 4
+                                        <ol>
+                                            <li>Sub 5</li>
+                                        </ol>
+                                    </li>
+                                </ol>
+                            </li>
+                        </ol>
+                    </li>
+                </ol>
+            </li>
+        </ol>
+    </li>
+    <li>Three</li>
+    <li>Four</li>
 </ol>

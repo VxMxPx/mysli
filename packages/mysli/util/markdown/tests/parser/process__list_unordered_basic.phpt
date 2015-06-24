@@ -2,9 +2,9 @@
 --DESCRIPTION--
 --FILE--
 <?php
-use mysli\util\markdown\parser;
+use mysli\util\markdown;
 
-$parser = new parser(<<<EOF
+echo markdown::process(<<<EOF
 * Red
 * Green
 * Blue
@@ -18,26 +18,16 @@ $parser = new parser(<<<EOF
 - Blue
 EOF
 );
-
-$parser->process();
-echo $parser->as_string();
-
 ?>
 --EXPECT--
 <ul>
-<li>Red</li>
-<li>Green</li>
-<li>Blue</li>
-</ul>
-
-<ul>
-<li>Red</li>
-<li>Green</li>
-<li>Blue</li>
-</ul>
-
-<ul>
-<li>Red</li>
-<li>Green</li>
-<li>Blue</li>
+    <li>Red</li>
+    <li>Green</li>
+    <li>Blue</li>
+    <li>Red</li>
+    <li>Green</li>
+    <li>Blue</li>
+    <li>Red</li>
+    <li>Green</li>
+    <li>Blue</li>
 </ul>
