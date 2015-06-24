@@ -3,8 +3,8 @@
 <?php
 use mysli\framework\cli\output as cout;
 
-cout::format('Hello +bold+red%s-bold-red', ['World']) . "\n";
-cout::format('Hello +bold+red%s-all', ['World']) . "\n";
+cout::format("Hello <bold><red>%s</bold></red>\n", ['World']);
+cout::format("Hello <bold><red>%s</all>\n",        ['World']);
 
 ?>
 --EXPECT--
