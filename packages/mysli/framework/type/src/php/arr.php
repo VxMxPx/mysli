@@ -24,6 +24,11 @@ class arr
      */
     static function count_values(array $array, $case_sensitive=true)
     {
+        if ($case_sensitive && function_exists('array_count_values'))
+        {
+            return array_count_values($array);
+        }
+
         $count = [];
 
         foreach ($array as $value)
@@ -42,6 +47,20 @@ class arr
 
         return $count;
     }
+
+    /**
+     * Retrun number of particular value.
+     * @param  array   $array
+     * @param  string  $value
+     * @param  boolean $case_sensitive
+     * @return integer
+     */
+    static function count_values_of(array $array, $value, $case_sensitive=true)
+    {
+        $values = self::count_values($array, $case_sensitive);
+        return isset($values[$value]) ? $values[$value] : 0;
+    }
+
     /**
      * Remove array element(s), by value and return new array.
      * @param  array   $array
