@@ -130,17 +130,28 @@ class output
             $format
         );
 
+        // Do we have new line character?
+        if (substr($format, -1) === "\n")
+        {
+            $format = substr($format, 0, -1);
+            $new_line = true;
+        }
+        else
+        {
+            $new_line = false;
+        }
+
         $output = vsprintf($format, $params);
 
         if (strpos($format, '[[[right/]]]') !== false)
         {
             $output = explode('[[[right/]]]', $output, 2);
             self::line($output[0], false);
-            self::line(self::right($output[1]), false);
+            self::line(self::right($output[1]), $new_line);
         }
         else
         {
-            self::line($output, false);
+            self::line($output, $new_line);
         }
     }
     /**
