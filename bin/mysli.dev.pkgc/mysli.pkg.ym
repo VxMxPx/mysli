@@ -1,0 +1,9 @@
+package:     mysli.dev.pkgc
+version:     1
+description: Command line utility to produce phar packages.
+license:     GPL-3.0
+authors:
+    - Marko Gajšt (Developer) <m@gaj.st>
+require:
+    dot:           1
+    mysli.toolkit: 1

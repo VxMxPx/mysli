@@ -1,7 +1,0 @@
-package:     mysli.util.crypt
-version:     1
-description: AES Cryptography Library.
-license:     GPL-3.0
-authors:
-    - Marko Gajšt (Developer) <m@gaj.st>
-require: No

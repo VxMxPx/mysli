@@ -1,8 +1,0 @@
-package:     mysli.framework.type
-version:     1
-description: A simple type utilities.
-license:     GPL-3.0
-authors:
-    - Marko Gajšt (Developer) <m@gaj.st>
-require:
-    mysli.framework.exception: 1

@@ -1,8 +1,0 @@
-package:     mysli.util.output
-version:     1
-description: Control various outputs.
-license:     GPL-3.0
-authors:
-    - Marko Gajšt (Developer) <m@gaj.st>
-require:
-    mysli.web.html: 1

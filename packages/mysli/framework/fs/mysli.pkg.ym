@@ -1,9 +1,0 @@
-package:     mysli.framework.fs
-version:     1
-description: File System Library.
-license:     GPL-3.0
-authors:
-    - Marko Gajšt (Developer) <m@gaj.st>
-require:
-    mysli.framework.core:      1
-    mysli.framework.exception: 1

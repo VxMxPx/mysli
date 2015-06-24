@@ -3,24 +3,24 @@ language: php
 php:
   - 5.6
 
-before_install:
-  - sudo apt-get update > /dev/null
+#before_install:
+#  - sudo apt-get update > /dev/null
 
-install:
-  - sudo apt-get install -y --force-yes php5
+#install:
+#  - sudo apt-get install -y --force-yes php5
 
-before_script:
-  - php ./packages/mysli/installer/src/php/stub.php -y
+#before_script:
+#  - php ./packages/mysli/installer/src/php/stub.php -y
 
-script:
-  - cd private
-  - ./dot pkgm -e mysli.dev.phpt
-  - # Run tests...
-  - ./dot phpt -t --std-diff mysli.dev.phpt
-  - ./dot phpt -t --std-diff mysli.framework.cli
-  - ./dot phpt -t --std-diff mysli.framework.type
-  - ./dot phpt -t --std-diff mysli.framework.ym
-  - ./dot phpt -t --std-diff mysli.util.datetime
-  - ./dot phpt -t --std-diff mysli.util.i18n
-  - ./dot phpt -t --std-diff mysli.util.markdown
-  - ./dot phpt -t --std-diff mysli.util.tplp
+#script:
+#  - cd private
+#  - ./dot pkgm -e mysli.dev.phpt
+#  - # Run tests...
+#  - ./dot phpt -t --std-diff mysli.dev.phpt
+#  - ./dot phpt -t --std-diff mysli.framework.cli
+#  - ./dot phpt -t --std-diff mysli.framework.type
+#  - ./dot phpt -t --std-diff mysli.framework.ym
+#  - ./dot phpt -t --std-diff mysli.util.datetime
+#  - ./dot phpt -t --std-diff mysli.util.i18n
+#  - ./dot phpt -t --std-diff mysli.util.markdown
+#  - ./dot phpt -t --std-diff mysli.util.tplp

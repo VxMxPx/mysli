@@ -1,7 +1,0 @@
-package:     mysli.framework.core
-version:     1
-description: Mysli Framework Core Library.
-license:     GPL-3.0
-authors:
-    - Marko Gajšt (Developer) <m@gaj.st>
-require: No

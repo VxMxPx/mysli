@@ -1,7 +1,0 @@
-package:     mysli.installer
-version:     1
-description: Setup Mysli
-license:     GPL-3.0
-authors:
-    - Marko Gajšt (Developer) <m@gaj.st>
-require: No
