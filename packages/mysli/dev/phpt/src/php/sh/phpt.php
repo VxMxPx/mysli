@@ -37,7 +37,7 @@ class phpt
             'default' => false
         ]);
         $param->add('--std-diff', [
-            'help'    => 'Print standard diff, rather than side-by-side advanced version.',
+            'help'    => 'Print standard diff, rather than side-by-side version.',
             'type'    => 'bool',
             'default' => false
         ]);
@@ -134,12 +134,16 @@ class phpt
     static function watch($pkg, $file, $method, $do_add, $do_test, $std_diff, $sleep=2)
     {
         // Add files path
+        // $sfp = [
+        //     fs::pkgreal($pkg, 'src/php'),
+        //     ($file
+        //         ? "/".preg_quote(trim($file,'/\\'), '/')."\\.php/"
+        //         : '/.*?\\.php/'
+        //     )
+        // ];
         $sfp = [
             fs::pkgreal($pkg, 'src/php'),
-            ($file
-                ? "/".preg_quote(trim($file,'/\\'), '/')."\\.php/"
-                : '/.*?\\.php/'
-            )
+            '/.*?\\.php/'
         ];
 
         // Test files path
