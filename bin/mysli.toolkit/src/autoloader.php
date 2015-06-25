@@ -1,5 +1,11 @@
 <?php
 
+/**
+ * # Autoloader
+ *
+ * Handle autoloading of classes, aliasing (when __use exists)
+ * and initialization of packages.
+ */
 namespace mysli\toolkit; class autoloader
 {
     /**
@@ -26,6 +32,8 @@ namespace mysli\toolkit; class autoloader
      */
     static function load($class)
     {
+        log::debug("Load: {$class}", __CLASS__);
+
         if (isset(self::$aliases[$class]))
         {
             if (self::init_class(self::$aliases[$class]))
@@ -305,9 +313,7 @@ namespace mysli\toolkit; class autoloader
     private static function register_alias($from, $to)
     {
         if ($from === $to)
-        {
             return;
-        }
 
         if (strpos($to, '*'))
         {
@@ -319,11 +325,12 @@ namespace mysli\toolkit; class autoloader
         if (isset(self::$aliases[$to]) && self::$aliases[$to] !== $from)
         {
             throw new \Exception(
-                "Alias is already set `{$to}`, for `{self::$aliases[$to]}`, ".
+                "Alias is already set `{$to}`, for `".self::$aliases[$to]."`, ".
                 "cannot rewrite it for `{$from}`", 10
             );
         }
 
+        log::debug("Register: `{$from}` => `{$to}`.", __CLASS__);
         self::$aliases[$to] = $from;
     }
 
@@ -342,9 +349,7 @@ namespace mysli\toolkit; class autoloader
         This class already exists, nothing to do here...
          */
         if (class_exists($class, false))
-        {
             return true;
-        }
 
         /*
         Get package's name from namespace
@@ -420,10 +425,7 @@ namespace mysli\toolkit; class autoloader
         /*
         Init this package, if not initialized yet by some other class.
          */
-        if (!in_array($package, self::$initialized))
-        {
-            self::init($package, $abspath);
-        }
+        self::init($package, $abspath);
 
         /*
         Register short version of name this class
@@ -448,6 +450,11 @@ namespace mysli\toolkit; class autoloader
      */
     private static function init($package, $path)
     {
+        if (in_array($package, self::$initialized))
+            return;
+
+        log::debug("Initialize: `{$package}`.", __CLASS__);
+
         self::$initialized[] = $package;
 
         $class = '\\'.str_replace('.', '\\', $package).'\\__init';

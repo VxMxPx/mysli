@@ -31,6 +31,23 @@
  *
  *      cookie::get('name', 'default-value');
  *
+ * Get method, accepts cookie object with advanced options:
+ *
+ *      $cookie = new cookie('name');
+ *      $cookie->set_encrypt(true);
+ *      $cookie->set_encrypt_key('foo/bar');
+ *      $cookie->set_signature(true);
+ *      $cookie->set_signature_key('foo/bar');
+ *
+ *      try
+ *      {
+ *          $value = cookie::get($cookie);
+ *      }
+ *      catch(\Exception $e)
+ *      {
+ *          // Signature is invalid...
+ *      }
+ *
  * ## Removing
  *
  * Cookie can be removed by calling a static method `delete`, for example:
@@ -47,10 +64,30 @@
  * Gives an unique prefix to all cookies set by this application.
  *
  *     string mysli.toolkit, cookie.prefix ['']
+ *
+ * **ENCRYPT**\\
+ * Weather cookies should be encrypted.
+ *
+ *      boolean mysli.toolkit, cookie.encrypt [false]
+ *
+ * **ENCRYPT_KEY**\\
+ * A unique encryption key, used if encrypt is set to true.
+ *
+ *      string mysli.toolkit, cookie.encrypt [null]
+ *
+ * **SIGN**\\
+ * Weather cookies should be signed.
+ *
+ *      boolean mysli.toolkit, cookie.sign [false]
+ *
+ * **SIGN_KEY**\\
+ * A unique sign key (salt), used if sign is set to true.
+ *
+ *      string mysli.toolkit, cookie.sign_key [null]
  */
 namespace mysli\toolkit; class cookie
 {
-    const __use = '.{ type.arr, config }';
+    const __use = '.{ type.arr, config, log, cypt, signature, exception.* }';
 
     /**
      * Properties of current cookie instance.
@@ -58,13 +95,17 @@ namespace mysli\toolkit; class cookie
      * @var array
      */
     private $properties = [
-        'name'     => null,
-        'value'    => null,
-        'expire'   => 0,
-        'path'     => '/',
-        'domain'   => null,
-        'secure'   => false,
-        'httponly' => false
+        'name'        => null,
+        'value'       => null,
+        'expire'      => 0,
+        'path'        => '/',
+        'domain'      => null,
+        'secure'      => false,
+        'httponly'    => false,
+        'encrypt'     => null,
+        'encrypt_key' => null,
+        'sign'        => null,
+        'sign_key'    => null
     ];
 
     /**
@@ -75,6 +116,18 @@ namespace mysli\toolkit; class cookie
     function __construct($name)
     {
         $this->set_name($name);
+
+        /*
+        Set default encryption parameters
+         */
+        $this->set_encrypt(null);
+        $this->set_encrypt_key(null);
+
+        /*
+        Set default sign parameters
+         */
+        $this->set_signature(null);
+        $this->set_signature_key(null);
     }
 
     /**
@@ -82,10 +135,14 @@ namespace mysli\toolkit; class cookie
      * Will apply prefix if any set in configuration.
      * --
      * @param string $name
+     * @param string $prefix
+     *        Prefix cookie, if null prefix will be read from configuration.
      */
-    function set_name($name)
+    function set_name($name, $prefix=null)
     {
-        $prefix = config::select('mysli.toolkit', 'cookie.prefix', '');
+        if ($prefix === null)
+            $prefix = config::select('mysli.toolkit', 'cookie.prefix', '');
+
         $this->properties['name'] = $prefix.$name;;
     }
 
@@ -237,10 +294,109 @@ namespace mysli\toolkit; class cookie
         return $this->properties['httponly'];
     }
 
+    /**
+     * Set cookie's encryption.
+     * You can set it to `null` which will mean that global
+     * settings from configuration will be used.
+     * --
+     * @param boolean $encrypt
+     */
+    function set_encrypt($encrypt)
+    {
+        if ($encrypt === null)
+            $encrypt = $c->get('cookie.encrypt', false);
+
+        $this->properties['encrypt'] = $encrypt;
+    }
+
+    /**
+     * Get current encrypt setting.
+     * --
+     * @return boolean
+     */
+    function get_encrypt()
+    {
+        return $this->properties['encrypt'];
+    }
+
+    /**
+     * Set cookie's encryption key.
+     * You can set it to `null` which will mean that global
+     * settings from configuration will be used.
+     * --
+     * @param string $key
+     */
+    function set_encrypt_key($key)
+    {
+        if ($key === null)
+            $key = $c->get('cookie.encrypt_key');
+
+        $this->properties['encrypt_key'] = $key;
+    }
+
+    /**
+     * Get current encrypt key setting.
+     * --
+     * @return string
+     */
+    function get_encrypt_key()
+    {
+        return $this->properties['encrypt_key'];
+    }
+
+    /**
+     * Set cookie's signature.
+     * You can set it to `null` which will mean that global
+     * setting from configuration will be used.
+     * --
+     * @param boolean $sign
+     */
+    function set_signature($sign)
+    {
+        if ($sign === null)
+            $sign = $c->get('cookie.sign', false);
+
+        $this->properties['sign'] = $sign;
+    }
+
+    /**
+     * Get current signature setting.
+     * --
+     * @return boolean
+     */
+    function get_signature()
+    {
+        return $this->properties['sign'];
+    }
+
+    /**
+     * Set cookie's signature key.
+     * You can set it to `null` which will mean that global
+     * setting from configuration will be used.
+     * --
+     * @param string $key
+     */
+    function set_signature_key($key)
+    {
+        if ($key === null)
+            $key = $c->get('cookie.sign_key');
+
+        $this->properties['sign_key'] = $key;
+    }
+
+    /**
+     * Get current signature key setting.
+     * --
+     * @return string
+     */
+    function get_signature_key()
+    {
+        return $this->properties['sign_key'];
+    }
+
     /*
     --- Static -----------------------------------------------------------------
      */
-
 
     /**
      * Set a cookie.
@@ -258,10 +414,17 @@ namespace mysli\toolkit; class cookie
      *        If you provided instance of self as a name,
      *        then expire is not required and but will be set if provided.
      * --
+     * @throws exception\value 1 If encryption is set to true, but there's no
+     *                         encryption key set.
+     * @throws exception\value 2 If signature is set to true, but there's no
+     *                         signature key set.
+     * --
      * @return boolean
      */
     static function set($name, $value=null, $expire=0)
     {
+        $c = config::select('mysli.toolkit');
+
         if (is_object($name) && is_a($name, __CLASS__))
         {
             $cookie = $name;
@@ -279,6 +442,40 @@ namespace mysli\toolkit; class cookie
             $cookie->set_value($value);
         }
 
+        /*
+        Check if cookie actually needs to be encrypted, and encrypt it.
+         */
+        if ($cookie->get_encrypt())
+        {
+            if (!$cookie->get_encrypt_key())
+                throw new exception\value(
+                    "Cookie encrypt requires `cookie.encrypt_key` ".
+                    "to be set in configuration.", 1
+                );
+
+            $cookie->set_value(
+                crypt::encrypt($cookie->get_value(), $cookie->get_encrypt_key())
+            );
+        }
+
+        /*
+        Check if cookie needs to be signed, and signed it.
+         */
+        if ($cookie->get_signature())
+        {
+            if (!$cookie->get_signature_key())
+                throw new exception\value(
+                    "Cookie sign requires `cookie.sign_key` ".
+                    "to be set in configuration.", 2
+                );
+
+            $cookie->set_value(
+                signature::create($cookie->get_value(), $cookie->get_signature_key())
+            );
+        }
+
+        log::info("Set: `{$cookie->get_name()}`.", __CLASS__);
+
         return setcookie(
             $cookie->get_name(),
             $cookie->get_value(),
@@ -294,7 +491,13 @@ namespace mysli\toolkit; class cookie
      * Get cookie by a name.
      * --
      * @param mixed $name
-     *        String (one cookie), array (multiple cookies)
+     *        - string (one cookie),
+     *        - array (multiple cookies),
+     *        - \mysli\toolkit\cookie an instance of cookie,
+     *          with advanced settings, like signature, etc...
+     * --
+     * @throws exception\data 1 If signature is required but not present in value.
+     * @throws exception\data 2 If signature is invalid.
      * --
      * @return string
      */
@@ -306,29 +509,64 @@ namespace mysli\toolkit; class cookie
         if (is_array($name))
         {
             $cookies = [];
+
             foreach ($name as $val)
-            {
                 $cookies[] = self::get($val, $default);
-            }
 
             return $cookies;
         }
 
         /*
-        Getting one cookie.
+        Getting one cookie from object.
          */
+        if (is_object($name) && is_a($name, __CLASS__))
+        {
+            $cookie = $name;
 
-        // Set prefix.
+            if (arr::key_in($_COOKIE, $cookie->get_name()))
+                $value = $_COOKIE[$name];
+            else
+                return $default;
+
+            /*
+            Resolve signature.
+             */
+            if ($cookie->get_signature())
+            {
+                if (!signature::has($value))
+                    throw new exception\data(
+                        "Expected cookie with a signature, got unsigned.", 1
+                    );
+
+                if (!signature::is_valid($value, $cookie->get_signature_key()))
+                    throw new exception\data(
+                        "Cookie's signature is invalid.", 2
+                    );
+
+                $value = signature::strip($value);
+            }
+
+            /*
+            Resolve encryption.
+             */
+            if ($cookie->get_encrypt())
+            {
+                $value = crypt::decrypt($value, $cookie->get_encrypt_key());
+            }
+
+            return $value;
+        }
+
+
+        /*
+        Get one cookie outside object context.
+         */
         $name = config::select('mysli.toolkit', 'cookie.prefix', '').$name;
 
         if (arr::key_in($_COOKIE, $name))
-        {
             return $_COOKIE[$name];
-        }
         else
-        {
             return $default;
-        }
     }
 
     /**
@@ -343,6 +581,8 @@ namespace mysli\toolkit; class cookie
     static function remove($name, $path='/', $domain=null)
     {
         $name = config::select('mysli.toolkit', 'cookie.prefix', '').$name;
+
+        log::info("Remove: `{$name}`.", __CLASS__);
 
         return setcookie(
             $name,

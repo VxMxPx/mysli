@@ -11,10 +11,10 @@ namespace mysli\toolkit; class toolkit
      */
     static function shutdown()
     {
-        log::info('System going for shutdown.');
+        log::info('System is about to shutdown. Bye! :)', __CLASS__);
         event::trigger("toolkit::shutdown");
 
-        dump(log::get());
+        echo log_to_html( log::get() );
     }
 
     /**
@@ -23,8 +23,10 @@ namespace mysli\toolkit; class toolkit
      */
     static function panic()
     {
-        log::panic('Panic called! System will be stopped immediately.');
+        log::panic('System will be stopped now. :(', __CLASS__);
         event::trigger("toolkit::panic");
+
+        echo log_to_html( log::get() );
         exit(11);
     }
 }

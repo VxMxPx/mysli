@@ -1,18 +1,94 @@
 <?php
 
-namespace mysli\framework\ym;
-
-__use(__namespace__, '
-    mysli.framework.type/str
-    mysli.framework.fs/file
-    mysli.framework.exception/* -> framework\exception\*
-');
-
-class ym
+/**
+ * # YM
+ *
+ * YM is a simplified YAML parser. Some features of original YAML are
+ * deliberately not implemented hence package name is YM, and filenames are `.ym`.
+ *
+ * This version is aimed for speed and to be used for the toolkit's
+ * configuration files. It's still slower than native JSON extension, but files
+ * are much more readable.
+ *
+ * The `.ym` files can be parsed with native YAML extension, but `.yaml` files
+ * might not be parsed successfully with this class, if there are some advanced
+ * features.
+ *
+ * ## Usage
+ *
+ * Standard methods are available: `decode`, `decode_file`,
+ * `encode` and `encode_file`.
+ *
+ * ## Supported Syntax
+ *
+ * String value:
+ *
+ *     key : string
+ *
+ * ... or explicit string:
+ *
+ *     key : "string"
+ *
+ * Boolean:
+ *
+ *     one   : Yes
+ *     two   : No
+ *     three : True
+ *     four  : False
+ *
+ * Integer and float:
+ *
+ *     im_integer : 12
+ *     im_float   : 12.2
+ *
+ * Array:
+ *
+ *     items:
+ *         - item one
+ *         - item two
+ *
+ * ... or associative:
+ *
+ *     items:
+ *         key  : value
+ *         key2 : value
+ *
+ * ... nested:
+ *
+ *     level1:
+ *         level2:
+ *             - one
+ *             - two
+ *
+ * Comments:
+ *
+ * Comments must start with hash (`#`) which can be indented...
+ *
+ *     key : value
+ *     # Comment!
+ *     array:
+ *         # Comment!
+ *         - one
+ *         - two
+ *
+ * ... but cannot be inline:
+ *
+ *     key : value # Inline comment, considered part of a value!
+ *
+ * ... to start key with a hash, a double quotes can be used:
+ *
+ *     "#hash_key" : value
+ *
+ */
+namespace mysli\toolkit; class ym
 {
+    const __use = '.{ type.str, fs.file, exception.* }';
+
     /**
-     * Decode particular file.
-     * @param  string $filename
+     * Decode a particular .ym file and return an array.
+     * --
+     * @param string $filename
+     * --
      * @return array
      */
     static function decode_file($filename)
@@ -21,16 +97,19 @@ class ym
         {
             return self::decode(file::read($filename));
         }
-        catch (framework\exception\parser $e)
+        catch (exception\parser $e)
         {
-            throw new framework\exception\parser(
+            throw new exception\parser(
                 $e->getMessage()."\nFile: {$filename}"
             );
         }
     }
+
     /**
-     * Decode .ym string.
-     * @param  string $string
+     * Decode .ym string and return an array.
+     * --
+     * @param string $string
+     * --
      * @return array
      */
     static function decode($string)
@@ -102,18 +181,21 @@ class ym
             }
             catch (\Exception $e)
             {
-                throw new framework\exception\parser(
-                    $e->getMessage()."\n".self::err_lines($lines, $lineno)
+                throw new exception\parser(
+                    $e->getMessage()."\n".err_lines($lines, $lineno)
                 );
             }
         }
 
         return $list;
     }
+
     /**
-     * Encode an array to .ym file
-     * @param  string $filename
-     * @param  array  $in
+     * Encode an array to .ym file.
+     * --
+     * @param string $filename
+     * @param array  $in
+     * --
      * @return boolean
      */
     static function encode_file($filename, array $in)
@@ -122,17 +204,21 @@ class ym
         {
             return file::write($filename, self::encode($in));
         }
-        catch (framework\exception\parser $e)
+        catch (exception\parser $e)
         {
-            throw new framework\exception\parser(
+            throw new exception\parser(
                 $e->getMessage()."\nFile: {$filename}"
             );
         }
     }
+
     /**
-     * Encode an array to .ym string
-     * @param  array   $in
-     * @param  integer $lvl current indentation level (0)
+     * Encode an array to .ym string.
+     * --
+     * @param array   $in
+     * @param integer $lvl
+     *        Current indentation level (0).
+     * --
      * @return string
      */
     static function encode(array $in, $lvl=0)
@@ -167,11 +253,16 @@ class ym
             }
 
             // Convert value
-            if     (is_numeric($value) && is_string($value)) $value = '"'.$value.'"';
-            elseif (in_array(strtolower($value), ['yes', 'true'])) $value = '"Yes"';
-            elseif (in_array(strtolower($value), ['no', 'false'])) $value = '"No"';
-            elseif ($value === true)  $value = 'Yes';
-            elseif ($value === false) $value = 'No';
+            if (is_numeric($value) && is_string($value))
+                $value = '"'.$value.'"';
+            elseif (in_array(strtolower($value), ['yes', 'true']))
+                $value = '"Yes"';
+            elseif (in_array(strtolower($value), ['no', 'false']))
+                $value = '"No"';
+            elseif ($value === true)
+                $value = 'Yes';
+            elseif ($value === false)
+                $value = 'No';
 
             if (is_integer($key))
             {
@@ -185,10 +276,17 @@ class ym
 
         return $output;
     }
+
+    /*
+    --- Private ----------------------------------------------------------------
+     */
+
     /**
      * Extract key / value from line!
-     * @param  string  $line
-     * @param  boolean $li   list item?
+     * --
+     * @param string  $line
+     * @param boolean $li   List item?
+     * --
      * @return array
      */
     private static function proc_line($line, $li)
@@ -200,7 +298,7 @@ class ym
 
             if (!isset($segments[1]))
             {
-                throw new framework\exception\data("Missing colon (:).", 1);
+                throw new exception\data("Missing colon (:).", 1);
             }
             else
             {
@@ -249,10 +347,13 @@ class ym
 
         return [$key, $value];
     }
+
     /**
      * Get current indentation level.
-     * @param  string $line
-     * @param  string $indent
+     * --
+     * @param string $line
+     * @param string $indent
+     * --
      * @return integer
      */
     private static function get_level($line, $indent)
@@ -268,9 +369,12 @@ class ym
 
         return $level;
     }
+
     /**
-     * Get Indentation (type)
-     * @param  string $string
+     * Get Indentation (type).
+     * --
+     * @param string $string
+     * --
      * @return mixed
      */
     private static function detect_indent($string)
@@ -279,40 +383,5 @@ class ym
         {
             return $matches[1];
         }
-    }
-    /**
-     * Return -$padding, $current, +$padding lines for exceptions, e.g.:
-     *   11. ::if true
-     * >>12.     {username|non_existant_function}
-     *   13. ::/if
-     * @param  array   $lines
-     * @param  integer $current
-     * @param  integer $padding
-     * @return string
-     */
-    private static function err_lines($lines, $current, $padding=3)
-    {
-        $start    = $current - $padding;
-        $end      = $current + $padding;
-        $result   = '';
-
-        for ($position = $start; $position <= $end; $position++)
-        {
-            if (isset($lines[$position]))
-            {
-                if ($position === $current)
-                {
-                    $result .= ">>";
-                }
-                else
-                {
-                    $result .= "  ";
-                }
-
-                $result .= ($position+1).". {$lines[$position]}\n";
-            }
-        }
-
-        return $result;
     }
 }

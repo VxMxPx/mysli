@@ -2,7 +2,10 @@
 
 namespace mysli\toolkit\fs; class file
 {
-    const __use = '.exception.* -> toolkit.exception.*';
+    const __use = '
+        .log
+        .exception.*
+    ';
 
     const prepend = 0;
     const append = 1;
@@ -77,7 +80,7 @@ namespace mysli\toolkit\fs; class file
     {
         if (!self::exists($filename))
         {
-            throw new toolkit\exception\not_found(
+            throw new exception\not_found(
                 "File not found: `{$filename}`.", 1
             );
         }
@@ -112,7 +115,7 @@ namespace mysli\toolkit\fs; class file
         }
         else
         {
-            throw new toolkit\exception\not_found(
+            throw new exception\not_found(
                 "File not found: `{$filename}`.", 1
             );
         }
@@ -138,11 +141,13 @@ namespace mysli\toolkit\fs; class file
 
             if (file_put_contents($filename, '') === false)
             {
-                throw new toolkit\exception\fs(
+                throw new exception\fs(
                     "Couldn't remove file's contents: `{$filename}`.", 1
                 );
             }
         }
+
+        log::info("Create: `{$filename}`", __CLASS__);
 
         return touch($filename);
     }
@@ -188,10 +193,15 @@ namespace mysli\toolkit\fs; class file
 
         if (!self::exists($filename))
         {
-            throw new toolkit\exception\not_found(
+            throw new exception\not_found(
                 "File doesn't exists: `{$filename}`.", 1
             );
         }
+
+        log::info(
+            "Writting to file: `{$filename}`, method: `{$method}`, lock: `{$lock}`.",
+            __CLASS__
+        );
 
         if ($method === self::prepend)
         {
@@ -199,7 +209,7 @@ namespace mysli\toolkit\fs; class file
 
             if ($handle === false)
             {
-                throw new toolkit\exception\fs(
+                throw new exception\fs(
                     "Couldn't open file: `{$filename}`", 1
                 );
             }
@@ -208,7 +218,7 @@ namespace mysli\toolkit\fs; class file
             {
                 if (!flock($handle, LOCK_EX))
                 {
-                    throw new toolkit\exception\fs(
+                    throw new exception\fs(
                         "Couldn't lock the file: `{$filename}`.", 2
                     );
                 }
@@ -259,7 +269,7 @@ namespace mysli\toolkit\fs; class file
 
             if ($r === false)
             {
-                throw new toolkit\exception\fs(
+                throw new exception\fs(
                     "Couldn't write content to the file: `{$filename}`.", 3
                 );
             }
@@ -289,6 +299,8 @@ namespace mysli\toolkit\fs; class file
             return $i;
         }
 
+        log::info("Remove: `{$file}`", __CLASS__);
+
         return unlink($file) ? 1 : 0;
     }
 
@@ -311,7 +323,7 @@ namespace mysli\toolkit\fs; class file
         {
             if (!dir::exists(dirname($destination)))
             {
-                throw new toolkit\exception\not_found(
+                throw new exception\not_found(
                     "Destination directory not found: `{$destination}`."
                 );
             }
@@ -319,10 +331,15 @@ namespace mysli\toolkit\fs; class file
 
         if (file::exists($destination) && !$overwrite)
         {
-            throw new toolkit\exception\argument(
+            throw new exception\argument(
                 "Destination file exists: `{$destination}`."
             );
         }
+
+        log::info(
+            "Copy: `{$source}` to `{$destination}`, overwrite: `{$overwrite}`.",
+            __CLASS__
+        );
 
         return copy($source, $destination);
     }
@@ -346,7 +363,7 @@ namespace mysli\toolkit\fs; class file
         {
             if (!dir::exists(dirname($destination)))
             {
-                throw new toolkit\exception\not_found(
+                throw new exception\not_found(
                     "Destination directory not found: `{$destination}`."
                 );
             }
@@ -354,10 +371,15 @@ namespace mysli\toolkit\fs; class file
 
         if (file::exists($destination) && !$overwrite)
         {
-            throw new toolkit\exception\argument(
+            throw new exception\argument(
                 "Destination file exists: `{$destination}`."
             );
         }
+
+        log::info(
+            "Move: `{$source}` to `{$destination}`, overwrite: `{$overwrite}`.",
+            __CLASS__
+        );
 
         return move($source, $destination);
     }
@@ -380,16 +402,21 @@ namespace mysli\toolkit\fs; class file
 
         if (dirname($source) !== dirname($destination))
         {
-            throw new toolkit\exception\argument(
+            throw new exception\argument(
                 "Destination and source directories must be the same.", 1
             );
         }
 
         if (basename($source) === basename($destination)) {
-            throw new toolkit\exception\argument(
+            throw new exception\argument(
                 "Destination and source filenames must be different.", 2
             );
         }
+
+        log::info(
+            "Rename: `{$source}` to `{$destination}`.",
+            __CLASS__
+        );
 
         return \rename($source, $destination);
     }
@@ -421,7 +448,7 @@ namespace mysli\toolkit\fs; class file
     {
         if (!dir::exists($directory))
         {
-            throw new toolkit\exception\argument(
+            throw new exception\argument(
                 "Not a valid directory: `{$directory}`.", 1
             );
         }
@@ -431,7 +458,7 @@ namespace mysli\toolkit\fs; class file
 
         if ($filter && substr($filter, 0, 1) !== '/')
         {
-            throw new toolkit\exception\argument(
+            throw new exception\argument(
                 "Invalid filter formar: `{$filter}` ".
                 "expected regular expression.", 1
             );
@@ -502,7 +529,7 @@ namespace mysli\toolkit\fs; class file
 
         if (!file_exists($filename))
         {
-            throw new toolkit\exception\argument(
+            throw new exception\argument(
                 "File not found: `{$filename}`.", 1
             );
         }

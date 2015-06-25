@@ -1,5 +1,18 @@
 <?php
 
+/**
+ * # Json
+ *
+ * A very simple JSON manipulation class, depending on native functions.
+ *
+ * ## Usage
+ *
+ * Use `encode` to encode a JSON string, and `decode` to decode it.
+ * Additional to that, methods which will read/write directly from file
+ * are available:
+ *
+ *      json::decode_file($filename, true);
+ */
 namespace mysli\toolkit; class json
 {
     const __use = '

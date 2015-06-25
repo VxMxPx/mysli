@@ -1,7 +1,9 @@
 <?php
 
 /**
- * Manage package.
+ * # Pkg
+ *
+ * Manage packages.
  */
 namespace mysli\toolkit; class pkg
 {
@@ -13,14 +15,21 @@ namespace mysli\toolkit; class pkg
      * --
      * @var string
      */
-    private static $listf = null;
+    private static $list_file = null;
 
     /**
      * Registry. List of currently present packages + current version.
      * --
      * @var array
      */
-    private static $r = [];
+    private static $enabled = [];
+
+    /**
+     * List of all packages currently present in the file-system.
+     * --
+     * @var array
+     */
+    private static $all = [];
 
     /**
      * Init pkg
@@ -29,7 +38,7 @@ namespace mysli\toolkit; class pkg
      */
     static function __init($path)
     {
-        if (self::$listf)
+        if (self::$list_file)
         {
             throw new \Exception("Already initialized.", 10);
         }
@@ -39,18 +48,70 @@ namespace mysli\toolkit; class pkg
             throw new \Exception("File not found: `{$path}`", 20);
         }
 
-        self::$listf = $path;
+        self::$list_file = $path;
         self::read();
+        self::reload_all();
     }
 
     /**
-     * Return packages list as an array.
+     * Return list of enabled packages.
      * --
      * @return array
      */
-    static function dump()
+    static function list_enabled()
     {
-        return self::$r;
+        return array_keys(self::$enabled);
+    }
+
+    /**
+     * Return list of diabled packages.
+     * --
+     * @return array
+     */
+    static function list_disabled()
+    {
+        $disabled = [];
+
+        foreach (self::$all as $package)
+        {
+            if (!self::is_enabled($package))
+                $disabled[] = $package;
+        }
+
+        return $disabled;
+    }
+
+    /**
+     * Return list of all packages.
+     * --
+     * @return array
+     */
+    static function list_all()
+    {
+        return self::$all;
+    }
+
+
+    /**
+     * Get list of command line scripts, for each enabled package.
+     * --
+     * @example
+     *     [
+     *         'vendor.package.script' => [
+     *             'script'      => 'script',
+     *             'package'     => 'vendor.package',
+     *             'class'       => '\vendor\package\cli\script',
+     *             'path'        => 'vendor/package/src/cli/script.php',
+     *             'description' => 'Package's description.',
+     *         ],
+     *         // ...
+     *     ]
+     * --
+     * @return array
+     */
+    static function list_cli()
+    {
+
     }
 
     /**
@@ -128,7 +189,7 @@ namespace mysli\toolkit; class pkg
      * Return form in which package exists (either pkg::source | pkg::phar)
      * If package not found, null will be returned.
      * --
-     * @param  string $package
+     * @param string $package
      * --
      * @return string
      */
@@ -159,18 +220,22 @@ namespace mysli\toolkit; class pkg
      * Add a new package to the registry.
      * --
      * @param  string  $name
-     * @param  array   $meta
+     * @param  integer $version
+     * @param  string  $release
      * --
      * @return boolean
      */
-    static function add($name, $version)
+    static function add($name, $version, $release)
     {
-        if (isset(self::$r[$name]))
+        if (isset(self::$enabled[$name]))
         {
             throw new \Exception("Package {$name} already on the list.", 10);
         }
 
-        self::$r[$name] = $version;
+        self::$enabled[$name] = [
+            'version' => $version,
+            'release' => $release
+        ];
     }
 
     /**
@@ -182,32 +247,31 @@ namespace mysli\toolkit; class pkg
      */
     static function remove($name)
     {
-        if (!isset(self::$r[$name]))
+        if (!isset(self::$enabled[$name]))
         {
             throw new \Exception(
                 "Trying to remove a non-existant package: `{$name}`");
         }
 
-        unset(self::$r[$name]);
+        unset(self::$enabled[$name]);
     }
 
     /**
      * Update a package version.
      * --
-     * @param  string $name
-     * @param  array  $new_version
-     * --
-     * @return boolean
+     * @param  string  $name
+     * @param  integer $new_version
+     * @param  string  $new_release
      */
-    static function update($name, array $new_version)
+    static function update($name, $new_version, $new_release)
     {
-        if (isset(self::$r[$name]))
+        if (isset(self::$enabled[$name]))
         {
-            self::$r[$name] = $new_version;
-            return true;
+            self::$enabled[$name] = [
+                'version' => $new_version,
+                'release' => $new_release
+            ];
         }
-        else
-            return null;
     }
 
     /**
@@ -219,7 +283,7 @@ namespace mysli\toolkit; class pkg
      */
     static function is_enabled($name)
     {
-        return isset(self::$r[$name]);
+        return isset(self::$enabled[$name]);
     }
 
     /**
@@ -239,12 +303,50 @@ namespace mysli\toolkit; class pkg
      */
 
     /**
+     * Find all packages.
+     * --
+     * @throws \Exception 1 Package exists in two variations, source and .phar.
+     * @throws \Exception 2 Found directory which is actually not a package.
+     */
+    static function reload_all()
+    {
+        self::$all = [];
+        $binfiles = scandir(MYSLI_BINPATH);
+
+        foreach ($binfiles as $package)
+        {
+            if (substr($package, 0, 1) === '.')
+                continue;
+
+            if (substr($package, 0, -4) === '.phar')
+                $package = substr($package, 0, -4);
+
+
+            if (in_array($package, self::$all))
+                throw new \Exception(
+                    "Package exists: `{$package}` both as `phar` and as `source`, ".
+                    "please remove one of them or system will not boot.", 1
+                );
+
+            $type = self::exists_as($package);
+
+            if (!$type)
+                throw new \Exception(
+                    "File in `bin/` directory appears not to be ".
+                    "a valid package: `{$package}`, please remove it.", 2
+                );
+
+            self::$all[] = $package;
+        }
+    }
+
+    /**
      * Read and process packages list.
      */
     static function read()
     {
-        self::$r = [];
-        $list = file_get_contents(self::$listf);
+        self::$enabled = [];
+        $list = file_get_contents(self::$list_file);
         $list = explode("\n", $list);
 
         foreach ($list as $line)
@@ -255,7 +357,9 @@ namespace mysli\toolkit; class pkg
             list($name, $version) = explode(' ', $line, 2);
 
             if (($name = trim($name)) && ($version = (int) $version))
-                self::$r[$name] = $version;
+            {
+                self::$enabled[$name] = $version;
+            }
         }
     }
 
@@ -268,11 +372,9 @@ namespace mysli\toolkit; class pkg
     {
         $list = '';
 
-        foreach (self::$r as $name => $version)
-        {
+        foreach (self::$enabled as $name => $version)
             $list = "{$name} {$version}\n";
-        }
 
-        return !!file_put_contents(self::$listf, $list);
+        return !!file_put_contents(self::$list_file, $list);
     }
 }

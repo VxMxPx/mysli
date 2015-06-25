@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * # Crypt
+ *
+ * Cryptography library.
+ *
+ * Based on:
+ * http://www.zimuel.it/
+ * http://github.com/zendframework/zf2
+ */
 namespace mysli\toolkit; class crypt
 {
     /**
@@ -50,28 +59,28 @@ namespace mysli\toolkit; class crypt
         $keys = hash_pbkdf2('sha256', $key, $iv, 10000, 64);
 
         // 256 bit encryption key
-        $encKey = substr($keys, 0, 32);
+        $enc_key = substr($keys, 0, 32);
 
         // 256 bit hmac key
-        $hmacKey = substr($keys, 32);
+        $hmac_key = substr($keys, 32);
 
         // Encryption
         if (function_exists('openssl_encrypt'))
         {
-            $ciphertext = openssl_encrypt(
-                $text, 'AES-256-CBC', $encKey, OPENSSL_NO_PADDING, $iv
+            $cipher_text = openssl_encrypt(
+                $text, 'AES-256-CBC', $enc_key, OPENSSL_NO_PADDING, $iv
             );
         }
         else
         {
-            $ciphertext = mcrypt_encrypt(
-                'rijndael-128', $encKey, $text, 'cbc', $iv
+            $cipher_text = mcrypt_encrypt(
+                'rijndael-128', $enc_key, $text, 'cbc', $iv
             );
         }
 
-        $hmac = hash_hmac('sha256', $iv . $ciphertext, $hmacKey);
+        $hmac = hash_hmac('sha256', $iv . $cipher_text, $hmac_key);
 
-        return $hmac . $iv . $ciphertext;
+        return $hmac . $iv . $cipher_text;
     }
 
     /**
@@ -94,13 +103,13 @@ namespace mysli\toolkit; class crypt
         $text = substr($text, 80);
 
         // Generate the encryption and hmac keys
-        $keys    = hash_pbkdf2('sha256', $key, $iv, 10000, 64);
+        $keys = hash_pbkdf2('sha256', $key, $iv, 10000, 64);
 
         // 256 bit encryption key
-        $encKey  = substr($keys, 0, 32);
-        $hmacNew = hash_hmac('sha256', $iv . $text, substr($keys, 32));
+        $enc_key  = substr($keys, 0, 32);
+        $hmac_new = hash_hmac('sha256', $iv . $text, substr($keys, 32));
 
-        if (!self::compare_strings($hmac, $hmacNew))
+        if (!self::compare_strings($hmac, $hmac_new))
         {
             // to prevent timing attacks
             return false;
@@ -110,13 +119,13 @@ namespace mysli\toolkit; class crypt
         if (function_exists('openssl_decrypt'))
         {
             $result = openssl_decrypt(
-                $text, 'AES-256-CBC', $encKey, OPENSSL_NO_PADDING, $iv
+                $text, 'AES-256-CBC', $enc_key, OPENSSL_NO_PADDING, $iv
             );
         }
         else
         {
             $result = mcrypt_decrypt(
-                'rijndael-128', $encKey, $text, 'cbc', $iv
+                'rijndael-128', $enc_key, $text, 'cbc', $iv
             );
         }
 
@@ -127,13 +136,13 @@ namespace mysli\toolkit; class crypt
      * Padding PKCS#7.
      * --
      * @param string  $text
-     * @param integer $blockSize
+     * @param integer $block_size
      * --
      * @return string
      */
-    private static function PKCS7_pad($text, $blockSize)
+    private static function PKCS7_pad($text, $block_size)
     {
-        $pad = $blockSize - (strlen($text) % $blockSize);
+        $pad = $block_size - (strlen($text) % $block_size);
         return $text . str_repeat(chr($pad), $pad);
     }
 
@@ -159,7 +168,7 @@ namespace mysli\toolkit; class crypt
     }
 
     /**
-     * Compare two strings to avoid timing attacks
+     * Compare two strings to avoid timing attacks.
      *
      * C function memcmp() internally used by PHP, exits as soon as a difference
      * is found in the two buffers. That makes possible of leaking

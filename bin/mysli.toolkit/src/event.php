@@ -40,7 +40,7 @@
 namespace mysli\toolkit; class event
 {
     const __use = '
-        .{ fs.file, json, exception.* -> toolkit.exception.* }
+        .{ fs.file, json, log, exception.* }
     ';
 
     const priority_low = 'low';
@@ -77,7 +77,7 @@ namespace mysli\toolkit; class event
     {
         if (!file::exists($filename))
         {
-            throw new toolkit\exception\not_found(
+            throw new exception\not_found(
                 "File not found: `{$filename}`.", 1
             );
         }
@@ -204,7 +204,10 @@ namespace mysli\toolkit; class event
             array_unshift($events[$event], $call);
         }
 
+        log::info("Register: `{$event}` to `{$call}`.", __CLASS__);
+
         self::on($event, $call, $priority);
+
         return self::write($events);
     }
 
@@ -257,6 +260,8 @@ namespace mysli\toolkit; class event
             }
         }
 
+        log::info("Unregister: `{$event}` for `{$call}`.", __CLASS__);
+
         self::off($event, $call);
         return self::write($events);
     }
@@ -269,6 +274,8 @@ namespace mysli\toolkit; class event
      */
     static function trigger($event, array $params=[])
     {
+        log::debug("Trigger: {$event}", __CLASS__);
+
         foreach (self::$events as $levent => $calls)
         {
             if (strpos($levent, '*') !== false)

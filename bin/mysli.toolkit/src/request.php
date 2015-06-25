@@ -1,37 +1,49 @@
 <?php
 
-namespace mysli\web\request;
-
-__use(__namespace__, '
-    mysli.framework.type/arr,str
-');
-
-class request
+namespace mysli\toolkit; class request
 {
+    const __use = '.{type.arr, type.str}';
+
     // Request methods types
     const method_get    = 'GET';
     const method_post   = 'POST';
     const method_put    = 'PUT';
     const method_delete = 'DELETE';
 
-    private static $segments = false;
+    /**
+     * All segments of current request.
+     * --
+     * @var array
+     */
+    private static $segments = [];
 
     /**
-     * Get parituclar segment(s) e.g.: page.php/segment0/segment1/segment2
-     * @param  string $id      false:   return all segments
-     *                         integer: return paticular segment (zero based)
+     * Set segments.
+     * --
+     * @param string $path
+     *        Initial path, is not provided `self::path()` will be used.
+     */
+    static function __init($path=null)
+    {
+        $path = $path ?: self::path();
+        $segments = trim($path, '/');
+        self::$segments = str::split_trim($segments, '/');
+    }
+
+    /**
+     * Get parituclar segment(s) e.g.: `page.php/segment0/segment1/segment2`
+     * --
+     * @param integer $id
+     *        null    return all segments
+     *        integer return paticular segment (zero based)
+     *
      * @param  mixed  $default
+     * --
      * @return mixed
      */
-    static function segment($id=false, $default=null)
+    static function segment($id=null, $default=null)
     {
-        if (self::$segments === false)
-        {
-            self::$segments = trim(self::path(), '/');
-            self::$segments = str::split_trim(self::$segments, '/');
-        }
-
-        if ($id === false)
+        if ($id === null)
         {
             return self::$segments;
         }
@@ -40,15 +52,22 @@ class request
             return arr::get(self::$segments, $id, $default);
         }
     }
+
     /**
-     * Get URI _GET segment.
-     * @param  mixed $key     false:  return all keys
-     *                        string: return particular key if exists
-     *                        array:  return keys specified in array
-     * @param  mixed $default Default value(s) when key not found
+     * Get URI _GET values.
+     * --
+     * @param mixed $key
+     *        null   return all keys
+     *        string return particular key if exists
+     *        array  return keys specified in array
+     *
+     * @param mixed $default
+     *        Default value(s) when key not found.
+     * --
      * @return mixed
+     *         String or array, depending on key.
      */
-    static function get($key=false, $default=null)
+    static function get($key=null, $default=null)
     {
         if (!$key)
         {
@@ -64,13 +83,20 @@ class request
             return arr::get($_GET, $key, $default);
         }
     }
+
     /**
-     * Get _POST segment.
-     * @param  mixed $key     false: return all keys,
-     *                        string: return particular key
-     *                        array:  return keys specified in array
-     * @param  mixed $default Default value(s) when key not found
+     * Get _POST values.
+     * --
+     * @param mixed $key
+     *        false  return all keys
+     *        string return particular key
+     *        array  return keys specified in array
+     *
+     * @param mixed $default
+     *        Default value(s) when key not found.
+     * --
      * @return mixed
+     *         String or array, deepening on key.
      */
     static function post($key=false, $default=null)
     {
@@ -88,10 +114,13 @@ class request
             return arr::get($_POST, $key, $default);
         }
     }
+
     /**
      * Name and revision of the information protocol
      * via which the page was requested; i.e. 'HTTP/1.0';
-     * @param  string $default
+     * --
+     * @param string $default
+     * --
      * @return string
      */
     static function protocol($default='HTTP/1.1')
@@ -105,25 +134,32 @@ class request
             return $default;
         }
     }
+
     /**
      * Get IP from which request was made.
+     * --
      * @return string
      */
     static function ip()
     {
         return $_SERVER['REMOTE_ADDR'];
     }
+
     /**
-     * Return user's agent.
+     * Get user's agent.
+     * --
      * @return  string
      */
     static function agent()
     {
         return $_SERVER['HTTP_USER_AGENT'];
     }
+
     /**
-     * Check if we're on SSL connection.
-     * _Borrowed from Wordpress_
+     * Check if it's SSL connection.
+     * --
+     * @author Wordpress
+     * --
      * @return boolean
      */
     static function is_ssl()
@@ -141,31 +177,42 @@ class request
             }
         }
         elseif (isset($_SERVER['SERVER_PORT']) &&
-            ('443' == $_SERVER['SERVER_PORT']))
+            '443' == $_SERVER['SERVER_PORT'])
         {
             return true;
         }
 
         return false;
     }
+
     /**
-     * Retrun get current domain
+     * Return current domain.
+     * --
      * @return string
      */
     static function host()
     {
-        return isset($_SERVER['SERVER_NAME'])
-            ? $_SERVER['SERVER_NAME']
-            : isset($_SERVER['HTTP_HOST'])
-                ? $_SERVER['HTTP_HOST']
-                : null;
+        if (isset($_SERVER['SERVER_NAME']))
+        {
+            return $_SERVER['SERVER_NAME'];
+        }
+        elseif (isset($_SERVER['HTTP_HOST']))
+        {
+            return $_SERVER['HTTP_HOST'];
+        }
+        else
+        {
+            return null;
+        }
     }
+
     /**
      * Return client-provided pathname information trailing the actual script
      * filename but preceding the query string, if available.
      * For instance, if the current script was accessed via the URL
      * http://www.example.com/php/path_info.php/some/stuff?foo=bar,
      * then this would return /some/stuff.
+     * --
      * @return string
      */
     static function path()
@@ -178,6 +225,7 @@ class request
         if (isset($_SERVER['REQUEST_URI']))
         {
             $path = explode('?', $_SERVER['REQUEST_URI'])[0];
+
             $script_name = isset($_SERVER['SCRIPT_NAME'])
                 ? $_SERVER['SCRIPT_NAME']
                 : null;
@@ -192,11 +240,14 @@ class request
 
         return null;
     }
+
     /**
-     * Return current url, if with_query is set to true,
-     * it will return full url, query included.
-     * @param   boolean $with_query
-     * @return  string
+     * Return current URL.
+     * If with_query is set to true, it will return full URL, query included.
+     * --
+     * @param boolean $with_query
+     * --
+     * @return string
      */
     static function url($with_query=false)
     {
@@ -204,17 +255,19 @@ class request
 
         if ($with_query)
         {
-            // Make sure we have ending '/'!
+            // Make sure there's ending '/'
             $url = trim($url, '/') . '/';
             $url = $url . ltrim($_SERVER['REQUEST_URI'], '/');
         }
 
         return rtrim($url, '/');
     }
+
     /**
-     * Modify current uri query, and return new query.
-     * ?k1=val&k2=val2
-     * @param  array $segments
+     * Modify current URI query, and return new query, example: ?k1=val&k2=val2
+     * --
+     * @param array $segments
+     * --
      * @return string
      */
     static function modify_query(array $segments)
@@ -228,37 +281,70 @@ class request
 
         return '?' . http_build_query($query);
     }
+
     /**
-     * Return true if any data was posted, and false if wasn't
-     * @param  string $key is particular key set int post
+     * Return true if any data was posted.
+     * --
+     * @param string $key
+     *        Is particular key set in post.
+     * --
      * @return boolean
      */
-    static function has_post($key=false)
+    static function has_post($key=null)
     {
         return $key
             ? isset($_POST[$key])
             : !empty($_POST);
     }
+
     /**
-     * Get request method: request::method_get, request::method_post,
-     *                     request::method_put, request::method_delete
+     * Get request method:
+     *     request::method_get, request::method_post,
+     *     request::method_put, request::method_delete
+     * --
+     * @param boolean $can_fake
+     *        Weather fake method is accepted.
+     *        In case of PUT, if data is posted with key REQUEST_METHOD = PUT,
+     *        that would mean it's PUT request.
+     *        In case of delete, if either GET or POST key exists, with value
+     *        REQUEST_METHOD = DELETE, that would make it DELETE.
+     * --
      * @return string
      */
-    static function method()
+    static function method($can_fake=false)
     {
         // Is it put?
-        if ($_SERVER['REQUEST_METHOD'] === 'PUT' ||
-            self::post('REQUEST_METHOD') === 'PUT')
+        if ($_SERVER['REQUEST_METHOD'] === 'PUT')
         {
             return self::method_put;
         }
 
         // Is it delete?
-        if ($_SERVER['REQUEST_METHOD'] === 'DELETE' ||
-            self::post('REQUEST_METHOD') === 'DELETE' ||
-            self::get('request_method') === 'delete')
+        if ($_SERVER['REQUEST_METHOD'] === 'DELETE')
         {
             return self::method_delete;
+        }
+
+        // Check for fakes now
+        if ($can_fake)
+        {
+            if (self::has_post('REQUEST_METHOD'))
+            {
+                if (strtolower(self::post('REQUEST_METHOD')) === 'delete')
+                {
+                    return self::method_delete;
+                }
+
+                if (strtolower(self::post('REQUEST_METHOD')) === 'put')
+                {
+                    return self::method_put;
+                }
+            }
+
+            if (strtolower(self::get('REQUEST_METHOD')) === 'delete')
+            {
+                return self::method_delete;
+            }
         }
 
         // Is it post?

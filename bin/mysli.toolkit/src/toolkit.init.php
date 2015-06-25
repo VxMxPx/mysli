@@ -2,6 +2,13 @@
 
 namespace mysli\toolkit; class toolkit_init
 {
+    /**
+     * Initialize toolkit.
+     * --
+     * @param  string $apppath Absolute application root path.
+     * @param  string $binpath Absolute binaries root path.
+     * @param  string $pubpath Absolute public path.
+     */
     static function __init($apppath, $binpath, $pubpath)
     {
         /*
@@ -30,11 +37,15 @@ namespace mysli\toolkit; class toolkit_init
 
         // Toolkit logger
         include __DIR__."/log.php";
-        log::info('Toolkit init, log loaded!');
+        log::info('Toolkit init, log loaded!', __CLASS__);
 
         // Load pkg, basic packages manager
         include __DIR__."/pkg.php";
         pkg::__init(MYSLI_CFGPATH."/toolkit.pkg.list");
+        log::debug(
+            "Got following packages: ".implode(', ', pkg::list_all()),
+            __CLASS__
+        );
 
         // Load autoloader
         include __DIR__."/autoloader.php";
@@ -49,10 +60,30 @@ namespace mysli\toolkit; class toolkit_init
         type\str::encoding('UTF-8');
 
         /*
+        Init request
+         */
+        request::__init();
+
+        /*
         Trigger main event - system __init
          */
         event::__init(MYSLI_CFGPATH."/toolkit.events.json");
         event::trigger("toolkit::__init");
+
+        /*
+        Resolve route(s)
+         */
+        router::resolve();
+
+        /*
+        Apply header and send output.
+         */
+        log::debug("About to apply headers and output!", __CLASS__);
+        response::apply_headers();
+        $output = output::as_html();
+
+        event::trigger("toolkit::__init.output", [$output]);
+        echo $output;
 
         /*
         Close with a normal shutdown

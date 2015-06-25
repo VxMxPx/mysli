@@ -60,9 +60,13 @@ namespace mysli\toolkit\type; class validate
      */
     static function need_str($input, $message=null)
     {
-        if (!is_string($input)) {
+        if (!is_string($input) && !is_null($input)) {
             throw new toolkit\exception\argument(
-                ($message ?: "Unexpected type, expected a string."), 723
+                ($message ?:
+                    "Unexpected type, expected a string, got: `".
+                    gettype($input) . "`."
+                ),
+                723
             );
         }
     }

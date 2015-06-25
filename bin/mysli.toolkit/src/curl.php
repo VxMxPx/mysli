@@ -112,6 +112,8 @@ namespace mysli\toolkit; class curl
                 curl_error($this->resource)
             );
 
+        log::info("Executed: `".curl_getinfo($this->resource)."`.", __CLASS__);
+
         return $result;
     }
 

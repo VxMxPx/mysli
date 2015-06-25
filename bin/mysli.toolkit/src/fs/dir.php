@@ -2,7 +2,10 @@
 
 namespace mysli\toolkit\fs; class dir
 {
-    const __use = '.exception.* -> toolkit.exception.*';
+    const __use = '
+        .log
+        .exception.*
+    ';
 
     /**
      * Create a new directory.
@@ -22,8 +25,10 @@ namespace mysli\toolkit\fs; class dir
 
         if (file::exists($directory))
         {
-            throw new toolkit\exception\fs("File exists: `{$directory}`.", 1);
+            throw new exception\fs("File exists: `{$directory}`.", 1);
         }
+
+        log::info("Create: `{$directory}`, recursive: {$recursive}", __CLASS__);
 
         return mkdir($directory, $mode, $recursive);
     }
@@ -45,7 +50,7 @@ namespace mysli\toolkit\fs; class dir
 
         if (!self::exists($source))
         {
-            throw new toolkit\exception\argument(
+            throw new exception\argument(
                 "Not a valid directory: `{$source}`.", 1
             );
         }
@@ -54,7 +59,7 @@ namespace mysli\toolkit\fs; class dir
         {
             if (!self::create($destination))
             {
-                throw new toolkit\exception\fs(
+                throw new exception\fs(
                     "Cannot create destination directory: ".
                     "`{$destination}`.", 1
                 );
@@ -86,15 +91,24 @@ namespace mysli\toolkit\fs; class dir
             {
                 try
                 {
+                    log::info(
+                        "Copy: `{$filename}` to directory: `{$destination}` ".
+                        "as: `{$file}`, overwrite: `{$overwrite}`.",
+                        __CLASS__
+                    );
+
                     $count += file::copy(
                         $filename,
                         fs::ds($destination, $file),
                         $overwrite
                     );
                 }
-                catch (toolkit\exception\argument $e)
+                catch (exception\argument $e)
                 {
-                    // pass
+                    log::warning(
+                        'Copying failed, with message: `{message}`.',
+                        [__CLASS__, 'exception' => $e]
+                    );
                 }
             }
         }
@@ -118,7 +132,7 @@ namespace mysli\toolkit\fs; class dir
 
         if (!self::exists($source))
         {
-            throw new toolkit\exception\argument(
+            throw new exception\argument(
                 "Not a valid directory: `{$source}`.", 1
             );
         }
@@ -127,7 +141,7 @@ namespace mysli\toolkit\fs; class dir
         {
             if (!self::create($destination))
             {
-                throw new toolkit\exception\fs(
+                throw new exception\fs(
                     "Cannot create destination directory: ".
                     "`{$destination}`.", 1
                 );
@@ -156,15 +170,24 @@ namespace mysli\toolkit\fs; class dir
             {
                 try
                 {
+                    log::info(
+                        "Move: `{$filename}` to directory: `{$destination}` ".
+                        "as: `{$file}`, overwrite: `{$overwrite}`.",
+                        __CLASS__
+                    );
+
                     $count += file::move(
                         $filename,
                         fs::ds($destination, $file),
                         $overwrite
                     );
                 }
-                catch (toolkit\exception\argument $e)
+                catch (exception\argument $e)
                 {
-                    // pass
+                    log::warning(
+                        'Moving failed, with message: `{message}`.',
+                        [__CLASS__, 'exception' => $e]
+                    );
                 }
             }
         }
@@ -173,9 +196,12 @@ namespace mysli\toolkit\fs; class dir
         {
             self::remove($source, false);
         }
-        catch (toolkit\exception\fs $e)
+        catch (exception\fs $e)
         {
-            // pass
+            log::warning(
+                'Failed to remove source `{$source}`: `{message}`.',
+                [__CLASS__, 'exception' => $e]
+            );
         }
 
         return $count;
@@ -196,23 +222,25 @@ namespace mysli\toolkit\fs; class dir
     {
         if (!$directory || empty($directory) || trim($directory) === '/')
         {
-            throw new toolkit\exception\argument(
+            throw new exception\argument(
                 'Argument $directory cannot be empty or /.', 1
             );
         }
 
         if (!self::exists($directory))
         {
+            log::notice(
+                "Cannot remove, directory doesn't exists: `{$directory}`.",
+                __CLASS__
+            );
             return true;
-            // throw new toolkit\exception\argument(
-            //     "Directory doesn't exists: `{$directory}`.", 2);
         }
 
         if (!self::is_empty($directory))
         {
             if (!$force)
             {
-                throw new toolkit\exception\fs(
+                throw new exception\fs(
                     'Directory is not empty, use $force flag.', 1
                 );
             }
@@ -230,7 +258,7 @@ namespace mysli\toolkit\fs; class dir
 
                 if (!unlink($filename))
                 {
-                    throw new toolkit\exception\fs(
+                    throw new exception\fs(
                         "Could not remove file: `{$filename}`.", 2
                     );
                 }
@@ -239,7 +267,7 @@ namespace mysli\toolkit\fs; class dir
 
         if (!rmdir($directory))
         {
-            throw new toolkit\exception\fs(
+            throw new exception\fs(
                 "Could not remove directory: `{$directory}`.", 3
             );
         }
@@ -263,7 +291,7 @@ namespace mysli\toolkit\fs; class dir
     {
         if (!self::exists($directory))
         {
-            throw new toolkit\exception\argument(
+            throw new exception\argument(
                 "Invalid directory: `{$directory}`.", 1
             );
         }
@@ -316,7 +344,7 @@ namespace mysli\toolkit\fs; class dir
     {
         if (!self::is_readable($directory))
         {
-            throw new toolkit\exception\fs(
+            throw new exception\fs(
                 'The directory is not readable!', 1
             );
         }
@@ -346,7 +374,7 @@ namespace mysli\toolkit\fs; class dir
     {
         if (!self::exists($directory))
         {
-            throw new toolkit\exception\not_found(
+            throw new exception\not_found(
                 "Directory not found: `{$directory}`.", 1
             );
         }

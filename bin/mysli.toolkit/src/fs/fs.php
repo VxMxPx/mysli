@@ -3,10 +3,9 @@
 namespace mysli\toolkit\fs; class fs
 {
     const __use = '
-        .{
-            pkg,
-            exception.* -> toolkit.exception.*
-        }
+        .pkg
+        .log
+        .exception.*
     ';
 
     const map_continue = '\\/map continue\\/';
@@ -70,6 +69,11 @@ namespace mysli\toolkit\fs; class fs
 
             return $renamed;
         }
+
+        log::info(
+            "Rename: `{$old}` to `{$new}`.",
+            __CLASS__
+        );
 
         return rename($old, $new);
     }
@@ -163,7 +167,7 @@ namespace mysli\toolkit\fs; class fs
 
         if (!dir::exists($directory))
         {
-            throw new toolkit\exception\not_found(
+            throw new exception\not_found(
                 "Not a valid directory: `{$directory}`.", 1
             );
         }
@@ -220,7 +224,7 @@ namespace mysli\toolkit\fs; class fs
     static function ls($directory, $filter=null)
     {
         if (!dir::exists($directory)) {
-            throw new toolkit\exception\fs(
+            throw new exception\fs(
                 "Directory is required: `{$directory}`, not a valid directory."
             );
         }

@@ -4,6 +4,7 @@ namespace mysli\toolkit\type; class str
 {
     const __use = '
         .{
+            log,
             type.validate,
             type.int,
             exception.* -> toolkit.exception.*
@@ -21,6 +22,8 @@ namespace mysli\toolkit\type; class str
     {
         if ($encoding)
         {
+            log::info("Set internal encoding to: `{$encoding}`.", __CLASS__);
+
             if (!mb_internal_encoding($encoding))
             {
                 throw new toolkit\exception\argument(

@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * # Log
+ *
+ * A basic logger.
+ */
 namespace mysli\toolkit; class log
 {
     const debug   = 'debug';
@@ -19,10 +24,10 @@ namespace mysli\toolkit; class log
     /**
      * Debug information.
      * --
-     * @param  string $message
-     * @param  array  $context
+     * @param string $message
+     * @param mixed  $context
      */
-    static function debug($message, array $context=[])
+    static function debug($message, $context=null)
     {
         self::add(self::debug, $message, $context);
     }
@@ -30,10 +35,10 @@ namespace mysli\toolkit; class log
     /**
      * General information.
      * --
-     * @param  string $message
-     * @param  array  $context
+     * @param string $message
+     * @param mixed  $context
      */
-    static function info($message, array $context=[])
+    static function info($message, $context=null)
     {
         self::add(self::info, $message, $context);
     }
@@ -41,10 +46,10 @@ namespace mysli\toolkit; class log
     /**
      * Significant information.
      * --
-     * @param  string $message
-     * @param  array  $context
+     * @param string $message
+     * @param mixed  $context
      */
-    static function notice($message, array $context=[])
+    static function notice($message, $context=null)
     {
         self::add(self::notice, $message, $context);
     }
@@ -52,10 +57,10 @@ namespace mysli\toolkit; class log
     /**
      * Warning!
      * --
-     * @param  string $message
-     * @param  array  $context
+     * @param string $message
+     * @param mixed  $context
      */
-    static function warn($message, array $context=[])
+    static function warning($message, $context=null)
     {
         self::add(self::warning, $message, $context);
     }
@@ -63,10 +68,10 @@ namespace mysli\toolkit; class log
     /**
      * Errors of any type.
      * --
-     * @param  string $message
-     * @param  array  $context
+     * @param string $message
+     * @param mixed  $context
      */
-    static function error($message, array $context=[])
+    static function error($message, $context=null)
     {
         self::add(self::error, $message, $context);
     }
@@ -74,10 +79,10 @@ namespace mysli\toolkit; class log
     /**
      * Fatal or any other serious full-stop situation.
      * --
-     * @param  string $message
-     * @param  array  $context
+     * @param string $message
+     * @param mixed  $context
      */
-    static function panic($message, array $context=[])
+    static function panic($message, $context=null)
     {
         self::add(self::panic, $message, $context);
     }
@@ -87,12 +92,22 @@ namespace mysli\toolkit; class log
      * --
      * @param string $type
      * @param string $message
-     * @param array  $context
+     * @param mixed  $context
+     *        string to use context as sender (just use __CLASS__),
+     *        array  to send other arguments, 0 (if set) will be used as sender.
      */
-    static function add($type, $message, array $context=[])
+    static function add($type, $message, $context=null)
     {
-        if (!empty($context))
+        $sender = null;
+
+        if (is_array($context))
         {
+            if (isset($context[0]))
+            {
+                $sender = $context[0];
+                unset($context[0]);
+            }
+
             foreach ($context as $key => $value)
             {
                 if (is_a($value, 'Exception'))
@@ -104,9 +119,14 @@ namespace mysli\toolkit; class log
                 $message = str_replace('{'.$key.'}', $value, $message);
             }
         }
+        else
+        {
+            $sender = $context;
+        }
 
         self::$messages[] = [
             'type'      => $type,
+            'from'      => $sender,
             'timestamp' => date('c'),
             'message'   => $message
         ];

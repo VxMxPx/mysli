@@ -117,3 +117,100 @@ function err_lines($lines, $current, $padding=3)
 
     return $result;
 }
+
+/**
+ * Standard log as html.
+ * --
+ * @param array $logs
+ * --
+ * @return string
+ */
+function log_to_html($logs)
+{
+    $css_output = "width:100%;";
+    $css_message = "width:100%; background:#234; color:#eee;";
+
+    $output = <<<STYLE
+    <style type="text/css">
+        section.logs
+        {
+            width: 100%;
+        }
+        section.logs div.log-message
+        {
+            display: block;
+            background: #0F181A;
+            color: #999;
+            border-bottom: 1px solid #444;
+            padding: 10px;
+            font-family: sans;
+            font-size: 12px;
+        }
+        section.logs div.log-message span.message
+        {
+            font-family: monospace;
+            font-size: 16px;
+            display: block;
+            margin-bottom: 10px;
+        }
+        section.logs div.log-message.type-debug span.message
+        {
+            color: #6e973d;
+        }
+        section.logs div.log-message.type-info span.message
+        {
+            color: #aee87b;
+        }
+        section.logs div.log-message.type-notice span.message
+        {
+            color: #ddb691;
+        }
+        section.logs div.log-message.type-warning span.message
+        {
+            color: #ed683b;
+        }
+        section.logs div.log-message.type-error span.message
+        {
+            color: #f23d3d;
+        }
+        section.logs div.log-message.type-panic span.message
+        {
+            color: #fcc;
+            background: #893434;
+            padding: 5px;
+            border-radius: 4px;
+        }
+        section.logs div.log-message.type-panic span.message:before
+        {
+            content: "PANIC!!";
+            font-weight: bold;
+            font-size: 18px;
+            display: block;
+        }
+        section.logs div.log-message span.type
+        {
+            display: none;
+        }
+        section.logs div.log-message span.from
+        {
+            padding-right: 10px;
+        }
+    </style>
+STYLE;
+
+    $output .= '<section class="logs" />';
+
+    foreach ($logs as $k => $log)
+    {
+        $output .= '<div class="log-message type-'.$log['type'].'">';
+        $output .= '<span class="type">'.$log['type'].'</span>';
+        $output .= '<span class="message">'.$log['message'].'</span>';
+        $output .= '<span class="from">'.$log['from'].'</span>';
+        $output .= '<span class="time">'.$log['timestamp'].'</span>';
+        $output .= '</div>';
+    }
+
+    $output .= '</section>';
+
+    return $output;
+}

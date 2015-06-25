@@ -1,9 +1,50 @@
 <?php
 
+/**
+ * # Config
+ *
+ * Use to acces and create configuration for packages.
+ *
+ * ## Usage
+ *
+ * To create configuration for your package use:
+ *
+ *      $options = [
+ *          'foo' => 'bar',
+ *          'countries' => [
+ *              'slovenia' => [
+ *                  'capital' => 'Ljubljana',
+ *                  'language' => 'Slovene'
+ *              ]
+ *          ]
+ *      ];
+ *      $config = config::select('vendor.package');
+ *      $config->reset($options);
+ *      $config->save();
+ *
+ * To access those configurations:
+ *
+ *      $config = config::select('vendor.package');
+ *      $config->get('foo'); // bar
+ *      $config->get('countries.slovenia.capital'); // Ljubljana
+ *
+ * You can grab value directly:
+ *
+ *      $capital = config::select('vendor.package', 'countries.slovenia.capital');
+ *      $language = config::select('vendor.package', 'countries.slovenia.language');
+ *
+ *  This will not decrease performance, as objects are constructed only once
+ *  per package.
+ *
+ *  To remove all configurations for a particular package `destroy` method
+ *  can be used:
+ *
+ *      config::destroy('vendor.package');
+ */
 namespace mysli\toolkit; class config
 {
     const __use = '
-        .{ pkg, json, fs.fs, fs.file, type.arr, type.arr_path -> arrp, exception.* }
+        .{ pkg, json, fs.fs, fs.file, log, type.arr, type.arr_path -> arrp, exception.* }
     ';
 
     /**
@@ -43,6 +84,8 @@ namespace mysli\toolkit; class config
     function __construct($package)
     {
         $this->package = self::ns_to_pkg($package);
+
+        log::debug("Create for package: `{$package}`.", __CLASS__);
 
         if (!$this->package)
             throw new exception\value("Invalid package name for config.", 1);
