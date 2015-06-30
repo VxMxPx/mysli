@@ -1,13 +1,13 @@
 <?php
 
-namespace mysli\toolkit\cli;
+namespace dot\cli;
 
 use dot\ui;
 use dot\param;
 
 /**
  * Installer will fetch toolkit from remote location (if needed),
- * run toolkit setup, and created all necessary files and folders.
+ * run toolkit setup, and created necessary basic files and folders.
  */
 class install
 {
@@ -107,10 +107,11 @@ LOC;
         }
 
         /*
-        Resolve and create paths.
+        Resolve and create bin and public paths.
          */
         if (!($binpath = self::do_dir('binpath', $apppath, $values['binpath'])))
             return false;
+
         if (!($pubpath = self::do_dir('pubpath', $apppath, $values['pubpath'])))
             return false;
 
@@ -137,9 +138,68 @@ LOC;
         /*
         Run toolkit setup
          */
+        try
+        {
+            // Get dnyamic name, in came of `mysli.toolkit` it would be `toolkit`,
+            // but in case of vendor.package, would be package.
+            $tk_name = substr($toolkit, strrpos($toolkit, '.')+1);
+
+            // Setup filename, different if phar.
+            $toolkit_setup_file = $is_toolkit_phar
+                ? "phar://{$binpath}/{$toolkit}.phar/src/{$tk_name}.setup.php"
+                : "{$binpath}/{$toolkit}/src/{$tk_name}.setup.php";
+
+            // Setup file must exists.
+            if (!file_exists($toolkit_setup_file))
+            {
+                ui::error(
+                    "FAILED",
+                    "Toolkit setup file not found: `{$toolkit_setup_file}`."
+                );
+                return false;
+            }
+
+            // Include setup file
+            include $toolkit_setup_file;
+
+            // Construct classname & namespace
+            $tk_class = str_replace('.', '\\', $toolkit.".{$tk_name}_setup");
+
+            if (!class_exists($tk_class, false))
+            {
+                ui::error(
+                    'FAILED',
+                    "Toolkit setup file was loaded, ".
+                    "but it doesn't contain class: `{$tk_class}`."
+                );
+                return false;
+            }
+
+            if (!call_user_func_array(
+                [$tk_class, 'enable'], [$apppath, $binpath, $pubpath]))
+            {
+                ui::error(
+                    'FAILED',
+                    "Toolkit setup failed, without explanation."
+                );
+                return false;
+            }
+            else
+            {
+                ui::success('OK', 'Toolkit setup successful.');
+            }
+        }
+        catch (\Exception $e)
+        {
+            ui::error(
+                "FAILED",
+                "Toolkit setup failed, with message:\n".$e->getMessage()
+            );
+            return false;
+        }
 
         /*
-        Write dot.loc.php file
+        Write mysli.loc.php file
          */
         $loc = str_replace(
             ['{{TIMESTAMP}}', '{{BINPATH}}', '{{PUBPATH}}'],
@@ -147,18 +207,26 @@ LOC;
             self::$loc_template
         );
 
-        if (!file_put_contents("{$apppath}/dot.loc.php", $loc."\n"))
+        if (!file_put_contents("{$apppath}/mysli.loc.php", $loc."\n"))
         {
             ui::error(
                 'FAILED',
-                "Couldn't write `loc` file to: `{$apppath}/dot.loc.php`."
+                "Couldn't write `loc` file to: `{$apppath}/mysli.loc.php`."
             );
             return false;
         }
         else
         {
-            ui::success('OK', "Wrote `loc` file to: `{$apppath}/dot.loc.php`.");
+            ui::success(
+                'OK', "Wrote `loc` file to: `{$apppath}/mysli.loc.php`."
+            );
         }
+
+        /*
+        Done.
+         */
+        ui::success('OK', 'Install is now done. System should be usable.');
+        return true;
     }
 
     /**
