@@ -1,15 +1,12 @@
 <?php
 
 /**
- * Help you to build a simple CLI UI. This will heavily rely on output and input
- * classes, but will add some of its own formatting.
+ * # Ui
+ *
  * Use this class to achieve consistent CLI outputs.
  *
  * Commands, the exception is `template`, will not output string automatically,
  * but will rather return formated string.
- * --
- * @example
- * output::line(ui::warn('Ooops, something went wrong.'));
  */
 namespace dot; class ui
 {

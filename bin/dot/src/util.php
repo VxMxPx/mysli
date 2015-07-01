@@ -1,6 +1,8 @@
 <?php
 
 /**
+ * # Util
+ *
  * Various utilities used in command line interface.
  */
 namespace dot; class util
@@ -83,7 +85,7 @@ namespace dot; class util
      * Use 'pcntl_wait($status);' in parent, to prevent zombie processes!
      * --
      * @param  mixed   $commands string|array
-     * @param  boolean $print result of script execution (use system
+     * @param  boolean $print Result of script execution (use system
      *                        rather than exec).
      * --
      * @return integer pid

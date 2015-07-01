@@ -1,6 +1,6 @@
 package:     dot
 version:     1
-description: Command line utilities.
+description: Command Line Utilities.
 license:     GPL-3.0
 authors:
     - Marko Gajšt (Developer) <m@gaj.st>

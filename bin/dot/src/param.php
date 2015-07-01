@@ -1,7 +1,91 @@
 <?php
 
 /**
- * Handle script input parameters.
+ * # Param
+ *
+ * This class can be used to define parameters which a scripts accepts,
+ * and then to parse arguments.
+ *
+ * ## Usage
+ *
+ * This class cannot be called statically, so it needs to be instantiated:
+ *
+ *     $param = new param('My Script!', $arguments);
+ *
+ * ... the first parameter is _title_ which will be used when help is printed for
+ * a script. The second parameter is optional, if not provided, `$_SERVER['argv']`
+ * will be used.
+ *
+ * Additional to that, following properties can be set (all used for help text):
+ *
+ *     $param->title   = 'Title';
+ *     $param->command = 'command';
+ *     $param->description = 'Short description';
+ *     $param->description_long = 'Long description';
+ *
+ * The title does the same, as title when object is instantiated. Name is the name
+ * of the script as called with `./dot script`. Description is printed right after
+ * title, when help is printed. The `description_long` is displayed on the bottom
+ * when help is printed, and should be longer description of what script does.
+ *
+ * ### Adding parameters
+ *
+ * To add expected parameters `add` method can be used:
+ *
+ *     $param->add($name, $options);
+ *
+ * The `$name` parameter can be either:
+ *
+ *     -s         // short parameter
+ *     -s/--long  // short and long
+ *     --long     // only long
+ *     POSITIONAL // positional parameter
+ *
+ * The `$options` parameter is an array, for options @see <self::$defaults>.
+ *
+ * A valid example of boolean parameter would be:
+ *
+ *
+ *     $param->add('-v/--verbose', [
+ *         'type'    => 'bool',
+ *         'default' => false,
+ *         'help'    => 'Explain what is this param used for.']);
+ *
+ *
+ * To process arguments, `parse` can be used:
+ *
+ *     $param->parse();
+ *
+ * Check if process succeeded and to fetch values otherwise print error messages:
+ *
+ *
+ *     if ($param->is_valid())
+ *     {
+ *         $values = $param->values();
+ *     }
+ *     else
+ *     {
+ *         echo $param->messages();
+ *     }
+ *
+ *
+ * Each parameter has an unique ID, which if not set, will be automatically
+ * generated, in following way:
+ *
+ *     -s/--long  => long
+ *     -s         => s
+ *     POSITIONAL => positional
+ *
+ * ### Advanced options
+ *
+ * To allow one or another parameter, but not both, `exclude` can be used:
+ *
+ *     $param->add('-p/--param1', ['exclude' => ['param2']]);
+ *     $param->add('--param2');
+ *
+ * In the above example `param1` and `param2` will exclude each other,
+ * meaning that if both will be present, warning will be displayed and validation
+ * will not pass.
  */
 namespace dot; class param
 {
@@ -197,7 +281,7 @@ namespace dot; class param
     ];
 
     /**
-     * Construct cli/param
+     * Construct cli/param.
      * --
      * @param string $title
      * @param array  $arguments
@@ -254,7 +338,7 @@ namespace dot; class param
     }
 
     /**
-     * Return list of messages, which are set after parse()
+     * Return list of messages, which are set after `parse()`.
      * --
      * @return string
      */
@@ -265,7 +349,7 @@ namespace dot; class param
 
     /**
      * Return status (weather execution was valid, all required parameters
-     * were set, etc...)
+     * were set, etc...).
      * --
      * @return boolean
      */
@@ -614,7 +698,7 @@ namespace dot; class param
     }
 
     /**
-     * Find parameter, see if bool is expected, set value (if bool)
+     * Find parameter, see if bool is expected, set value (if bool).
      * --
      * @param string  $arg
      * @param string  $type
@@ -953,6 +1037,19 @@ namespace dot; class param
     /**
      * Validate options values.
      * --
+     * @throws \Exception 10 Invalid arguments! No valid ID.
+     * @throws \Exception 20 ID exists.
+     * @throws \Exception 30 Long argument need to be longer than one character.
+     * @throws \Exception 31 Long argument cannot be longer than 40 characters.
+     * @throws \Exception 40 Positional arguments cannot have (bool) type.
+     * @throws \Exception 50 Short argument need to be one character long.
+     * @throws \Exception 51 Short argument exists.
+     * @throws \Exception 60 Invalid type.
+     * @throws \Exception 70 Invalid default value for type `bool`.
+     * @throws \Exception 71 Invalid default value for type `int`.
+     * @throws \Exception 72 Invalid default value for type `float`.
+     * @throws \Exception 80 Values for `min` cannot be bigger than value for `max`.
+     * --
      * @param array $options
      */
     private function options_validate(array $options)
@@ -962,16 +1059,16 @@ namespace dot; class param
         // need a valid ID
         if (!$options['id'])
         {
-            throw new \exception(
-                "Invalid arguments! No valid ID.", 1
+            throw new \Exception(
+                "Invalid arguments! No valid ID.", 10
             );
         }
 
         // ID must be unique
         if (array_key_exists($options['id'], $this->params))
         {
-            throw new \exception(
-                "ID exists: `{$options['id']}`.", 2
+            throw new \Exception(
+                "ID exists: `{$options['id']}`.", 20
             );
         }
 
@@ -981,26 +1078,26 @@ namespace dot; class param
             // long need to be at lest 2 characters
             if (strlen($options['long']) < 2)
             {
-                throw new \exception(
+                throw new \Exception(
                     "Long argument need to be longer than one character: ".
-                    "`{$options['long']}` for `{$options['id']}`.", 3
+                    "`{$options['long']}` for `{$options['id']}`.", 30
                 );
             }
 
             if (strlen($options['long']) > 40)
             {
-                throw new \exception(
+                throw new \Exception(
                     "Long argument cannot be longer than 40 characters: ".
-                    "`{$options['long']}` for `{$options['id']}`.", 3
+                    "`{$options['long']}` for `{$options['id']}`.", 31
                 );
             }
         }
 
         if ($options['positional'] && $options['type'] === 'bool')
         {
-            throw new \exception(
+            throw new \Exception(
                 "Positional arguments cannot have (bool) type".
-                " `{$options['id']}`.", 5
+                " `{$options['id']}`.", 40
             );
         }
 
@@ -1010,9 +1107,9 @@ namespace dot; class param
             // short cannot be more than one character
             if (strlen($options['short']) > 1)
             {
-                throw new \exception(
+                throw new \Exception(
                     "Short argument need to be one character long: ".
-                    "`{$options['short']}` for `{$options['id']}`.", 10
+                    "`{$options['short']}` for `{$options['id']}`.", 50
                 );
             }
 
@@ -1021,10 +1118,10 @@ namespace dot; class param
             {
                 if ($popt['short'] === $options['short'])
                 {
-                    throw new \exception(
+                    throw new \Exception(
                         "Short argument exists: ".
                         "`{$options['short']}` for `{$options['id']}` ".
-                        "defined in `{$pid}`.", 12
+                        "defined in `{$pid}`.", 51
                     );
                 }
             }
@@ -1033,9 +1130,9 @@ namespace dot; class param
         // need to be valid type
         if (!in_array($options['type'], $typesok))
         {
-            throw new \exception(
+            throw new \Exception(
                 "Invalid type: `{$options['type']}`. ".
-                "Acceptable types: " . implode(', ', $typesok), 20
+                "Acceptable types: " . implode(', ', $typesok), 60
             );
         }
 
@@ -1045,25 +1142,25 @@ namespace dot; class param
             // if type bool, default needs to be bool
             if ($options['type'] === 'bool' && !is_bool($options['default']))
             {
-                throw new \exception(
+                throw new \Exception(
                     "Invalid default value for type `bool`. ".
-                    "Require true/false.", 30
+                    "Require true/false.", 70
                 );
             }
             // if type int, default needs to be int
             elseif ($options['type'] === 'int' && !is_int($options['default']))
             {
-                throw new \exception(
+                throw new \Exception(
                     "Invalid default value for type `int`. ".
-                    "Require integer value.", 31
+                    "Require integer value.", 71
                 );
             }
             // if float, default needs to be float
             elseif ($options['type'] === 'float' && !is_float($options['default']))
             {
-                throw new \exception(
+                throw new \Exception(
                     "Invalid default value for type `float`. ".
-                    "Require float value.", 32
+                    "Require float value.", 72
                 );
             }
         }
@@ -1073,9 +1170,9 @@ namespace dot; class param
         {
             if ($options['min'] > $options['max'])
             {
-                throw new \exception(
+                throw new \Exception(
                     "Values for `min` ({$options['min']}) cannot be bigger ".
-                    "than value for `max` ({$options['max']})", 40
+                    "than value for `max` ({$options['max']})", 80
                 );
             }
         }
