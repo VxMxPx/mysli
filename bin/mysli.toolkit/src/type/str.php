@@ -2,17 +2,13 @@
 
 namespace mysli\toolkit\type; class str
 {
-    const __use = '
-        .{
-            log,
-            type.validate,
-            type.int,
-            exception.* -> toolkit.exception.*
-        }
-    ';
+    const __use = '.{log, type.validate, type.int, exception.str -> exception.str}';
 
     /**
      * Set/Get internal character encoding.
+     * --
+     * @throws mysli\toolkit\exception\str
+     *         10 Invalid encoding.
      * --
      * @param string $encoding
      * --
@@ -26,8 +22,8 @@ namespace mysli\toolkit\type; class str
 
             if (!mb_internal_encoding($encoding))
             {
-                throw new toolkit\exception\argument(
-                    "Invalid encoding: `{$encoding}`.", 1
+                throw new exception\str(
+                    "Invalid encoding: `{$encoding}`.", 10
                 );
             }
         }
@@ -37,6 +33,12 @@ namespace mysli\toolkit\type; class str
 
     /**
      * Split and trim data.
+     * --
+     * @throws mysli\toolkit\exception\validate
+     *         723 Unexpected type, expected a string.
+     *
+     * @throws mysli\toolkit\exception\validate
+     *         720 Unexpected type, expected an integer.
      * --
      * @param string  $string
      * @param mixed   $separator array or string
@@ -91,6 +93,9 @@ namespace mysli\toolkit\type; class str
     /**
      * Get string length (unicode).
      * --
+     * @throws mysli\exception\exception\str
+     *         10 Cannot get string length. Probably invalid encoding is set.
+     * --
      * @param string $string
      * @param string $encoding
      * --
@@ -102,9 +107,9 @@ namespace mysli\toolkit\type; class str
 
         if ($r === false)
         {
-            throw new toolkit\exception\argument(
+            throw new exception\str(
                 "Cannot get string length. Probably invalid encoding ".
-                "was set: `{$encoding}`.", 2
+                "is set: `{$encoding}`.", 10
             );
         }
         else
@@ -126,6 +131,12 @@ namespace mysli\toolkit\type; class str
      *     $char  = [' ', '!']
      *     $limit = 2
      *     return   hello  world!!
+     * --
+     * @throws mysli\toolkit\exception\validate
+     *         723 Unexpected type, expected a string.
+     *
+     * @throws mysli\toolkit\exception\validate
+     *         720 Unexpected type, expected an integer.
      * --
      * @param string  $input
      *
@@ -162,6 +173,12 @@ namespace mysli\toolkit\type; class str
 
     /**
      * Generate a random string.
+     * --
+     * @throws mysli\toolkit\exception\validate
+     *         720 Unexpected type, expected an integer.
+     *
+     * @throws mysli\toolkit\exception\validate
+     *         723 Unexpected type, expected a string.
      * --
      * @param integer $length
      * @param string $mask
@@ -262,6 +279,12 @@ namespace mysli\toolkit\type; class str
     /**
      * Slice string (unicode).
      * --
+     * @throws mysli\toolkit\exception\validate
+     *         723 Unexpected type, expected a string.
+     *
+     * @throws mysli\toolkit\exception\validate
+     *         720 Unexpected type, expected an integer.
+     * --
      * @param string  $string
      * @param integer $start
      * @param integer $length
@@ -286,6 +309,15 @@ namespace mysli\toolkit\type; class str
 
     /**
      * Clean string data, to allow very narrow amount of specific characters.
+     * --
+     * @throws mysli\toolkit\exception\str
+     *         10 Invalid $mask parameter.
+     *
+     * @throws mysli\toolkit\exception\validate
+     *         723 Unexpected type, expected a string.
+     *
+     * @throws mysli\toolkit\exception\validate
+     *         724 Unexpected type, expected an integer or a string.
      * --
      * @param string $string
      * @param string $mask   aA1s = small a-z, up A-Z, numeric, spaces.
@@ -325,7 +357,7 @@ namespace mysli\toolkit\type; class str
 
         if (!$filter)
         {
-            throw new toolkit\exception\argument("Invalid \$mask parameter.", 2);
+            throw new exception\str('Invalid $mask parameter.', 10);
         }
 
         $filter = '/([^' . $filter . '])/sm';
@@ -337,6 +369,9 @@ namespace mysli\toolkit\type; class str
     /**
      * Clean string data with the help of regular expression.
      * Remove matches, use ^ to invert, for example: /[^a-z]/i
+     * --
+     * @throws mysli\toolkit\exception\validate
+     *         723 Unexpected type, expected a string.
      * --
      * @param string $string
      * @param string $regex
@@ -352,6 +387,9 @@ namespace mysli\toolkit\type; class str
 
     /**
      * Convert string to a slug "Hello world" => "hello-world".
+     * --
+     * @throws mysli\toolkit\exception\validate
+     *         723 Unexpected type, expected a string.
      * --
      * @param string $string
      * @param array  $delimiter
@@ -405,6 +443,9 @@ namespace mysli\toolkit\type; class str
     /**
      * Get desired number of words, shorten string nicely.
      * --
+     * @throws mysli\toolkit\exception\validate
+     *         720 Unexpected type, expected an integer.
+     * --
      * @param string  $string
      *
      * @param integer $limit
@@ -438,6 +479,9 @@ namespace mysli\toolkit\type; class str
 
     /**
      * Get desired number of characters.
+     * --
+     * @throws mysli\toolkit\exception\validate
+     *         720 Unexpected type, expected an integer.
      * --
      * @param string $string
      *
@@ -492,6 +536,15 @@ namespace mysli\toolkit\type; class str
      * Space as a separator and array() as protected:
      *     ["id='head'", "class='odd new'", "title='it\'s a nice day!'"]
      * --
+     * @throws mysli\toolkit\exception\str
+     *         10 Separator can't be backslash.
+     *
+     * @throws mysli\toolkit\exception\str
+     *         20 `$protected` need to have exactly 2 elements.
+     *
+     * @throws mysli\toolkit\exception\validate
+     *         723 Unexpected type, expected a string.
+     * --
      * @param string $input
      * @param string $separator
      * @param array  $protected
@@ -506,9 +559,7 @@ namespace mysli\toolkit\type; class str
 
         if ($separator === '\\')
         {
-            throw new toolkit\exception\argument(
-                "Separator can't be backslash.", 1
-            );
+            throw new exception\str("Separator can't be backslash.", 10);
         }
 
         // Open and close of protected region
@@ -516,8 +567,8 @@ namespace mysli\toolkit\type; class str
         {
             if (count($protected) !== 2)
             {
-                throw new toolkit\exception\argument(
-                    "\$protected need to have exactly 2 elements.", 2
+                throw new exception\str(
+                    '`$protected` need to have exactly 2 elements.', 20
                 );
             }
             $popen = $protected[0];
@@ -607,6 +658,12 @@ namespace mysli\toolkit\type; class str
     /**
      * Find position of first occurrence of string in a string.
      * --
+     * @throws mysli\toolkit\exception\validate
+     *         723 Unexpected type, expected a string.
+     *
+     * @throws mysli\toolkit\exception\validate
+     *         720 Unexpected type, expected an integer.
+     * --
      * @param string  $string
      * @param string  $find
      * @param integer $offset
@@ -630,6 +687,9 @@ namespace mysli\toolkit\type; class str
 
     /**
      * Convert to camel case.
+     * --
+     * @throws mysli\toolkit\exception\validate
+     *         723 Unexpected type, expected a string.
      * --
      * @param  string  $string
      * @param  boolean $uc_first Upper case first letter also?
@@ -679,6 +739,9 @@ namespace mysli\toolkit\type; class str
     /**
      * Convert camel case to underscores.
      * --
+     * @throws mysli\toolkit\exception\validate
+     *         723 Unexpected type, expected a string.
+     * --
      * @param string $string
      * --
      * @return string
@@ -694,6 +757,9 @@ namespace mysli\toolkit\type; class str
     /**
      * Convert string to lowercase (unicode).
      * --
+     * @throws mysli\toolkit\exception\validate
+     *         723 Unexpected type, expected a string.
+     * --
      * @param string $string
      * --
      * @return string
@@ -707,6 +773,9 @@ namespace mysli\toolkit\type; class str
     /**
      * Convert string to uppercase (unicode).
      * --
+     * @throws mysli\toolkit\exception\validate
+     *         723 Unexpected type, expected a string.
+     * --
      * @param  string $string
      * --
      * @return string
@@ -719,6 +788,12 @@ namespace mysli\toolkit\type; class str
 
     /**
      * Split string to segments (by string).
+     * --
+     * @throws mysli\toolkit\exception\validate
+     *         723 Unexpected type, expected a string.
+     *
+     * @throws mysli\toolkit\exception\validate
+     *         720 Unexpected type, expected an integer.
      * --
      * @param string  $string
      * @param string  $separator

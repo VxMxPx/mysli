@@ -44,7 +44,16 @@
 namespace mysli\toolkit; class config
 {
     const __use = '
-        .{ pkg, json, fs.fs, fs.file, log, type.arr, type.arr_path -> arrp, exception.* }
+        .{
+            pkg,
+            json,
+            fs.fs,
+            fs.file,
+            log,
+            type.arr,
+            type.arr_path -> arrp,
+            exception.config -> exception.config
+        }
     ';
 
     /**
@@ -79,6 +88,9 @@ namespace mysli\toolkit; class config
     /**
      * Instace of config object.
      * --
+     * @throws mysli\toolkit\exception\config
+     *         10 Invalid package name for config.
+     * --
      * @param string $package vendor.package or a namespace.
      */
     function __construct($package)
@@ -88,7 +100,7 @@ namespace mysli\toolkit; class config
         log::debug("Create for package: `{$package}`.", __CLASS__);
 
         if (!$this->package)
-            throw new exception\value("Invalid package name for config.", 1);
+            throw new exception\config("Invalid package name for config.", 10);
 
         $this->filename = fs::cfgpath('pkg', $this->package.'.json');
 
@@ -232,6 +244,8 @@ namespace mysli\toolkit; class config
     /**
      * Get an instance of config or value from it.
      * --
+     * @throws mysli\toolkit\exception\config 10 Invalid package.
+     * --
      * @param string $package Use vendor.package or full namespace.
      * @param mixed  $key
      * @param mixed  $default
@@ -244,7 +258,7 @@ namespace mysli\toolkit; class config
 
         if (!$package)
         {
-            throw new exception\value("Invalid package.", 1);
+            throw new exception\config("Invalid package.", 10);
         }
 
         if (!arr::get(self::$registry, $package))

@@ -2,9 +2,7 @@
 
 namespace mysli\toolkit\type; class arr
 {
-    const __use = '
-        .{ type.str, type.validate, exception.* -> toolkit.exception.* }
-    ';
+    const __use = '.{type.str, type.validate, exception.arr -> exception.arr}';
 
     const pad_left = 0;
     const pad_right = 1;
@@ -15,6 +13,9 @@ namespace mysli\toolkit\type; class arr
     /**
      * Returns an array using the values of array as keys
      * and their frequency in array as values.
+     * --
+     * @throws mysli\toolkit\exception\validate
+     *         724 Unexpected type, expected an integer or a string.
      * --
      * @param  array   $array
      * @param  boolean $case_sensitive
@@ -65,6 +66,8 @@ namespace mysli\toolkit\type; class arr
     /**
      * Remove array element(s), by value and return new array.
      * --
+     * @throws mysli\toolkit\exception\arr 10 Invalid parameters.
+     * --
      * @param array $array
      * @param mixed $value
      *
@@ -85,7 +88,7 @@ namespace mysli\toolkit\type; class arr
         {
             if ($key === null)
             {
-                throw new toolkit\exception\argument("Invalid parameters.", 1);
+                throw new exception\arr("Invalid parameters.", 10);
             }
 
             unset($array[$key]);
@@ -101,6 +104,15 @@ namespace mysli\toolkit\type; class arr
 
     /**
      * Merge one or more arrays.
+     * --
+     * @throws mysli\toolkit\exception\arr
+     *         10 At least 2 parameters are required.
+     *
+     * @throws mysli\toolkit\exception\arr
+     *         20 "Invalid merge type.
+     *
+     * @throws mysli\toolkit\exception\arr
+     *         30 "All parameters except last, needs to be an array.
      * --
      * @param array  $...
      *        at least two arrays to be merged
@@ -119,8 +131,8 @@ namespace mysli\toolkit\type; class arr
 
         if (count($arguments) < 2)
         {
-            throw new toolkit\exception\argument(
-                "At least 2 parameters are required.", 1
+            throw new exception\arr(
+                "At least 2 parameters are required.", 10
             );
         }
 
@@ -130,7 +142,7 @@ namespace mysli\toolkit\type; class arr
 
             if (!in_array($type, [self::merge_associative, self::merge_all]))
             {
-                throw new toolkit\exception\argument("Invalid merge type.", 2);
+                throw new exception\arr("Invalid merge type.", 20);
             }
         }
         else
@@ -142,8 +154,8 @@ namespace mysli\toolkit\type; class arr
         {
             if (!is_array($arg))
             {
-                throw new toolkit\exception\argument(
-                    "All parameters except last, needs to be an array.", 3
+                throw new exception\arr(
+                    "All parameters except last, needs to be an array.", 30
                 );
             }
         }
@@ -203,6 +215,13 @@ namespace mysli\toolkit\type; class arr
     /**
      * Pad array to the specified length with a value.
      * --
+     * @throws mysli\toolkit\exception\arr
+     *         10 Invalid type, required:
+     *         arr::pad_left | arr::pad_right | arr::pad_both.
+     *
+     * @throws mysli\toolkit\exception\validate
+     *         720 Unexpected type, expected an integer.
+     * --
      * @param array   $array
      * @param mixed   $value
      * @param integer $size Negative values are not acceptable.
@@ -238,9 +257,9 @@ namespace mysli\toolkit\type; class arr
                 break;
 
             default:
-                throw new toolkit\exception\argument(
+                throw new exception\arr(
                     "Invalid type: `{$type}`, required: ".
-                    "arr::pad_left | arr::pad_right | arr::pad_both", 2
+                    "arr::pad_left | arr::pad_right | arr::pad_both", 10
                 );
         }
     }
@@ -262,6 +281,9 @@ namespace mysli\toolkit\type; class arr
     /**
      * Check if the required key is exists.
      * This is using array_key_exists so key => null will return true.
+     * --
+     * @throws mysli\toolkit\exception\validate
+     *         724 Unexpected type, expected an integer or a string.
      * --
      * @param array $array
      *
@@ -458,8 +480,8 @@ namespace mysli\toolkit\type; class arr
 
             if ($return === null)
             {
-                throw new toolkit\exception\argument(
-                    "Invalid parameters.", 1
+                throw new exception\arr(
+                    "Invalid parameters.", 10
                 );
             }
 
@@ -503,6 +525,9 @@ namespace mysli\toolkit\type; class arr
      * Insert an item into array at particular position.
      * This will modify original array!
      * --
+     * @throws mysli\toolkit\exception\validate
+     *         720 Unexpected type, expected an integer.
+     * --
      * @param array   $array
      * @param mixed   $value
      * @param integer $position
@@ -537,6 +562,9 @@ namespace mysli\toolkit\type; class arr
     /**
      * Implode array's keys.
      * --
+     * @throws mysli\toolkit\exception\validate
+     *         724 Unexpected type, expected an integer or a string.
+     * --
      * @param array  $array
      * @param string $glue
      * --
@@ -552,6 +580,12 @@ namespace mysli\toolkit\type; class arr
      * Return array as a nicely formatted string. Example:
      * key      : value
      * long_key : value
+     * --
+     * @throws mysli\toolkit\exception\validate
+     *         720 Unexpected type, expected an integer.
+     *
+     * @throws mysli\toolkit\exception\validate
+     *         723 Unexpected type, expected a string.
      * --
      * @param array $array
      *
@@ -649,6 +683,12 @@ namespace mysli\toolkit\type; class arr
      *     - sub-value
      *     - sub-value
      * --
+     * @throws mysli\toolkit\exception\validate
+     *         720 Unexpected type, expected an integer.
+     *
+     * @throws mysli\toolkit\exception\validate
+     *         723 Unexpected type, expected a string.
+     * --
      * @param array $array
      *
      * @param integer $indent
@@ -722,6 +762,9 @@ namespace mysli\toolkit\type; class arr
      * $separator = .
      * return = [12 => 'Inna', '23' => 'Marko']
      * --
+     * @throws mysli\toolkit\exception\validate
+     *         723 Unexpected type, expected a string.
+     * --
      * @param array   $array
      * @param string  $separator
      * @param boolean $skip_missing
@@ -753,6 +796,9 @@ namespace mysli\toolkit\type; class arr
 
     /**
      * Trim values.
+     * --
+     * @throws mysli\toolkit\exception\validate
+     *         723 Unexpected type, expected a string.
      * --
      * @param array  $array
      * @param string $mask

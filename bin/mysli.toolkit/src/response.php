@@ -81,7 +81,12 @@
  */
 namespace mysli\toolkit; class response
 {
-    const __use = '.{request, event, log, exception.*}';
+    const __use = '.{
+        request,
+        event,
+        log,
+        exception.response -> exception.response
+    }';
 
     /*
     Static codes.
@@ -155,6 +160,9 @@ namespace mysli\toolkit; class response
      * Apply headers, no way back at this point!
      * --
      * @event toolkit.response::apply_headers(array $headers)
+     * --
+     * @throws mysli\framework\exception\response
+     *         10 Output was already started.
      */
     static function apply_headers()
     {
@@ -162,7 +170,7 @@ namespace mysli\toolkit; class response
         {
             throw new exception\response(
                 "Output was already started in file: ".
-                "'{$file}', on line: '{$line}'."
+                "'{$file}', on line: '{$line}'.", 10
             );
         }
 
@@ -260,6 +268,8 @@ namespace mysli\toolkit; class response
      * --
      * @param integer $status
      * @param string  $location
+     * --
+     * @throws mysli\toolkit\exception\response 10 Not a valid status.
      */
     static function set_status($status, $location=null)
     {
@@ -267,8 +277,8 @@ namespace mysli\toolkit; class response
 
         if (!isset(self::$statuses[$status]))
         {
-            throw new exception\argument(
-                "Not a valid status: `{$status}`"
+            throw new exception\response(
+                "Not a valid status: `{$status}`", 10
             );
         }
 

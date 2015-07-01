@@ -2,10 +2,7 @@
 
 namespace mysli\toolkit\fs; class file
 {
-    const __use = '
-        .log
-        .exception.*
-    ';
+    const __use = '.{log, exception.file -> exception.file}';
 
     const prepend = 0;
     const append = 1;
@@ -72,6 +69,8 @@ namespace mysli\toolkit\fs; class file
     /**
      * Return file size in bytes. File must exists.
      * --
+     * @throws mysli\toolkit\exception\file 10 File not found.
+     * --
      * @param string $filename
      * --
      * @return integer
@@ -80,8 +79,8 @@ namespace mysli\toolkit\fs; class file
     {
         if (!self::exists($filename))
         {
-            throw new exception\not_found(
-                "File not found: `{$filename}`.", 1
+            throw new exception\file(
+                "File not found: `{$filename}`.", 10
             );
         }
 
@@ -103,6 +102,8 @@ namespace mysli\toolkit\fs; class file
     /**
      * Get file's content if file exists.
      * --
+     * @throws mysli\toolkit\exception\file 10 File not found.
+     * --
      * @param string $filename
      * --
      * @return string
@@ -115,8 +116,8 @@ namespace mysli\toolkit\fs; class file
         }
         else
         {
-            throw new exception\not_found(
-                "File not found: `{$filename}`.", 1
+            throw new exception\file(
+                "File not found: `{$filename}`.", 10
             );
         }
     }
@@ -124,6 +125,9 @@ namespace mysli\toolkit\fs; class file
     /**
      * Create a new file, if doesn't exists already.
      * If it does exists (and $empty = true) it will remove existing content.
+     * --
+     * @throws mysli\toolkit\exception\file
+     *         10 Couldn't remove file's contents.
      * --
      * @param string  $filename
      * @param boolean $empty
@@ -141,8 +145,8 @@ namespace mysli\toolkit\fs; class file
 
             if (file_put_contents($filename, '') === false)
             {
-                throw new exception\fs(
-                    "Couldn't remove file's contents: `{$filename}`.", 1
+                throw new exception\file(
+                    "Couldn't remove file's contents: `{$filename}`.", 10
                 );
             }
         }
@@ -176,6 +180,18 @@ namespace mysli\toolkit\fs; class file
     /**
      * Write a content to the file.
      * --
+     * @throws mysli\toolkit\exception\file
+     *         10 File doesn't exists.
+     *
+     * @throws mysli\toolkit\exception\file
+     *         20 Couldn't open file.
+     *
+     * @throws mysli\toolkit\exception\file
+     *         30 Couldn't lock the file.
+     *
+     * @throws mysli\toolkit\exception\file
+     *         40 Couldn't write content to the file.
+     * --
      * @param  string  $filename Full absolute path.
      * @param  string  $content
      * @param  integer $method   file::append, file::prepend, file::replace
@@ -193,8 +209,8 @@ namespace mysli\toolkit\fs; class file
 
         if (!self::exists($filename))
         {
-            throw new exception\not_found(
-                "File doesn't exists: `{$filename}`.", 1
+            throw new exception\file(
+                "File doesn't exists: `{$filename}`.", 10
             );
         }
 
@@ -209,8 +225,8 @@ namespace mysli\toolkit\fs; class file
 
             if ($handle === false)
             {
-                throw new exception\fs(
-                    "Couldn't open file: `{$filename}`", 1
+                throw new exception\file(
+                    "Couldn't open file: `{$filename}`", 20
                 );
             }
 
@@ -218,8 +234,8 @@ namespace mysli\toolkit\fs; class file
             {
                 if (!flock($handle, LOCK_EX))
                 {
-                    throw new exception\fs(
-                        "Couldn't lock the file: `{$filename}`.", 2
+                    throw new exception\file(
+                        "Couldn't lock the file: `{$filename}`.", 30
                     );
                 }
             }
@@ -269,8 +285,8 @@ namespace mysli\toolkit\fs; class file
 
             if ($r === false)
             {
-                throw new exception\fs(
-                    "Couldn't write content to the file: `{$filename}`.", 3
+                throw new exception\file(
+                    "Couldn't write content to the file: `{$filename}`.", 40
                 );
             }
 
@@ -307,6 +323,12 @@ namespace mysli\toolkit\fs; class file
     /**
      * Copy file from source to destination.
      * --
+     * @throws mysli\toolkit\exception\file
+     *         10 Destination directory not found.
+     *
+     * @throws mysli\toolkit\exception\file
+     *         20 Destination file exists.
+     * --
      * @param mixed   $source      Absolute path.
      * @param string  $destination Absolute path.
      * @param boolean $overwrite   If destination exists, overwrite it.
@@ -323,16 +345,16 @@ namespace mysli\toolkit\fs; class file
         {
             if (!dir::exists(dirname($destination)))
             {
-                throw new exception\not_found(
-                    "Destination directory not found: `{$destination}`."
+                throw new exception\file(
+                    "Destination directory not found: `{$destination}`.", 10
                 );
             }
         }
 
         if (file::exists($destination) && !$overwrite)
         {
-            throw new exception\argument(
-                "Destination file exists: `{$destination}`."
+            throw new exception\file(
+                "Destination file exists: `{$destination}`.", 20
             );
         }
 
@@ -346,6 +368,12 @@ namespace mysli\toolkit\fs; class file
 
     /**
      * Move a file from source to destination.
+     * --
+     * @throws mysli\toolkit\exception\file
+     *         10 Destination directory not found.
+     *
+     * @throws mysli\toolkit\exception\file
+     *         20 Destination file exists.
      * --
      * @param mixed   $source      Absolute path.
      * @param string  $destination Absolute path.
@@ -363,16 +391,16 @@ namespace mysli\toolkit\fs; class file
         {
             if (!dir::exists(dirname($destination)))
             {
-                throw new exception\not_found(
-                    "Destination directory not found: `{$destination}`."
+                throw new exception\file(
+                    "Destination directory not found: `{$destination}`.", 10
                 );
             }
         }
 
         if (file::exists($destination) && !$overwrite)
         {
-            throw new exception\argument(
-                "Destination file exists: `{$destination}`."
+            throw new exception\file(
+                "Destination file exists: `{$destination}`.", 20
             );
         }
 
@@ -386,6 +414,12 @@ namespace mysli\toolkit\fs; class file
 
     /**
      * Rename a file.
+     * --
+     * @throws mysli\toolkit\exception\file
+     *         10 Destination and source directories must be the same.
+     *
+     * @throws mysli\toolkit\exception\file
+     *         20 Destination and source filenames must be different.
      * --
      * @param mixed  $source      Absolute path.
      * @param string $destination Absolute path.
@@ -402,14 +436,14 @@ namespace mysli\toolkit\fs; class file
 
         if (dirname($source) !== dirname($destination))
         {
-            throw new exception\argument(
-                "Destination and source directories must be the same.", 1
+            throw new exception\file(
+                "Destination and source directories must be the same.", 10
             );
         }
 
         if (basename($source) === basename($destination)) {
-            throw new exception\argument(
-                "Destination and source filenames must be different.", 2
+            throw new exception\file(
+                "Destination and source filenames must be different.", 20
             );
         }
 
@@ -423,6 +457,12 @@ namespace mysli\toolkit\fs; class file
 
     /**
      * Find files in particular directory.
+     * --
+     * @throws mysli\toolkit\exception\file
+     *         10 Not a valid directory.
+     *
+     * @throws mysli\toolkit\exception\file
+     *         20 Invalid filter format, expected regular expression.
      * --
      * @param string $directory
      *
@@ -448,8 +488,8 @@ namespace mysli\toolkit\fs; class file
     {
         if (!dir::exists($directory))
         {
-            throw new exception\argument(
-                "Not a valid directory: `{$directory}`.", 1
+            throw new exception\file(
+                "Not a valid directory: `{$directory}`.", 10
             );
         }
 
@@ -458,9 +498,9 @@ namespace mysli\toolkit\fs; class file
 
         if ($filter && substr($filter, 0, 1) !== '/')
         {
-            throw new exception\argument(
+            throw new exception\file(
                 "Invalid filter formar: `{$filter}` ".
-                "expected regular expression.", 1
+                "expected regular expression.", 20
             );
         }
 
@@ -507,6 +547,8 @@ namespace mysli\toolkit\fs; class file
     /**
      * Return a md5 signature of specified file(s).
      * --
+     * @throws mysli\toolkit\exception\file 10 File not found.
+     * --
      * @param  mixed $filename
      *         Filename (full path), or an array, collection of files,
      *         e.g. `['/abs/path/file.1', '/abs/path/file.2']`.
@@ -529,8 +571,8 @@ namespace mysli\toolkit\fs; class file
 
         if (!file_exists($filename))
         {
-            throw new exception\argument(
-                "File not found: `{$filename}`.", 1
+            throw new exception\file(
+                "File not found: `{$filename}`.", 10
             );
         }
 

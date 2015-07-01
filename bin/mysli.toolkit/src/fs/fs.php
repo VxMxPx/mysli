@@ -2,11 +2,7 @@
 
 namespace mysli\toolkit\fs; class fs
 {
-    const __use = '
-        .pkg
-        .log
-        .exception.*
-    ';
+    const __use = '.{pkg, log, exception.fs -> exception.fs}';
 
     const map_continue = '\\/map continue\\/';
 
@@ -153,7 +149,10 @@ namespace mysli\toolkit\fs; class fs
      *     function ($full_absolute_path, $relative_path, $is_directory)
      *         return fs::map_continue - skip to the next file
      *
-     * If used on a directory the whole directory (with all content) will be skipped.
+     * If used on a directory the whole directory
+     * (with all content) will be skipped.
+     * --
+     * @throws mysli\toolkit\exception\fs 10 Not a valid directory.
      * --
      * @param string   $directory
      * @param callable $callback
@@ -167,8 +166,8 @@ namespace mysli\toolkit\fs; class fs
 
         if (!dir::exists($directory))
         {
-            throw new exception\not_found(
-                "Not a valid directory: `{$directory}`.", 1
+            throw new exception\fs(
+                "Not a valid directory: `{$directory}`.", 10
             );
         }
 
@@ -215,6 +214,8 @@ namespace mysli\toolkit\fs; class fs
      * Return list of file(s) and folders in a particular directory.
      * If no filter provided, `.` and `..` will be excluded.
      * --
+     * @throws mysli\toolkit\exception\fs 10 Directory doesn't exists.
+     * --
      * @param string $directory
      * @param string $filter
      *        Normal regular expression filter, matching files will be returned.
@@ -225,7 +226,7 @@ namespace mysli\toolkit\fs; class fs
     {
         if (!dir::exists($directory)) {
             throw new exception\fs(
-                "Directory is required: `{$directory}`, not a valid directory."
+                "Directory doesn't exists: `{$directory}`.", 10
             );
         }
 

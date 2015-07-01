@@ -82,12 +82,18 @@
  */
 namespace mysli\toolkit; class ym
 {
-    const __use = '.{ type.str, fs.file, exception.* }';
+    const __use = '.{
+        type.str,
+        fs.file,
+        exception.ym -> exception.ym
+    }';
 
     /**
      * Decode a particular .ym file and return an array.
      * --
      * @param string $filename
+     * --
+     * @throws mysli\toolkit\exception\ym N MESSAGE
      * --
      * @return array
      */
@@ -97,10 +103,10 @@ namespace mysli\toolkit; class ym
         {
             return self::decode(file::read($filename));
         }
-        catch (exception\parser $e)
+        catch (exception\ym $e)
         {
-            throw new exception\parser(
-                $e->getMessage()."\nFile: {$filename}"
+            throw new exception\ym(
+                $e->getMessage()."\nFile: {$filename}", $e->getCode()
             );
         }
     }
@@ -109,6 +115,8 @@ namespace mysli\toolkit; class ym
      * Decode .ym string and return an array.
      * --
      * @param string $string
+     * --
+     * @throws mysli\toolkit\exception\ym N MESSAGE
      * --
      * @return array
      */
@@ -181,8 +189,9 @@ namespace mysli\toolkit; class ym
             }
             catch (\Exception $e)
             {
-                throw new exception\parser(
-                    $e->getMessage()."\n".err_lines($lines, $lineno)
+                throw new exception\ym(
+                    $e->getMessage()."\n".err_lines($lines, $lineno),
+                    $e->getCode()
                 );
             }
         }
@@ -196,6 +205,8 @@ namespace mysli\toolkit; class ym
      * @param string $filename
      * @param array  $in
      * --
+     * @throws mysli\toolkit\exception\ym N MESSAGE
+     * --
      * @return boolean
      */
     static function encode_file($filename, array $in)
@@ -204,10 +215,11 @@ namespace mysli\toolkit; class ym
         {
             return file::write($filename, self::encode($in));
         }
-        catch (exception\parser $e)
+        catch (exception\ym $e)
         {
-            throw new exception\parser(
-                $e->getMessage()."\nFile: {$filename}"
+            throw new exception\ym(
+                $e->getMessage()."\nFile: {$filename}",
+                $e->getCode()
             );
         }
     }
@@ -287,6 +299,8 @@ namespace mysli\toolkit; class ym
      * @param string  $line
      * @param boolean $li   List item?
      * --
+     * @throws mysli\toolkit\exception\ym 10 Missing colon.
+     * --
      * @return array
      */
     private static function proc_line($line, $li)
@@ -298,7 +312,7 @@ namespace mysli\toolkit; class ym
 
             if (!isset($segments[1]))
             {
-                throw new exception\data("Missing colon (:).", 1);
+                throw new exception\ym("Missing colon (:).", 10);
             }
             else
             {

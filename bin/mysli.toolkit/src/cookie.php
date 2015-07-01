@@ -87,7 +87,14 @@
  */
 namespace mysli\toolkit; class cookie
 {
-    const __use = '.{ type.arr, config, log, cypt, signature, exception.* }';
+    const __use = '.{
+        type.arr,
+        config,
+        log,
+        cypt,
+        signature,
+        exception.cookie -> exception.cookie
+    }';
 
     /**
      * Properties of current cookie instance.
@@ -414,10 +421,11 @@ namespace mysli\toolkit; class cookie
      *        If you provided instance of self as a name,
      *        then expire is not required and but will be set if provided.
      * --
-     * @throws exception\value 1 If encryption is set to true, but there's no
-     *                         encryption key set.
-     * @throws exception\value 2 If signature is set to true, but there's no
-     *                         signature key set.
+     * @throws exception\cookie
+     *         10 If encryption is set to true, but there's no encryption key set.
+     *
+     * @throws exception\cookie
+     *         20 If signature is set to true, but there's no signature key set.
      * --
      * @return boolean
      */
@@ -448,7 +456,7 @@ namespace mysli\toolkit; class cookie
         if ($cookie->get_encrypt())
         {
             if (!$cookie->get_encrypt_key())
-                throw new exception\value(
+                throw new exception\cookie(
                     "Cookie encrypt requires `cookie.encrypt_key` ".
                     "to be set in configuration.", 1
                 );
@@ -464,7 +472,7 @@ namespace mysli\toolkit; class cookie
         if ($cookie->get_signature())
         {
             if (!$cookie->get_signature_key())
-                throw new exception\value(
+                throw new exception\cookie(
                     "Cookie sign requires `cookie.sign_key` ".
                     "to be set in configuration.", 2
                 );
@@ -496,8 +504,11 @@ namespace mysli\toolkit; class cookie
      *        - \mysli\toolkit\cookie an instance of cookie,
      *          with advanced settings, like signature, etc...
      * --
-     * @throws exception\data 1 If signature is required but not present in value.
-     * @throws exception\data 2 If signature is invalid.
+     * @throws exception\cookie
+     *         10 If signature is required but not present in value.
+     *
+     * @throws exception\cookie
+     *         20 If signature is invalid.
      * --
      * @return string
      */
@@ -534,13 +545,13 @@ namespace mysli\toolkit; class cookie
             if ($cookie->get_signature())
             {
                 if (!signature::has($value))
-                    throw new exception\data(
-                        "Expected cookie with a signature, got unsigned.", 1
+                    throw new exception\cookie(
+                        "Expected cookie with a signature, got unsigned.", 10
                     );
 
                 if (!signature::is_valid($value, $cookie->get_signature_key()))
-                    throw new exception\data(
-                        "Cookie's signature is invalid.", 2
+                    throw new exception\cookie(
+                        "Cookie's signature is invalid.", 20
                     );
 
                 $value = signature::strip($value);

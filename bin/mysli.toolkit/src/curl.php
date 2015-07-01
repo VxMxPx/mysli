@@ -63,7 +63,12 @@
  */
 namespace mysli\toolkit; class curl
 {
-    const __use = '.{ fs.fs, fs.dir, config, exception.* }';
+    const __use = '.{
+        fs.fs,
+        fs.dir,
+        config,
+        exception.curl -> exception.curl
+    }';
 
     /**
      * Resource of current instance.
@@ -100,6 +105,8 @@ namespace mysli\toolkit; class curl
     /**
      * Execute a cURL session.
      * --
+     * @throws mysli\toolkit\exception\curl 10 Curl error.
+     * --
      * @return mixed false on failure
      */
     function exec()
@@ -109,7 +116,7 @@ namespace mysli\toolkit; class curl
         if (!$result)
             throw new exception\curl(
                 'Error no.: `' . curl_errno($this->resource) . '`: '.
-                curl_error($this->resource)
+                curl_error($this->resource), 10
             );
 
         log::info("Executed: `".curl_getinfo($this->resource)."`.", __CLASS__);
@@ -142,6 +149,8 @@ namespace mysli\toolkit; class curl
     /**
      * Set option.
      * --
+     * @throws mysli\toolkit\exception\curl 10 Invalud cURL option.
+     * --
      * @param mixed   $opt       string|array
      * @param mixed   $value     If $opt is string, then value for it.
      * @param boolean $overwrite If option is set, should it be overwritten?
@@ -159,7 +168,7 @@ namespace mysli\toolkit; class curl
             $this->options[$k] = $val;
 
             if (!@curl_setopt($this->resource, $k, $val))
-                throw new exception\argument("Invalid cURL option: `{$k}`.");
+                throw new exception\curl("Invalid cURL option: `{$k}`.", 10);
         }
     }
 

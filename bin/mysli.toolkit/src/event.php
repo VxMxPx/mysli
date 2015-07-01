@@ -39,9 +39,12 @@
  */
 namespace mysli\toolkit; class event
 {
-    const __use = '
-        .{ fs.file, json, log, exception.* }
-    ';
+    const __use = '.{
+        fs.file,
+        json,
+        log,
+        exception.event -> exception.event
+    }';
 
     const priority_low = 'low';
     const priority_high = 'high';
@@ -71,14 +74,16 @@ namespace mysli\toolkit; class event
     /**
      * Init class with registry filename.
      * --
+     * @throws mysli\toolkit\exception\event 10 File not found.
+     * --
      * @param string $filename
      */
     static function __init($filename)
     {
         if (!file::exists($filename))
         {
-            throw new exception\not_found(
-                "File not found: `{$filename}`.", 1
+            throw new exception\event(
+                "File not found: `{$filename}`.", 10
             );
         }
 

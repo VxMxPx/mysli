@@ -85,6 +85,20 @@ namespace mysli\toolkit; class autoloader
      *     vendor.package.{class, class_two, class_three -> three}
      * ';
      * --
+     * @throws \Exception
+     *         10 Block already opened.
+     *
+     * @throws \Exception
+     *         20 Block not opened.
+     *
+     * @throws \Exception
+     *         30 Unexpected semicolon (,) at the end of the line, when
+     *         closing block.
+     *
+     * @throws \Exception
+     *         40 Expected semicolon (,) at the end of the line, when
+     *         in block.
+     * --
      * @param string $class Including full namespace.
      * @param string $use
      */
@@ -149,7 +163,7 @@ namespace mysli\toolkit; class autoloader
                 {
                     throw new \Exception(f_error($lines, $lineno,
                         "Block already opened. This looks like a syntax error ".
-                        "in __use statement for: `{$class}`."
+                        "in __use statement for: `{$class}`.", 10
                     ));
                 }
 
@@ -167,7 +181,7 @@ namespace mysli\toolkit; class autoloader
                 {
                     throw new \Exception(f_error($lines, $lineno,
                         "Block not opened. This looks like a syntax error ".
-                        "in __use statement for: `{$class}`."
+                        "in __use statement for: `{$class}`.", 20
                     ));
                 }
 
@@ -176,7 +190,7 @@ namespace mysli\toolkit; class autoloader
                 {
                     throw new \Exception(f_error($lines, $lineno-1,
                         "Unexpected semicolon (,) at the end of the line, when".
-                        "closing block. For: `{$class}`."
+                        "closing block. For: `{$class}`.", 30
                     ));
                 }
 
@@ -196,7 +210,7 @@ namespace mysli\toolkit; class autoloader
                 {
                     throw new \Exception(f_error($lines, $lineno-1,
                         "Expected semicolon (,) at the end of the line, when".
-                        "in block. For: `{$class}`."
+                        "in block. For: `{$class}`.", 40
                     ));
                 }
 
@@ -307,6 +321,9 @@ namespace mysli\toolkit; class autoloader
      * Resolve:
      * mysli\framework\pkgm\pkgm => mysli\framework\cli\pkgm
      * --
+     * @throwa \Exception
+     *         10 Alias is already set, cannot rewrite it.
+     * --
      * @param  string $from
      * @param  string $to
      */
@@ -338,6 +355,9 @@ namespace mysli\toolkit; class autoloader
      * Load particular class file, if file exists.
      * Register __use, if set.
      * Call __init, if available and was not called before.
+     * --
+     * @throws \Exception
+     *         10 File was loaded, but class was not found.
      * --
      * @param  string $class
      * --
@@ -407,7 +427,7 @@ namespace mysli\toolkit; class autoloader
         {
             throw new \Exception(
                 "File was loaded: `{$class_file}`, ".
-                "but class: `{$class}` was not found.", 20
+                "but class: `{$class}` was not found.", 10
             );
         }
 

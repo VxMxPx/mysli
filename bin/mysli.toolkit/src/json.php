@@ -16,7 +16,7 @@
 namespace mysli\toolkit; class json
 {
     const __use = '
-        .{ fs.fs, fs.file, type.arr, exception.* -> toolkit.exception.* }
+        .{ fs.fs, fs.file, type.arr, exception.json -> exception.json }
     ';
 
     private static $json_errors = [
@@ -32,6 +32,8 @@ namespace mysli\toolkit; class json
 
     /**
      * Decode a JSON file, and return it as Array or Object.
+     * --
+     * @throws mysli\toolkit\exception\json 10 File not found.
      * --
      * @param  string  $filename the file with JSON string
      * @param  boolean $assoc    when TRUE, returned object will be
@@ -51,8 +53,8 @@ namespace mysli\toolkit; class json
         }
         else
         {
-            throw new toolkit\exception\not_found(
-                "File not found: `{$filename}`.", 1
+            throw new exception\json(
+                "File not found: `{$filename}`.", 10
             );
         }
     }
@@ -128,6 +130,8 @@ namespace mysli\toolkit; class json
 
     /**
      * Throw data exception if json error is detected.
+     * --
+     * @throws mysli\toolkit\exception\json 10 JSON error.
      */
     private static function exception_on_error()
     {
@@ -148,7 +152,7 @@ namespace mysli\toolkit; class json
                 );
             }
 
-            throw new toolkit\exception\data("JSON error: `{$error}`.");
+            throw new exception\json("JSON error: `{$error}`.", 10);
         }
     }
 }

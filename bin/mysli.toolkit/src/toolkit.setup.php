@@ -115,8 +115,8 @@ namespace mysli\toolkit; class toolkit_setup
     /**
      * Read this package's version, without utilizing `ym` class.
      * --
-     * @throws \Exception 1 Cannot find mysli.pkg.ym file.
-     * @throws \Exception 2 Cannot find version key in mysli.pkg.ym file.
+     * @throws \Exception 10 Cannot find mysli.pkg.ym file.
+     * @throws \Exception 20 Cannot find version key in mysli.pkg.ym file.
      * --
      * @return integer
      */
@@ -136,7 +136,7 @@ namespace mysli\toolkit; class toolkit_setup
 
         if (!$file)
             throw new \Exception(
-                "Couldn't find `mysli.pkg.ym` file to read version.", 1
+                "Couldn't find `mysli.pkg.ym` file to read version.", 10
             );
 
         // Get mysli.pkg contents
@@ -153,7 +153,7 @@ namespace mysli\toolkit; class toolkit_setup
         else
         {
             throw new \Exception(
-                "Couldn't find `version` key in `mysli.pkg.ym`.", 2
+                "Couldn't find `version` key in `mysli.pkg.ym`.", 20
             );
         }
 

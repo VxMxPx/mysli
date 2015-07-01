@@ -2,10 +2,13 @@
 
 namespace mysli\toolkit\type; class validate
 {
-    const __use = '.exception.* -> toolkit.exception.*';
+    const __use = '.exception.validate -> exception.validate';
 
     /**
      * Check weather input is an integer, and if not throw an exception.
+     * --
+     * @throws mysli\toolkit\exception\validate
+     *         720 Unexpected type, expected an integer.
      * --
      * @param mixed   $input
      * @param integer $min optional, minimum integer size.
@@ -16,7 +19,7 @@ namespace mysli\toolkit\type; class validate
     {
         if (!is_integer($input))
         {
-            throw new toolkit\exception\argument(
+            throw new exception\validate(
                 ($message ?: "Unexpected type, expected an integer."), 720
             );
         }
@@ -28,6 +31,12 @@ namespace mysli\toolkit\type; class validate
      * Check weather integer is in particular range,
      * and if not, throw an exception.
      * --
+     * @throws mysli\toolkit\exception\validate
+     *         721 Unexpected value, expected at lest $min.
+     *
+     * @throws mysli\toolkit\exception\validate
+     *         722 Unexpected value, expected not more than $max.
+     * --
      * @param integer $input
      * @param integer $min
      * @param integer $max
@@ -37,7 +46,7 @@ namespace mysli\toolkit\type; class validate
     {
         if ($min !== null && $input < $min)
         {
-            throw new toolkit\exception\argument(
+            throw new exception\validate(
                 ($message ?: "Unexpected value, expected at lest `{$min}`."),
                 721
             );
@@ -45,7 +54,7 @@ namespace mysli\toolkit\type; class validate
 
         if ($max !== null && $input > $max)
         {
-            throw new toolkit\exception\argument(
+            throw new exception\validate(
                 ($message ?: "Unexpected value, expected not more than `{$max}`."),
                 722
             );
@@ -55,13 +64,16 @@ namespace mysli\toolkit\type; class validate
     /**
      * Check weather input is string and if not, throw an exception.
      * --
+     * @throws mysli\toolkit\exception\validate
+     *         723 Unexpected type, expected a string.
+     * --
      * @param mixed  $input
      * @param string $message
      */
     static function need_str($input, $message=null)
     {
         if (!is_string($input) && !is_null($input)) {
-            throw new toolkit\exception\argument(
+            throw new exception\validate(
                 ($message ?:
                     "Unexpected type, expected a string, got: `".
                     gettype($input) . "`."
@@ -74,6 +86,9 @@ namespace mysli\toolkit\type; class validate
     /**
      * Check weather input is string or integer if not, throw an exception.
      * --
+     * @throws mysli\toolkit\exception\validate
+     *         724 Unexpected type, expected an integer or a string.
+     * --
      * @param mixed  $input
      * @param string $message
      */
@@ -81,7 +96,7 @@ namespace mysli\toolkit\type; class validate
     {
         if (!is_integer($input) && !is_string($input))
         {
-            throw new toolkit\exception\argument(
+            throw new exception\validate(
                 ($message ?: "Unexpected type, expected an integer or a string."),
                 724
             );
@@ -91,6 +106,9 @@ namespace mysli\toolkit\type; class validate
     /**
      * Check weather input is callable, if not, throw an exception.
      * --
+     * @throws mysli\toolkit\exception\validate
+     *         725 Unexpected value, needs to be callable!
+     * --
      * @param mixed  $input
      * @param string $message
      */
@@ -98,7 +116,7 @@ namespace mysli\toolkit\type; class validate
     {
         if (!is_callable($input))
         {
-            throw new toolkit\exception\argument(
+            throw new exception\validate(
                 ($message ?: "Unexpected value, needs to be callable!"), 725
             );
         }

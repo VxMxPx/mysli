@@ -35,7 +35,7 @@
  */
 namespace mysli\toolkit; class datetime
 {
-    const __use = '.log, .exception.*';
+    const __use = '.log';
 
     const timestamp = 'U';
     const time      = 'H:i:s';

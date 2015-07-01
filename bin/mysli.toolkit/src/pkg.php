@@ -34,6 +34,9 @@ namespace mysli\toolkit; class pkg
     /**
      * Init pkg
      * --
+     * @throws \Exception 10 Already initialized.
+     * @throws \Exception 20 File not found.
+     * --
      * @param  string registry path
      */
     static function __init($path)
@@ -223,6 +226,8 @@ namespace mysli\toolkit; class pkg
      * @param  integer $version
      * @param  string  $release
      * --
+     * @throws \Exception 10 Package already on the list.
+     * --
      * @return boolean
      */
     static function add($name, $version, $release)
@@ -243,6 +248,8 @@ namespace mysli\toolkit; class pkg
      * --
      * @param  string $name
      * --
+     * @throws \Exception 10 Trying to remove non-existent package.
+     * --
      * @return boolean
      */
     static function remove($name)
@@ -250,7 +257,8 @@ namespace mysli\toolkit; class pkg
         if (!isset(self::$enabled[$name]))
         {
             throw new \Exception(
-                "Trying to remove a non-existant package: `{$name}`");
+                "Trying to remove a non-existant package: `{$name}`", 10
+            );
         }
 
         unset(self::$enabled[$name]);
@@ -305,8 +313,8 @@ namespace mysli\toolkit; class pkg
     /**
      * Find all packages.
      * --
-     * @throws \Exception 1 Package exists in two variations, source and .phar.
-     * @throws \Exception 2 Found directory which is actually not a package.
+     * @throws \Exception 10 Package exists in two variations, source and .phar.
+     * @throws \Exception 20 Found directory which is actually not a package.
      */
     static function reload_all()
     {
@@ -325,7 +333,7 @@ namespace mysli\toolkit; class pkg
             if (in_array($package, self::$all))
                 throw new \Exception(
                     "Package exists: `{$package}` both as `phar` and as `source`, ".
-                    "please remove one of them or system will not boot.", 1
+                    "please remove one of them or system will not boot.", 10
                 );
 
             $type = self::exists_as($package);
@@ -333,7 +341,7 @@ namespace mysli\toolkit; class pkg
             if (!$type)
                 throw new \Exception(
                     "File in `bin/` directory appears not to be ".
-                    "a valid package: `{$package}`, please remove it.", 2
+                    "a valid package: `{$package}`, please remove it.", 20
                 );
 
             self::$all[] = $package;

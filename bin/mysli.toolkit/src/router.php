@@ -7,6 +7,9 @@ namespace mysli\toolkit; class router
 
     /**
      * Resolve routes and trigger an event.
+     * --
+     * @event toolkit.router::resolve.route(string $method, string $route)
+     * @event toolkit.router::resolve.404(string $method, string $route)
      */
     static function resolve()
     {
