@@ -5,6 +5,17 @@ namespace mysli\toolkit\type; class str
     const __use = '.{log, type.validate, type.int, exception.str -> exception.str}';
 
     /**
+     * Set the default encoding, which can be changed later.
+     * This will set encoding to UTF-8.
+     * --
+     * @return boolean
+     */
+    static function __init()
+    {
+        self::encoding('UTF-8');
+    }
+
+    /**
      * Set/Get internal character encoding.
      * --
      * @throws mysli\toolkit\exception\str
