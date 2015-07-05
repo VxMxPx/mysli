@@ -39,8 +39,10 @@ namespace mysli\toolkit; class pkg
      * --
      * @param  string registry path
      */
-    static function __init($path)
+    static function __init($path=null)
     {
+        $path = $path ?: MYSLI_CFGPATH."/toolkit.pkg.list";
+
         if (self::$list_file)
         {
             throw new \Exception("Already initialized.", 10);
@@ -100,21 +102,102 @@ namespace mysli\toolkit; class pkg
      * --
      * @example
      *     [
-     *         'vendor.package.script' => [
-     *             'script'      => 'script',
-     *             'package'     => 'vendor.package',
-     *             'class'       => '\vendor\package\cli\script',
-     *             'path'        => 'vendor/package/src/cli/script.php',
-     *             'description' => 'Package's description.',
-     *         ],
+     *         'script' => 'package.script',
      *         // ...
      *     ]
+     * --
+     * @throws \Exception 10 Package not found.
+     * @throws \Exception 20 Cannot construct package's unique ID.
      * --
      * @return array
      */
     static function list_cli()
     {
+        $cli = [];
+        $enabled = self::list_enabled();
 
+        foreach ($enabled as $package => $version)
+        {
+            if (!($path = self::get_path($package)))
+                throw new \Exception("Package not found: `{$package}`.", 10);
+
+            /*
+            Does this package contain `src/cli` folder
+             */
+            if (file_exists("{$path}src/cli"))
+            {
+                // Get list of scripts
+                $scripts = scandir("{$path}src/cli");
+
+                foreach ($scripts as $script)
+                {
+                    if (substr($script, 0, -4) !== '.php')
+                        continue;
+
+                    // Divide package into segments, this will be used if script
+                    // with a same name is already defined by another package.
+                    $spackage = explode('.', $package);
+
+                    // Script's unique id
+                    $id = $script;
+
+                    // Script full name
+                    $full = "{$package}.{$script}";
+
+                    /*
+                     * If such script name already exist, then package name
+                     * will be pre-pended, if that exists too, vendor will
+                     * be pre-pended, ...
+                     *
+                     * Example:
+                     *   vendor/package/i_am_script => i_am_script
+                     *   another/package/i_am_script => package.i_am_script
+                     *   yet_another/package/i_am_script => yet_another.package.i_am_script
+                     *   4th/package/i_am_script => 4th.package.i_am_script
+                     */
+                    while (isset($cli[$id]))
+                    {
+                        if (empty($spackage))
+                            throw new \Exception(
+                                "Cannot construct package's unique ID, ".
+                                "for: `{$package}`", 20
+                            );
+
+                        $id = array_pop($spackage).'.'.$id;
+                    }
+
+                    // Shortcut
+                    $cli[$id] = $full;
+                }
+            }
+        }
+
+        return $cli;
+    }
+
+    /**
+     * Take package base name, and return full absolute path, taking `phar` into
+     * consideration.
+     * --
+     * @example
+     *
+     *      $pkg = pkg::get_path('mysli.toolkit');
+     *      echo $pkg;
+     *      // Src: /home/path/to/bin/mysli.toolkit/
+     *      // or Phar: phar:///home/path/to/bin/mysli.toolkit.phar/
+     * --
+     * @param  string $package
+     * --
+     * @return string
+     */
+    static function get_path($package)
+    {
+        $source = MYSLI_BINPATH."/{$package}/";
+        $phar   = 'phar://'.MYSLI_BINPATH."/{$package}.phar/";
+
+        if     (file_exists($phar))   return $phar;
+        elseif (file_exists($source)) return $source;
+        else                          return null;
     }
 
     /**
