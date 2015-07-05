@@ -1,6 +1,6 @@
 <?php
 
-namespace mysli\toolkit; class toolkit_setup
+namespace mysli\toolkit; class __setup
 {
     /**
      * When toolkit is enabled, default folders and files needs to be created.
@@ -79,8 +79,7 @@ namespace mysli\toolkit; class toolkit_setup
          */
         $toolkit_load =
             "<?php\n\ndefine(\n    'TOOLKIT_LOAD',\n    ".
-            "'mysli.toolkit:::toolkit.init:::".
-            "mysli\\toolkit\\toolkit_init::__init'\n);";
+            "'mysli.toolkit:::__init:::mysli\\toolkit\\__init::__init'\n);";
 
         if (!file_put_contents("{$cfgpath}/toolkit.php", $toolkit_load))
             throw new \Exception(
@@ -216,9 +215,10 @@ VG9vbGtpdCBgaW5pdGAgZmlsZSBub3QgZm91bmQ6IGB7JHRrX2ZpbGV9YC4iLAogICAgICAgIEVf
 VVNFUl9FUlJPUgogICAgKTsKCmluY2x1ZGUgJHRrX2ZpbGU7CgpsaXN0KCR0a19jbGFzcywgJHRr
 X21ldGhvZCkgPSBleHBsb2RlKCc6OicsICR0a19jYWxsLCAyKTsKCmlmICghY2xhc3NfZXhpc3Rz
 KCR0a19jbGFzcywgZmFsc2UpKQogICAgdHJpZ2dlcl9lcnJvcigiVG9vbGtpdCBjbGFzcyBub3Qg
-Zm91bjogYHskdGtfY2xhc3N9YCIsIEVfVVNFUl9FUlJPUik7CgovLyBSdW4gdG9vbGtpdCwgd2l0
-aCBwYXRocy4KY2FsbF91c2VyX2Z1bmNfYXJyYXkoJHRrX2NhbGwsIFskYXBwcGF0aCwgJGJpbnBh
-dGgsICRwdWJwYXRoXSk7CgovLyBEb25lLgovLyBFT0YK
+Zm91bjogYHskdGtfY2xhc3N9YCIsIEVfVVNFUl9FUlJPUik7CgovLyBfX2luaXQgdG9vbGtpdApj
+YWxsX3VzZXJfZnVuY19hcnJheSgkdGtfY2FsbCwgWyRhcHBwYXRoLCAkYmlucGF0aCwgJHB1YnBh
+dGhdKTsKCi8vIFJ1biB0b29sa2l0IGB3ZWJgCmNhbGxfdXNlcl9mdW5jKCJ7JHRrX2NsYXNzfTo6
+d2ViIik7CgovLyBEb25lLgovLyBFT0YK
 INDEX;
 
 }
