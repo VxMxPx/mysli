@@ -354,7 +354,8 @@ namespace mysli\toolkit; class autoloader
     /**
      * Load particular class file, if file exists.
      * Register __use, if set.
-     * Call __init, if available and was not called before.
+     * Call __init, for package, if available and was not called before.
+     * Call __init, for class, if available.
      * --
      * @throws \Exception
      *         10 File was loaded, but class was not found.
@@ -448,6 +449,12 @@ namespace mysli\toolkit; class autoloader
         self::init($package, $abspath);
 
         /*
+        If class has __init method, then call it, to initialize class.
+         */
+        if (method_exists($class, '__init'))
+            call_user_func([$class, '__init']);
+
+        /*
         Register short version of name this class
          */
         if ($alias)
@@ -470,29 +477,27 @@ namespace mysli\toolkit; class autoloader
      */
     private static function init($package, $path)
     {
+        /*
+        If already initialized, then return.
+         */
         if (in_array($package, self::$initialized))
             return;
 
         log::debug("Initialize: `{$package}`.", __CLASS__);
 
+        /*
+        Add self to the initialized list.
+         */
         self::$initialized[] = $package;
 
+        /*
+        Make class name.
+         */
         $class = '\\'.str_replace('.', '\\', $package).'\\__init';
-        $path = $path.'/__init.php';
 
-        if (!file_exists($path))
-        {
-            return;
-        }
-
-        if (!class_exists($class, false))
-        {
-            include($path);
-        }
-
-        if (class_exists($class, false) && method_exists($class, '__init'))
-        {
-            call_user_func([$class, '__init']);
-        }
+        /*
+        Init class (load file, resolve __use)
+         */
+        self::init_class($class);
     }
 }
