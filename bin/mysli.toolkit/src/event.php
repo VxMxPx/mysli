@@ -74,18 +74,18 @@ namespace mysli\toolkit; class event
     /**
      * Init class with registry filename.
      * --
-     * @throws mysli\toolkit\exception\event 10 File not found.
-     * --
      * @param string $filename
+     * --
+     * @throws mysli\toolkit\exception\event 10 File not found.
      */
-    static function __init($filename)
+    static function __init($filename=null)
     {
+        $filename = $filename ?: MYSLI_CFGPATH."/toolkit.events.json";
+
         if (!file::exists($filename))
-        {
             throw new exception\event(
                 "File not found: `{$filename}`.", 10
             );
-        }
 
         self::$registry = $filename;
         self::read();
