@@ -94,9 +94,10 @@ installed, the directory to which system should be installed.
 $apppath = dirname($binpath);
 
 /*
-dot.loc.php file contains paths, the file is present only if system is installed.
+mysli.loc.php file contains paths,
+the file is present only if system is installed.
  */
-$dotloc = $apppath.'/dot.loc.php';
+$dotloc = $apppath.'/mysli.loc.php';
 
 /*
 If dot file exists, then system is installed, otherwise not, and this can only
@@ -112,7 +113,8 @@ if (!file_exists($dotloc))
     {
         if (substr($script, 0, 1) !== '.')
         {
-            $available[] = substr($script, 0, -4);
+            $script = substr($script, 0, -4);
+            $available[$script] = "dot.{$script}";
         }
     }
 }
@@ -127,25 +129,44 @@ else
     // From those we can load the toolkit and boot the system.
 
     // First check if all paths are defined.
-    if (!defined('MYSLI_DOT_LOC_BINPATH'))
+    if (!defined('MYSLI_LOC_BINPATH'))
         trigger_error(
-            "Binary path not defined! `MYSLI_DOT_LOC_BINPATH`. ".
+            "Binary path not defined! `MYSLI_LOC_BINPATH`. ".
             "Check `dot.loc.php` file.",
             E_USER_ERROR
         );
-    if (!defined('MYSLI_DOT_LOC_PUBPATH'))
+
+    if (!defined('MYSLI_LOC_PUBPATH'))
         trigger_error(
-            "Public path not defined! `MYSLI_DOT_LOC_PUBPATH`. ".
+            "Public path not defined! `MYSLI_LOC_PUBPATH`. ".
             "Check `dot.loc.php` file.",
+            E_USER_ERROR
+        );
+
+    /*
+    Set public path.
+     */
+    $pubpath = realpath($apppath.'/'.MYSLI_LOC_PUBPATH);
+
+    if (!$pubpath)
+        trigger_error(
+            "Public path not found in: `{$apppath}` looking for: `".
+            MYSLI_LOC_PUBPATH."`.",
             E_USER_ERROR
         );
 }
 
+/*
+Arguments and command
+ */
+$args = $_SERVER['argv'];
+$command = isset($args[1]) ? $args[1] : false;
+
+/*
+Special procedure if this is running in safe (non-installed system).
+ */
 if ($safe_mode)
 {
-    $argv = $_SERVER['argv'];
-    $comm = isset($argv[1]) ? $argv[1] : false;
-
     // Before we can proceed, we need to include base cli classes.
     foreach (scandir("{$basepath}/src/") as $cli_class)
     {
@@ -156,37 +177,89 @@ if ($safe_mode)
     }
 
     // If there's no command, or command is -h or --help, display help
-    if (!$comm || $comm === '-h' || $comm === '--help')
+    if (!$command || $command === '-h' || $command === '--help')
     {
-        ui::t(SAFE_MODE_MESSAGES, ['list' => $available]);
+        ui::t(SAFE_MODE_MESSAGES, ['list' => array_keys($available)]);
         exit(0);
     }
 
+    /*
+    Execute command if exists.
+     */
+
     // Check if script exists.
-    if (!in_array($comm, $available))
+    if (!isset($available[$command]))
     {
         ui::warn("Invalid command! Use `-h` to see list available commands");
         exit(1);
     }
 
-    // Execute script.
-    include "{$basepath}/src/cli/{$comm}.php";
+    // Include script
+    include "{$basepath}/src/cli/{$command}.php";
 
     $r = call_user_func(
-        ['dot\cli\\'.$comm, '__run'],
-        $apppath, array_slice($argv, 2)
+        ['dot\\cli\\'.$command, '__run'],
+        $apppath, array_slice($args, 2)
     );
 
-    if ($r)
-    {
-        exit(0);
-    }
-    else
-    {
-        exit(1);
-    }
+    exit($r ? 0 : 1);
 }
 else
 {
     // Toolkit's CLI should handle it!
+
+    /*
+    Load toolkit now.
+     */
+    $toolkit_conf = "{$apppath}/configuration/toolkit.php";
+    if (!file_exists($toolkit_conf))
+        trigger_error(
+            "Toolkit configuration not found in `{apppath}/configuration/toolkit.php`",
+            E_USER_ERROR
+        );
+
+    // Toolkit conf will define TOOLKIT_LOAD, which will hold information on how to
+    // initialize toolkit. This file will also allow toolkit to be replace by any
+    // other vendor.
+    include $toolkit_conf;
+
+    // TOOLKIT_LOAD is written in format:
+    // binary_name:::init_filename_to_load:::namespaced_method_to_call
+    // Example: mysl.toolkit:::toolkit.init:::mysli\toolkit\toolkit_init::__init
+    list($tk_bin, $tk_file, $tk_call) = explode(':::', TOOLKIT_LOAD);
+
+    // Toolkit base directory
+    $tk_dir = "{$binpath}/{$tk_bin}";
+
+    // If it doesn't exists, it might be phar
+    if (!file_exists($tk_dir))
+    {
+        // If not phar, then something went wrong
+        if (!file_exists($tk_dir.'.phar'))
+            trigger_error("Toolkit not found `{$tk_dir}`.", E_USER_ERROR);
+        else
+            $tk_dir = "phar://{$tk_dir}.phar";
+    }
+
+    // Toolkit file, which contains init class.
+    $tk_file = "{$tk_dir}/src/{$tk_file}.php";
+
+    if (!file_exists($tk_file))
+        trigger_error(
+            "Toolkit `init` file not found: `{$tk_file}`.",
+            E_USER_ERROR
+        );
+
+    include $tk_file;
+
+    list($tk_class, $tk_method) = explode('::', $tk_call, 2);
+
+    if (!class_exists($tk_class, false))
+        trigger_error("Toolkit class not foun: `{$tk_class}`", E_USER_ERROR);
+
+    // __init toolkit
+    call_user_func_array($tk_call, [$apppath, $binpath, $pubpath]);
+
+    // Run toolkit `cli`
+    call_user_func("{$tk_class}::cli", array_slice($args, 1));
 }
