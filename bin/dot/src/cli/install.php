@@ -146,8 +146,8 @@ LOC;
 
             // Setup filename, different if phar.
             $toolkit_setup_file = $is_toolkit_phar
-                ? "phar://{$binpath}/{$toolkit}.phar/src/{$tk_name}.setup.php"
-                : "{$binpath}/{$toolkit}/src/{$tk_name}.setup.php";
+                ? "phar://{$binpath}/{$toolkit}.phar/src/__setup.php"
+                : "{$binpath}/{$toolkit}/src/__setup.php";
 
             // Setup file must exists.
             if (!file_exists($toolkit_setup_file))
@@ -163,7 +163,7 @@ LOC;
             include $toolkit_setup_file;
 
             // Construct classname & namespace
-            $tk_class = str_replace('.', '\\', $toolkit.".{$tk_name}_setup");
+            $tk_class = str_replace('.', '\\', $toolkit.".__setup");
 
             if (!class_exists($tk_class, false))
             {
@@ -223,6 +223,18 @@ LOC;
         }
 
         /*
+        Write your own version.
+         */
+        $toolkit_pkg_list = "{$cfgpath}/toolkit.pkg.list";
+        $pkg_list = file_get_contents($toolkit_pkg_list);
+        $pkg_list = 'dot '.self::get_version()."\n";
+
+        if (!file_put_contents($toolkit_pkg_list, $pkg_list))
+            throw new \Exception(
+                "Cannot create `{$toolkit_pkg_list}` file.", 30
+            );
+
+        /*
         Done.
          */
         ui::success('OK', 'Install is now done. System should be usable.');
@@ -252,6 +264,54 @@ LOC;
     /*
     --- Private ----------------------------------------------------------------
      */
+
+    /**
+     * Read this package's version, without utilizing `ym` class.
+     * --
+     * @throws \Exception 10 Cannot find mysli.pkg.ym file.
+     * @throws \Exception 20 Cannot find version key in mysli.pkg.ym file.
+     * --
+     * @return integer
+     */
+    static function get_version()
+    {
+        /*
+        Check if file needs to be loaded from phar.
+         */
+        if (substr(__FILE__, -5) === '.phar')
+        {
+            $file = realpath('phar://'.__FILE__.'/mysli.pkg.ym');
+        }
+        else
+        {
+            $file = dirname(__DIR__).'/mysli.pkg.ym';
+        }
+
+        if (!$file)
+            throw new \Exception(
+                "Couldn't find `mysli.pkg.ym` file to read version.", 10
+            );
+
+        // Get mysli.pkg contents
+        $meta = file_get_contents($file);
+
+        // Find `version: <number>` line in the file.
+        if (preg_match(
+            '/^[ \t]*?version[ \t]*?:[ \t]*?([0-9]+)$/ms',
+            $meta,
+            $matches))
+        {
+            $version = (int) $matches[1];
+        }
+        else
+        {
+            throw new \Exception(
+                "Couldn't find `version` key in `mysli.pkg.ym`.", 20
+            );
+        }
+
+        return $version;
+    }
 
     /**
      * Attempt to create directory if not there already.
