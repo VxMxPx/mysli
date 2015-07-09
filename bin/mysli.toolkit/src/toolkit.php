@@ -20,7 +20,8 @@ namespace mysli\toolkit; class toolkit
         log::info('System is about to shutdown. Bye! :)', __CLASS__);
         event::trigger("toolkit::shutdown", [$code]);
 
-        echo log_to_html( log::get() );
+        if (!is_cli())
+            echo log_to_html( log::get() );
 
         exit($code);
     }
@@ -36,7 +37,9 @@ namespace mysli\toolkit; class toolkit
         log::panic('System will be stopped now. :(', __CLASS__);
         event::trigger("toolkit::panic");
 
-        echo log_to_html( log::get() );
+        if (!is_cli())
+            echo log_to_html( log::get() );
+
         exit(11);
     }
 }
