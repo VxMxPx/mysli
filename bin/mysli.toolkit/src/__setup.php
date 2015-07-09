@@ -66,7 +66,7 @@ namespace mysli\toolkit; class __setup
         /*
         Write toolkit pkg list.
          */
-        $pkg_list = 'mysli.toolkit '.self::get_version();
+        $pkg_list = 'mysli.toolkit '.self::get_version()."\n";
 
         if (!file_put_contents("{$cfgpath}/toolkit.pkg.list", $pkg_list))
             throw new \Exception(
