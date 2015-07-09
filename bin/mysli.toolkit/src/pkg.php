@@ -19,6 +19,7 @@ namespace mysli\toolkit; class pkg
 
     /**
      * Registry. List of currently present packages + current version.
+     * [package => version, ...]
      * --
      * @var array
      */
@@ -26,6 +27,7 @@ namespace mysli\toolkit; class pkg
 
     /**
      * List of all packages currently present in the file-system.
+     * [package, package, ...]
      * --
      * @var array
      */
@@ -116,7 +118,7 @@ namespace mysli\toolkit; class pkg
         $cli = [];
         $enabled = self::list_enabled();
 
-        foreach ($enabled as $package => $version)
+        foreach ($enabled as $package)
         {
             if (!($path = self::get_path($package)))
                 throw new \Exception("Package not found: `{$package}`.", 10);
@@ -131,8 +133,11 @@ namespace mysli\toolkit; class pkg
 
                 foreach ($scripts as $script)
                 {
-                    if (substr($script, 0, -4) !== '.php')
+                    // Remove .php if not there, then just continue.
+                    if (substr($script, -4) !== '.php')
                         continue;
+                    else
+                        $script = substr($script, 0, -4);
 
                     // Divide package into segments, this will be used if script
                     // with a same name is already defined by another package.
