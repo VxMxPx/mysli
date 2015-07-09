@@ -43,6 +43,7 @@ namespace mysli\toolkit; class __init
 
         // Load pkg, basic packages manager
         include __DIR__."/pkg.php";
+        pkg::__init();
         log::debug(
             "Got following packages: ".implode(', ', pkg::list_all()),
             __CLASS__
@@ -110,10 +111,10 @@ namespace mysli\toolkit; class __init
     static function cli(array $arguments=[])
     {
         $help =
-        "<title>Dot Utility for Mysli Platform</title>\n\n".
+        "\n<title>Dot Utility for Mysli Platform</title>\n\n".
         "Usage: dot <command> [options...]\n".
         "You can always use dot <command> -h to get help for a specific command.\n".
-        "List of available commands:\n\n".
+        "List of available commands:\n".
         "<ul>{list}</ul>";
 
         /*
@@ -129,7 +130,7 @@ namespace mysli\toolkit; class __init
         /*
         Get list of available scripts.
          */
-        $scrips = pkg::list_cli();
+        $scripts = pkg::list_cli();
 
         /*
         Get current script from arguments.
@@ -141,7 +142,7 @@ namespace mysli\toolkit; class __init
          */
         if (!$script || $script === '-h' || $script === '--help')
         {
-            dot\ui::t($help, array_keys($scripts));
+            \dot\ui::t($help, ['list' => array_keys($scripts)]);
             toolkit::shutdown();
         }
 
@@ -151,7 +152,9 @@ namespace mysli\toolkit; class __init
             // If it's in array, that means full absolute name was provided.
             if (!in_array($script, $scripts))
             {
-                ui::warn("Invalid command! Use `-h` to see list available commands");
+                \dot\ui::warn(
+                    "Invalid command! Use `-h` to see list available commands"
+                );
                 toolkit::shutdown(1);
             }
         }
@@ -172,7 +175,7 @@ namespace mysli\toolkit; class __init
         }
         catch (\Exception $e)
         {
-            dot\ui::error(
+            \dot\ui::error(
                 "Error when trying to run a script `{$script}`: ".
                 $e->getMessage()
             );
