@@ -8,7 +8,7 @@ namespace mysli\toolkit; class __setup
      * instructions.
      *
      * There's an expectation that following directories already exists:
-     * BINGPATH, APPPATH, PUBPATH, as they were created by installer prior to
+     * BINPATH, APPPATH, PUBPATH, as they were created by installer prior to
      * this.
      * --
      * @param string $apppath Absolute application root path.
@@ -66,7 +66,10 @@ namespace mysli\toolkit; class __setup
         /*
         Write toolkit pkg list.
          */
-        $pkg_list = 'mysli.toolkit '.self::get_version()."\n";
+        // Add self and dot packages to the list as being enabled.
+        $pkg_list =
+            'mysli.toolkit '.self::get_version($binpath, 'mysli.toolkit')."\n".
+            'dot '.self::get_version($binpath, 'dot');
 
         if (!file_put_contents("{$cfgpath}/toolkit.pkg.list", $pkg_list))
             throw new \Exception(
@@ -114,24 +117,28 @@ namespace mysli\toolkit; class __setup
     /**
      * Read this package's version, without utilizing `ym` class.
      * --
-     * @throws \Exception 10 Cannot find mysli.pkg.ym file.
-     * @throws \Exception 20 Cannot find version key in mysli.pkg.ym file.
+     * @param string $binpath Packages root directory.
+     * @param string $package Package of which version should be acquired.
+     * --
+     * @throws \Exception  9 Couldn't find package.
+     * @throws \Exception 10 Couldn't find mysli.pkg.ym file.
+     * @throws \Exception 20 Couldn't find version key in mysli.pkg.ym file.
      * --
      * @return integer
      */
-    static function get_version()
+    static function get_version($binpath, $package)
     {
         /*
         Check if file needs to be loaded from phar.
          */
-        if (substr(__FILE__, -5) === '.phar')
-        {
-            $file = realpath('phar://'.__FILE__.'/mysli.pkg.ym');
-        }
+        if (file_exists("{$binpath}/{$package}.phar"))
+            $file = realpath("phar://{$binpath}/{$package}.phar/mysli.pkg.ym");
+        else if (file_exists("{$binpath}/{$package}"))
+            $file = realpath("{$binpath}/{$package}/mysli.pkg.ym");
         else
-        {
-            $file = dirname(__DIR__).'/mysli.pkg.ym';
-        }
+            throw new \Exception(
+                "Couldn't find package: `{$package}` in `{$binpath}`.", 9
+            );
 
         if (!$file)
             throw new \Exception(

@@ -223,18 +223,6 @@ LOC;
         }
 
         /*
-        Write your own version.
-         */
-        $toolkit_pkg_list = "{$cfgpath}/toolkit.pkg.list";
-        $pkg_list = file_get_contents($toolkit_pkg_list);
-        $pkg_list = 'dot '.self::get_version()."\n";
-
-        if (!file_put_contents($toolkit_pkg_list, $pkg_list))
-            throw new \Exception(
-                "Cannot create `{$toolkit_pkg_list}` file.", 30
-            );
-
-        /*
         Done.
          */
         ui::success('OK', 'Install is now done. System should be usable.');
