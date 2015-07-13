@@ -119,12 +119,16 @@ namespace dot; class ui
          */
         foreach ($variables as $key => $var)
         {
-            if (is_array($var))
-                $var = implode("\n", $var);
+            if (strpos($template, "{{$key}}") !== false)
+            {
+                if (is_array($var))
+                    $var = implode("\n", $var);
 
-            $template = str_replace("{\$key}", $var, $template);
+                $template = str_replace("{{$key}}", $var, $template);
+            }
         }
 
+        self::nl();
         output::line($template);
     }
 
@@ -234,33 +238,76 @@ namespace dot; class ui
      * ```
      * Result:
      * ```
-     *    Name: Zitalik
-     *     Age: 2
-     *    City: Maribor
+     * Name : Zitalik
+     * Age  : 2
+     * City : Maribor
      * ```
      * --
-     * @param array $lines
-     * @param boolean $return weather result should be return rather than output
+     * @param array   $lines
+     * @param boolean $return Result should be return rather than outputed.
+     * @param integer $indent Starting indent.
      * --
      * @return string
      */
-    static function al(array $lines, $return=false)
+    static function al(array $lines, $return=false, $indent=0)
     {
-        $f = "";
-        $longest = 0;
+        $step      = 4;
+        $separator = ' : ';
+        $new_line  = "\n";
+        $valuefy   = false;
 
-        foreach ($lines as $k => $v)
+        $long_key = 0;
+        $out = '';
+
+        // Get the longest key...
+        foreach ($lines as $key => $val)
         {
-            if (mb_strlen($k) > $longest)
-                $longest = mb_strlen($k);
+            if (strlen($key) > $long_key)
+            {
+                $long_key = strlen($key);
+            }
         }
 
-        foreach ($lines as $k => $line)
+        foreach ($lines as $key => $value)
         {
-            $f .= "\n".str_pad(' ', $longest - mb_strlen($k)).$k.": {$line}";
+            $out .= str_repeat(' ', $indent) . $key;
+
+            if (is_array($value))
+            {
+                if (!empty($value))
+                {
+                    $out .= $new_line . self::al($value, true, $indent+$step);
+                }
+                else
+                {
+                    $out .= str_repeat(' ', $long_key - strlen($key)) .
+                        $separator . '[]';
+                }
+            }
+            else
+            {
+                if ($valuefy)
+                {
+                    if (is_bool($value))
+                    {
+                        $value = $value ? 'true' : 'false';
+                    }
+                    elseif (is_string($value))
+                    {
+                        $value = '"'.$value.'"';
+                    }
+                }
+
+                $out .= str_repeat(' ', $long_key - strlen($key)) .
+                    $separator . $value;
+            }
+
+            $out .= $new_line;
         }
 
-        if ($return) return $f; else output::line($f);
+        $out = rtrim($out);
+
+        if ($return) return $out; else output::line($out);
     }
 
     /**
@@ -303,7 +350,7 @@ namespace dot; class ui
      */
     static function info($title, $message=null, $return=false)
     {
-        $f = "\e[34m{$title}\e[39m".($message ? ': '.$message : '');
+        $f = "\e[34m{$title}".($message ? ":\e[39m {$message}" : "\e[39m");
         if ($return) return $f; else output::line($f);
     }
 
@@ -319,7 +366,7 @@ namespace dot; class ui
      */
     static function warn($title, $message=null, $return=false)
     {
-        $f = "\e[33m{$title}\e[39m".($message ? ': '.$message : '');
+        $f = "\e[33m{$title}".($message ? ":\e[39m {$message}" : "\e[39m");
         if ($return) return $f; else output::line($f);
     }
 
@@ -335,7 +382,7 @@ namespace dot; class ui
      */
     static function error($title, $message=null, $return=false)
     {
-        $f = "\e[31m{$title}\e[39m".($message ? ': '.$message : '');
+        $f = "\e[31m{$title}".($message ? ":\e[39m {$message}" : "\e[39m");
         if ($return) return $f; else output::line($f);
     }
 
@@ -351,7 +398,7 @@ namespace dot; class ui
      */
     static function success($title, $message=null, $return=false)
     {
-        $f = "\e[32m{$title}\e[39m".($message ? ': '.$message : '');
+        $f = "\e[32m{$title}".($message ? ":\e[39m {$message}" : "\e[39m");
         if ($return) return $f; else output::line($f);
     }
 }
