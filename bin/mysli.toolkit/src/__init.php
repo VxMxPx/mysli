@@ -164,13 +164,22 @@ namespace mysli\toolkit; class __init
             $script = $scripts[$script];
         }
 
-        // Run script, it should be autoloaded
+        // Resolve script's name
+        $scriptr = $script;
+        $scriptr = substr_replace($scriptr, '.cli', strrpos($scriptr, '.'), 0);
+        $scriptr = str_replace('.', '\\', $scriptr);
+
+        // Check if script has __run method
+        if (!method_exists($scriptr, '__run'))
+        {
+            \dot\ui::error("Script has no __run method: `{$script}`.");
+            toolkit::shutdown(2);
+        }
+
+        // Run script
         try
         {
-            $r = call_user_func(
-                [str_replace('.', '\\', $script), '__run'],
-                array_slice($arguments, 2)
-            );
+            $r = call_user_func([$scriptr, '__run'], $arguments);
             toolkit::shutdown($r ? 0 : 1);
         }
         catch (\Exception $e)
@@ -179,7 +188,7 @@ namespace mysli\toolkit; class __init
                 "Error when trying to run a script `{$script}`: ".
                 $e->getMessage()
             );
-            toolkit::shutdown(2);
+            toolkit::shutdown(3);
         }
     }
 }
