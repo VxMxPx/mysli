@@ -234,7 +234,7 @@ namespace mysli\toolkit; class pkg
         $enabled = self::list_enabled();
         $list = [];
 
-        foreach ($enabled as $spackage => $version)
+        foreach ($enabled as $spackage)
         {
             $meta = self::get_meta($spackage);
 
@@ -667,6 +667,10 @@ namespace mysli\toolkit; class pkg
 
             foreach ($dependees as $dependee)
             {
+                // No need to process PHP Extension.
+                if (substr($dependee, 0, 14) === 'php.extension.')
+                    continue;
+
                 if (!self::disable($dependee, $with_setup, false))
                     throw new exception\pkg(
                         "Failed to disable dependee: ".
@@ -698,7 +702,7 @@ namespace mysli\toolkit; class pkg
     static function run_setup($package, $action)
     {
         $file = self::get_path($package);
-        $file .= '__setup.php';
+        $file .= 'src/__setup.php';
 
         // There's no __setup file,
         // such file is not required hence true will be returned.
@@ -879,7 +883,7 @@ namespace mysli\toolkit; class pkg
         $list = '';
 
         foreach (self::$enabled as $name => $version)
-            $list = "{$name} {$version}\n";
+            $list .= "{$name} {$version}\n";
 
         return !!file_put_contents(self::$list_file, $list);
     }
