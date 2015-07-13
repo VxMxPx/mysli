@@ -214,11 +214,11 @@ namespace mysli\toolkit\fs; class fs
      * Return list of file(s) and folders in a particular directory.
      * If no filter provided, `.` and `..` will be excluded.
      * --
-     * @throws mysli\toolkit\exception\fs 10 Directory doesn't exists.
-     * --
      * @param string $directory
      * @param string $filter
      *        Normal regular expression filter, matching files will be returned.
+     * --
+     * @throws mysli\toolkit\exception\fs 10 Directory doesn't exists.
      * --
      * @return array
      */

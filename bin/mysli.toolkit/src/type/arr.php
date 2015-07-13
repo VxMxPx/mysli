@@ -676,7 +676,7 @@ namespace mysli\toolkit\type; class arr
 
     /**
      * The same as `readable` return an array as a nicely formatted string.
-     * This will ignore keys though, and return onlty list of values.
+     * This will ignore keys though, and return only list of values.
      * Example:
      * - value
      * - value
