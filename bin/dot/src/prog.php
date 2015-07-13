@@ -192,7 +192,7 @@ namespace dot; class prog
         $positional = 1;
 
         // Match parameter name (including parameter with values e.g. --foo=bar)
-        $vp_name = '/^(?:(--[a-z]+[a-z0-9]+)|(-[a-z]))(?:\=(.*?))?$/i';
+        $vp_name = '/^((?:--[a-z]+[a-z0-9]+)|(?:-[a-z]))(?:\=(.*?))?$/i';
 
         /*
         Go through list of arguments.
