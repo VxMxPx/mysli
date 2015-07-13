@@ -1,0 +1,9 @@
+package:     mysli.curl
+version:     1
+description: Mysli cURL Library.
+license:     GPL-3.0
+authors:
+    - Marko Gajšt (Developer) <m@gaj.st>
+require:
+    mysli.toolkit: 1
+    php.extension.curl: ?
