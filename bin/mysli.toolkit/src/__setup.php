@@ -2,6 +2,16 @@
 
 namespace mysli\toolkit; class __setup
 {
+    private static $default_config = [
+        'cookie' => [
+            'prefix'      => '',
+            'encrypt'     => false,
+            'encrypt_key' => null,
+            'sign'        => false,
+            'sign_key'    => null
+        ]
+    ];
+
     /**
      * When toolkit is enabled, default folders and files needs to be created.
      * At this point toolkit is not initialized yet, and will ignore `__use`
@@ -103,6 +113,14 @@ namespace mysli\toolkit; class __setup
         $index = base64_decode(trim(self::index_php));
         if (!file_put_contents("{$pubpath}/index.php", $index))
             throw new \Exception("Cannot create `index.php` file.", 60);
+
+        /*
+        Time to write all default configurations
+         */
+        file_put_contents(
+            "{$cfgpath}/pkg/mysli.toolkit.json",
+            json_encode(self::$default_config)
+        );
 
         /*
         Done.
