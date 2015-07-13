@@ -80,7 +80,7 @@ namespace mysli\toolkit\cli; class pkg
         }
         catch (\Exception $e)
         {
-            ui::error("FAILED", "Failed to enable! Reason:\n".$e->getMessage());
+            ui::error("FAILED", $e->getMessage());
             return false;
         }
 
@@ -103,7 +103,7 @@ namespace mysli\toolkit\cli; class pkg
         }
         catch (\Exception $e)
         {
-            ui::error("FAILED", "Failed to disable! Reason:\n".$e->getMessage());
+            ui::error("FAILED", $e->getMessage());
             return false;
         }
 
