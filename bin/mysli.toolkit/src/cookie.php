@@ -73,7 +73,7 @@
  * **ENCRYPT_KEY**\\
  * A unique encryption key, used if encrypt is set to true.
  *
- *      string mysli.toolkit, cookie.encrypt [null]
+ *      string mysli.toolkit, cookie.encrypt_key [null]
  *
  * **SIGN**\\
  * Weather cookies should be signed.
