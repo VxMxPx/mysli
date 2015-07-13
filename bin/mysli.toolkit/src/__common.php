@@ -88,12 +88,16 @@ function f_error(array $lines, $current, $message, $file=null)
  * --
  * @param array   $lines
  * @param integer $current
+ *        Use negative, to get line from end of the list.
  * @param integer $padding
  * --
  * @return string
  */
-function err_lines($lines, $current, $padding=3)
+function err_lines(array $lines, $current, $padding=3)
 {
+    if ($current < 0)
+        $current = count($lines)+$current;
+
     $start    = $current - $padding;
     $end      = $current + $padding;
     $result   = '';
@@ -103,13 +107,9 @@ function err_lines($lines, $current, $padding=3)
         if (isset($lines[$position]))
         {
             if ($position === $current)
-            {
                 $result .= ">>";
-            }
             else
-            {
                 $result .= "  ";
-            }
 
             $result .= ($position+1).". {$lines[$position]}\n";
         }
