@@ -104,7 +104,10 @@ namespace dot; class ui
 
                 if (method_exists('dot\ui', $tag))
                 {
-                    return call_user_func(['dot\ui', $tag], $text, true);
+                    return trim(
+                        call_user_func(['dot\ui', $tag], $text, true),
+                        "\n"
+                    );
                 }
                 else
                 {
@@ -307,7 +310,7 @@ namespace dot; class ui
 
         $out = rtrim($out);
 
-        if ($return) return $out; else output::line($out);
+        if ($return) return $out; else output::line("\n".$out);
     }
 
     /**

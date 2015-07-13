@@ -88,9 +88,9 @@ LOC;
         }
 
         // Get values now
-        $apppath = $papppath->get_value();
-        $binpath = self::fix_dir($pbinpath->get_value());
-        $pubpath = self::fix_dir($ppubpath->get_value());
+        $apppath   = $papppath->get_value();
+        $r_binpath = self::fix_dir($pbinpath->get_value());
+        $r_pubpath = self::fix_dir($ppubpath->get_value());
 
         /*
         Set base variables.
@@ -106,8 +106,7 @@ LOC;
         if (!@is_writable($apppath))
         {
             ui::error(
-                'FAILED',
-                "Application directory must be writable `{$apppath}`."
+                '!!', "Application directory must be writable `{$apppath}`."
             );
             return false;
         }
@@ -115,10 +114,10 @@ LOC;
         /*
         Resolve and create bin and public paths.
          */
-        if (!($binpath = self::do_dir('binpath', $apppath, $values['binpath'])))
+        if (!($binpath = self::do_dir('binpath', $apppath, $r_binpath)))
             return false;
 
-        if (!($pubpath = self::do_dir('pubpath', $apppath, $values['pubpath'])))
+        if (!($pubpath = self::do_dir('pubpath', $apppath, $r_pubpath)))
             return false;
 
         /*
@@ -133,13 +132,12 @@ LOC;
             if (!file_exists("{$binpath}/{$toolkit}"))
             {
                 ui::error(
-                    'ERROR',
-                    "toolkit ({$toolkit}) not found in: `{$binpath}`."
+                    '!!', "Toolkit ({$toolkit}) not found in: `{$binpath}`."
                 );
                 return false;
             }
         }
-        ui::success('FOUND', "`{$toolkit}`");
+        ui::success('OK', "`{$toolkit}`");
 
         /*
         Run toolkit setup
@@ -159,8 +157,7 @@ LOC;
             if (!file_exists($toolkit_setup_file))
             {
                 ui::error(
-                    "FAILED",
-                    "Toolkit setup file not found: `{$toolkit_setup_file}`."
+                    "!!", "Toolkit setup file not found: `{$toolkit_setup_file}`."
                 );
                 return false;
             }
@@ -174,7 +171,7 @@ LOC;
             if (!class_exists($tk_class, false))
             {
                 ui::error(
-                    'FAILED',
+                    '!!',
                     "Toolkit setup file was loaded, ".
                     "but it doesn't contain class: `{$tk_class}`."
                 );
@@ -185,8 +182,7 @@ LOC;
                 [$tk_class, 'enable'], [$apppath, $binpath, $pubpath]))
             {
                 ui::error(
-                    'FAILED',
-                    "Toolkit setup failed, without explanation."
+                    '!!', "Toolkit setup failed, without explanation."
                 );
                 return false;
             }
@@ -198,8 +194,7 @@ LOC;
         catch (\Exception $e)
         {
             ui::error(
-                "FAILED",
-                "Toolkit setup failed, with message:\n".$e->getMessage()
+                "!!", "Toolkit setup failed, with message:\n".$e->getMessage()
             );
             return false;
         }
@@ -209,15 +204,14 @@ LOC;
          */
         $loc = str_replace(
             ['{{TIMESTAMP}}', '{{BINPATH}}', '{{PUBPATH}}'],
-            [gmdate('c'), $values['binpath'], $values['pubpath']],
+            [gmdate('c'), $r_binpath, $r_pubpath],
             self::$loc_template
         );
 
         if (!file_put_contents("{$apppath}/mysli.loc.php", $loc."\n"))
         {
             ui::error(
-                'FAILED',
-                "Couldn't write `loc` file to: `{$apppath}/mysli.loc.php`."
+                '!!', "Couldn't write `loc` file to: `{$apppath}/mysli.loc.php`."
             );
             return false;
         }
@@ -326,7 +320,7 @@ LOC;
             if (!@is_writable($path[0]))
             {
                 ui::error(
-                    'FAILED',
+                    '!!',
                     "Couldn't create `{$name}`: `{$path[1]}`, ".
                     "the directory is not writable: `{$path[0]}`."
                 );
@@ -336,7 +330,7 @@ LOC;
             if (!preg_match('/^[a-z0-9\/_.\-]+$/i', $path[1]))
             {
                 ui::error(
-                    'FAILED',
+                    '!!',
                     "Couldn't create `{$name}`: `{$path[1]}`, ".
                     "please limit your directory name to: alphanumeric with ".
                     "spaces and `._-` characters."
@@ -348,24 +342,18 @@ LOC;
 
             if (mkdir($path, 0777, true))
             {
-                ui::success(
-                    'OK',
-                    "The `{$name}` was created: `{$path}`"
-                );
+                ui::success('OK', "The `{$name}` was created: `{$path}`");
             }
             else
             {
-                ui::error(
-                    'FAILED',
-                    "Couldn't create `{$name}`: `{$path}`"
-                );
+                ui::error('!!', "Couldn't create `{$name}`: `{$path}`");
                 return null;
             }
         }
         else
         {
             $path = $path[0];
-            ui::info('FOUND', "The `{$name}` exists: `{$path}`");
+            ui::info('OK', "The `{$name}` exists: `{$path}`");
         }
 
         return $path;

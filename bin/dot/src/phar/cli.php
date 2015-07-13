@@ -9,8 +9,8 @@ At least this version is needed to proceed.
  */
 const NEED_VERSION = '5.6.0';
 
-const SAFE_MODE_MESSAGES = "
-<title>Dot Utility for Mysli Platform</title>
+const SAFE_MODE_MESSAGES =
+"<title>Dot Utility for Mysli Platform</title>
 
 If you'd like to mange an installed application, please execute dot from root
 director of that application.
@@ -21,8 +21,7 @@ You can always use dot <command> -h to get help for a specific command.
 
 List of available commands:
 
-<ul>{list}</ul>
-";
+<ul>{list}</ul>";
 
 /*
 Set timezone to UTC temporarily
