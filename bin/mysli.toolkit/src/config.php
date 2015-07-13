@@ -244,11 +244,11 @@ namespace mysli\toolkit; class config
     /**
      * Get an instance of config or value from it.
      * --
-     * @throws mysli\toolkit\exception\config 10 Invalid package.
-     * --
      * @param string $package Use vendor.package or full namespace.
      * @param mixed  $key
      * @param mixed  $default
+     * --
+     * @throws mysli\toolkit\exception\config 10 Invalid package.
      * --
      * @return \mysli\toolkit\config or a mixed value
      */
@@ -276,6 +276,24 @@ namespace mysli\toolkit; class config
         {
             return $config;
         }
+    }
+
+    /**
+     * Get list of all packages that configuration is available for.
+     * --
+     * @return array
+     */
+    static function get_list()
+    {
+        $packages = [];
+
+        foreach (fs::ls(fs::cfgpath('pkg')) as $file)
+        {
+            if (substr($file, -5) === '.json')
+                $packages[] = substr($file, 0, -5);
+        }
+
+        return $packages;
     }
 
     /**
