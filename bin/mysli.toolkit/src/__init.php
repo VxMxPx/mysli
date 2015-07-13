@@ -24,25 +24,33 @@ namespace mysli\toolkit; class __init
         define('MYSLI_CFGPATH', MYSLI_APPPATH.'/configuration');
 
         /*
+        This might be called from PHAR, so adjust root DIR accordingly.
+         */
+        if (substr(__FILE__, -5) === '.phar')
+            define('__RDIR__', realpath('phar://'.__FILE__));
+        else
+            define('__RDIR__', __DIR__);
+
+        /*
         Load common basic functions and classes.
          */
 
         // Toolkit common utilities.
-        include __DIR__."/__common.php";
+        include __RDIR__."/__common.php";
 
         // Core exceptions.
-        foreach (scandir(__DIR__.'/exception') as $exception)
+        foreach (scandir(__RDIR__.'/exception') as $exception)
         {
             if (substr($exception, 0, -4) === '.php')
-                include __DIR__."/exception/{$exception}";
+                include __RDIR__."/exception/{$exception}";
         }
 
         // Toolkit logger
-        include __DIR__."/log.php";
+        include __RDIR__."/log.php";
         log::info('Toolkit init, log loaded!', __CLASS__);
 
         // Load pkg, basic packages manager
-        include __DIR__."/pkg.php";
+        include __RDIR__."/pkg.php";
         pkg::__init();
         log::debug(
             "Got following packages: ".implode(', ', pkg::list_all()),
@@ -50,11 +58,11 @@ namespace mysli\toolkit; class __init
         );
 
         // Load autoloader
-        include __DIR__."/autoloader.php";
+        include __RDIR__."/autoloader.php";
         spl_autoload_register('\mysli\toolkit\autoloader::load', true, true);
 
         // Toolkit core class
-        include __DIR__."/toolkit.php";
+        include __RDIR__."/toolkit.php";
 
         /*
         Trigger main event - system __init
@@ -185,7 +193,7 @@ namespace mysli\toolkit; class __init
         catch (\Exception $e)
         {
             \dot\ui::error(
-                "Error when trying to run a script `{$script}`: ".
+                "Error when trying to run a script `{$script}`!\n".
                 $e->getMessage()
             );
             toolkit::shutdown(3);
