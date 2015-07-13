@@ -3,6 +3,7 @@
 namespace dot\cli;
 
 use dot\ui;
+use dot\prog;
 use dot\param;
 
 /**
@@ -47,44 +48,49 @@ LOC;
      * --
      * @return boolean
      */
-    static function __run($apppath, array $arguments)
+    static function __run(array $arguments)
     {
         /*
         Gather arguments.
          */
-        $params = new param('Mysli Platform Installer', $arguments);
-        $params->command = 'install';
-        $params->description =
+        $prog = new prog(
+            'Mysli Platform Installer',
             "Please execute installer in the root directory of your application. ".
             "The installer will create `bin/` folder (if it doesn't already exists) ".
-            "and acquire Mysli Toolkit automatically.";
-        $params->description_long =
-            "NOTE: paths MUST be relative to the (current) application path.";
+            "and acquire Mysli Toolkit automatically.",
+            'install',
+            'NOTE: paths MUST be relative to the (current) application path.'
+        );
+        $papppath = new param('--apppath');
+        $papppath
+            ->required(true)
+            ->help('Full absolute application path.');
+        $pbinpath = new param('--binpath');
+        $pbinpath
+            ->def('./bin')
+            ->help('Binaries path (where all .phar packages are located).');
+        $ppubpath = new param('--pubpath');
+        $ppubpath
+            ->def('./public')
+            ->help('Publicly accessible directory.');
+        $prog->parameters($papppath, $pbinpath, $ppubpath);
+        $prog->arguments($arguments);
 
-        $params->add('--binpath', [
-            'type' => 'str',
-            'required' => false,
-            'default' => './bin',
-            'help' => 'Binaries path (where all .phar packages are located).',
-            'modify' => 'dot\cli\install::fix_dir'
-        ]);
-        $params->add('--pubpath', [
-            'type' => 'str',
-            'required' => false,
-            'default' => './public',
-            'help' => 'Publicly accessible directory.',
-            'validate' => 'dot\cli\install::fix_dir'
-        ]);
-
-        $params->parse();
-
-        if (!$params->is_valid())
+        if (!$prog->validate())
         {
-            ui::line($params->messages());
+            ui::line($prog->messages());
             return false;
         }
+        else if ($prog->is_help())
+        {
+            ui::line($prog->help());
+            return true;
+        }
 
-        $values = $params->values();
+        // Get values now
+        $apppath = $papppath->get_value();
+        $binpath = self::fix_dir($pbinpath->get_value());
+        $pubpath = self::fix_dir($ppubpath->get_value());
 
         /*
         Set base variables.
@@ -229,6 +235,11 @@ LOC;
         return true;
     }
 
+
+    /*
+    --- Private ----------------------------------------------------------------
+     */
+
     /**
      * Append ./ for relative paths. Used when saving loc file.
      * --
@@ -236,7 +247,7 @@ LOC;
      * --
      * @return string
      */
-    static function fix_dir($value)
+    private static function fix_dir($value)
     {
         if (substr($value, 0, 3) !== '../' && substr($value, 0, 2) !== './' &&
             substr($value, 0, 1) !== '/')
@@ -249,10 +260,6 @@ LOC;
         }
     }
 
-    /*
-    --- Private ----------------------------------------------------------------
-     */
-
     /**
      * Read this package's version, without utilizing `ym` class.
      * --
@@ -261,7 +268,7 @@ LOC;
      * --
      * @return integer
      */
-    static function get_version()
+    private static function get_version()
     {
         /*
         Check if file needs to be loaded from phar.
@@ -310,7 +317,7 @@ LOC;
      * --
      * @return string
      */
-    protected static function do_dir($name, $apppath, $realpath)
+    private static function do_dir($name, $apppath, $realpath)
     {
         $path = self::resolve_relative($apppath, $realpath);
 
@@ -379,7 +386,7 @@ LOC;
      * --
      * @return array [ string $exists, string $create ]
      */
-    protected static function resolve_relative($relative_to, $path)
+    private static function resolve_relative($relative_to, $path)
     {
         // We're dealing with absolute path
         if (substr($path, 1, 1) !== ':' && substr($path, 0, 1) !== '/')

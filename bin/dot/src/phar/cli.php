@@ -197,9 +197,19 @@ if ($safe_mode)
     // Include script
     include "{$basepath}/src/cli/{$command}.php";
 
+    // Prepare arguments
+    $args = array_slice($args, 2);
+
+    // Apppath needs to be set!
+    if (!in_array('--apppath', $args))
+    {
+        array_unshift($args, '--apppath', $apppath);
+    }
+
+    // Execute
     $r = call_user_func(
         ['dot\\cli\\'.$command, '__run'],
-        $apppath, array_slice($args, 2)
+        $args
     );
 
     exit($r ? 0 : 1);
