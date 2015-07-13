@@ -4,13 +4,10 @@
 // ./dot/src/phar/cli.php instead it can be run as for example: ./dot/me install
 namespace dot;
 
+// This **CANNOT** be run from withing PHAR so no need to adjust paths for PHAR.
 $phar_cli = __DIR__.'/src/phar/cli.php';
 
 if (file_exists($phar_cli))
-{
     include $phar_cli;
-}
 else
-{
     trigger_error("Not found: `{$phar_cli}`", E_USER_ERROR);
-}

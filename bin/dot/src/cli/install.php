@@ -268,13 +268,9 @@ LOC;
         Check if file needs to be loaded from phar.
          */
         if (substr(__FILE__, -5) === '.phar')
-        {
             $file = realpath('phar://'.__FILE__.'/mysli.pkg.ym');
-        }
         else
-        {
             $file = dirname(__DIR__).'/mysli.pkg.ym';
-        }
 
         if (!$file)
             throw new \Exception(
