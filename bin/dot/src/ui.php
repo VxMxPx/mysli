@@ -104,10 +104,7 @@ namespace dot; class ui
 
                 if (method_exists('dot\ui', $tag))
                 {
-                    return trim(
-                        call_user_func(['dot\ui', $tag], $text, true),
-                        "\n"
-                    );
+                    return call_user_func(['dot\ui', $tag], $text, true);
                 }
                 else
                 {
