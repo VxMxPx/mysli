@@ -1,32 +1,30 @@
 <?php
 
-namespace mysli\framework\cli\sh;
-
-__use(__namespace__, '
-    ./output,input -> cout,cin
-');
-
-class interactive
+namespace mysli\toolkit\cli; class interactive
 {
-    static function __init()
+    const __use = '
+        dot.{ui, input -> cin}
+    ';
+
+    /**
+     * Run the intective mode.
+     */
+    static function __run()
     {
-        $namespace = 'namespace mysli\framework\cli\sh\interactive\internal;';
+        $namespace = 'namespace mysli\toolkit\cli\interactive\internal;';
         $multiline = false;
         $buffer = [];
 
-        cout::line('Hi! This isan interative console for the Mysli Project.');
+        ui::line('Hi! This is an interative console for the Mysli Project.');
+
         cin::line('>> ',
             function ($stdin) use ($namespace, &$multiline, &$buffer)
             {
                 if ($multiline)
-                {
-                    cout::line('... ', false);
-                }
+                    ui::line('... ', false);
 
                 if (in_array(strtolower($stdin), ['exit', 'q']))
-                {
                     return true;
-                }
 
                 if (in_array($stdin, ['help', 'h', '?']))
                 {
@@ -38,8 +36,8 @@ class interactive
                 {
                     $multiline = true;
                     $buffer = [$namespace];
-                    cout::info('Multiline input set.');
-                    cout::line('... ', false);
+                    ui::info('Multiline input set.');
+                    ui::line('... ', false);
                     return;
                 }
 
@@ -48,12 +46,12 @@ class interactive
                     if ($multiline)
                     {
                         $multiline = false;
-                        cout::line(eval(implode("\n", $buffer)));
+                        ui::line(eval(implode("\n", $buffer)));
                         return;
                     }
                     else
                     {
-                        cout::warn(
+                        ui::warn(
                             "Cannot END, you must START multiline input first."
                         );
                         return;
@@ -64,11 +62,11 @@ class interactive
                 {
                     if (substr($stdin, 0, 1) === '.')
                     {
-                        cout::line(eval(substr($stdin, 1)));
+                        ui::line(eval(substr($stdin, 1)));
                     }
                     else
                     {
-                        cout::line(eval(
+                        ui::line(eval(
                             $namespace."\n".
                             'echo dump_r(' . trim($stdin, ';') . ');'));
                     }
@@ -81,13 +79,20 @@ class interactive
         );
     }
 
-    static function help()
+    /**
+     * Display help message.
+     */
+    private static function help()
     {
-        cout::line('* Mysli CLI Interactive');
-        cout::line('    Normal PHP commands are accepted, example: `$var = \'value\'`.');
-        cout::line('    You don\'t need to enter `echo` and you can omit semicolons.');
-        cout::line('    If you want command not to be echoed automatically, prefix it with dot `.`.');
-        cout::line('    Multiline input is allowed, type: `START` to start it, and `END` to execute lines.');
-        cout::line('    Enter `q` or `exit` to quit.');
+        ui::t(<<<HELP
+<title>Mysli CLI Interactive</title>
+
+Normal PHP commands are accepted, example: `\$var = 'value'`.
+You don't need to enter `echo` and you can omit semicolons.
+If you want command not to be echoed automatically, prefix it with dot `.`.
+Multiline input is allowed, type: `START` to start it, and `END` to execute lines.
+Enter `q` or `exit` to quit.
+HELP
+        );
     }
 }
