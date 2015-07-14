@@ -90,6 +90,7 @@ namespace mysli\toolkit\cli; class config
         $values = [$key => $values];
         ui::nl();
         ui::al($values);
+        ui::nl();
     }
 
     /**
@@ -123,7 +124,7 @@ namespace mysli\toolkit\cli; class config
                 else
                     $value = (int) $value;
             }
-            elseif (in_array(strtolower($value, ['true', 'false'])))
+            elseif (in_array(strtolower($value), ['true', 'false']))
             {
                 $value = strtolower($value) === 'true' ? true : false;
             }
@@ -131,7 +132,6 @@ namespace mysli\toolkit\cli; class config
 
         $c = root\config::select($package);
         $c->set($key, $value);
-        ui::nl();
 
         if ($c->save())
             ui::success('OK', $key.' => '.$original_value);
@@ -147,26 +147,24 @@ namespace mysli\toolkit\cli; class config
      */
     static function get_list($package=null)
     {
+        ui::nl();
         if ($package)
         {
-            ui::nl();
-            ui::line("Available options for `{$package}`:");
+            ui::line("Available options for `{$package}`:\n");
             $options = root\config::select($package)->as_array();
 
             if (empty($options))
             {
-                ui::line('No options available.');
+                ui::line("No options available.");
             }
             else
             {
-                ui::nl();
-                ui::al($options);
+                ui::line(self::format_options($options));
             }
         }
         else
         {
-            ui::nl();
-            ui::line('Available packages:');
+            ui::line("Available packages:\n");
 
             $list = root\config::get_list();
 
@@ -181,9 +179,24 @@ namespace mysli\toolkit\cli; class config
             }
             else
             {
-                ui::nl();
                 ui::line('No configuration available.');
             }
         }
+        ui::nl();
+    }
+
+    /**
+     * Prepare options array to be displayed in CLI.
+     * --
+     * @param  array  $options
+     * --
+     * @return string
+     */
+    private static function format_options(array $options)
+    {
+        $final = [];
+        $lognes = 0;
+
+
     }
 }

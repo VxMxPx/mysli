@@ -123,7 +123,7 @@ namespace mysli\toolkit; class __init
         "Usage: dot <command> [options...]\n".
         "You can always use dot <command> -h to get help for a specific command.\n".
         "List of available commands:\n".
-        "<ul>{list}</ul>";
+        "\n<ul>{list}</ul>\n";
 
         /*
         Define current mode to be `cli`.
