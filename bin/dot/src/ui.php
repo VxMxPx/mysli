@@ -128,7 +128,6 @@ namespace dot; class ui
             }
         }
 
-        self::nl();
         output::line($template);
     }
 
@@ -179,11 +178,11 @@ namespace dot; class ui
         $f = "";
 
         foreach ($lines as $line)
-        {
             $f .= "\n   - {$line}";
-        }
 
-        if ($return) return $f; else output::line($f);
+        $f = trim($f, "\n");
+
+        if ($return) return ltrim($f, "\n"); else output::line($f);
     }
 
     /**
@@ -219,6 +218,8 @@ namespace dot; class ui
             $k = $k + 1;
             $f .= "\n   {$k}. {$line}";
         }
+
+        $f = trim($f, "\n");
 
         if ($return) return $f; else output::line($f);
     }
@@ -307,7 +308,7 @@ namespace dot; class ui
 
         $out = rtrim($out);
 
-        if ($return) return $out; else output::line("\n".$out);
+        if ($return) return $out; else output::line($out);
     }
 
     /**
