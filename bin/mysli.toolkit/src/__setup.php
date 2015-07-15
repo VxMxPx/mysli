@@ -3,6 +3,7 @@
 namespace mysli\toolkit; class __setup
 {
     private static $default_config = [
+        // Cookies default configurations
         'cookie.prefix'      => ['string',  ''],
         'cookie.encrypt'     => ['boolean', false],
         'cookie.encrypt_key' => ['string',  null],
@@ -74,7 +75,7 @@ namespace mysli\toolkit; class __setup
         /*
         Write toolkit pkg list.
          */
-        // Add self and dot packages to the list as being enabled.
+        // Add self and dot packages to the enabled list.
         $pkg_list =
             'mysli.toolkit '.self::get_version($binpath, 'mysli.toolkit')."\n".
             'dot '.self::get_version($binpath, 'dot');
@@ -86,7 +87,7 @@ namespace mysli\toolkit; class __setup
 
         /*
         Write toolkit.php file, containing toolkit's unique ID, for easy and
-        dynamic loading for toolkit from index.
+        dynamic loading of toolkit from index.
          */
         $toolkit_load =
             "<?php\n\ndefine(\n    'TOOLKIT_LOAD',\n    ".
@@ -113,7 +114,7 @@ namespace mysli\toolkit; class __setup
             throw new \Exception("Cannot create `index.php` file.", 60);
 
         /*
-        Time to write all default configurations
+        Write all default configurations
          */
         file_put_contents(
             "{$cfgpath}/pkg/mysli.toolkit.json",
@@ -131,7 +132,7 @@ namespace mysli\toolkit; class __setup
      */
 
     /**
-     * Read this package's version, without utilizing `ym` class.
+     * Read particular package's version, without utilizing `ym` class.
      * --
      * @param string $binpath Packages root directory.
      * @param string $package Package of which version should be acquired.
@@ -183,7 +184,7 @@ namespace mysli\toolkit; class __setup
     }
 
     /**
-     * Index.php contents
+     * Index.php
      */
     const index_php = <<<INDEX
 PD9waHAKCm5hbWVzcGFjZSBteXNsaVx0b29sa2l0XGluZGV4OwoKLyoKQXQgbGVhc3QgdGhpcyB2

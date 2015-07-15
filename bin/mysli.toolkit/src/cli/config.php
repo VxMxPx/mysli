@@ -288,6 +288,6 @@ namespace mysli\toolkit\cli; class config
             }
         }
 
-        return ltrim($output, "\n");
+        return ltrim($output."\n", "\n");
     }
 }

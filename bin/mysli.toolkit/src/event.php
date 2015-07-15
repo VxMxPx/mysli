@@ -1,6 +1,8 @@
 <?php
 
 /**
+ * # Event
+ *
  * Allows you you to handle system events.
  *
  * To wait for an events, use:

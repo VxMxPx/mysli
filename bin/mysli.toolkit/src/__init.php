@@ -1,13 +1,21 @@
 <?php
 
+/**
+ * # Init
+ *
+ * Toolkit initialization class. It will include autoloader and other
+ * core classes that needs to be loaded manually and re necessary for the
+ * Toolkit to function properly.
+ *
+ */
 namespace mysli\toolkit; class __init
 {
     /**
      * Initialize toolkit.
      * --
-     * @param  string $apppath Absolute application root path.
-     * @param  string $binpath Absolute binaries root path.
-     * @param  string $pubpath Absolute public path.
+     * @param string $apppath Absolute application root path.
+     * @param string $binpath Absolute binaries root path.
+     * @param string $pubpath Absolute public path.
      * --
      * @event toolkit::__init ()
      */
@@ -71,7 +79,7 @@ namespace mysli\toolkit; class __init
     }
 
     /**
-     * Run toolkit web mode, call when execute from public index.
+     * Run toolkit web mode, call when executed from public index.
      * --
      * @event toolkit::web ()
      * @event toolkit::web.output ( string $output )
@@ -110,7 +118,7 @@ namespace mysli\toolkit; class __init
     }
 
     /**
-     * Run toolkit cli mode, run when exececuted from command line.
+     * Run toolkit CLI mode, run when executed from the command line.
      * --
      * @param array $arguments
      * --
@@ -146,7 +154,7 @@ namespace mysli\toolkit; class __init
         $script = array_shift($arguments);
 
         /*
-        Check if we have script.
+        Check requested script exists.
          */
         if (!$script || $script === '-h' || $script === '--help')
         {
@@ -154,10 +162,17 @@ namespace mysli\toolkit; class __init
             toolkit::shutdown();
         }
 
-        // Check if script exists.
-        if (!isset($scripts[$script]))
+        // Check weather script exists in its short form.
+        if (isset($scripts[$script]))
+        {
+            // Set full absolute script name
+            $script = $scripts[$script];
+        }
+        else
         {
             // If it's in array, that means full absolute name was provided.
+            // In such case, nothing else needs to be done at this point.
+            // If not however, that means requested script doesn't exists.
             if (!in_array($script, $scripts))
             {
                 \dot\ui::warn(
@@ -165,11 +180,7 @@ namespace mysli\toolkit; class __init
                 );
                 toolkit::shutdown(1);
             }
-        }
-        else
-        {
-            // Set full absolute script name
-            $script = $scripts[$script];
+
         }
 
         // Resolve script's name
@@ -177,7 +188,8 @@ namespace mysli\toolkit; class __init
         $scriptr = substr_replace($scriptr, '.cli', strrpos($scriptr, '.'), 0);
         $scriptr = str_replace('.', '\\', $scriptr);
 
-        // Check if script has __run method
+        // If script's __run method is missing, nothing but error can be done.
+        // All scripts needs __run method as an entry point.
         if (!method_exists($scriptr, '__run'))
         {
             \dot\ui::nl();
@@ -186,12 +198,15 @@ namespace mysli\toolkit; class __init
             toolkit::shutdown(2);
         }
 
-        // Run script
+        // Try to Run script
         try
         {
             \dot\ui::nl();
             $r = call_user_func([$scriptr, '__run'], $arguments);
             \dot\ui::nl();
+            // Grab result and shutdown system with it.
+            // If result was false, that mean there was a problem,
+            // hence exit with `1`
             toolkit::shutdown($r ? 0 : 1);
         }
         catch (\Exception $e)

@@ -3,7 +3,7 @@
 /**
  * # Json
  *
- * A very simple JSON manipulation class, depending on native functions.
+ * A very simple JSON manipulation class, depends on native functions.
  *
  * ## Usage
  *
@@ -33,12 +33,12 @@ namespace mysli\toolkit; class json
     /**
      * Decode a JSON file, and return it as Array or Object.
      * --
-     * @throws mysli\toolkit\exception\json 10 File not found.
-     * --
      * @param  string  $filename the file with JSON string
      * @param  boolean $assoc    when TRUE, returned object will be
      *                           converted into associative array.
      * @param  integet $depth user specified recursion depth.
+     * --
+     * @throws mysli\toolkit\exception\json 10 File not found.
      * --
      * @return mixed
      */

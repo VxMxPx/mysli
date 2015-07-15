@@ -1,7 +1,14 @@
 <?php
 
 /**
- * Determine if this is command line interface.
+ * # Common
+ *
+ * Various commonly used function, to be globally accessible.
+ *
+ */
+
+/**
+ * Determine if script is running in command line.
  * --
  * @return boolean
  */
@@ -11,8 +18,10 @@ function is_cli()
 }
 
 /**
- * Output variable as: <pre>print_r($variable)</pre> (this is only for debuging)
+ * Output a variable as: <pre>print_r($variable)</pre> (this is only for debuging)
  * This will die after dumpign variables on screen.
+ * --
+ * @param mixed $... Variables to dump.
  */
 function dump()
 {
@@ -22,9 +31,11 @@ function dump()
 /**
  * Dump, but don't die - echo results instead.
  * --
+ * @param mixed $... Variables to dump.
+ * --
  * @return null
  */
-function dump_r()
+function dump_e()
 {
     echo call_user_func_array('dump_rr', func_get_args());
 }
@@ -32,9 +43,11 @@ function dump_r()
 /**
  * Dump, but don't die - return results instead.
  * --
+ * @param mixed $... Variables to dump.
+ * --
  * @return string
  */
-function dump_rr()
+function dump_r()
 {
     $arguments = func_get_args();
     $result = '';
@@ -61,7 +74,7 @@ function dump_rr()
 }
 
 /**
- * Format generic exception message when processing multiple lines input.
+ * Format generic exception message when processing multi line input.
  * --
  * @param  array   $lines
  * @param  integer $current
@@ -119,13 +132,13 @@ function err_lines(array $lines, $current, $padding=3)
 }
 
 /**
- * Standard log as html.
+ * Standard log as HTML.
  * --
  * @param array $logs
  * --
  * @return string
  */
-function log_to_html($logs)
+function log_to_html(array $logs)
 {
     $css_output = "width:100%;";
     $css_message = "width:100%; background:#234; color:#eee;";
