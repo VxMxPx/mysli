@@ -180,22 +180,28 @@ namespace mysli\toolkit; class __init
         // Check if script has __run method
         if (!method_exists($scriptr, '__run'))
         {
+            \dot\ui::nl();
             \dot\ui::error("Script has no __run method: `{$script}`.");
+            \dot\ui::nl();
             toolkit::shutdown(2);
         }
 
         // Run script
         try
         {
+            \dot\ui::nl();
             $r = call_user_func([$scriptr, '__run'], $arguments);
+            \dot\ui::nl();
             toolkit::shutdown($r ? 0 : 1);
         }
         catch (\Exception $e)
         {
+            \dot\ui::nl();
             \dot\ui::error(
                 "Error when trying to run a script `{$script}`!\n".
                 $e->getMessage()
             );
+            \dot\ui::nl();
             toolkit::shutdown(3);
         }
     }

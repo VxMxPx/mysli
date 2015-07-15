@@ -7,7 +7,10 @@ namespace mysli\toolkit\type; class arr
     const pad_left = 0;
     const pad_right = 1;
     const pad_both = 2;
+
+    // Merge only associative arrays, otherwise append.
     const merge_associative = 'arr::merge_associative';
+    // Merge non-associative arrays.
     const merge_all = 'arr::merge_all';
 
     /**
@@ -105,6 +108,15 @@ namespace mysli\toolkit\type; class arr
     /**
      * Merge one or more arrays.
      * --
+     * @param array  $...
+     *        At least two arrays to be merged.
+     *
+     * @param string $...
+     *        Optional, used to set merge strategy:
+     *        - [arr::merge_associative] - merge only associative arrays,
+     *                                     otherwise append.
+     *        - arr::merge_all           - merge non-associative arrays too,
+     * --
      * @throws mysli\toolkit\exception\arr
      *         10 At least 2 parameters are required.
      *
@@ -113,15 +125,6 @@ namespace mysli\toolkit\type; class arr
      *
      * @throws mysli\toolkit\exception\arr
      *         30 "All parameters except last, needs to be an array.
-     * --
-     * @param array  $...
-     *        at least two arrays to be merged
-     *
-     * @param string $...
-     *        Optional, used to set merge type:
-     *        - arr::merge_all - merge non-associative arrays too,
-     *        - arr::merge_associative - merge only associative arrays,
-     *        - otherwise append.
      * --
      * @return array
      */
