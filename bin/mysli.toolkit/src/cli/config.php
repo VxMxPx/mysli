@@ -9,7 +9,7 @@ namespace mysli\toolkit\cli; class config
             config -> root\config,
             fs.*
         }
-        dot.{prog,param,ui}
+        dot.{ prog, param, ui, output }
     ';
 
     /**
@@ -104,7 +104,7 @@ namespace mysli\toolkit\cli; class config
             }
             else
             {
-                ui::f(self::format_options($options));
+                output::format(self::format_options($options));
             }
         }
         else
@@ -148,7 +148,7 @@ namespace mysli\toolkit\cli; class config
         }
         else
         {
-            self::format_options([$key => $options[$key]]);
+            output::format(self::format_options([$key => $options[$key]]));
             return true;
         }
     }
@@ -167,7 +167,7 @@ namespace mysli\toolkit\cli; class config
 
         if (!$type)
         {
-            ui::warn("Setting non existant key: `{$key}`.");
+            ui::warn("Key not found: `{$key}`.");
             return false;
         }
 
@@ -176,6 +176,8 @@ namespace mysli\toolkit\cli; class config
         {
             switch ($type) {
                 case 'boolean':
+                    if (!in_array(strtolower($value), ['true', 'false']))
+                        ui::warn("Converting non boolean value: `{$value}` to boolean!");
                     $value = strtolower($value) === 'true';
                     break;
 
@@ -218,7 +220,7 @@ namespace mysli\toolkit\cli; class config
 
         if ($config->save())
         {
-            ui::success("Saved!");
+            output::green("OK: ", false);
             self::get_value($package, $key);
             return true;
         }
@@ -240,13 +242,16 @@ namespace mysli\toolkit\cli; class config
     {
         $output  = "";
         $longest = 0;
-        $longest_type = 7; // Boolean / Numeric
+        $longest_type = 0;
 
         // Find longest key to align values nucely
-        foreach ($options as $key => $_)
+        foreach ($options as $key => list($type, $_))
         {
             if (strlen($key) > $longest)
                 $longest = strlen($key);
+
+            if (strlen($type) > $longest_type)
+                $longest_type = strlen($type);
         }
 
         foreach ($options as $key => list($type, $value))
@@ -262,11 +267,11 @@ namespace mysli\toolkit\cli; class config
 
             switch ($type) {
                 case 'boolean':
-                    $output .= $value ? '<green>True</green>' : '<green>False</green>';
+                    $output .= $value ? '<green>True</green>' : '<red>False</red>';
                     continue;
 
                 case 'string':
-                    $output .= "<blue>{$value}</blue>";
+                    $output .= "<blue>\"{$value}\"</blue>";
                     continue;
 
                 case 'integer':
