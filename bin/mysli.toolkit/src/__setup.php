@@ -3,13 +3,11 @@
 namespace mysli\toolkit; class __setup
 {
     private static $default_config = [
-        'cookie' => [
-            'prefix'      => '',
-            'encrypt'     => false,
-            'encrypt_key' => null,
-            'sign'        => false,
-            'sign_key'    => null
-        ]
+        'cookie.prefix'      => ['string',  ''],
+        'cookie.encrypt'     => ['boolean', false],
+        'cookie.encrypt_key' => ['string',  null],
+        'cookie.sign'        => ['boolean', false],
+        'cookie.sign_key'    => ['string',  null]
     ];
 
     /**
