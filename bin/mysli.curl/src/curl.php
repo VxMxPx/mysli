@@ -47,12 +47,13 @@
  * **USER_AGENT**\\
  * Weather to acquire and use user agent from current user.
  *
- *      boolean mysli.curl, user_agent, [true]
+ *      boolean mysli.curl, agent_fetch, [true]
  *
  * **COSTUME_AGENT**\\
- * A fallaback, if user's agent is not set, or set to false.
+ * A fallaback, if user's agent couldn't be fetched,
+ * or agent_fetch is set to false.
  *
- *      string mysli.curl, costume_agent, [
+ *      string mysli.curl, agent_costume, [
  *          Mozilla/5.0 (X11; Linux x86_64; rv:35.0) Gecko/20100101 Firefox/35.0
  *      ]
  *
@@ -311,10 +312,10 @@ namespace mysli\curl; class curl
     {
         $c = config::select('mysli.curl');
 
-        if (isset($_SERVER['HTTP_USER_AGENT']) && $c->get('user_agent'))
+        if (isset($_SERVER['HTTP_USER_AGENT']) && $c->get('agent_fetch'))
             return $_SERVER['HTTP_USER_AGENT'];
         else
-            return $c->get('costume_agent');
+            return $c->get('agent_costume');
     }
 
     /**

@@ -3,43 +3,54 @@
 /**
  * # Config
  *
- * Use to acces and create configuration for packages.
+ * Used to access and create configuration for packages.
  *
  * ## Usage
  *
- * To create configuration for your package use:
+ * Example, create configuration for a package:
  *
  *      $options = [
- *          'foo' => 'bar',
- *          'countries' => [
- *              'slovenia' => [
- *                  'capital' => 'Ljubljana',
- *                  'language' => 'Slovene'
- *              ]
- *          ]
+ *          'an_example' => ['string', 'example_value']
  *      ];
  *      $config = config::select('vendor.package');
- *      $config->reset($options);
+ *      $config->init($options);
  *      $config->save();
  *
- * To access those configurations:
+ * When initializing new options, as in example above, each value must be
+ * an array, of which first element must be type, and second must be actual value.
+ * When later a value is changed (set) type is not needed, but value needs
+ * to be as it was specified when configuration was initialized.
  *
- *      $config = config::select('vendor.package');
- *      $config->get('foo'); // bar
- *      $config->get('countries.slovenia.capital'); // Ljubljana
+ * Configuration needs to be initialized only once,
+ * usually when package is enabled.
  *
- * You can grab value directly:
+ * Access configuration:
  *
- *      $capital = config::select('vendor.package', 'countries.slovenia.capital');
- *      $language = config::select('vendor.package', 'countries.slovenia.language');
+ *     $config = config::select('vendor.package');
+ *     $config->get('an_example'); // example_value
  *
- *  This will not decrease performance, as objects are constructed only once
- *  per package.
+ * Or statically:
  *
- *  To remove all configurations for a particular package `destroy` method
- *  can be used:
+ *     $example_value = config::select('vendor.package', 'an_example');
  *
- *      config::destroy('vendor.package');
+ * Setting a value:
+ *
+ *     $c = config::select('vendor.package')
+ *     $c->set('example_value', true);
+ *
+ * Adding a new configuration key:
+ *
+ *     $c = config::select('vendor.package')
+ *     $c->add('example_value', 'boolean', true);
+ *
+ * To remove all configurations for a particular package `destroy` method
+ * can be used:
+ *
+ *     config::select('vendor.package')->destroy();
+ *
+ * NOTE: This class is singleton, only one instance is allowed per PACKAGE.
+ * Constructor is hence private, and config::select() must be used,
+ * to get a (new) instance of configuration.
  */
 namespace mysli\toolkit; class config
 {
@@ -51,7 +62,6 @@ namespace mysli\toolkit; class config
             fs.file,
             log,
             type.arr,
-            type.arr_path -> arrp,
             exception.config -> exception.config
         }
     ';
@@ -78,42 +88,47 @@ namespace mysli\toolkit; class config
     private $data  = [];
 
     /**
-     * Cached value, so that array search will be faster when accessing multiple
-     * values by path.
+     * Initialize this configuration. In practice this should be called only
+     * once for each package, --- when package is `enabled`.
+     *
+     * This will empty any data that's currently set, and replace it with new
+     * configuration keys/types/values.
      * --
-     * @var array
+     * @param array $values
+     *        Must be in format: [key => [type, value], key => [type, value]]
+     * --
+     * @throws \mysli\toolkit\exception\config 10 Invalid type/value format.
+     * @throws \mysli\toolkit\exception\config 20 Value is of incorrect type.
      */
-    private $cache = [];
-
-    /**
-     * Instace of config object.
-     * --
-     * @throws mysli\toolkit\exception\config
-     *         10 Invalid package name for config.
-     * --
-     * @param string $package vendor.package or a namespace.
-     */
-    function __construct($package)
+    function init(array $values)
     {
-        $this->package = self::ns_to_pkg($package);
+        $this->data = [];
 
-        log::debug("Create for package: `{$package}`.", __CLASS__);
+        foreach ($values as $key => $opt)
+        {
+            if (!is_array($opt) || count($opt) !== 2)
+                throw new exception\config(
+                    "Invalid type/value format, expected [type, value] ".
+                    "for: `{$key}`.", 10
+                );
 
-        if (!$this->package)
-            throw new exception\config("Invalid package name for config.", 10);
+            list($type, $value) = $opt;
 
-        $this->filename = fs::cfgpath('pkg', $this->package.'.json');
+            if (!$this->validate_type($type, $value))
+                throw new exception\config(
+                    "Value is of incorrect type, expected: `{$type}`, got: `".
+                    gettype($value)."`.", 20
+                );
 
-        // If we have file, then load contents...
-        if (file::exists($this->filename))
-            $this->data = json::decode_file($this->filename, true);
+            $this->data[$key] = [$type, $value];
+        }
     }
 
     /**
      * Get config element, by: sub.key.main
      * --
      * @param mixed $key
-     *        String (sub.key) or array ([sub.key, sub.key2]).
+     *        String (sub.key) or array ([sub.key, sub.another_key]).
      *
      * @param mixed $default
      *        Default value if key not found.
@@ -135,25 +150,35 @@ namespace mysli\toolkit; class config
             return $values;
         }
 
-        if (arr::get($this->cache, $key))
+        if (isset($this->data[$key]))
         {
-            return $this->cache[$key];
+            // 1st element is returned, element 0, is data type.
+            return $this->data[$key][1];
         }
-
-        $value = arrp::get($this->data, $key, $default);
-
-        // We cache only when we assume it's not default value...
-        if ($value !== $default)
+        else
         {
-            $this->cache[$key] = $value;
+            return $default;
         }
+    }
 
-        // Return value in any case...
-        return $value;
+    /**
+     * Get type for particular key.
+     * --
+     * @param  string $key
+     * --
+     * @return string
+     */
+    function get_type($key)
+    {
+        if (isset($this->data[$key]))
+            return $this->data[$key][0];
+        else
+            return null;
     }
 
     /**
      * Return all configurations for current package, as an array.
+     * This will return types too!
      * --
      * @return array
      */
@@ -163,40 +188,68 @@ namespace mysli\toolkit; class config
     }
 
     /**
-     * Set value for key.
+     * Set value for key. Value must be of a specified type!
+     * To keep changes, use $config->save();
      * --
-     * @param string $path sub.key
+     * @param string  $key sub.key
+     * @param mixed   $value
+     * @param boolean $overwrite_array
+     *        When value is an array, weather to overwrite it, or merge it.
+     * --
+     * @throws \mysli\toolkit\exception\config 10 Key doesn't exists.
+     * @throws \mysli\toolkit\exception\config 20 Value is of incorrect type.
+     */
+    function set($key, $value, $overwrite_array=false)
+    {
+        if (!isset($this->data[$key]))
+            throw new exception\config(
+                "Key doesn't exists, please use `add` if you'd like to add ".
+                "a new key. Key: `{$key}`.", 10
+            );
+
+        $type = $this->data[$key][0];
+
+        if (!$this->validate_type($type, $value))
+            throw new exception\config(
+                "Value is of incorrect type, expected: `{$type}`, got: `".
+                gettype($value)."`.", 20
+            );
+
+        if ($type === 'array' && !$overwrite_array)
+        {
+            $value = arr::merge( $this->data[$key][1], $value );
+        }
+
+        $this->data[$key][1] = $value;
+    }
+
+    /**
+     * Define a new config key. If you'd like to just set key, then use `set`.
+     * To keep changes, use $config->save();
+     * --
+     * @param string $key
+     * @param string $type
      * @param mixed  $value
-     */
-    function set($path, $value)
-    {
-        // Clear cache to avoid corrupted data
-        $this->cache = [];
-        return arrp::set($this->data, $path, $value);
-    }
-
-    /**
-     * Reset configuration for package, - erase all current values, and replace
-     * them with those provided to this method.
      * --
-     * @param array $config
+     * @throws \mysli\toolkit\exception\config
+     *         10 A configuration key already exists.
+     *
+     * @throws \mysli\toolkit\exception\config 20 Value is of incorrect type.
      */
-    function reset(array $config)
+    function add($key, $type, $value)
     {
-        $this->cache = [];
-        $this->data = $config;
-    }
+        if (isset($this->data[$key]))
+            throw new exception\config(
+                "A configuration key already exists: `{$key}`.", 10
+            );
 
-    /**
-     * Append configuration, preserve current values (replace only those that
-     * overlaps).
-     * --
-     * @param array $config
-     */
-    function merge(array $config)
-    {
-        $this->cache = [];
-        $this->data = arr::merge($this->data, $config);
+        if (!$this->validate_type($type, $value))
+            throw new exception\config(
+                "Value is of incorrect type, expected: `{$type}`, got: `".
+                gettype($value)."`.", 20
+            );
+
+        $this->data[$key] = [$type, $value];
     }
 
     /**
@@ -216,16 +269,79 @@ namespace mysli\toolkit; class config
      */
     function destroy()
     {
-        $this->cache = $this->data = [];
+        $this->data = [];
         unset(self::$registry[$this->package]);
 
+        return file::exists($this->filename)
+            ? file::remove($this->filename)
+            : true;
+    }
+
+    /*
+    --- Private ----------------------------------------------------------------
+     */
+
+    /**
+     * Instace of config object.
+     * --
+     * @throws mysli\toolkit\exception\config
+     *         10 Invalid package name for config.
+     * --
+     * @param string $package vendor.package or a namespace.
+     */
+    private function __construct($package)
+    {
+        $this->package = self::ns_to_pkg($package);
+
+        log::debug("Create for package: `{$package}`.", __CLASS__);
+
+        if (!$this->package)
+            throw new exception\config("Invalid package name for config.", 10);
+
+        $this->filename = fs::cfgpath('pkg', $this->package.'.json');
+
+        // If we have file, then load contents...
         if (file::exists($this->filename))
-        {
-            return file::remove($this->filename);
-        }
-        else
-        {
+            $this->data = json::decode_file($this->filename, true);
+    }
+
+    /**
+     * Check if value is of required type.
+     * --
+     * @param  string $type
+     * @param  mixed  $value
+     * --
+     * @throws \mysli\toolkit\exception\config 10 Unsupported type.
+     * --
+     * @return boolean
+     */
+    private function validate_type($type, $value)
+    {
+        if (is_null($value))
             return true;
+
+        switch ($type)
+        {
+            case 'boolean':
+                return is_bool($value);
+
+            case 'string':
+                return is_string($value);
+
+            case 'integer':
+                return is_integer($value);
+
+            case 'float':
+                return is_float($value);
+
+            case 'numeric':
+                return is_float($value) || is_integer($value);
+
+            case 'array':
+                return is_array($value);
+
+            default:
+                throw new exception\config("Unsupported type: `{$type}`", 10);
         }
     }
 
@@ -257,25 +373,16 @@ namespace mysli\toolkit; class config
         $package = self::ns_to_pkg($package);
 
         if (!$package)
-        {
             throw new exception\config("Invalid package.", 10);
-        }
 
-        if (!arr::get(self::$registry, $package))
-        {
+        if (!isset(self::$registry[$package]))
             self::$registry[$package] = new self($package);
-        }
 
         $config = self::$registry[$package];
 
-        if ($key)
-        {
-            return $config->get($key, $default);
-        }
-        else
-        {
-            return $config;
-        }
+        return $key
+            ? $config->get($key, $default)
+            : $config;
     }
 
     /**
