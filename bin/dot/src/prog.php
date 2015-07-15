@@ -374,7 +374,7 @@ namespace dot; class prog
                 $dargs_title = ui::title($dargs_title, true);
         }
 
-        return
+        $output =
             ($title ? "\n{$title}\n" : '').
             ($description ? "{$description}\n" : '').
             "\nUsage: ./dot {$command} {$sargs}\n".
@@ -384,6 +384,8 @@ namespace dot; class prog
                 ? "\n".wordwrap($description_long, $terminal_width)."\n"
                 : ''
             );
+
+        return trim($output, "\n");
     }
 
     /**
