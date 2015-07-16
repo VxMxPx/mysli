@@ -19,9 +19,18 @@ namespace mysli\curl; class __setup
                     CURLOPT_MAXREDIRS      => 8
                 ],
             ],
-            'user_agent'      => ['boolean', true],
-            'costume_agent'   => ['string', 'Mozilla/5.0 (X11; Linux x86_64; rv:35.0) Gecko/20100101 Firefox/35.0'],
-            'cookie_filename' => ['string', 'cookies.txt']
+            'user_agent'      => [
+                'boolean',
+                true
+            ],
+            'costume_agent'   => [
+                'string',
+                'Mozilla/5.0 (X11; Linux x86_64; rv:35.0) Gecko/20100101 Firefox/35.0'
+            ],
+            'cookie_filename' => [
+                'string',
+                'cookies.txt'
+            ]
         ]);
 
         return $c->save();
