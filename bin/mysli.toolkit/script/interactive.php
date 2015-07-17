@@ -3,7 +3,7 @@
 namespace mysli\toolkit\root\script; class interactive
 {
     const __use = '
-        .{cli.ui, cli.input -> cin}
+        .cli.{ui, input -> cin}
     ';
 
     /**

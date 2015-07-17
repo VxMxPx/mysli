@@ -3,7 +3,7 @@
 namespace mysli\toolkit\root\script; class pkg
 {
     const __use = '
-        .{ pkg -> lib\pkg, cli.prog, cli.param, cli.ui }
+        .{ pkg -> lib\pkg, cli.prog -> prog, cli.param -> param, cli.ui -> ui }
     ';
 
     /**

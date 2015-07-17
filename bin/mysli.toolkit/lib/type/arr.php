@@ -4,7 +4,7 @@ namespace mysli\toolkit\type; class arr
 {
     const __use = '
         .{
-            type.str -> str,
+            type.str       -> str,
             type.validate -> validate,
             exception.arr
         }
