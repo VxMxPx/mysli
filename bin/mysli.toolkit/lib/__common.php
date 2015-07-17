@@ -25,7 +25,7 @@ function is_cli()
  */
 function dump()
 {
-    die(call_user_func_array('dump_rr', func_get_args()));
+    die(call_user_func_array('dump_r', func_get_args()));
 }
 
 /**
@@ -37,7 +37,7 @@ function dump()
  */
 function dump_e()
 {
-    echo call_user_func_array('dump_rr', func_get_args());
+    echo call_user_func_array('dump_r', func_get_args());
 }
 
 /**
