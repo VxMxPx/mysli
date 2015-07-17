@@ -333,7 +333,7 @@ namespace mysli\toolkit\cli; class param
          */
         foreach ($args as $param)
         {
-            if (!is_object($param) || !is_a($param, '\\dot\\param'))
+            if (!is_object($param) || !is_a($param, '\\mysli\\toolkit\\cli\\param'))
             {
                 throw new \Exception(
                     "All arguments needs to be an instance of `param`, got: `".

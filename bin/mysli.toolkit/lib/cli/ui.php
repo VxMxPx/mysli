@@ -104,9 +104,11 @@ namespace mysli\toolkit\cli; class ui
                     }
                 }
 
-                if (method_exists('dot\ui', $tag))
+                if (method_exists('mysli\\toolkit\\cli\\ui', $tag))
                 {
-                    return call_user_func(['dot\ui', $tag], $text, true);
+                    return call_user_func(
+                        ['mysli\\toolkit\\cli\\ui', $tag], $text, true
+                    );
                 }
                 else
                 {
@@ -184,7 +186,7 @@ namespace mysli\toolkit\cli; class ui
 
         $f = trim($f, "\n");
 
-        if ($return) return ltrim($f, "\n"); else output::line($f);
+        if ($return) return $f; else output::line($f);
     }
 
     /**

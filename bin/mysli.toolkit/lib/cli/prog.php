@@ -1,9 +1,9 @@
 <?php
 
 /**
- * # DOT Prog
+ * # CLI Prog
  *
- * Allows you to create DOT, Command Line Interface program.
+ * Allows you to create Command Line Interface program.
  * This class needs to be used in combination with `param`, to define which
  * parameters are accepted.
  */
@@ -113,9 +113,9 @@ namespace mysli\toolkit\cli; class prog
     /**
      * Add parameter(s) which this program accepts.
      * --
-     * @param \dot\param $... Parameters.
+     * @param \mysli\toolkit\cli\param $... Parameters.
      * --
-     * @throws \Exception 10 Parameter needs to be of a `\\dot\\param` type.
+     * @throws \Exception 10 Parameter needs to be of a `\\mysli\\toolkit\cli\\param` type.
      * @throws \Exception 20 Parameter with such (short) name already exists.
      * @throws \Exception 21 Parameter with such (long) name already exists.
      */
@@ -125,9 +125,9 @@ namespace mysli\toolkit\cli; class prog
 
         foreach ($params as $param)
         {
-            if (!is_object($param) || !is_a($param, '\\dot\\param'))
+            if (!is_object($param) || !is_a($param, '\\mysli\\toolkit\\cli\\param'))
                 throw new \Exception(
-                    "Parameter needs to be of a `\\dot\\param` type, got: `".
+                    "Parameter needs to be of a `\\mysli\\toolkit\\cli\\param` type, got: `".
                     gettype($param)."`.", 10
                 );
             else
@@ -468,7 +468,7 @@ namespace mysli\toolkit\cli; class prog
      *        string:  by name, or if it's --foo then long, -s short
      *        string:  :0, :1 get positional parameter at selected position
      * --
-     * @return \dot\param
+     * @return \mysli\toolkit\cli\param
      */
     function get_parameter($id)
     {
@@ -740,8 +740,8 @@ namespace mysli\toolkit\cli; class prog
     /**
      * Validate prog and print messages to CLI if failed or if help was requested.
      * --
-     * @param \dot\prog $prog
-     * @param array     $arguments
+     * @param \mysli\toolkit\prog $prog
+     * @param array               $arguments
      * --
      * @return boolean
      *         NULL  if successfull (nothing happened).
