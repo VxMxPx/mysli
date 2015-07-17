@@ -400,6 +400,7 @@ LOC;
      * @var string
      */
     private static $help = <<<'HELP'
+
 Mysli Platform Installer
 
 Please execute installer in the root directory of your application.
