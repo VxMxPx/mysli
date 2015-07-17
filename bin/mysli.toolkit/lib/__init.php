@@ -175,9 +175,11 @@ namespace mysli\toolkit; class __init
             // If not however, that means requested script doesn't exists.
             if (!in_array($script, $scripts))
             {
+                cli\ui::nl();
                 cli\ui::warning(
-                    "Invalid command! Use `-h` to see list available commands"
+                    "Invalid command! Use `-h` to see list available commands."
                 );
+                cli\ui::nl();
                 toolkit::shutdown(1);
             }
 
@@ -185,11 +187,21 @@ namespace mysli\toolkit; class __init
 
         // Resolve script's name
         $scriptr = $script;
+
         // Script is called as vendor.package.script, hence, `root.script` part
         // needs to be inserted, so that we get full class name:
         // vendor\package\root\script\script
         $scriptr = substr_replace($scriptr, '.root.script', strrpos($scriptr, '.'), 0);
         $scriptr = str_replace('.', '\\', $scriptr);
+
+        // Try to autoload class...
+        if (!class_exists($scriptr))
+        {
+            cli\ui::nl();
+            cli\ui::error("Couldn't find class for: `{$script}`.");
+            cli\ui::nl();
+            toolkit::shutdown(2);
+        }
 
         // If script's __run method is missing, nothing but error can be done.
         // All scripts needs __run method as an entry point.
