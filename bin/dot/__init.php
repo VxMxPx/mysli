@@ -15,20 +15,22 @@ namespace dot\root\phar; function __init()
      */
     $NEED_VERSION = '5.6.0';
 
+    /*
+    Help message to be displayed in CLI.
+     */
     $SAFE_MODE_MESSAGES = "
-    <title>Dot Utility for Mysli Platform</title>
+Dot Utility for Mysli Platform
 
-    If you'd like to mange an installed application, please execute dot from root
-    director of that application.
+If you'd like to mange an installed application, please execute dot from root
+director of that application.
 
-    Usage: dot <command> [options...]
+Usage: dot <command> [options...]
 
-    You can always use dot <command> -h to get help for a specific command.
+You can always use dot <command> -h to get help for a specific command.
 
-    List of available commands:
+List of available commands:
 
-    <ul>{list}</ul>
-    ";
+    - {list}\n";
 
     /*
     Set timezone to UTC temporarily
@@ -72,7 +74,7 @@ namespace dot\root\phar; function __init()
     else
     {
         $is_phar  = false;
-        $basepath = realpath(dirname($basepath).'/../../');
+        $basepath = realpath(dirname($basepath));
     }
 
     /*
@@ -179,7 +181,8 @@ namespace dot\root\phar; function __init()
             print(
                 str_replace(
                     '{list}',
-                    implde($available, "\n", $SAFE_MODE_MESSAGES)
+                    implode(array_keys($available), "\n    - "),
+                    $SAFE_MODE_MESSAGES
                 )
             );
             exit(0);
@@ -208,10 +211,10 @@ namespace dot\root\phar; function __init()
 
         // Execute
         $r = call_user_func(
-            ['dot\\cli\\'.$command, '__run'],
+            ['dot\\root\\script\\'.$command, '__run'],
             $args
         );
-
+        print("\n");
         exit($r ? 0 : 1);
     }
     else
