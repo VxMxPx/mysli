@@ -320,7 +320,7 @@ namespace mysli\toolkit; class autoloader
             $list = [];
 
             // Remove end }
-            $line = trim($line, '}');
+            $line = trim($line, "} \t");
 
             // Explode by {, getting base and classes
             list($base, $classes) = explode('{', $line, 2);
@@ -333,7 +333,9 @@ namespace mysli\toolkit; class autoloader
             {
                 $list = array_merge(
                     $list,
-                    self::resolve_use_line($base.trim($class), $namespace, $class)
+                    self::resolve_use_line(
+                        $base.trim($class), $namespace, trim($class)
+                    )
                 );
             }
 
@@ -459,10 +461,13 @@ namespace mysli\toolkit; class autoloader
 
         // If first segment is root,
         // that menas we're loading from root, rather than `lib`
-        $in = (substr($relpath, 0, 5) === 'root/') ? '' : 'lib/';
+        if (substr($relpath, 0, 5) === 'root/')
+            $relpath = substr($relpath, 5);
+        else
+            $relpath = "lib/{$relpath}";
 
         // Essamble class filename
-        $class_file = "{$abspath}/{$in}{$relpath}";
+        $class_file = "{$abspath}/{$relpath}";
 
         if (!file_exists($class_file))
         {
