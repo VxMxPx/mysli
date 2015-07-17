@@ -5,13 +5,13 @@ namespace mysli\toolkit\root\script; class config
     const __use = '
         .{
             pkg,
-            type.str,
-            config -> lib\config,
-            fs.*,
-            cli.prog,
-            cli.param,
-            cli.ui,
-            cli.output
+            type.str   -> str,
+            config     -> lib\config,
+            fs.*       -> *,
+            cli.prog   -> prog,
+            cli.param  -> param,
+            cli.ui     -> ui,
+            cli.output -> output
         }
     ';
 
@@ -58,7 +58,7 @@ namespace mysli\toolkit\root\script; class config
 
         if ($package->is_set())
         {
-            if (!root\config::select($package->get_value()))
+            if (!lib\config::select($package->get_value()))
             {
                 ui::error('!!', "Package not found: `{$package}`.");
                 return false;
@@ -99,7 +99,7 @@ namespace mysli\toolkit\root\script; class config
         if ($package)
         {
             ui::line("Available options for `{$package}`:\n");
-            $options = root\config::select($package)->as_array();
+            $options = lib\config::select($package)->as_array();
 
             if (empty($options))
             {
@@ -114,7 +114,7 @@ namespace mysli\toolkit\root\script; class config
         {
             ui::line("Available packages:\n");
 
-            $list = root\config::get_list();
+            $list = lib\config::get_list();
 
             if (!empty($list))
             {
@@ -142,7 +142,7 @@ namespace mysli\toolkit\root\script; class config
      */
     static function get_value($package, $key)
     {
-        $options = root\config::select($package)->as_array();
+        $options = lib\config::select($package)->as_array();
 
         if (!isset($options[$key]))
         {
@@ -165,7 +165,7 @@ namespace mysli\toolkit\root\script; class config
      */
     static function set_value($package, $key, $value)
     {
-        $config = root\config::select($package);
+        $config = lib\config::select($package);
         $type = $config->get_type($key);
 
         if (!$type)
