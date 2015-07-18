@@ -2,7 +2,14 @@
 
 namespace mysli\toolkit\fs; class file
 {
-    const __use = '.{ log, fs.fs -> fs, fs.dir -> dir, exception.file }';
+    const __use = '
+        .{
+            log,
+            fs.fs  -> fs,
+            fs.dir -> dir,
+            exception.file
+        }
+    ';
 
     const prepend = 0;
     const append = 1;
@@ -136,7 +143,7 @@ namespace mysli\toolkit\fs; class file
      */
     static function create($filename, $empty=false)
     {
-        if (file::exists($filename))
+        if (self::exists($filename))
         {
             if (!$empty)
             {
@@ -351,7 +358,7 @@ namespace mysli\toolkit\fs; class file
             }
         }
 
-        if (file::exists($destination) && !$overwrite)
+        if (self::exists($destination) && !$overwrite)
         {
             throw new exception\file(
                 "Destination file exists: `{$destination}`.", 20
@@ -397,7 +404,7 @@ namespace mysli\toolkit\fs; class file
             }
         }
 
-        if (file::exists($destination) && !$overwrite)
+        if (self::exists($destination) && !$overwrite)
         {
             throw new exception\file(
                 "Destination file exists: `{$destination}`.", 20
@@ -458,16 +465,11 @@ namespace mysli\toolkit\fs; class file
     /**
      * Find files in particular directory.
      * --
-     * @throws mysli\toolkit\exception\file
-     *         10 Not a valid directory.
-     *
-     * @throws mysli\toolkit\exception\file
-     *         20 Invalid filter format, expected regular expression.
-     * --
      * @param string $directory
      *
      * @param string $filter
      *        Regular expression filter, e.g. `/.*\.jpg/i`.
+     *        Simple filter is supported. (@see fs::filter_to_regex())
      *
      * @param boolean $deep
      *        Include sub-directories.
@@ -481,6 +483,9 @@ namespace mysli\toolkit\fs; class file
      *        pass a value, to set how much of the file path should be removed,
      *        default is `strlen($directory)`.
      * --
+     * @throws mysli\toolkit\exception\file
+     *         10 Not a valid directory.
+     * --
      * @return array
      */
     static function find(
@@ -493,32 +498,33 @@ namespace mysli\toolkit\fs; class file
             );
         }
 
+        // Grab files in the selected directory...
         $collection = array_diff(scandir($directory), ['.','..']);
         $matched    = [];
 
+        // No files were found at all
+        if (empty($collection))
+            return [];
+
+        // Convert simple filter to the regular expression
         if ($filter && substr($filter, 0, 1) !== '/')
         {
-            throw new exception\file(
-                "Invalid filter formar: `{$filter}` ".
-                "expected regular expression.", 20
-            );
+            $filter = fs::filter_to_regex($filter);
         }
 
-        if (empty($collection))
-        {
-            return [];
-        }
-
+        // If there's no $rootlen, it will be acquired from the directory.
+        // This is used latter in recursion.
         $rootlen = $rootlen ?: strlen($directory)+1;
 
+        /*
+        Start looking for files.
+         */
         foreach ($collection as $file)
         {
             if (dir::exists(fs::ds($directory, $file)))
             {
                 if (!$deep)
-                {
                     continue;
-                }
 
                 $matched_sub = self::find(
                     fs::ds($directory, $file), $filter, $deep, $mrel, $rootlen
@@ -547,11 +553,11 @@ namespace mysli\toolkit\fs; class file
     /**
      * Return a md5 signature of specified file(s).
      * --
-     * @throws mysli\toolkit\exception\file 10 File not found.
-     * --
      * @param  mixed $filename
      *         Filename (full path), or an array, collection of files,
      *         e.g. `['/abs/path/file.1', '/abs/path/file.2']`.
+     * --
+     * @throws mysli\toolkit\exception\file 10 File not found.
      * --
      * @return mixed string | array, depends on the input.
      */
@@ -577,5 +583,154 @@ namespace mysli\toolkit\fs; class file
         }
 
         return md5_file($filename);
+    }
+
+
+    /**
+     * Observe files in particular directory for changes,
+     * and call $callback when changes are detected.
+     *
+     * ## Callback
+     *
+     * Callback will receive the list of changed files in format:
+     *
+     *     $changes = [
+     *         '/full/absolute/path' => ['action' => added']
+     *     ];
+     *
+     * Possible changes are: `added|removed|modified|renamed|moved`
+     * In case of `renamed` and `moved` additional details will be set, either:
+     * `from => file` or `to => file`.
+     *
+     * Please note, this list does NOT contain directories.
+     *
+     * ## Filter
+     *
+     * Filter can be in a regular expression format, and will be matched against
+     * exact filename. Use `/regex/m` and specify exact filter which filename
+     * must match.
+     *
+     * Simple filter is also supported. (@see fs::filter_to_regex())
+     *
+     * ## Return
+     *
+     * This function will run until something else than `null` is returned.
+     * --
+     * @example
+     *
+     *     dir::observe('/home/user', function ($changes)
+     *     {
+     *         echo "A file was changed.";
+     *     }, '*.sh', 1);
+     *
+     * --
+     * @param string   $directory The directory observe.
+     * @param callable $callback  Function to be called when changes occurs.
+     * @param string   $filter    Observe only particular files.
+     * @param boolean  $deep      Observe sub-directories.
+     * @param integer  $interval  Run every N seconds.
+     * --
+     * @throws mysli\toolkit\fs\file 10 Directory doesn't exists.
+     * --
+     * @return mixed
+     *         Whatever callback returned.
+     */
+    static function observe(
+        $directory, $callback, $filter=null, $deep=true, $interval=3)
+    {
+        if (!dir::exists($directory))
+            throw new exception\file(
+                "Directory doesn't exists: `{$directory}`.", 10
+            );
+
+        // Initialize a null variables of signatures....
+        $sig_new = null;
+        $sig_old = null;
+
+        // Go for it...
+        do
+        {
+            // Reset changes...
+            $changes = [];
+
+            // Grab modification time of files...
+            $sig_new = [];
+            $files   = self::find($directory, $filter, $deep);
+
+            clearstatcache();
+            foreach ($files as $file)
+                $sig_new[$file] = filemtime($file);
+
+            // If this is not first run...
+            if ($sig_old !== null && $sig_new !== $sig_old)
+            {
+                foreach ($sig_new as $file => $signature)
+                {
+                    if (!isset($sig_old[$file]))
+                    {
+                        $changes[$file] = ['action' => 'added'];
+                    }
+                    elseif ($signature !== $sig_old[$file])
+                    {
+                        $changes[$file] = ['action' => 'modified'];
+                    }
+                    // Nothing else to do here...
+                }
+
+                // Any file removed?
+                foreach ($sig_old as $file => $_)
+                {
+                    if (!isset($sig_new[$file]))
+                    {
+                        $changes[$file] = ['action' => 'removed'];
+                    }
+                }
+
+                // Renamed...?
+                foreach ($changes as $file => $opt)
+                {
+                    if ($opt['action'] === 'added')
+                    {
+                        $sig_add = $sig_new[$file];
+
+                        // Such thing was removed?
+                        if (($file_old = array_search($sig_add, $sig_old)))
+                        {
+                            if (isset($changes[$file_old]) &&
+                                $changes[$file_old]['action'] === 'removed')
+                            {
+                                // Renamed or moved?
+                                if ((dirname($file) !== dirname($file_old)) &&
+                                    (basename($file) === basename($file_old)))
+                                    $action = 'moved';
+                                else
+                                    $action = 'renamed';
+
+                                $changes[$file] = [
+                                    'action' => $action,
+                                    'from'   => $file_old
+                                ];
+                                $changes[$file_old] = [
+                                    'action' => $action,
+                                    'to'     => $file
+                                ];
+                            }
+                        }
+                    }
+                }
+
+                // Break the loop and return if callback returned
+                // anything else than `null`.
+                if (null !== ($r = call_user_func($callback, $changes)))
+                    return $r;
+            }
+
+            // Set new to old,...
+            $sig_old = $sig_new;
+
+            // Take a nap...
+            sleep($interval);
+
+        } while (true);
     }
 }
