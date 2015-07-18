@@ -9,7 +9,7 @@ namespace mysli\toolkit\root\script; class interactive
     /**
      * Run the intective mode.
      */
-    static function __run()
+    static function __run($args)
     {
         $namespace = 'namespace mysli\toolkit\cli\interactive\internal;';
         $multiline = false;
@@ -17,6 +17,18 @@ namespace mysli\toolkit\root\script; class interactive
 
         ui::line('Hi! This is an interative console for the Mysli Project.');
 
+        // See if there's code to be executed...
+        $exec = array_search('--exec', $args);
+        if (isset($args[$exec+1]))
+        {
+            $execute = $args[$exec+1];
+            ui::line('Execute: '.$execute);
+            ui::line(eval(
+                $namespace."\n".
+                'echo dump_r(' . trim($execute, ';') . ');'));
+        }
+
+        // Now wait for the user input
         cin::line('>> ',
             function ($stdin) use ($namespace, &$multiline, &$buffer)
             {
@@ -92,6 +104,8 @@ You don't need to enter `echo` and you can omit semicolons.
 If you want command not to be echoed automatically, prefix it with dot `.`.
 Multiline input is allowed, type: `START` to start it, and `END` to execute lines.
 Enter `q` or `exit` to quit.
+
+Use --exec CODE to execute code on start.
 HELP
         );
     }
