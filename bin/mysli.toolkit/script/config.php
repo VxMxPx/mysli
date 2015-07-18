@@ -19,13 +19,15 @@ namespace mysli\toolkit\root\script; class config
      * Configuration command line utility.
      * --
      * @param array $args
+     * --
+     * @return boolean
      */
     static function __run(array $args)
     {
         /*
         Set params.
          */
-        $prog = new prog('Mysli Config', '', 'config');
+        $prog = new prog('Mysli Config', '', 'mysli.toolkit.config');
         $prog
         ->create_parameter('PACKAGE', [
             'help' => 'Package which will be affected. '.
