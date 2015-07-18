@@ -6,7 +6,7 @@ namespace mysli\toolkit\fs; class fs
         .{
             pkg,
             fs.file -> file,
-            fs.dir -> dir,
+            fs.dir  -> dir,
             log,
             exception.fs
         }
@@ -160,11 +160,11 @@ namespace mysli\toolkit\fs; class fs
      * If used on a directory the whole directory
      * (with all content) will be skipped.
      * --
-     * @throws mysli\toolkit\exception\fs 10 Not a valid directory.
-     * --
      * @param string   $directory
      * @param callable $callback
      * @param integer  $rcut
+     * --
+     * @throws mysli\toolkit\exception\fs 10 Not a valid directory.
      * --
      * @return array
      */
@@ -259,6 +259,81 @@ namespace mysli\toolkit\fs; class fs
 
             return $collection;
         }
+    }
+
+    /**
+     * Convert simple filter to regular expression.
+     * For example:
+     *
+     *     *.jpg|*.gif
+     *
+     * The above example will match all files ending with `.jpg` and `.gif`.
+     *
+     *     !*.png
+     *
+     * Match any file but `.png`.
+     *
+     *     report_*.md
+     *
+     * Match any file which starts with `report_` and ends with `.md`.
+     *
+     * Following special characters are allowed:
+     *
+     *     * - match all until
+     *     | - or
+     *     ! - not (always at the beginning!)
+     *
+     * Filter is constructed in a following way:
+     *
+     * *.jpg        => /^(.*?\.jpg)$/i
+     * *.jpg|*.gif  => /^(.*?\.jpg)|(.*?\.gif)$/i
+     * !*.png       => /(?!^.*?\.png$)(^.*?$)/i
+     * !*.png|*.jpg => /(?!^.*?\.png$)(?!^.*?\.jpg$)(^.*?$)/i
+     * --
+     * @param  string $filter
+     * --
+     * @return string
+     */
+    static function filter_to_regex($filter)
+    {
+        $final = '';
+
+        // Do we have negation?
+        if (substr($filter, 0, 1) === '!')
+        {
+            $filter = substr($filter, 1);
+            $negate = true;
+        }
+        else
+        {
+            $negate = false;
+        }
+
+        // Groups
+        $groups = explode('|', $filter);
+
+        foreach ($groups as &$group)
+        {
+            $group = preg_quote($group);
+            $group = str_replace('\\*', '.*?', $group);
+
+            if ($negate)
+                $group = "(?!{$group}$)";
+            else
+                $group = "({$group})";
+        }
+
+        if ($negate)
+        {
+            $groups[] = '(^.*?$)';
+            $final = implode('', $groups);
+        }
+        else
+        {
+            $final = implode('|', $groups);
+        }
+
+        return "/{$final}/i";
     }
 
     /*
