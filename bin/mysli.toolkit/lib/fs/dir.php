@@ -6,7 +6,7 @@ namespace mysli\toolkit\fs; class dir
         .{
             log,
             fs.file -> file,
-            fs.fs -> fs,
+            fs.fs   -> fs,
             exception.dir
         }
     ';
@@ -311,22 +311,20 @@ namespace mysli\toolkit\fs; class dir
      * Get signatures of all files in the directory +
      * sub directories if $deep is true.
      * --
-     * @throws mysli\toolkit\exception\dir 10 Invalid directory,
-     * --
      * @param string  $directory
      * @param boolean $deep
      * @param boolean $ignore_hidden Ignore hidden files and folders.
+     * --
+     * @throws mysli\toolkit\exception\dir 10 Directory doesn't exists.
      * --
      * @return array
      */
     static function signature($directory, $deep=true, $ignore_hidden=true)
     {
         if (!self::exists($directory))
-        {
             throw new exception\dir(
-                "Invalid directory: `{$directory}`.", 10
+                "Directory doesn't exists: `{$directory}`.", 10
             );
-        }
 
         $result = [];
         $files = array_diff(scandir($directory), ['.','..']);
