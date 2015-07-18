@@ -1,9 +1,8 @@
-package:     mysli.dev.phpt
+package:     mysli.dev.testme
 version:     1
-description: Wrapper for PHPT
+description: Mysli Testing Utility.
 license:     GPL-3.0
 authors:
     - Marko Gajšt (Developer) <m@gaj.st>
 require:
-    dot:           1
     mysli.toolkit: 1
