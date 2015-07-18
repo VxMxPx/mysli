@@ -441,6 +441,26 @@ namespace mysli\toolkit\cli; class prog
     }
 
     /**
+     * Get multiple values as an array.
+     * --
+     * @param string $... See self::get_parameter()
+     * --
+     * @return array
+     */
+    function get_values()
+    {
+        $params = func_get_args();
+        $result = [];
+
+        foreach ($params as $param)
+        {
+            $result[] = $this->get_parameter($param)->get_value();
+        }
+
+        return $result;
+    }
+
+    /**
      * Get multiple parameters as an array.
      * --
      * @param string $... See self::get_parameter()
