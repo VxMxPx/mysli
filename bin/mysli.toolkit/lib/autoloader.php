@@ -334,7 +334,9 @@ namespace mysli\toolkit; class autoloader
                 $list = array_merge(
                     $list,
                     self::resolve_use_line(
-                        $base.trim($class), $namespace, trim($class)
+                        $base.trim($class),
+                        $namespace,
+                        str_replace('.', '\\', trim($class))
                     )
                 );
             }
