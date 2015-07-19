@@ -96,11 +96,19 @@ namespace mysli\dev\testme\root\script; class test
          */
         foreach ($testfiles as $testfile)
         {
-            // Get results a from file
-            list($global, $tests) = lib\test::file($testfile);
-
             // Test base filename
             $testfilebase = substr(basename($testfile), 0, -4);
+
+            // Get results a from file
+            try
+            {
+                list($global, $tests) = lib\test::file($testfile);
+            }
+            catch (\Exception $e)
+            {
+                ui::error("ERROR:\n".$e->getMessage());
+                return false;
+            }
 
             // Loop through results, and generate report.
             foreach ($tests as $testcase)
@@ -148,6 +156,7 @@ namespace mysli\dev\testme\root\script; class test
         self::generate_stats(
             $sum_succeeded, $sum_skipped, $sum_failed, $sum_all, $sum_time
         );
+        ui::nl();
 
         // If non failed, then this succeeded, otherwise, failed.
         return $sum_failed === 0;
@@ -165,16 +174,30 @@ namespace mysli\dev\testme\root\script; class test
     {
         list($path, $package, $filter) = self::ppf($pid);
 
+        // Check if package // Dir exists...
         if (!$package || !fs\dir::exists($path))
             return false;
 
+        // Loop will actually re-run this script multiple times (calling system),
+        // so -w / --watch needs to be removed to avoid infinite loops...
+        $arguments = $_SERVER['argv'];
+        if (false !== ($k = array_search('-w', $arguments)))
+            unset($arguments[$k]);
+        if (false !== ($k = array_search('--watch', $arguments)))
+            unset($arguments[$k]);
+
         // Wait for changes
-        fs\file::observe($path, function ($changes) use ($pid, $diff)
+        fs\file::observe(fs::binpath($package), function ($changes) use ($pid, $diff, $arguments)
         {
             // Re-run tests...
-            self::test($pid, $diff);
+            // self::test($pid, $diff);
 
-        }, "*.php|{$filter}", 2);
+            // Call self over and over again
+            // This is done in such way, so that changes in PHP files are
+            // registered. Each run is fresh...
+            system(implode(" ", $arguments));
+
+        }, "*.php|{$filter}", true, 2, true);
     }
 
     /**
@@ -259,20 +282,7 @@ namespace mysli\dev\testme\root\script; class test
         output::green(str_repeat("^", $width+11));
         foreach ($expect as $lineno => $line)
         {
-            // Convert to printable object ....
-            if (is_array($line))
-            {
-                $line = "Array:\n".arr::readable($line, 4, 4, ': ', "\n", true);
-            }
-            elseif (is_object($line))
-            {
-                $line = get_class($line);
-            }
-            elseif (is_resource($line))
-            {
-                $line = '<RESOURCE>';
-            }
-
+            $line = self::stringify($line);
             output::line("    {$line}");
         }
 
@@ -284,28 +294,43 @@ namespace mysli\dev\testme\root\script; class test
         output::red(str_repeat("^", $width+11));
         foreach ($actual as $lineno => $line)
         {
-            // Convert to printable object ....
-            if (is_array($line))
-            {
-                $line = "Array:\n".arr::readable($line, 4, 4, ': ', "\n", true);
-            }
-            elseif (is_object($line))
-            {
-                $line = get_class($line);
-            }
-            elseif (is_resource($line))
-            {
-                $line = '<RESOURCE>';
-            }
+            $line = self::stringify($line);
 
             if (!isset($expect[$lineno]) || $expect[$lineno] !== $line)
-            {
                 output::red("  > {$line}");
-            }
             else
-            {
                 output::line("    {$line}");
-            }
+        }
+    }
+
+    /**
+     * Convert line to presentable string for diff.
+     * --
+     * @param  mixed $line
+     * --
+     * @return string
+     */
+    private static function stringify($line)
+    {
+        if (is_array($line))
+        {
+            return "Array:\n".arr::readable($line, 4, 4, ': ', "\n", true);
+        }
+        elseif (is_object($line))
+        {
+            return get_class($line);
+        }
+        elseif (is_resource($line))
+        {
+            return '<RESOURCE>';
+        }
+        else
+        {
+            // Strip shell arguments if there...
+            if (preg_match('/\\e\[[0-9]+m/', $line))
+                return escapeshellcmd($line);
+            else
+                return $line;
         }
     }
 
