@@ -4,7 +4,8 @@ namespace mysli\dev\testme\root\script; class test
 {
     const __use = '
         .{ test -> lib.test }
-        mysli.toolkit.cli.{ prog, param, ui, output }
+        mysli.toolkit.cli.{ prog, param, ui, output, util }
+        mysli.toolkit.{ fs.dir, fs.file, fs.fs -> fs, pkg, type.arr -> arr }
     ';
 
     /**
@@ -23,21 +24,21 @@ namespace mysli\dev\testme\root\script; class test
         $prog
         ->create_parameter('PACKAGE', [
             'required' => true,
-            'help'     => 'Package to be tested, in format: .'.
-                          '`vendor.package.class::method.file`. '.
+            'help'     => 'Package to be tested, in format: '.
+                          '`vendor.package.class::method.filter`. '.
                           'Only `vendor.package` are required segments, '.
                           'use the rest to narrow down the amount of tests to be run.',
         ])
         ->create_parameter('--watch/-w', [
-            'type'    => 'boolean',
-            'def'     => false,
-            'help'    => 'Watch package\'s directory and re-run tests when changes occurs.'
+            'type' => 'boolean',
+            'def'  => false,
+            'help' => 'Watch package\'s directory and re-run tests when changes occurs.'
         ])
         ->create_parameter('--diff/-d', [
-            'type'    => 'boolean',
-            'def'     => true,
-            'help'    => 'Print side-by-side comparison of expected/actual '.
-                         'results for failed tests.'
+            'type' => 'boolean',
+            'def'  => true,
+            'help' => 'Print side-by-side comparison of expected/actual '.
+                      'results for failed tests.'
         ]);
 
         if (null !== ($r = prog::validate_and_print($prog, $args)))
@@ -56,25 +57,23 @@ namespace mysli\dev\testme\root\script; class test
     /**
      * Test particular package.
      * --
-     * @param  string  $package In format: vendor.package.class::method.file
-     * @param  boolean $diff
+     * @param string  $pid In format: vendor.package.class::method.filter
+     * @param boolean $diff
      * --
      * @return boolean
      */
-    private static function test($package, $diff)
+    private static function test($pid, $diff)
     {
-        // Get package's name from full package's ID
-        $package_seg  = explode('::', $package, 2);
-        $package_name = pkg::by_namespace(str_replace('.', '\\', $package_seg[0]));
+        list($path, $package, $filter) = self::ppf($pid);
 
-        if (!$package_name)
+        if (!$package)
         {
-            ui::error("No such package: `{$package_seg[0]}`");
+            ui::error("No tests found for: `{$pid}`");
             return false;
         }
 
         // Get list of tests to run, by providing a package name.
-        $testfiles = self::get_tests_by_package($package);
+        $testfiles = self::get_tests_by_pid($pid);
 
         // If there's no tests available, just skip...
         if (empty($testfiles))
@@ -98,49 +97,49 @@ namespace mysli\dev\testme\root\script; class test
         foreach ($testfiles as $testfile)
         {
             // Get results a from file
-            $results = lib\test::file($testfile);
+            list($global, $tests) = lib\test::file($testfile);
+
+            // Test base filename
+            $testfilebase = substr(basename($testfile), 0, -4);
 
             // Loop through results, and generate report.
-            foreach ($results as $case)
+            foreach ($tests as $testcase)
             {
+                // Generate test...
+                $test_generated = lib\test::generate($testcase, $global);
+
+                // Run tests...
+                $res = lib\test::run($test_generated, $testcase, $global);
+
                 // Update general stats
-                $sum_succeeded += (int) $case['succeed'];
-                $sum_skipped   += $case['skipped'] !== null;
-                $sum_failed    += (int) $case['failed'];
+                $sum_succeeded += ($res['succeed'] === true);
+                $sum_skipped   += ($res['skipped'] !== null);
+                $sum_failed    += ($res['succeed'] === false);
                 $sum_all++;
-                $sum_time += $case['runtime'];
+                $sum_time += $res['runtime'];
 
                 // Succeed, failed, skipped?
-                if ($case['succeed'])
+                if ($res['succeed'])
                 {
-                    output::format(
-                        "<green>!!</green> {$case['name']} <right>OK</right>"
-                    );
+                    output::format("<green>SUCCEED:</green> [{$testfilebase}] {$testcase['title']}\n");
                 }
-                elseif ($case[$skipped] !== null)
+                elseif ($res['skipped'])
                 {
-                    output::format(
-                        "<yellow>!!</yellow> {$case['name']} <right>SKIPPED</right>"
-                    );
-                    output::format(
-                        "<yellow>..</yellow> Reason: {$case['skipped']}"
-                    );
-                    ui::nl();
-                }
-                elseif ($case[$failed])
-                {
-                    output::format(
-                        "<red>!!</red> {$case['name']} <right>FAILED</right>"
-                    );
-                    if ($diff)
-                        self::generate_diff($case['expected'], $case['result']);
+                    output::format("<yellow>SKIPPED:</yellow> [{$testfilebase}] {$testcase['title']}\n");
+                    output::format("         {$testcase['skip']}\n");
                     ui::nl();
                 }
                 else
                 {
-                    output::format(
-                        "<red>??</red> {$case['name']} <right>UNKNOWN</right>"
-                    );
+                    output::format("<red>FAILED:</red> [{$testfilebase}] {$testcase['title']}\n");
+                    output::line("  FILE: {$testfile}");
+                    output::line("  LINE: {$testcase['lineof']['test']}");
+                    if ($diff)
+                    {
+                        ui::nl();
+                        self::generate_diff($res['expect'], $res['actual']);
+                    }
+                    ui::nl();
                 }
             }
         }
@@ -157,64 +156,163 @@ namespace mysli\dev\testme\root\script; class test
     /**
      * Run test(s) for particular package, and watch for change.
      * --
-     * @param  string  $package In format: vendor.package.class::method.file
+     * @param  string  $pid In format: vendor.package.class::method.filter
      * @param  boolean $diff    Weather to print diff for failed tests.
      * --
      * @return boolean
      */
-    private static function watch($package, $diff)
+    private static function watch($pid, $diff)
     {
-        /*
-        Extract file, if indeed exists.
-        So: vendor.package.class::method.file <-- we're interested in file here
-        If file was specified, only that test file will be observed for changes.
-         */
-        $package_seg = explode('::', $package, 2);
+        list($path, $package, $filter) = self::ppf($pid);
 
-        // Check if file was specified and extract it...
-        $test_file =  (isset($package_seg[1]) && strpos($package_seg[1], '.'))
-            ? substr($package, strrpos($package, '.'))
-            : '*';
+        if (!$package || !fs\dir::exists($path))
+            return false;
 
         // Wait for changes
-        file::observe($dir, function ($changes) use ($package, $diff)
+        fs\file::observe($path, function ($changes) use ($pid, $diff)
         {
             // Re-run tests...
-            self::test($package, $diff);
+            self::test($pid, $diff);
 
-        }, "*.php|{$test_file}.t.php", 2);
+        }, "*.php|{$filter}", 2);
     }
 
     /**
      * Get all tests using package's full ID/name.
      * --
-     * @param  string $package vendor.package.class::method.file
+     * @param string $pid vendor.package.class::method.filter
      * --
      * @return array
      *         [/full/absolute/test/path/file.phpt, ...]
      */
-    private static function get_tests_by_package($package)
+    private static function get_tests_by_pid($pid)
     {
+        list($path, $_, $filter) = self::ppf($pid);
 
+        // Is actual directory there...
+        if (!fs\dir::exists($path))
+        {
+            ui::warning("Path not found: `{$path}`");
+            return false;
+        }
+
+        // Find tests
+        return fs\file::find($path, $filter);
+    }
+
+    /**
+     * Return path, package, filter.
+     * --
+     * @param  string $pid vendor.package.sub.class::method.filter
+     * --
+     * @return array
+     *         [ string $path, string $package, string $filter ]
+     */
+    private static function ppf($pid)
+    {
+        // Get Method/Filter
+        $pids = explode('::', $pid, 2);
+        $pidroot = $pids[0];
+        if (isset($pids[1]))
+        {
+            $method_filter = explode('.', $pids[1]);
+            $method = $method_filter[0];
+            if (isset($method_filter[1]))
+                $filter = $method_filter[1];
+            else
+                $filter = null;
+
+            $filter = $method.($filter ? ".{$filter}" : '*').'.t.php';
+        }
+        else
+        {
+            $filter = "*.t.php";
+        }
+
+        // Package
+        $package = pkg::by_namespace(str_replace('.', '\\', $pidroot));
+        $classes = substr($pidroot, strlen($package)+1);
+        $classes = str_replace('.', '/', $classes);
+
+        // Actual path to the tests...
+        $path = fs::binpath($package, 'tests', $classes);
+
+        return [$path, $package, $filter];
     }
 
     /**
      * Generate and print diff.
      * --
-     * @param  array $expected
-     * @param  array $result
+     * @param  array $expect
+     * @param  array $actual
      * --
      * @return void
      */
-    private static function generate_diff($expected, $result)
+    private static function generate_diff($expect, $actual)
     {
+        $width = util::terminal_width();
+        $width = $width < 50 ? $width : 50;
 
+        // Expected
+        // output::green("... EXPECT ".str_repeat(".", $width));
+        output::light_green("    EXPECT");
+        output::green(str_repeat("^", $width+11));
+        foreach ($expect as $lineno => $line)
+        {
+            // Convert to printable object ....
+            if (is_array($line))
+            {
+                $line = "Array:\n".arr::readable($line, 4, 4, ': ', "\n", true);
+            }
+            elseif (is_object($line))
+            {
+                $line = get_class($line);
+            }
+            elseif (is_resource($line))
+            {
+                $line = '<RESOURCE>';
+            }
+
+            output::line("    {$line}");
+        }
+
+        ui::nl();
+
+        // Actual
+        // output::red("... RESULT ".str_repeat(".", $width));
+        output::light_red("    RESULT");
+        output::red(str_repeat("^", $width+11));
+        foreach ($actual as $lineno => $line)
+        {
+            // Convert to printable object ....
+            if (is_array($line))
+            {
+                $line = "Array:\n".arr::readable($line, 4, 4, ': ', "\n", true);
+            }
+            elseif (is_object($line))
+            {
+                $line = get_class($line);
+            }
+            elseif (is_resource($line))
+            {
+                $line = '<RESOURCE>';
+            }
+
+            if (!isset($expect[$lineno]) || $expect[$lineno] !== $line)
+            {
+                output::red("  > {$line}");
+            }
+            else
+            {
+                output::line("    {$line}");
+            }
+        }
     }
 
     /**
      * Generate and print final footer status.
      * --
-     * @param integer $succeeded
+     * @param integer $succeed
      * @param integer $skipped
      * @param integer $failed
      * @param integer $all
@@ -222,9 +320,20 @@ namespace mysli\dev\testme\root\script; class test
      * --
      * @return void
      */
-    private static function generate_Stats(
-        $succeeded, $skipped, $failed, $all, $time)
+    private static function generate_stats(
+        $succeed, $skipped, $failed, $all, $time)
     {
+        $width = util::terminal_width();
+        $width = $width < 60 ? $width : 60;
 
+        // Set variables to be printed
+        $all     = "RUN: {$all}";
+        $failed  = $failed > 0  ? "<red>FAILED: {$failed}</red>"         : "FAILED: 0";
+        $succeed = $succeed > 0 ? "<green>SUCCEED: {$succeed}</green>"   : "SUCCEED: 0";
+        $skipped = $skipped > 0 ? "<yellow>SKIPPED: {$skipped}</yellow>" : "SKIPPED: 0";
+        $time    = "RUN TIME: " . number_format($time, 4);
+
+        ui::line(str_repeat('-', $width));
+        output::format("{$all} | {$failed} | {$succeed} | {$skipped} | {$time}\n");
     }
 }
