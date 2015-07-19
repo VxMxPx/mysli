@@ -118,6 +118,16 @@ namespace mysli\toolkit; class datetime
     }
 
     /**
+     * Get timezone.
+     * --
+     * @return \DateTimeZone
+     */
+    function get_timezone()
+    {
+        return $this->datetime->getTimezone();
+    }
+
+    /**
      * Format date/time.
      * --
      * @param string $format
@@ -136,23 +146,31 @@ namespace mysli\toolkit; class datetime
      * --
      * @param string $modify
      * --
-     * @return integer
+     * @return string
      */
     function modify($modify)
     {
-        return new self($this->datetime->modify($modify));
+        return $this->datetime->modify($modify)->format(self::timestamp);
     }
 
     /**
      * Return difference between two DateTimeInterface objects.
      * --
      * @param string $datetime
+     * @param string $timezone If not provided, current will be used.
      * --
      * @return \DateInterval
      */
-    function diff($datetime)
+    function diff($datetime, $timezone=null)
     {
-        return date_diff($this->datetime, new \DateTime($datetime));
+        $timezone = new \DateTimeZone(
+            $timezone ?: $this->get_timezone()->getName()
+        );
+
+        return date_diff(
+            $this->datetime,
+            new \DateTime($datetime, $timezone)
+        );
     }
 
     /*
