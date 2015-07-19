@@ -285,8 +285,8 @@ namespace mysli\toolkit\fs; class fs
      *
      * Filter is constructed in a following way:
      *
-     * *.jpg        => /^(.*?\.jpg)$/i
-     * *.jpg|*.gif  => /^(.*?\.jpg)|(.*?\.gif)$/i
+     * *.jpg        => /(^.*?\.jpg$)/i
+     * *.jpg|*.gif  => /(^.*?\.jpg)|(^.*?\.gif$)/i
      * !*.png       => /(?!^.*?\.png$)(^.*?$)/i
      * !*.png|*.jpg => /(?!^.*?\.png$)(?!^.*?\.jpg$)(^.*?$)/i
      * --
@@ -318,9 +318,9 @@ namespace mysli\toolkit\fs; class fs
             $group = str_replace('\\*', '.*?', $group);
 
             if ($negate)
-                $group = "(?!{$group}$)";
+                $group = "(^?!{$group}$)";
             else
-                $group = "({$group})";
+                $group = "(^{$group}$)";
         }
 
         if ($negate)
