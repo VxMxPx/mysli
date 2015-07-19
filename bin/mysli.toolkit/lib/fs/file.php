@@ -508,9 +508,8 @@ namespace mysli\toolkit\fs; class file
 
         // Convert simple filter to the regular expression
         if ($filter && substr($filter, 0, 1) !== '/')
-        {
             $filter = fs::filter_to_regex($filter);
-        }
+
 
         // If there's no $rootlen, it will be acquired from the directory.
         // This is used latter in recursion.
@@ -629,6 +628,10 @@ namespace mysli\toolkit\fs; class file
      * @param string   $filter    Observe only particular files.
      * @param boolean  $deep      Observe sub-directories.
      * @param integer  $interval  Run every N seconds.
+     * @param boolean  $frun      First run, if true, callback will be executed
+     *                            imediatelt when this method is called, rather
+     *                            than waiting for changes and execute only
+     *                            when changes are actually made...
      * --
      * @throws mysli\toolkit\fs\file 10 Directory doesn't exists.
      * --
@@ -636,7 +639,7 @@ namespace mysli\toolkit\fs; class file
      *         Whatever callback returned.
      */
     static function observe(
-        $directory, $callback, $filter=null, $deep=true, $interval=3)
+        $directory, $callback, $filter=null, $deep=true, $interval=3, $frun=false)
     {
         if (!dir::exists($directory))
             throw new exception\file(
@@ -645,7 +648,7 @@ namespace mysli\toolkit\fs; class file
 
         // Initialize a null variables of signatures....
         $sig_new = null;
-        $sig_old = null;
+        $sig_old = $frun ? [] : null;
 
         // Go for it...
         do
