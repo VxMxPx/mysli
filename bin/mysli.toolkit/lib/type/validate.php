@@ -2,7 +2,7 @@
 
 namespace mysli\toolkit\type; class validate
 {
-    const __use = '.exception.validate';
+    const __use = '.{ exception.validate }';
 
     /**
      * Check weather input is an integer, and if not throw an exception.
