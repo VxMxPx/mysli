@@ -514,7 +514,7 @@ namespace mysli\toolkit\fs; class file
 
         // If there's no $rootlen, it will be acquired from the directory.
         // This is used latter in recursion.
-        $rootlen = $rootlen ?: strlen($directory)+1;
+        $rootlen = $rootlen ?: strlen(rtrim($directory, '\\/'))+1;
 
         /*
         Start looking for files.
