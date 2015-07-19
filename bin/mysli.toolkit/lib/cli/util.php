@@ -87,8 +87,8 @@ namespace mysli\toolkit\cli; class util
      * Use 'pcntl_wait($status);' in parent, to prevent zombie processes!
      * --
      * @param  mixed   $commands string|array
-     * @param  boolean $print Result of script execution (use system
-     *                        rather than exec).
+     * @param  boolean $print    Result of script execution (use system
+     *                           rather than exec).
      * --
      * @return integer pid
      */
@@ -98,7 +98,7 @@ namespace mysli\toolkit\cli; class util
 
         if ($pid === -1)
         {
-            output::format("<red>Cannot fork the process...\n");
+            output::format("<red>Cannot fork the process...</red>\n");
             exit(1);
         }
         elseif ($pid === 0)
@@ -121,7 +121,7 @@ namespace mysli\toolkit\cli; class util
                 }
             }
 
-            exit(1);
+            exit(0);
         }
         else
         {
