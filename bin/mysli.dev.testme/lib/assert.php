@@ -16,11 +16,13 @@
  */
 namespace mysli\dev\testme; class assert
 {
+    const __use = '.{ exception.assert }';
+
     /**
      * Assert that two values are equal by value and type.
      * --
-     * @param  mixed $actual
-     * @param  mixed $expect
+     * @param mixed $actual
+     * @param mixed $expect
      * --
      * @return array
      */
