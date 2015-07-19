@@ -25,9 +25,9 @@ namespace mysli\dev\testme\root\script; class test
         ->create_parameter('PACKAGE', [
             'required' => true,
             'help'     => 'Package to be tested, in format: '.
-                          '`vendor.package.class::method.filter`. '.
-                          'Only `vendor.package` are required segments, '.
-                          'use the rest to narrow down the amount of tests to be run.',
+                            '`vendor.package.class::method.filter`. '.
+                            'Only `vendor.package` are required segments, '.
+                            'use the rest to narrow down the amount of tests to be run.',
         ])
         ->create_parameter('--watch/-w', [
             'type' => 'boolean',
@@ -38,7 +38,7 @@ namespace mysli\dev\testme\root\script; class test
             'type' => 'boolean',
             'def'  => true,
             'help' => 'Print side-by-side comparison of expected/actual '.
-                      'results for failed tests.'
+                        'results for failed tests.'
         ]);
 
         if (null !== ($r = prog::validate_and_print($prog, $args)))
@@ -280,11 +280,7 @@ namespace mysli\dev\testme\root\script; class test
         // output::green("... EXPECT ".str_repeat(".", $width));
         output::light_green("    EXPECT");
         output::green(str_repeat("^", $width+11));
-        foreach ($expect as $lineno => $line)
-        {
-            $line = self::stringify($line);
-            output::line("    {$line}");
-        }
+        self::diff_out($expect, $actual, false);
 
         ui::nl();
 
@@ -292,11 +288,92 @@ namespace mysli\dev\testme\root\script; class test
         // output::red("... RESULT ".str_repeat(".", $width));
         output::light_red("    RESULT");
         output::red(str_repeat("^", $width+11));
-        foreach ($actual as $lineno => $line)
+        self::diff_out($actual, $expect, true);
+    }
+
+    /**
+     * Find actual diff, withing line, compared to expecation.
+     * --
+     * @param array   $one
+     * @param array   $two
+     * @param boolean $mark
+     * @param boolean $is_array
+     * @param integer $level
+     * --
+     * @return void
+     */
+    private static function diff_out(
+        array $one, array $two, $mark=false, $is_array=false, $level=-1)
+    {
+        foreach ($one as $id => $line)
         {
+            // Transform to array if multiline string
+            if (is_string($line) && strpos($line, "\n") !== false)
+            {
+                $line = explode("\n", $line);
+
+                if (!is_string($two[$id]))
+                {
+                    $two[$id] = explode("\n", $two[$id]);
+                }
+                else
+                {
+                    $two[$id] = [ $two[$id] ];
+                }
+
+                self::diff_out($line, $two[$id], $mark, false, $level+1);
+
+                continue;
+            }
+
+            // Call self again in case of array....
+            if (is_array($line))
+            {
+                if (!is_array($two[$id]))
+                {
+                    $two[$id] = [ $two[$id] ];
+                }
+
+                self::diff_out($line, $two[$id], $mark, true, $level+1);
+                continue;
+            }
+
+            // Stringify line...
             $line = self::stringify($line);
 
-            if (!isset($expect[$lineno]) || $expect[$lineno] !== $line)
+            // Output Pre-Indent
+            if ($level > 0)
+                output::line(str_repeat(' ', $level*4), false);
+
+            if ($is_array)
+            {
+                // If not set, then print is a missing...
+                if (!isset($two[$id]))
+                {
+                    $two[$id] = '<MISSING>';
+                    $linetype = '<MISSING> ';
+                    $twotype  = '<MISSING> ';
+                }
+                else
+                {
+                    $linetype = '('.gettype($line).') ';
+                    $twotype  = '('.gettype($two[$id]).') ';
+                }
+
+
+                if ($linetype === $twotype && $linetype !== '<MISSING> ')
+                    $linetype = $twotype = '';
+
+                $line = "{$id} : {$linetype}{$line}";
+                $need = "{$id} : {$twotype}{$two[$id]}";
+            }
+            else
+            {
+                $need = isset($two[$id]) ? $two[$id] : '<MISSING>';
+            }
+
+            // Compare lines...
+            if ($mark && ($need !== $line))
                 output::red("  > {$line}");
             else
                 output::line("    {$line}");
@@ -314,7 +391,7 @@ namespace mysli\dev\testme\root\script; class test
     {
         if (is_array($line))
         {
-            return "Array:\n".arr::readable($line, 4, 4, ': ', "\n", true);
+            return arr::readable($line, 4, 4, ': ', "\n", true);
         }
         elseif (is_object($line))
         {
@@ -328,9 +405,11 @@ namespace mysli\dev\testme\root\script; class test
         {
             // Strip shell arguments if there...
             if (preg_match('/\\e\[[0-9]+m/', $line))
-                return escapeshellcmd($line);
+                $line = escapeshellcmd($line);
             else
-                return $line;
+                $line = $line;
+
+            return $line;
         }
     }
 
