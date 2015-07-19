@@ -122,13 +122,13 @@ namespace mysli\toolkit\cli; class output
      */
     static function line($string, $new_line=true)
     {
-        fwrite(STDOUT, $string);
+        echo $string;
 
         if ($new_line)
         {
-            fwrite(STDOUT, "\e[0m");
+            // echo "\e[0m";
             self::$last_length = 0;
-            fwrite(STDOUT, PHP_EOL);
+            echo PHP_EOL;
         }
         else
         {
@@ -136,8 +136,6 @@ namespace mysli\toolkit\cli; class output
                 preg_replace('/\\e\[[0-9]+m/', '', $string)
             );
         }
-
-        flush();
     }
 
     /**

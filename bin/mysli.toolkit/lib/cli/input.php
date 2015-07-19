@@ -72,7 +72,7 @@ namespace mysli\toolkit\cli; class input
         }
         else
         {
-            fwrite(STDOUT, $title);
+            echo $title;
             $stdin = fread(STDIN, 8192);
         }
 
