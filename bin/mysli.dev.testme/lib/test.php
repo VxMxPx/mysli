@@ -161,7 +161,7 @@ namespace mysli\dev\testme; class test
                             $option = strtolower($option);
                             $opts = explode(' ', $option);
                             $target['use'][] = [
-                                trim($opts),
+                                trim($opts[0]),
                                 isset($opts[1]) ? trim($opts[1]) : 'before'
                             ];
                         }
@@ -212,7 +212,6 @@ namespace mysli\dev\testme; class test
                         && $target['expect'][0] === 'output'
                         && substr($line, 0, strlen($target['expect'][1])) === $target['expect'][1])
                     {
-                        $target['code']['expect'][] = substr($line, strlen($target['expect'][1]));
                         $buffer = 'expect';
                     }
                     // Buffering `expect`
@@ -225,6 +224,10 @@ namespace mysli\dev\testme; class test
                         {
                             $buffer = 'test';
                             continue;
+                        }
+                        else
+                        {
+                            $target['code'][$buffer][] = $line;
                         }
                     }
                     // Buffer test, skip or expect..
@@ -334,12 +337,13 @@ namespace mysli\dev\testme; class test
     /**
      * Run particular test.
      * --
-     * @param  array  $test
-     * @param  array  $global
+     * @param string $test_code
+     * @param array  $test
+     * @param array  $global
      * --
      * @return array
      */
-    static function run($test_code, $test, array $global)
+    static function run($test_code, array $test, array $global)
     {
         // Append defaults
         $r['succeed'] = null;
@@ -365,25 +369,36 @@ namespace mysli\dev\testme; class test
             ob_start();
             $result = eval($test_code);
             $output = ob_get_contents();
-            ob_end_clean();
         }
         catch (\Exception $e)
         {
             $r = self::assert_statement($e, $test['expect']);
             $r['skipped'] = null;
             $r['runtime'] = (microtime(true) - $timestart);
+            // dump($r);
             return $r;
+        }
+        finally
+        {
+            ob_end_clean();
         }
 
         // Was output expected?
         if ($test['expect'][0] === 'output')
         {
-            $test['expect'][1] = trim($test['code']['expect']);
-            $r = self::assert_statement(trim($output), $test['expect']);
+            $test['expect'][1] = implode("\n", $test['code']['expect']);
+            $r = self::assert_statement($output, $test['expect']);
         }
         elseif ($test['expect'][0] === 'assertion')
         {
-            $r = $result;
+            if (is_array($result) && isset($result['succeed']))
+            {
+                $r = $result;
+            }
+            else
+            {
+                $r = self::assert_statement($result, $test['expect']);
+            }
         }
         else
         {
@@ -559,6 +574,13 @@ namespace mysli\dev\testme; class test
                     return $r;
 
                 $r['succeed'] = true;
+                return $r;
+
+            case 'assertion':
+                $r = [];
+                $r['succeed'] = false;
+                $r['actual']  = assert::describe($actual);
+                $r['expect']  = $expect;
                 return $r;
 
             default:
