@@ -208,7 +208,7 @@ namespace mysli\toolkit\cli; class output
         {
             $output = explode('[[[right/]]]', $output, 2);
             self::line($output[0], false);
-            self::line(self::right($output[1]), $new_line);
+            self::line(self::right($output[1]), true);
         }
         else
         {
