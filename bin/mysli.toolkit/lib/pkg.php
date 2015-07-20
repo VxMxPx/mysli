@@ -508,12 +508,12 @@ namespace mysli\toolkit; class pkg
      */
     static function exists_as($package)
     {
-        $source = MYSLI_BINPATH."/{$package}/mysli.pkg.ym";
-        $phar   = 'phar://'.MYSLI_BINPATH."/{$package}.phar/mysli.pkg.ym";
+        $phar    = 'phar://'.MYSLI_BINPATH."/{$package}.phar/mysli.pkg.ym";
+        $source  = MYSLI_BINPATH."/{$package}/mysli.pkg.ym";
 
-        if     (file_exists($phar))   return self::phar;
-        elseif (file_exists($source)) return self::source;
-        else                          return null;
+        if     (file_exists($phar))    return self::phar;
+        elseif (file_exists($source))  return self::source;
+        else                           return null;
     }
 
     /**
@@ -830,7 +830,10 @@ namespace mysli\toolkit; class pkg
 
         foreach ($binfiles as $package)
         {
-            if (substr($package, 0, 1) === '.')
+            if ($package === 'mysli')
+                continue;
+
+            if (substr($package, 0, 1) === '.' || substr($package, 0, 1) === '~')
                 continue;
 
             if (substr($package, 0, -4) === '.phar')
