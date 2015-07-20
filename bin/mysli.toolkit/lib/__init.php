@@ -47,9 +47,10 @@ namespace mysli\toolkit; class __init
         include __RDIR__."/__common.php";
 
         // Core exceptions.
+        include __RDIR__."/exception/base.php";
         foreach (scandir(__RDIR__.'/exception') as $exception)
         {
-            if (substr($exception, 0, -4) === '.php')
+            if (substr($exception, -4) === '.php' && $exception !== 'base.php')
                 include __RDIR__."/exception/{$exception}";
         }
 
@@ -127,9 +128,9 @@ namespace mysli\toolkit; class __init
     static function cli(array $arguments=[])
     {
         $help =
-        "\n<title>Dot Utility for Mysli Platform</title>\n\n".
-        "Usage: dot <command> [options...]\n".
-        "You can always use dot <command> -h to get help for a specific command.\n".
+        "\n<title>Command Line Utility for Mysli Platform</title>\n\n".
+        "Usage: mysli <command> [options...]\n".
+        "You can always use mysli <command> -h to get help for a specific command.\n".
         "List of available commands:\n".
         "\n<ul>{list}</ul>\n";
 
