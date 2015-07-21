@@ -34,9 +34,9 @@ namespace mysli\root; class __init
         /*
         Check if current PHP version is sufficient to proceed.
          */
-        if (!(version_compare(PHP_VERSION, self::NEED_VERSION) >= 0))
+        if (!(version_compare(PHP_VERSION, self::need_version) >= 0))
             trigger_error(
-                'PHP needs to be at least version `'.self::NEED_VERSION.'` '.
+                'PHP needs to be at least version `'.self::need_version.'` '.
                 'Your version: `'.PHP_VERSION.'`',
                 E_USER_ERROR
             );
@@ -96,8 +96,8 @@ namespace mysli\root; class __init
                 print(
                     str_replace(
                         '{commands}',
-                        self::format_commands(self::$COMMANDS),
-                        self::SAFE_MODE_MESSAGES
+                        self::format_commands(self::$commands),
+                        self::safemode_messages
                     )
                 );
                 exit(0);
@@ -108,7 +108,7 @@ namespace mysli\root; class __init
              */
 
             // Check if script exists.
-            if (!isset(self::$COMMANDS['--self '.$command]))
+            if (!isset(self::$commands['--self '.$command]))
             {
                 print("Invalid command! Use `-h` to see list available commands");
                 exit(1);
@@ -197,18 +197,13 @@ namespace mysli\root; class __init
             // Example: mysl.toolkit:::toolkit.init:::mysli\toolkit\toolkit_init::__init
             list($tk_bin, $tk_file, $tk_call) = explode(':::', TOOLKIT_LOAD);
 
-            // Toolkit base directory
-            $tk_dir = "{$binpath}/{$tk_bin}";
-
-            // If it doesn't exists, it might be phar
-            if (!file_exists($tk_dir))
-            {
-                // If not phar, then something went wrong
-                if (!file_exists($tk_dir.'.phar'))
-                    trigger_error("Toolkit not found `{$tk_dir}`.", E_USER_ERROR);
-                else
-                    $tk_dir = "phar://{$tk_dir}.phar";
-            }
+            // Resolve toolkit's base directory
+            if (file_exists("{$binpath}/{$tk_bin}.phar"))
+                $tk_dir = "phar://{$binpath}/{$tk_bin}.phar";
+            elseif (file_exists("{$binpath}/{$tk_bin}"))
+                $tk_dir = "{$binpath}/{$tk_bin}";
+            else
+                trigger_error("Toolkit not found `{$binpath}/{$tk_bin}`.", E_USER_ERROR);
 
             // Toolkit file, which contains init class.
             $tk_file = "{$tk_dir}/lib/{$tk_file}.php";
@@ -251,7 +246,7 @@ namespace mysli\root; class __init
         // Is it help
         if (in_array('-h', $arguments) || in_array('--help', $arguments))
         {
-            print(self::SAFEMODE_INIT_HELP);
+            print(self::safemode_init_help);
             return true;
         }
 
@@ -395,7 +390,7 @@ namespace mysli\root; class __init
         $loc = str_replace(
             ['{{TIMESTAMP}}', '{{BINPATH}}', '{{PUBPATH}}'],
             [gmdate('c'), $r_binpath, $r_pubpath],
-            self::LOC_TEMPLATE
+            self::loc_template
         );
 
         if (!file_put_contents("{$apppath}/mysli.loc.php", $loc."\n"))
@@ -597,12 +592,12 @@ namespace mysli\root; class __init
     /*
     At least this version is needed to proceed.
      */
-    const NEED_VERSION = '5.6.0';
+    const need_version = '5.6.0';
 
     /*
     List of available self- commands
      */
-    private static $COMMANDS = [
+    private static $commands = [
         '--self init'    =>
             'Initialize Mysli Toolkit in current directory.',
 
@@ -623,7 +618,7 @@ namespace mysli\root; class __init
     /*
     Help message to be displayed in CLI.
      */
-    const SAFE_MODE_MESSAGES = "
+    const safemode_messages = "
 Command Line for Mysli Platform
 
 If you'd like to mange initialized application, please execute `mysli` from root directory of that application.
@@ -641,7 +636,7 @@ List of available commands:
     /*
     LOC file template
      */
-    const LOC_TEMPLATE = <<<'LOC'
+    const loc_template = <<<'LOC'
 <?php
 
 /*
@@ -666,7 +661,7 @@ LOC;
     /*
     Command line help text.
      */
-    const SAFEMODE_INIT_HELP = <<<'HELP'
+    const safemode_init_help = <<<'HELP'
 
 Mysli Platform Initialization
 
