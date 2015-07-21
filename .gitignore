@@ -5,3 +5,5 @@ configuration
 mysli.loc.php
 public
 .DS_Store
+~releases/
+~dist/
