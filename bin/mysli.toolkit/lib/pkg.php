@@ -212,8 +212,8 @@ namespace mysli\toolkit; class pkg
      */
     static function get_path($package)
     {
-        $source = MYSLI_BINPATH."/{$package}";
         $phar   = 'phar://'.MYSLI_BINPATH."/{$package}.phar";
+        $source = MYSLI_BINPATH."/{$package}";
 
         if     (file_exists($phar))   return $phar;
         elseif (file_exists($source)) return $source;
@@ -816,9 +816,6 @@ namespace mysli\toolkit; class pkg
 
     /**
      * Find all packages.
-     * --
-     * @throws mysli\toolkit\exception\pkg
-     *         10 Package exists in two variations, source and .phar.
      *
      * @throws mysli\toolkit\exception\pkg
      *         20 Found directory which is actually not a package.
@@ -836,15 +833,19 @@ namespace mysli\toolkit; class pkg
             if (substr($package, 0, 1) === '.' || substr($package, 0, 1) === '~')
                 continue;
 
-            if (substr($package, 0, -4) === '.phar')
-                $package = substr($package, 0, -4);
+            if (substr($package, -5) === '.phar')
+                $package = substr($package, 0, -5);
 
 
             if (in_array($package, self::$all))
-                throw new exception\pkg(
-                    "Package exists: `{$package}` both as `phar` and as `source`, ".
-                    "please remove one of them or system will not boot.", 10
+                log::warning(
+                    "Package `{$package}` exists both as a `phar` and a `source`.",
+                    __CLASS__
                 );
+                // throw new exception\pkg(
+                //     "Package `{$package}` exists both as `phar` and as `source`, ".
+                //     "please remove one of them or system will not boot.", 10
+                // );
 
             $type = self::exists_as($package);
 
