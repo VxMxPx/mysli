@@ -227,13 +227,18 @@ namespace mysli\toolkit; class __init
         }
         catch (\Exception $e)
         {
-            cli\ui::nl();
-            cli\ui::error(
-                "Error when trying to run a script `{$script}`!\n".
-                $e->getMessage()
-            );
-            cli\ui::nl();
-            toolkit::shutdown(3);
+            if ($e->getCode() > -99)
+            {
+                cli\ui::nl();
+                cli\ui::error(
+                    "Error when trying to run a script `{$script}`!\n".
+                    $e->getMessage()
+                );
+                cli\ui::nl();
+                toolkit::shutdown(3);
+            }
+            else
+                throw $e;
         }
     }
 }
