@@ -3,7 +3,7 @@
 namespace mysli\dev\testme\root\script; class test
 {
     const __use = '
-        .{ test -> lib.test }
+        .{ test -> lib.test, diff }
         mysli.toolkit.cli.{ prog, param, ui, output, util }
         mysli.toolkit.{ fs.dir, fs.file, fs.fs -> fs, pkg, type.arr -> arr }
     ';
@@ -271,145 +271,44 @@ namespace mysli\dev\testme\root\script; class test
      * --
      * @return void
      */
-    private static function generate_diff($expect, $actual)
+    private static function generate_diff(array $expect, array $actual)
     {
         $width = util::terminal_width();
         $width = $width < 50 ? $width : 50;
 
         // Expected
-        // output::green("... EXPECT ".str_repeat(".", $width));
-        output::light_green("    EXPECT");
+        output::light_green(" :: EXPECT");
         output::green(str_repeat("^", $width+11));
-        self::diff_out($expect, $actual, false);
-
+        self::output_diff( diff::plain($expect) );
         ui::nl();
 
         // Actual
-        // output::red("... RESULT ".str_repeat(".", $width));
-        output::light_red("    RESULT");
+        output::light_red(" :: RESULT");
         output::red(str_repeat("^", $width+11));
-        self::diff_out($actual, $expect, true);
+        self::output_diff( diff::generate($actual, $expect) );
+        ui::nl();
     }
 
     /**
-     * Find actual diff, withing line, compared to expecation.
+     * Output generated diff array.
      * --
-     * @param array   $one
-     * @param array   $two
-     * @param boolean $mark
-     * @param boolean $is_array
-     * @param integer $level
-     * --
-     * @return void
+     * @param array $diff
      */
-    private static function diff_out(
-        array $one, array $two, $mark=false, $is_array=false, $level=-1)
+    private static function output_diff(array $diff)
     {
-        foreach ($one as $id => $line)
+        foreach ($diff as list($is_diff, $level, $line1, $line2))
         {
-            // Transform to array if multiline string
-            if (is_string($line) && strpos($line, "\n") !== false)
+            $space = str_repeat(' ', $level*4);
+
+            if ($is_diff)
             {
-                $line = explode("\n", $line);
-
-                if (!is_string($two[$id]))
-                {
-                    $two[$id] = explode("\n", $two[$id]);
-                }
-                else
-                {
-                    $two[$id] = [ $two[$id] ];
-                }
-
-                self::diff_out($line, $two[$id], $mark, false, $level+1);
-
-                continue;
-            }
-
-            // Call self again in case of array....
-            if (is_array($line))
-            {
-                if (!is_array($two[$id]))
-                {
-                    $two[$id] = [ $two[$id] ];
-                }
-
-                self::diff_out($line, $two[$id], $mark, true, $level+1);
-                continue;
-            }
-
-            // Stringify line...
-            $line = self::stringify($line);
-
-            // Output Pre-Indent
-            if ($level > 0)
-                output::line(str_repeat(' ', $level*4), false);
-
-            if ($is_array)
-            {
-                // If not set, then print is a missing...
-                if (!isset($two[$id]))
-                {
-                    $two[$id] = '<MISSING>';
-                    $linetype = '<MISSING> ';
-                    $twotype  = '<MISSING> ';
-                }
-                else
-                {
-                    $linetype = '('.gettype($line).') ';
-                    $twotype  = '('.gettype($two[$id]).') ';
-                }
-
-
-                if ($linetype === $twotype && $linetype !== '<MISSING> ')
-                    $linetype = $twotype = '';
-
-                $line = "{$id} : {$linetype}{$line}";
-                $need = "{$id} : {$twotype}{$two[$id]}";
+                $space = substr_replace($space, '->', -3, 2);
+                output::red($space.$line1);
             }
             else
             {
-                $need = isset($two[$id]) ? $two[$id] : '<MISSING>';
+                output::line($space.$line1);
             }
-
-            // Compare lines...
-            if ($mark && ($need !== $line))
-                output::red("  > {$line}");
-            else
-                output::line("    {$line}");
-        }
-    }
-
-    /**
-     * Convert line to presentable string for diff.
-     * --
-     * @param  mixed $line
-     * --
-     * @return string
-     */
-    private static function stringify($line)
-    {
-        if (is_array($line))
-        {
-            return arr::readable($line, 4, 4, ': ', "\n", true);
-        }
-        elseif (is_object($line))
-        {
-            return get_class($line);
-        }
-        elseif (is_resource($line))
-        {
-            return '<RESOURCE>';
-        }
-        else
-        {
-            // Strip shell arguments if there...
-            if (preg_match('/\\e\[[0-9]+m/', $line))
-                $line = escapeshellcmd($line);
-            else
-                $line = $line;
-
-            return $line;
         }
     }
 
