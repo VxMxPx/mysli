@@ -375,7 +375,6 @@ namespace mysli\dev\testme; class test
             $r = self::assert_statement($e, $test['expect']);
             $r['skipped'] = null;
             $r['runtime'] = (microtime(true) - $timestart);
-            // dump($r);
             return $r;
         }
         finally
@@ -407,6 +406,7 @@ namespace mysli\dev\testme; class test
 
         $r['skipped'] = null;
         $r['runtime'] = (microtime(true) - $timestart);
+
         return $r;
     }
 
