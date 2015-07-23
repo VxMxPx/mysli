@@ -12,12 +12,12 @@ namespace mysli\toolkit\type; class arr_path
      *     path    => user.address
      *     return  => My Address
      * --
-     * @throws mysli\toolkit\exception\validate
-     *         723 Unexpected type, expected a string.
-     * --
      * @param array  $array
      * @param string $path
      * @param mixed  $default
+     * --
+     * @throws mysli\toolkit\exception\validate
+     *         723 Unexpected type, expected a string.
      * --
      * @return mixed
      */
@@ -53,12 +53,12 @@ namespace mysli\toolkit\type; class arr_path
      *     value  => 'New Address'
      *     result => ['user' => ['address' => 'New Address']]
      * --
-     * @throws mysli\toolkit\exception\validate
-     *         723 Unexpected type, expected a string.
-     * --
      * @param array  $array
      * @param string $path
      * @param mixed  $value
+     * --
+     * @throws mysli\toolkit\exception\validate
+     *         723 Unexpected type, expected a string.
      * --
      * @return null
      */
