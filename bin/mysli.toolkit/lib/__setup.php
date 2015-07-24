@@ -75,10 +75,9 @@ namespace mysli\toolkit; class __setup
         /*
         Write toolkit pkg list.
          */
-        // Add self and dot packages to the enabled list.
+        // Add self to the enabled list.
         $pkg_list =
-            'mysli.toolkit '.self::get_version($binpath, 'mysli.toolkit')."\n".
-            'dot '.self::get_version($binpath, 'dot');
+            'mysli.toolkit '.self::get_version($binpath, 'mysli.toolkit')."\n";
 
         if (!file_put_contents("{$cfgpath}/toolkit.pkg.list", $pkg_list))
             throw new \Exception(
