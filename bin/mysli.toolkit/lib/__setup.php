@@ -30,6 +30,7 @@ namespace mysli\toolkit; class __setup
      * @throws \Exception 30 Cannot create toolkit.pkg.list.
      * @throws \Exception 40 Cannot create the tookit.php file.
      * @throws \Exception 50 Cannot create the tookit.events.json file.
+     * @throws \Exception 51 Cannot create the tookit.routes.json file.
      * @throws \Exception 60 Cannot create index.php file.
      * --
      * @return boolean
@@ -102,7 +103,15 @@ namespace mysli\toolkit; class __setup
          */
         if (!file_put_contents("{$cfgpath}/toolkit.events.json", '{}'))
             throw new \Exception(
-                "Cannot create `{$cfgpath}`/toolkit.events.json` file.", 50
+                "Cannot create `{$cfgpath}/toolkit.events.json` file.", 50
+            );
+
+        /*
+        Create routes file.
+         */
+        if (!file_put_contents("{$cfgpath}/toolkit.routes.json", '{}'))
+            throw new \Exception(
+                "Cannot create `{$cfgpath}/toolkit.routes.json` file.", 51
             );
 
         /*
