@@ -5,7 +5,7 @@ namespace mysli\dev\testme\root\script; class test
     const __use = '
         .{ test -> lib.test, diff }
         mysli.toolkit.cli.{ prog, param, ui, output, util }
-        mysli.toolkit.{ fs.dir, fs.file, fs.fs -> fs, pkg, type.arr -> arr }
+        mysli.toolkit.{ fs, fs.dir, fs.file, pkg, type.arr -> arr }
     ';
 
     /**

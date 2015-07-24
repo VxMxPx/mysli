@@ -7,6 +7,7 @@ namespace mysli\toolkit\root\script; class config
             pkg,
             type.str   -> str,
             config     -> lib\config,
+            fs,
             fs.*       -> *,
             cli.prog   -> prog,
             cli.param  -> param,

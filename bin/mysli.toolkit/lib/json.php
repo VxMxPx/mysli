@@ -17,7 +17,7 @@ namespace mysli\toolkit; class json
 {
     const __use = '
         .{
-            fs.fs    -> fs,
+            fs,
             fs.file  -> file,
             type.arr -> arr,
             exception.json

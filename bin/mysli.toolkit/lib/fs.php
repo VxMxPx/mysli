@@ -1,6 +1,6 @@
 <?php
 
-namespace mysli\toolkit\fs; class fs
+namespace mysli\toolkit; class fs
 {
     const __use = '
         .{
