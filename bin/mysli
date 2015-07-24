@@ -604,7 +604,7 @@ namespace mysli\root; class __init
         '--self install' =>
             'Install this script to the `/usr/bin` directory to be always accessible. '.
             'You can use [PATH], e.g.: `mysli --self install /my/costume/path`, '.
-            'to select where to be installed, default is `/usr/bin`.'.
+            'to select where to be installed, default is `/usr/bin`. '.
             'You need to be root to do this.',
 
         '--self remove'  =>
