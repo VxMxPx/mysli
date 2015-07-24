@@ -174,9 +174,9 @@ namespace mysli\toolkit\type; class str
             return $input;
         }
 
-        validate::need_str($char, 1);
-        validate::need_str($input, 2);
-        validate::need_int($limit, 1);
+        validate::need_str($char);
+        validate::need_str($input);
+        validate::need_int($limit);
 
         $char_escaped = preg_quote($char, '/');
         $regex = "([{$char_escaped}]{{$limit},})";
@@ -206,7 +206,7 @@ namespace mysli\toolkit\type; class str
      */
     static function random($length, $mask='aA1s')
     {
-        validate::need_int($length, 1);
+        validate::need_int($length);
         validate::need_str($mask);
 
         $a = 'qwertzuiopasdfghjklyxcvbnm';
@@ -308,11 +308,11 @@ namespace mysli\toolkit\type; class str
     static function slice($string, $start, $length=null)
     {
         validate::need_str($string);
-        validate::need_int($start, null, null, 1);
+        validate::need_int($start);
 
         if ($length !== null)
         {
-            validate::need_int($length, null, null, 2);
+            validate::need_int($length);
             return mb_substr($string, $start, $length);
         }
         else
@@ -324,6 +324,10 @@ namespace mysli\toolkit\type; class str
     /**
      * Clean string data, to allow very narrow amount of specific characters.
      * --
+     * @param string $string
+     * @param string $mask   aA1s = small a-z, up A-Z, numeric, spaces.
+     * @param string $custom Any custom characters (like ,-+*!?#).
+     * --
      * @throws mysli\toolkit\exception\str
      *         10 Invalid $mask parameter.
      *
@@ -333,16 +337,12 @@ namespace mysli\toolkit\type; class str
      * @throws mysli\toolkit\exception\validate
      *         724 Unexpected type, expected an integer or a string.
      * --
-     * @param string $string
-     * @param string $mask   aA1s = small a-z, up A-Z, numeric, spaces.
-     * @param string $custom Any custom characters (like ,-+*!?#).
-     * --
      * @return string
      */
     static function clean($string, $mask='aA1s', $custom=null)
     {
-        validate::need_str($string, 1);
-        validate::need_str($mask, 2);
+        validate::need_str($string);
+        validate::need_str($mask);
 
         if ($custom)
         {
@@ -370,9 +370,7 @@ namespace mysli\toolkit\type; class str
         }
 
         if (!$filter)
-        {
             throw new exception\str('Invalid $mask parameter.', 10);
-        }
 
         $filter = '/([^' . $filter . '])/sm';
         $string = preg_replace($filter, '', $string);
@@ -394,8 +392,8 @@ namespace mysli\toolkit\type; class str
      */
     static function clean_regex($string, $regex)
     {
-        validate::need_str($string, 1);
-        validate::need_str($regex, 2);
+        validate::need_str($string);
+        validate::need_str($regex);
         return preg_replace($regex, '', $string);
     }
 
@@ -413,7 +411,7 @@ namespace mysli\toolkit\type; class str
     static function slug($string, $delimiter='-')
     {
         validate::need_str($string);
-        validate::need_str($delimiter, 1);
+        validate::need_str($delimiter);
 
         if (empty($string))
         {
@@ -472,7 +470,7 @@ namespace mysli\toolkit\type; class str
      */
     static function limit_words($string, $limit, $ending=null)
     {
-        validate::need_int($limit, 1);
+        validate::need_int($limit);
         $string = (string) $string;
         $string_initial_length = self::length($string);
 
@@ -510,7 +508,7 @@ namespace mysli\toolkit\type; class str
      */
     static function limit_length($string, $limit, $ending=null)
     {
-        validate::need_int($limit, 1);
+        validate::need_int($limit);
         $string = (string) $string;
         $string_initial_length = self::length($string);
         $string = self::slice($string, 0, $limit);
@@ -687,9 +685,9 @@ namespace mysli\toolkit\type; class str
      */
     static function find($string, $find, $offset=0, $encoding=null)
     {
-        validate::need_str($string, 1);
-        validate::need_str($find, 2);
-        validate::need_int($offset, 0);
+        validate::need_str($string);
+        validate::need_str($find);
+        validate::need_int($offset);
 
         if ($encoding === null)
         {
@@ -818,7 +816,7 @@ namespace mysli\toolkit\type; class str
     static function split($string, $separator, $limit=null)
     {
         validate::need_str($string);
-        validate::need_str($separator, 2);
+        validate::need_str($separator);
 
         if ($limit !== null)
         {
