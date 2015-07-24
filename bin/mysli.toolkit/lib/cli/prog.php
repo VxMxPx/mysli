@@ -404,7 +404,7 @@ namespace mysli\toolkit\cli; class prog
      * Get parameter's option, at index.
      * --
      * @example
-     *     // In case of: dot proh --foo bar --faz fez foz
+     *     // In case of: mysli prog --foo bar --faz fez foz
      *     $prog->get_parameter_at(0, 'name'); // => foo
      * --
      * @param integer $index

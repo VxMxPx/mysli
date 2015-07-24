@@ -146,14 +146,14 @@ namespace mysli\root; class __init
             if (!defined('MYSLI_LOC_BINPATH'))
                 trigger_error(
                     "Binary path not defined! `MYSLI_LOC_BINPATH`. ".
-                    "Check `dot.loc.php` file.",
+                    "Check `mysli.loc.php` file.",
                     E_USER_ERROR
                 );
 
             if (!defined('MYSLI_LOC_PUBPATH'))
                 trigger_error(
                     "Public path not defined! `MYSLI_LOC_PUBPATH`. ".
-                    "Check `dot.loc.php` file.",
+                    "Check `mysli.loc.php` file.",
                     E_USER_ERROR
                 );
 

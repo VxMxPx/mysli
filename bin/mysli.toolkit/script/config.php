@@ -124,7 +124,7 @@ namespace mysli\toolkit\root\script; class config
                 ui::ul($list);
                 ui::nl();
                 ui::line(
-                    'Use `./dot config vendor.package` to see all options '.
+                    'Use `mysli config vendor.package` to see all options '.
                     'for particular package.'
                 );
             }
