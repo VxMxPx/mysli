@@ -51,10 +51,11 @@ namespace mysli\toolkit; class pkg
     /**
      * Init pkg
      * --
+     * @param string $path
+     *        Specify a specific pkg list path, if not, default will be used.
+     * --
      * @throws mysli\toolkit\exception\pkg 10 Already initialized.
      * @throws mysli\toolkit\exception\pkg 20 File not found.
-     * --
-     * @param  string registry path
      */
     static function __init($path=null)
     {
