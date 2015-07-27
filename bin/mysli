@@ -650,12 +650,13 @@ define(
 );
 
 // All paths MUST be relative to the application (this file's) folder.
-//
+
 // BINPATH is binary path, where all system .phar files are stored.
 define('MYSLI_LOC_BINPATH', '{{BINPATH}}');
+
 // PUBPATH is public path, files saved in it, will be browser accessible.
 define('MYSLI_LOC_PUBPATH', '{{PUBPATH}}');
-// TMPPATH is temp path, where temporary files will be saved.
+
 LOC;
 
     /*
