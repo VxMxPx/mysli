@@ -149,7 +149,7 @@ namespace mysli\toolkit\cli; class ui
      */
     static function title($string, $return=false)
     {
-        $f = "\e[1m{$string}\e[21m";
+        $f = "\e[1m{$string}\e[0m";
         if ($return) return $f; else output::line($f);
     }
 

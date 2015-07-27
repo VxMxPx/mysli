@@ -7,7 +7,7 @@ use mysli\toolkit\cli\output;
 #: Expect Output <<<CLI
 output::format("Hello <bold><red>World</bold></red>");
 <<<CLI
-Hello [1m[31mWorld[21m[39m
+Hello [1m[31mWorld[0m[39m
 CLI;
 
 #: Test Format, Close All

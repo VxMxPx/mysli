@@ -61,12 +61,12 @@ namespace mysli\toolkit\cli; class output
         'all'              => [0, 0],
 
         // Formatting
-        'bold'             => [1, 21],
-        'dim'              => [2, 22],
-        'underline'        => [4, 24],
-        'blink'            => [5, 25],
-        'invert'           => [7, 27], // invert the foreground and background colors
-        'hidden'           => [8, 28],
+        'bold'             => [1, 0],
+        'dim'              => [2, 0],
+        'underline'        => [4, 0],
+        'blink'            => [5, 0],
+        'invert'           => [7, 0], // invert the foreground and background colors
+        'hidden'           => [8, 0],
 
         // Foreground (text) colors
         'default'          => [39, 39],
@@ -231,12 +231,12 @@ namespace mysli\toolkit\cli; class output
      */
 
     // Basic formatting
-    static function bold($s, $n=true)      { self::line("\e[1m{$s}\e[21m", $n); }
-    static function dim($s, $n=true)       { self::line("\e[2m{$s}\e[22m", $n); }
-    static function underline($s, $n=true) { self::line("\e[4m{$s}\e[24m", $n); }
-    static function blink($s, $n=true)     { self::line("\e[5m{$s}\e[25m", $n); }
-    static function invert($s, $n=true)    { self::line("\e[7m{$s}\e[27m", $n); }
-    static function hidden($s, $n=true)    { self::line("\e[8m{$s}\e[28m", $n); }
+    static function bold($s, $n=true)      { self::line("\e[1m{$s}\e[0m", $n); }
+    static function dim($s, $n=true)       { self::line("\e[2m{$s}\e[0m", $n); }
+    static function underline($s, $n=true) { self::line("\e[4m{$s}\e[0m", $n); }
+    static function blink($s, $n=true)     { self::line("\e[5m{$s}\e[0m", $n); }
+    static function invert($s, $n=true)    { self::line("\e[7m{$s}\e[0m", $n); }
+    static function hidden($s, $n=true)    { self::line("\e[8m{$s}\e[0m", $n); }
 
     // Foreground (text) colors
     static function black($s, $n=true)         { self::line("\e[30m{$s}\e[39m", $n); }
