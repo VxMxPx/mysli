@@ -4,7 +4,10 @@
 use mysli\toolkit\type\arr;
 
 #: Define Data
-$data = ['a', 'b', 'c', 'd'];
+$data = [
+    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o',
+    'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'
+];
 
 #: Test Count
 #: Use Data
@@ -19,9 +22,13 @@ return in_array(arr::get_random($data), $data);
 #: Test Random, All Elements Are Not Equal
 #: Use Data
 #: Expect True
-$a = arr::get_random($data);
-$b = arr::get_random($data);
-$c = arr::get_random($data);
-$d = arr::get_random($data);
-
-return !($a === $b && $b === $c && $c === $d);
+$previous = arr::get_random($data);
+for ($i=0; $i < count($data); $i++)
+{
+    $current = arr::get_random($data);
+    if ($previous !== $current)
+        return true;
+    else
+        $previous = $current;
+}
+return false;
