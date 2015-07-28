@@ -12,8 +12,8 @@ php:
 before_script:
     - chmod +x bin/mysli
     - bin/mysli --self init
-    - bin/mysli pkg -e mysli.dev.testme
+    - bin/mysli pkg -e mysli.dev.test
 
 script:
-    - bin/mysli test mysli.dev.testme
+    - bin/mysli test mysli.dev.test
     - bin/mysli test mysli.toolkit
