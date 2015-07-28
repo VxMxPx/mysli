@@ -91,8 +91,8 @@ namespace mysli\toolkit; class event
                 "File not found: `{$filename}`.", 10
             );
 
-        self::$registry = $filename;
-        self::read();
+        static::$registry = $filename;
+        static::read();
     }
 
     /**
@@ -114,22 +114,22 @@ namespace mysli\toolkit; class event
      */
     static function on($event, $call, $priority=self::priority_low)
     {
-        if (!isset(self::$events[$event]))
+        if (!isset(static::$events[$event]))
         {
-            self::$events[$event] = [];
+            static::$events[$event] = [];
         }
 
         if ($priority === self::priority_low)
         {
-            self::$events[$event][++self::$eid] = $call;
+            static::$events[$event][++static::$eid] = $call;
         }
         else
         {
-            self::$events = ['eid_'.++self::$eid => $call] + self::$events;
+            static::$events = ['eid_'.++static::$eid => $call] + static::$events;
         }
 
-        end(self::$events[$event]);
-        return key(self::$events[$event]);
+        end(static::$events[$event]);
+        return key(static::$events[$event]);
     }
 
     /**
@@ -140,7 +140,7 @@ namespace mysli\toolkit; class event
      */
     static function off($event, $call)
     {
-        foreach (self::$events as $cevent => &$calls)
+        foreach (static::$events as $cevent => &$calls)
         {
             if ($cevent !== $event)
             {
@@ -159,7 +159,7 @@ namespace mysli\toolkit; class event
             // should be removed also.
             if (!$calls)
             {
-                unset(self::$events[$event]);
+                unset(static::$events[$event]);
             }
         }
     }
@@ -184,14 +184,14 @@ namespace mysli\toolkit; class event
         {
             foreach ($event as $event_i => $call)
             {
-                if (!self::register($event_i, $call))
+                if (!static::register($event_i, $call))
                     return false;
             }
 
             return true;
         }
 
-        $events = json::decode_file(self::$registry, true);
+        $events = json::decode_file(static::$registry, true);
 
         if (!isset($events[$event]))
         {
@@ -215,9 +215,9 @@ namespace mysli\toolkit; class event
 
         log::info("Register: `{$event}` to `{$call}`.", __CLASS__);
 
-        self::on($event, $call, $priority);
+        static::on($event, $call, $priority);
 
-        return self::write($events);
+        return static::write($events);
     }
 
     /**
@@ -237,14 +237,14 @@ namespace mysli\toolkit; class event
         {
             foreach ($event as $event_i => $call)
             {
-                if (!self::unregister($event_i, $call))
+                if (!static::unregister($event_i, $call))
                     return false;
             }
 
             return true;
         }
 
-        $events = json::decode_file(self::$registry, true);
+        $events = json::decode_file(static::$registry, true);
 
         foreach ($events as $cevent => &$calls)
         {
@@ -271,8 +271,8 @@ namespace mysli\toolkit; class event
 
         log::info("Unregister: `{$event}` for `{$call}`.", __CLASS__);
 
-        self::off($event, $call);
-        return self::write($events);
+        static::off($event, $call);
+        return static::write($events);
     }
 
     /**
@@ -285,7 +285,7 @@ namespace mysli\toolkit; class event
     {
         log::debug("Trigger: {$event}", __CLASS__);
 
-        foreach (self::$events as $levent => $calls)
+        foreach (static::$events as $levent => $calls)
         {
             if (strpos($levent, '*') !== false)
             {
@@ -325,8 +325,8 @@ namespace mysli\toolkit; class event
      */
     static function read()
     {
-        self::$events = json::decode_file(self::$registry, true);
-        self::$eid = count(self::$events);
+        static::$events = json::decode_file(static::$registry, true);
+        static::$eid = count(static::$events);
     }
     /**
      * Write list of events.
@@ -335,6 +335,6 @@ namespace mysli\toolkit; class event
      */
     static function write()
     {
-        return json::encode_file(self::$registry, $events);
+        return json::encode_file(static::$registry, $events);
     }
 }

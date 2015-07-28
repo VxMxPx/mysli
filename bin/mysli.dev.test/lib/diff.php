@@ -24,7 +24,7 @@ namespace mysli\dev\test; class diff
                 $arr2[$id] = isset($arr2[$id]) ? explode("\n", $arr2[$id]) : [];
                 $line = explode("\n", $line);
                 $lines = array_merge(
-                    $lines, self::generate($line, $arr2[$id], 1)
+                    $lines, static::generate($line, $arr2[$id], 1)
                 );
                 continue;
             }
@@ -36,7 +36,7 @@ namespace mysli\dev\test; class diff
             if (!($level === 1 && is_array($line)))
             {
                 // Diff one line
-                $lines[] = self::diff_line(
+                $lines[] = static::diff_line(
                     $line,
                     (isset($arr2[$id]) ? $arr2[$id] : null),
                     $level,
@@ -48,7 +48,7 @@ namespace mysli\dev\test; class diff
             if (is_array($line))
                 $lines = array_merge(
                     $lines,
-                    self::generate(
+                    static::generate(
                         $line,
                         (isset($arr2[$id]) ? $arr2[$id] : [null]),
                         $level+1
@@ -61,7 +61,7 @@ namespace mysli\dev\test; class diff
 
     /**
      * Generate a plain representation of an array. This will generate same
-     * output as self::generate() does, but without comparison.
+     * output as static::generate() does, but without comparison.
      * Return an array, each item representing a line:
      * [ integer $level, string $line ]
      * --
@@ -78,7 +78,7 @@ namespace mysli\dev\test; class diff
             if ($level === 1 && is_string($line) && strpos($line, "\n"))
             {
                 $lines = array_merge(
-                    $lines, self::plain(explode("\n", $line), 1)
+                    $lines, static::plain(explode("\n", $line), 1)
                 );
                 continue;
             }
@@ -86,12 +86,12 @@ namespace mysli\dev\test; class diff
             $printable_id = $level > 1 ? $id : null;
 
             if (!($level === 1 && is_array($line)))
-                $lines[] = self::plain_line($line, $level, $printable_id);
+                $lines[] = static::plain_line($line, $level, $printable_id);
 
             if (is_array($line))
                 $lines = array_merge(
                     $lines,
-                    self::plain($line, $level+1)
+                    static::plain($line, $level+1)
                 );
         }
 
@@ -120,7 +120,7 @@ namespace mysli\dev\test; class diff
      */
     private static function plain_line($line, $level, $id=null)
     {
-        $line = self::stringify($line);
+        $line = static::stringify($line);
 
         if ($id !== null)
             $line = "{$id}: {$line}";
@@ -157,7 +157,7 @@ namespace mysli\dev\test; class diff
         // Miss? Quit...
         if ($was_miss)
         {
-            $line1 = self::stringify($line1);
+            $line1 = static::stringify($line1);
             $line1 = "[{$l1_type}] {$line1}";
             $line1 = $id !== null ? "{$id}: {$line1}" : $line1;
             return [ true, $level, $line1, null ];
@@ -171,15 +171,15 @@ namespace mysli\dev\test; class diff
         // They're the same...
         if ($line1 === $line2)
         {
-            $line1 = self::stringify($line1);
+            $line1 = static::stringify($line1);
             $line1 = $id !== null ? "{$id}: {$line1}" : $line1;
-            $line2 = self::stringify($line2);
+            $line2 = static::stringify($line2);
             $line2 = $id !== null ? "{$id}: {$line2}" : $line2;
             return [ false, $level, $line1, $line2 ];
         }
 
-        $line1 = self::stringify($line1);
-        $line2 = self::stringify($line2);
+        $line1 = static::stringify($line1);
+        $line2 = static::stringify($line2);
 
         // Type diff?
         if ($l1_type !== $l2_type)

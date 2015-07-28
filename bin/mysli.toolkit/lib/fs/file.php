@@ -49,7 +49,7 @@ namespace mysli\toolkit\fs; class file
 
         if (!$extension)
         {
-            $file_ext = self::extension($filename);
+            $file_ext = static::extension($filename);
             $file_ext = strlen($file_ext);
 
             if ($file_ext > 0)
@@ -84,7 +84,7 @@ namespace mysli\toolkit\fs; class file
      */
     static function size($filename)
     {
-        if (!self::exists($filename))
+        if (!static::exists($filename))
         {
             throw new exception\file(
                 "File not found: `{$filename}`.", 10
@@ -117,7 +117,7 @@ namespace mysli\toolkit\fs; class file
      */
     static function read($filename)
     {
-        if (self::exists($filename))
+        if (static::exists($filename))
         {
             return file_get_contents($filename);
         }
@@ -143,7 +143,7 @@ namespace mysli\toolkit\fs; class file
      */
     static function create($filename, $empty=false)
     {
-        if (self::exists($filename))
+        if (static::exists($filename))
         {
             if (!$empty)
             {
@@ -181,7 +181,7 @@ namespace mysli\toolkit\fs; class file
             dir::create($dir, 0777, true);
         }
 
-        return self::create($filename, $empty);
+        return static::create($filename, $empty);
     }
 
     /**
@@ -209,12 +209,12 @@ namespace mysli\toolkit\fs; class file
     static function write(
         $filename, $content, $method=self::replace, $lock=false, $create=true)
     {
-        if (!self::exists($filename) && $create)
+        if (!static::exists($filename) && $create)
         {
-            self::create($filename);
+            static::create($filename);
         }
 
-        if (!self::exists($filename))
+        if (!static::exists($filename))
         {
             throw new exception\file(
                 "File doesn't exists: `{$filename}`.", 10
@@ -316,7 +316,7 @@ namespace mysli\toolkit\fs; class file
 
             foreach ($file as $f)
             {
-                $i = $i + self::remove($f);
+                $i = $i + static::remove($f);
             }
 
             return $i;
@@ -346,7 +346,7 @@ namespace mysli\toolkit\fs; class file
     {
         if (dir::exists($destination))
         {
-            $destination = fs::ds($destination, '/', self::name($source));
+            $destination = fs::ds($destination, '/', static::name($source));
         }
         else
         {
@@ -358,7 +358,7 @@ namespace mysli\toolkit\fs; class file
             }
         }
 
-        if (self::exists($destination) && !$overwrite)
+        if (static::exists($destination) && !$overwrite)
         {
             throw new exception\file(
                 "Destination file exists: `{$destination}`.", 20
@@ -392,7 +392,7 @@ namespace mysli\toolkit\fs; class file
     {
         if (dir::exists($destination))
         {
-            $destination = fs::ds($destination, '/', self::name($source));
+            $destination = fs::ds($destination, '/', static::name($source));
         }
         else
         {
@@ -404,7 +404,7 @@ namespace mysli\toolkit\fs; class file
             }
         }
 
-        if (self::exists($destination) && !$overwrite)
+        if (static::exists($destination) && !$overwrite)
         {
             throw new exception\file(
                 "Destination file exists: `{$destination}`.", 20
@@ -525,7 +525,7 @@ namespace mysli\toolkit\fs; class file
                 if (!$deep)
                     continue;
 
-                $matched_sub = self::find(
+                $matched_sub = static::find(
                     fs::ds($directory, $file), $filter, $deep, $mrel, $rootlen
                 );
                 $matched = array_merge($matched_sub, $matched);
@@ -568,7 +568,7 @@ namespace mysli\toolkit\fs; class file
 
             foreach ($filename as $file)
             {
-                $collection[$file] = self::signature($file);
+                $collection[$file] = static::signature($file);
             }
 
             return $collection;
@@ -658,7 +658,7 @@ namespace mysli\toolkit\fs; class file
 
             // Grab modification time of files...
             $sig_new = [];
-            $files   = self::find($directory, $filter, $deep);
+            $files   = static::find($directory, $filter, $deep);
 
             clearstatcache();
             foreach ($files as $file)

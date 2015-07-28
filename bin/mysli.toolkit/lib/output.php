@@ -26,7 +26,7 @@ namespace mysli\toolkit; class output
      */
     static function set($output, $key='%master')
     {
-        self::$outputs[$key] = $output;
+        static::$outputs[$key] = $output;
     }
 
     /**
@@ -37,12 +37,12 @@ namespace mysli\toolkit; class output
      */
     static function append($output, $key='%master')
     {
-        if (isset(self::$outputs[$key]))
+        if (isset(static::$outputs[$key]))
         {
-            $output = self::$outputs[$key] . $output;
+            $output = static::$outputs[$key] . $output;
         }
 
-        self::set($output, $key);
+        static::set($output, $key);
     }
 
     /**
@@ -53,12 +53,12 @@ namespace mysli\toolkit; class output
      */
     static function prepend($output, $key='%master')
     {
-        if (isset(self::$outputs[$key]))
+        if (isset(static::$outputs[$key]))
         {
-            $output = $output . self::$outputs[$key];
+            $output = $output . static::$outputs[$key];
         }
 
-        self::set($output, $key);
+        static::set($output, $key);
     }
 
     /**
@@ -72,8 +72,8 @@ namespace mysli\toolkit; class output
      */
     static function take($key=null)
     {
-        $output = self::as_html($key);
-        self::clear($key);
+        $output = static::as_html($key);
+        static::clear($key);
         return $output;
     }
 
@@ -86,7 +86,7 @@ namespace mysli\toolkit; class output
      */
     static function as_string($key=null)
     {
-        return html::entities_encode(self::as_html($key));
+        return html::entities_encode(static::as_html($key));
     }
 
     /**
@@ -100,11 +100,11 @@ namespace mysli\toolkit; class output
     {
         if (!$key)
         {
-            return implode("\n", self::$outputs);
+            return implode("\n", static::$outputs);
         }
-        elseif (isset(self::$outputs[$key]))
+        elseif (isset(static::$outputs[$key]))
         {
-            return self::$outputs[$key];
+            return static::$outputs[$key];
         }
         else
         {
@@ -119,7 +119,7 @@ namespace mysli\toolkit; class output
      */
     static function as_array()
     {
-        return self::$outputs;
+        return static::$outputs;
     }
 
     /**
@@ -134,11 +134,11 @@ namespace mysli\toolkit; class output
     {
         if (!$key)
         {
-            return empty(self::$outputs);
+            return empty(static::$outputs);
         }
         else
         {
-            return isset(self::$outputs[$key]);
+            return isset(static::$outputs[$key]);
         }
     }
 
@@ -152,13 +152,13 @@ namespace mysli\toolkit; class output
     {
         if (!$key)
         {
-            self::$outputs = [];
+            static::$outputs = [];
         }
         else
         {
-            if (isset(self::$outputs[$key]))
+            if (isset(static::$outputs[$key]))
             {
-                unset(self::$outputs[$key]);
+                unset(static::$outputs[$key]);
             }
         }
     }

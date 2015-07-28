@@ -48,7 +48,7 @@ namespace mysli\toolkit; class signature
      */
     static function has($string)
     {
-        return !!self::get($string);
+        return !!static::get($string);
     }
 
     /**
@@ -79,12 +79,12 @@ namespace mysli\toolkit; class signature
      */
     static function is_valid($string, $key)
     {
-        $sign = self::get($string);
+        $sign = static::get($string);
 
         if (!$sign)
             return false;
 
-        return self::create($string, $key) === $sign;
+        return static::create($string, $key) === $sign;
     }
 
     /**
@@ -96,7 +96,7 @@ namespace mysli\toolkit; class signature
      */
     static function strip($string)
     {
-        if (($sign = self::get($string)))
+        if (($sign = static::get($string)))
         {
             return substr($string, strlen($sign));
         }

@@ -71,19 +71,19 @@ namespace mysli\toolkit\root\script; class config
         // If no package is set, list of available packages will be displayed.
         if (!$package->is_set())
         {
-            return self::get_list(false);
+            return static::get_list(false);
         }
         elseif (!$key->is_set())
         {
-            return self::get_list($package->get_value());
+            return static::get_list($package->get_value());
         }
         elseif (!$value->is_set() && !$null->is_set())
         {
-            return self::get_value($package->get_value(), $key->get_value());
+            return static::get_value($package->get_value(), $key->get_value());
         }
         else
         {
-            return self::set_value(
+            return static::set_value(
                 $package->get_value(),
                 $key->get_value(),
                 $value->is_set() ? $value->get_value() : null
@@ -110,7 +110,7 @@ namespace mysli\toolkit\root\script; class config
             }
             else
             {
-                output::format(self::format_options($options));
+                output::format(static::format_options($options));
             }
         }
         else
@@ -154,7 +154,7 @@ namespace mysli\toolkit\root\script; class config
         }
         else
         {
-            output::format(self::format_options([$key => $options[$key]]));
+            output::format(static::format_options([$key => $options[$key]]));
             return true;
         }
     }
@@ -227,7 +227,7 @@ namespace mysli\toolkit\root\script; class config
         if ($config->save())
         {
             output::green("OK: ", false);
-            self::get_value($package, $key);
+            static::get_value($package, $key);
             return true;
         }
         else

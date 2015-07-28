@@ -60,16 +60,16 @@ namespace mysli\toolkit\fs; class dir
     {
         $count = 0; // number of copied files and directories
 
-        if (!self::exists($source))
+        if (!static::exists($source))
         {
             throw new exception\dir(
                 "Not a valid directory: `{$source}`.", 10
             );
         }
 
-        if (!self::exists($destination))
+        if (!static::exists($destination))
         {
-            if (!self::create($destination))
+            if (!static::create($destination))
             {
                 throw new exception\dir(
                     "Cannot create destination directory: ".
@@ -87,11 +87,11 @@ namespace mysli\toolkit\fs; class dir
         foreach ($files as $file)
         {
             $filename = fs::ds($source, $file);
-            if (self::exists($filename))
+            if (static::exists($filename))
             {
                 if ($recursive)
                 {
-                    $count += self::copy(
+                    $count += static::copy(
                         $filename,
                         fs::ds($destination, $file),
                         $recursive,
@@ -148,16 +148,16 @@ namespace mysli\toolkit\fs; class dir
     {
         $count = 0; // number of moved files and directories
 
-        if (!self::exists($source))
+        if (!static::exists($source))
         {
             throw new exception\dir(
                 "Not a valid directory: `{$source}`.", 10
             );
         }
 
-        if (!self::exists($destination))
+        if (!static::exists($destination))
         {
-            if (!self::create($destination))
+            if (!static::create($destination))
             {
                 throw new exception\dir(
                     "Cannot create destination directory: ".
@@ -176,9 +176,9 @@ namespace mysli\toolkit\fs; class dir
         {
             $filename = fs::ds($source, $file);
 
-            if (self::exists($filename))
+            if (static::exists($filename))
             {
-                $count += self::move(
+                $count += static::move(
                     $filename,
                     fs::ds($destination, $file),
                     $overwrite
@@ -212,7 +212,7 @@ namespace mysli\toolkit\fs; class dir
 
         try
         {
-            self::remove($source, false);
+            static::remove($source, false);
         }
         catch (exception\fs $e)
         {
@@ -257,7 +257,7 @@ namespace mysli\toolkit\fs; class dir
             );
         }
 
-        if (!self::exists($directory))
+        if (!static::exists($directory))
         {
             log::notice(
                 "Cannot remove, directory doesn't exists: `{$directory}`.",
@@ -266,7 +266,7 @@ namespace mysli\toolkit\fs; class dir
             return true;
         }
 
-        if (!self::is_empty($directory))
+        if (!static::is_empty($directory))
         {
             if (!$force)
             {
@@ -280,9 +280,9 @@ namespace mysli\toolkit\fs; class dir
             {
                 $filename = fs::ds($directory, $file);
 
-                if (self::exists($filename))
+                if (static::exists($filename))
                 {
-                    self::remove($filename, $force);
+                    static::remove($filename, $force);
                     continue;
                 }
 
@@ -321,7 +321,7 @@ namespace mysli\toolkit\fs; class dir
      */
     static function signature($directory, $deep=true, $ignore_hidden=true)
     {
-        if (!self::exists($directory))
+        if (!static::exists($directory))
             throw new exception\dir(
                 "Directory doesn't exists: `{$directory}`.", 10
             );
@@ -338,9 +338,9 @@ namespace mysli\toolkit\fs; class dir
 
             $filename = fs::ds($directory, $file);
 
-            if (self::exists($filename))
+            if (static::exists($filename))
             {
-                $result = array_merge($result, self::signature($filename));
+                $result = array_merge($result, static::signature($filename));
             }
             else
             {
@@ -374,7 +374,7 @@ namespace mysli\toolkit\fs; class dir
      */
     static function is_empty($directory)
     {
-        if (!self::is_readable($directory))
+        if (!static::is_readable($directory))
         {
             throw new exception\dir(
                 'The directory is not readable!', 10
@@ -406,7 +406,7 @@ namespace mysli\toolkit\fs; class dir
      */
     static function size($directory, $deep=true)
     {
-        if (!self::exists($directory))
+        if (!static::exists($directory))
         {
             throw new exception\dir(
                 "Directory not found: `{$directory}`.", 10
@@ -418,11 +418,11 @@ namespace mysli\toolkit\fs; class dir
 
         foreach ($files as $file)
         {
-            if (self::exists(fs::ds($directory, $file)))
+            if (static::exists(fs::ds($directory, $file)))
             {
                 if ($deep)
                 {
-                    $size += self::size(fs::ds($directory, $file));
+                    $size += static::size(fs::ds($directory, $file));
                 }
             }
             else

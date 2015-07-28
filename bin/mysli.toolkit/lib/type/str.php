@@ -15,7 +15,7 @@ namespace mysli\toolkit\type; class str
      */
     static function __init()
     {
-        self::encoding('UTF-8');
+        static::encoding('UTF-8');
     }
 
     /**
@@ -168,7 +168,7 @@ namespace mysli\toolkit\type; class str
         {
             foreach ($char as $one_char)
             {
-                $input = self::limit_repeat($input, $one_char, $limit);
+                $input = static::limit_repeat($input, $one_char, $limit);
             }
 
             return $input;
@@ -284,8 +284,8 @@ namespace mysli\toolkit\type; class str
         }
 
         return str_replace(
-            array_keys(self::$normalize_map),
-            array_values(self::$normalize_map),
+            array_keys(static::$normalize_map),
+            array_values(static::$normalize_map),
             $str
         );
     }
@@ -418,9 +418,9 @@ namespace mysli\toolkit\type; class str
             return '';
         }
 
-        $string = self::to_lower($string);
-        $string = self::normalize($string);
-        $string = self::clean($string, 'a1s', '-_');
+        $string = static::to_lower($string);
+        $string = static::normalize($string);
+        $string = static::clean($string, 'a1s', '-_');
         $string = preg_replace('/( |_|-)+/', $delimiter, $string);
         $string = trim($string, $delimiter);
 
@@ -439,7 +439,7 @@ namespace mysli\toolkit\type; class str
      */
     static function slug_unique($string, array $slugs, $delimiter='-')
     {
-        $string = self::slug($string, $delimiter);
+        $string = static::slug($string, $delimiter);
         $num = 2;
         $base_string = $string;
 
@@ -472,7 +472,7 @@ namespace mysli\toolkit\type; class str
     {
         validate::need_int($limit);
         $string = (string) $string;
-        $string_initial_length = self::length($string);
+        $string_initial_length = static::length($string);
 
         if (strpos($string, ' ') === false)
         {
@@ -481,7 +481,7 @@ namespace mysli\toolkit\type; class str
 
         $string = implode(' ', array_slice(explode(' ', $string), 0, $limit));
 
-        if ($ending && self::length($string) !== $string_initial_length)
+        if ($ending && static::length($string) !== $string_initial_length)
         {
             $string = $string . $ending;
         }
@@ -510,10 +510,10 @@ namespace mysli\toolkit\type; class str
     {
         validate::need_int($limit);
         $string = (string) $string;
-        $string_initial_length = self::length($string);
-        $string = self::slice($string, 0, $limit);
+        $string_initial_length = static::length($string);
+        $string = static::slice($string, 0, $limit);
 
-        if ($ending && self::length($string) !== $string_initial_length)
+        if ($ending && static::length($string) !== $string_initial_length)
         {
             $string = $string . $ending;
         }
@@ -536,7 +536,7 @@ namespace mysli\toolkit\type; class str
     static function split_get(
         $string, $separator, $index, $default=null, $mask=null, $limit=null)
     {
-        $return = self::split_trim($string, $separator, $limit, $mask);
+        $return = static::split_trim($string, $separator, $limit, $mask);
         return arr::key_in($return, $index) ? $return[$index] : $default;
     }
 
@@ -593,13 +593,13 @@ namespace mysli\toolkit\type; class str
         }
 
         // Define lengths + first character of open and close tag
-        $open_first   = self::slice($popen, 0, 1);
-        $close_first  = self::slice($pclose, 0, 1);
-        $open_length  = self::length($popen);
-        $close_length = self::length($pclose);
-        $input_length = self::length($input);
-        $sep_length   = self::length($separator);
-        $sep_first    = self::slice($separator, 0, 1);
+        $open_first   = static::slice($popen, 0, 1);
+        $close_first  = static::slice($pclose, 0, 1);
+        $open_length  = static::length($popen);
+        $close_length = static::length($pclose);
+        $input_length = static::length($input);
+        $sep_length   = static::length($separator);
+        $sep_first    = static::slice($separator, 0, 1);
 
         // Define protected
         $is_protected = false;
@@ -622,7 +622,7 @@ namespace mysli\toolkit\type; class str
                     continue 2;
 
                 case $close_first:
-                    if (self::slice($input, $i, $close_length) === $pclose &&
+                    if (static::slice($input, $i, $close_length) === $pclose &&
                         $is_protected && !$is_escaped)
                     {
                         $is_protected = false;
@@ -633,7 +633,7 @@ namespace mysli\toolkit\type; class str
                     // Pass through
 
                 case $open_first:
-                    if (self::slice($input, $i, $open_length) === $popen &&
+                    if (static::slice($input, $i, $open_length) === $popen &&
                         !$is_escaped)
                     {
                         $is_protected = true;
@@ -643,7 +643,7 @@ namespace mysli\toolkit\type; class str
                     break;
 
                 case $sep_first:
-                    if (self::slice($input, $i, $sep_length) === $separator &&
+                    if (static::slice($input, $i, $sep_length) === $separator &&
                         !$is_escaped && !$is_protected)
                     {
                         $result[] = $current_token;
@@ -691,7 +691,7 @@ namespace mysli\toolkit\type; class str
 
         if ($encoding === null)
         {
-            $encoding = self::encoding();
+            $encoding = static::encoding();
         }
 
         return mb_strpos($string, $find, $offset, $encoding);
@@ -713,7 +713,7 @@ namespace mysli\toolkit\type; class str
         validate::need_str($string);
 
         // Convert _
-        if (self::find($string, '_') !== false)
+        if (static::find($string, '_') !== false)
         {
             $string = str_replace('_', ' ', $string);
             $string = ucwords($string);
@@ -721,7 +721,7 @@ namespace mysli\toolkit\type; class str
         }
 
         // Convert backslashes
-        if (self::find($string, '\\') !== false)
+        if (static::find($string, '\\') !== false)
         {
             $string = str_replace('\\', ' ', $string);
             $string = $uc_first ? ucwords($string) : lcfirst($string);
@@ -729,7 +729,7 @@ namespace mysli\toolkit\type; class str
         }
 
         // Convert slashes
-        if (self::find($string, '/') !== false)
+        if (static::find($string, '/') !== false)
         {
             $string = str_replace('/', ' ', $string);
             $string = $uc_first ? ucwords($string) : lcfirst($string);
@@ -761,7 +761,7 @@ namespace mysli\toolkit\type; class str
     static function to_underscore($string)
     {
         validate::need_str($string);
-        return self::to_lower(
+        return static::to_lower(
             preg_replace('/(?<=[a-z])([A-Z])/', '_$1', $string)
         );
     }

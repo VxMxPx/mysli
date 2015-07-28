@@ -30,8 +30,8 @@ namespace mysli\dev\test; class assert
     {
         $r = [];
 
-        $r['actual'] = self::describe($actual);
-        $r['expect'] = self::describe($expect);
+        $r['actual'] = static::describe($actual);
+        $r['expect'] = static::describe($expect);
         $r['succeed'] = ($actual === $expect);
 
         return $r;
@@ -53,8 +53,8 @@ namespace mysli\dev\test; class assert
 
         $r = [];
 
-        $r['actual'] = self::describe($actual);
-        $r['expect'] = self::describe($pattern);
+        $r['actual'] = static::describe($actual);
+        $r['expect'] = static::describe($pattern);
 
         $r['succeed'] = preg_match($pattern, $actual);
 
@@ -73,7 +73,7 @@ namespace mysli\dev\test; class assert
     {
         $r = [];
 
-        $r['actual'] = self::describe($actual);
+        $r['actual'] = static::describe($actual);
         $r['expect'] = [ 'instance', $expect ];
 
         $r['succeed'] = is_object($actual) && is_a($actual, $expect);

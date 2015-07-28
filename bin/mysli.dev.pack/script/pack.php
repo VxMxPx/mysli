@@ -53,7 +53,7 @@ namespace mysli\dev\pack\root\script; class pack
             return $r;
 
         list($package, $whitespace, $yes) = $prog->get_values('package', '-w', '-y');
-        return self::create($package, $whitespace, $yes);
+        return static::create($package, $whitespace, $yes);
     }
 
     /**
@@ -99,17 +99,17 @@ namespace mysli\dev\pack\root\script; class pack
 
         // Ask for version
         $pkg_api_version = ! $yes
-            ? self::ask_for_version((int) $pkg_meta['version'])
+            ? static::ask_for_version((int) $pkg_meta['version'])
             : (int) $pkg_meta['version'];
 
         // Ask for release
         $pkg_release = ! $yes
-            ? self::ask_for_release(gmdate('ymd'))
+            ? static::ask_for_release(gmdate('ymd'))
             : gmdate('ymd');
 
         // Ask for pre-release
         $pkg_pre_release = ! $yes
-            ? self::ask_for_pre_release('')
+            ? static::ask_for_pre_release('')
             : '';
 
         // Create filename
@@ -161,7 +161,7 @@ namespace mysli\dev\pack\root\script; class pack
         // Create PHAR archive
         try
         {
-            $phar_instance = self::create_phar(
+            $phar_instance = static::create_phar(
                 $phar_afile, "{$package}.phar", $phar_stub
             );
         }
@@ -181,7 +181,7 @@ namespace mysli\dev\pack\root\script; class pack
         Start Adding Files
          */
         ui::line("Adding files:");
-        $ignore = self::generate_ignore_list($pkg_meta);
+        $ignore = static::generate_ignore_list($pkg_meta);
 
         // Anyone is invited to add to the list...
         event::trigger(
@@ -239,7 +239,7 @@ namespace mysli\dev\pack\root\script; class pack
         });
 
         // Write new api_version and release to phar file
-        $meta_write = self::write_meta(
+        $meta_write = static::write_meta(
             "phar://".$phar_afile.'/mysli.pkg.ym',
             $pkg_api_version,
             $pkg_release,

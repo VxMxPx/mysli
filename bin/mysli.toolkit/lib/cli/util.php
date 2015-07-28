@@ -16,17 +16,17 @@ namespace mysli\toolkit\cli; class util
      */
     static function terminal_width()
     {
-        if (!self::is_cli())
+        if (!static::is_cli())
         {
             return 80;
         }
-        elseif (!self::is_win())
+        elseif (!static::is_win())
         {
-            return self::execute('tput cols');
+            return static::execute('tput cols');
         }
         else
         {
-            $result = self::popen('mode');
+            $result = static::popen('mode');
             preg_match('/^ *Columns\: *([0-9]+)$/m', $result, $matches);
             return $matches[1];
         }

@@ -57,7 +57,7 @@ namespace mysli\toolkit\cli; class input
             $result = null;
             do
             {
-                $stdin  = self::line($title);
+                $stdin  = static::line($title);
                 $result = $call($stdin);
             } while($result === null);
 
@@ -99,7 +99,7 @@ namespace mysli\toolkit\cli; class input
         {
             do
             {
-                $stdin_t = self::line($title);
+                $stdin_t = static::line($title);
                 $stdin .= $stdin_t . "\n";
 
                 if ($stdin_t === '')
@@ -137,7 +137,7 @@ namespace mysli\toolkit\cli; class input
     {
         $result = null;
         `stty -echo`;
-        $result = self::line($title, $call);
+        $result = static::line($title, $call);
         `stty echo`;
         return $result;
     }
@@ -154,7 +154,7 @@ namespace mysli\toolkit\cli; class input
     {
         $question = $title . ' [' . ($default ? 'Y/n' : 'y/N') . '] ';
 
-        return self::line(
+        return static::line(
             $question,
             function ($input) use ($default)
             {
@@ -206,7 +206,7 @@ namespace mysli\toolkit\cli; class input
         $question = implode(($compact ? ', ' : "\n"), $question);
         $question = "{$title}\n{$question}\nEnter one or more numbers: ";
 
-        return self::line(
+        return static::line(
             $question,
             function($input) use ($checked, $map)
             {
@@ -263,7 +263,7 @@ namespace mysli\toolkit\cli; class input
         $question = implode(($compact ? ', ' : "\n"), $question);
         $question = "{$title}\n{$question}\nEnter one of the numbers: ";
 
-        return self::line(
+        return static::line(
             $question,
             function($input) use ($selected, $map)
             {

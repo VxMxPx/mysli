@@ -127,12 +127,12 @@ namespace mysli\toolkit\cli; class output
         if ($new_line)
         {
             // echo "\e[0m";
-            self::$last_length = 0;
+            static::$last_length = 0;
             echo PHP_EOL;
         }
         else
         {
-            self::$last_length += strlen(
+            static::$last_length += strlen(
                 preg_replace('/\\e\[[0-9]+m/', '', $string)
             );
         }
@@ -147,7 +147,7 @@ namespace mysli\toolkit\cli; class output
     static function right($message, $padding=2)
     {
         $len = strlen(preg_replace('/\\e\[[0-9]+m/', '', $message));
-        $pos = util::terminal_width() - $padding - self::$last_length;
+        $pos = util::terminal_width() - $padding - static::$last_length;
         $pos = $pos - $len;
 
         if ($pos < 0)
@@ -159,9 +159,8 @@ namespace mysli\toolkit\cli; class output
     }
 
     /**
-     * Format output,
-     * --
-     * @see self::$format
+     * Format output.
+     * (@see static::$format)
      * --
      * @example
      * Use: <green>GREEN!</green>
@@ -176,9 +175,9 @@ namespace mysli\toolkit\cli; class output
             '/<(\/)?([a-z_]{3,})>/i',
             function ($match)
             {
-                if (isset(self::$format[$match[2]]))
+                if (isset(static::$format[$match[2]]))
                 {
-                    $f = self::$format[$match[2]][(int) ($match[1] === '/')];
+                    $f = static::$format[$match[2]][(int) ($match[1] === '/')];
                     return "\e[{$f}m";
                 }
                 elseif ($match[2] === 'right')
@@ -205,12 +204,12 @@ namespace mysli\toolkit\cli; class output
         if (strpos($format, '[[[right/]]]') !== false)
         {
             $output = explode('[[[right/]]]', $output, 2);
-            self::line($output[0], false);
-            self::line(self::right($output[1]), true);
+            static::line($output[0], false);
+            static::line(static::right($output[1]), true);
         }
         else
         {
-            self::line($output, $new_line);
+            static::line($output, $new_line);
         }
     }
 
@@ -223,7 +222,7 @@ namespace mysli\toolkit\cli; class output
     {
         $width = util::terminal_width() ?: 75;
         $width = floor($width / strlen($character));
-        self::line(str_repeat($character, $width));
+        static::line(str_repeat($character, $width));
     }
 
     /*
@@ -231,46 +230,46 @@ namespace mysli\toolkit\cli; class output
      */
 
     // Basic formatting
-    static function bold($s, $n=true)      { self::line("\e[1m{$s}\e[0m", $n); }
-    static function dim($s, $n=true)       { self::line("\e[2m{$s}\e[0m", $n); }
-    static function underline($s, $n=true) { self::line("\e[4m{$s}\e[0m", $n); }
-    static function blink($s, $n=true)     { self::line("\e[5m{$s}\e[0m", $n); }
-    static function invert($s, $n=true)    { self::line("\e[7m{$s}\e[0m", $n); }
-    static function hidden($s, $n=true)    { self::line("\e[8m{$s}\e[0m", $n); }
+    static function bold($s, $n=true)      { static::line("\e[1m{$s}\e[0m", $n); }
+    static function dim($s, $n=true)       { static::line("\e[2m{$s}\e[0m", $n); }
+    static function underline($s, $n=true) { static::line("\e[4m{$s}\e[0m", $n); }
+    static function blink($s, $n=true)     { static::line("\e[5m{$s}\e[0m", $n); }
+    static function invert($s, $n=true)    { static::line("\e[7m{$s}\e[0m", $n); }
+    static function hidden($s, $n=true)    { static::line("\e[8m{$s}\e[0m", $n); }
 
     // Foreground (text) colors
-    static function black($s, $n=true)         { self::line("\e[30m{$s}\e[39m", $n); }
-    static function red($s, $n=true)           { self::line("\e[31m{$s}\e[39m", $n); }
-    static function green($s, $n=true)         { self::line("\e[32m{$s}\e[39m", $n); }
-    static function yellow($s, $n=true)        { self::line("\e[33m{$s}\e[39m", $n); }
-    static function blue($s, $n=true)          { self::line("\e[34m{$s}\e[39m", $n); }
-    static function magenta($s, $n=true)       { self::line("\e[35m{$s}\e[39m", $n); }
-    static function cyan($s, $n=true)          { self::line("\e[36m{$s}\e[39m", $n); }
-    static function light_gray($s, $n=true)    { self::line("\e[37m{$s}\e[39m", $n); }
-    static function dark_gray($s, $n=true)     { self::line("\e[90m{$s}\e[39m", $n); }
-    static function light_red($s, $n=true)     { self::line("\e[91m{$s}\e[39m", $n); }
-    static function light_green($s, $n=true)   { self::line("\e[92m{$s}\e[39m", $n); }
-    static function light_yellow($s, $n=true)  { self::line("\e[93m{$s}\e[39m", $n); }
-    static function light_blue($s, $n=true)    { self::line("\e[94m{$s}\e[39m", $n); }
-    static function light_magenta($s, $n=true) { self::line("\e[95m{$s}\e[39m", $n); }
-    static function light_cyan($s, $n=true)    { self::line("\e[96m{$s}\e[39m", $n); }
-    static function white($s, $n=true)         { self::line("\e[97m{$s}\e[39m", $n); }
+    static function black($s, $n=true)         { static::line("\e[30m{$s}\e[39m", $n); }
+    static function red($s, $n=true)           { static::line("\e[31m{$s}\e[39m", $n); }
+    static function green($s, $n=true)         { static::line("\e[32m{$s}\e[39m", $n); }
+    static function yellow($s, $n=true)        { static::line("\e[33m{$s}\e[39m", $n); }
+    static function blue($s, $n=true)          { static::line("\e[34m{$s}\e[39m", $n); }
+    static function magenta($s, $n=true)       { static::line("\e[35m{$s}\e[39m", $n); }
+    static function cyan($s, $n=true)          { static::line("\e[36m{$s}\e[39m", $n); }
+    static function light_gray($s, $n=true)    { static::line("\e[37m{$s}\e[39m", $n); }
+    static function dark_gray($s, $n=true)     { static::line("\e[90m{$s}\e[39m", $n); }
+    static function light_red($s, $n=true)     { static::line("\e[91m{$s}\e[39m", $n); }
+    static function light_green($s, $n=true)   { static::line("\e[92m{$s}\e[39m", $n); }
+    static function light_yellow($s, $n=true)  { static::line("\e[93m{$s}\e[39m", $n); }
+    static function light_blue($s, $n=true)    { static::line("\e[94m{$s}\e[39m", $n); }
+    static function light_magenta($s, $n=true) { static::line("\e[95m{$s}\e[39m", $n); }
+    static function light_cyan($s, $n=true)    { static::line("\e[96m{$s}\e[39m", $n); }
+    static function white($s, $n=true)         { static::line("\e[97m{$s}\e[39m", $n); }
 
     // Background colors
-    static function bg_black($s, $n=true)         { self::line("\e[40m{$s}\e[49m", $n); }
-    static function bg_red($s, $n=true)           { self::line("\e[41m{$s}\e[49m", $n); }
-    static function bg_green($s, $n=true)         { self::line("\e[42m{$s}\e[49m", $n); }
-    static function bg_yellow($s, $n=true)        { self::line("\e[43m{$s}\e[49m", $n); }
-    static function bg_blue($s, $n=true)          { self::line("\e[44m{$s}\e[49m", $n); }
-    static function bg_magenta($s, $n=true)       { self::line("\e[45m{$s}\e[49m", $n); }
-    static function bg_cyan($s, $n=true)          { self::line("\e[46m{$s}\e[49m", $n); }
-    static function bg_light_gray($s, $n=true)    { self::line("\e[47m{$s}\e[49m", $n); }
-    static function bg_dark_gray($s, $n=true)     { self::line("\e[100m{$s}\e[49m", $n); }
-    static function bg_light_red($s, $n=true)     { self::line("\e[101m{$s}\e[49m", $n); }
-    static function bg_light_green($s, $n=true)   { self::line("\e[102m{$s}\e[49m", $n); }
-    static function bg_light_yellow($s, $n=true)  { self::line("\e[103m{$s}\e[49m", $n); }
-    static function bg_light_blue($s, $n=true)    { self::line("\e[104m{$s}\e[49m", $n); }
-    static function bg_light_magenta($s, $n=true) { self::line("\e[105m{$s}\e[49m", $n); }
-    static function bg_light_cyan($s, $n=true)    { self::line("\e[106m{$s}\e[49m", $n); }
-    static function bg_white($s, $n=true)         { self::line("\e[107m{$s}\e[49m", $n); }
+    static function bg_black($s, $n=true)         { static::line("\e[40m{$s}\e[49m", $n); }
+    static function bg_red($s, $n=true)           { static::line("\e[41m{$s}\e[49m", $n); }
+    static function bg_green($s, $n=true)         { static::line("\e[42m{$s}\e[49m", $n); }
+    static function bg_yellow($s, $n=true)        { static::line("\e[43m{$s}\e[49m", $n); }
+    static function bg_blue($s, $n=true)          { static::line("\e[44m{$s}\e[49m", $n); }
+    static function bg_magenta($s, $n=true)       { static::line("\e[45m{$s}\e[49m", $n); }
+    static function bg_cyan($s, $n=true)          { static::line("\e[46m{$s}\e[49m", $n); }
+    static function bg_light_gray($s, $n=true)    { static::line("\e[47m{$s}\e[49m", $n); }
+    static function bg_dark_gray($s, $n=true)     { static::line("\e[100m{$s}\e[49m", $n); }
+    static function bg_light_red($s, $n=true)     { static::line("\e[101m{$s}\e[49m", $n); }
+    static function bg_light_green($s, $n=true)   { static::line("\e[102m{$s}\e[49m", $n); }
+    static function bg_light_yellow($s, $n=true)  { static::line("\e[103m{$s}\e[49m", $n); }
+    static function bg_light_blue($s, $n=true)    { static::line("\e[104m{$s}\e[49m", $n); }
+    static function bg_light_magenta($s, $n=true) { static::line("\e[105m{$s}\e[49m", $n); }
+    static function bg_light_cyan($s, $n=true)    { static::line("\e[106m{$s}\e[49m", $n); }
+    static function bg_white($s, $n=true)         { static::line("\e[107m{$s}\e[49m", $n); }
 }

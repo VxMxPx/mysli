@@ -74,11 +74,11 @@ namespace mysli\toolkit; class autoloader
     {
         log::debug("Load: {$class}", __CLASS__);
 
-        if (isset(self::$aliases[$class]))
+        if (isset(static::$aliases[$class]))
         {
-            if (self::init_class(self::$aliases[$class]))
+            if (static::init_class(static::$aliases[$class]))
             {
-                class_alias(self::$aliases[$class], $class);
+                class_alias(static::$aliases[$class], $class);
                 return true;
             }
             else
@@ -87,12 +87,12 @@ namespace mysli\toolkit; class autoloader
             }
         }
 
-        if (self::init_class($class))
+        if (static::init_class($class))
         {
             return true;
         }
 
-        foreach (self::$aliases as $pattern => $required)
+        foreach (static::$aliases as $pattern => $required)
         {
             if (substr($pattern, 0, 1) !== '/')
             {
@@ -102,7 +102,7 @@ namespace mysli\toolkit; class autoloader
             if (preg_match($pattern, $class, $match))
             {
                 $required = str_replace('*', $match[1], $required);
-                if (self::init_class($required))
+                if (static::init_class($required))
                 {
                     class_alias($required, $class);
                     return true;
@@ -271,14 +271,14 @@ namespace mysli\toolkit; class autoloader
 
             $aliases = array_merge(
                 $aliases,
-                self::resolve_use_line($line, $namespace)
+                static::resolve_use_line($line, $namespace)
             );
         }
 
         // Register all aliases
         foreach ($aliases as $from => $to)
         {
-            self::register_alias($from, $to);
+            static::register_alias($from, $to);
         }
     }
 
@@ -333,7 +333,7 @@ namespace mysli\toolkit; class autoloader
             {
                 $list = array_merge(
                     $list,
-                    self::resolve_use_line(
+                    static::resolve_use_line(
                         $base.trim($class),
                         $namespace,
                         str_replace('.', '\\', trim($class))
@@ -390,16 +390,16 @@ namespace mysli\toolkit; class autoloader
             $to = "/^{$to}$/";
         }
 
-        if (isset(self::$aliases[$to]) && self::$aliases[$to] !== $from)
+        if (isset(static::$aliases[$to]) && static::$aliases[$to] !== $from)
         {
             throw new \Exception(
-                "Alias is already set `{$to}`, for `".self::$aliases[$to]."`, ".
+                "Alias is already set `{$to}`, for `".static::$aliases[$to]."`, ".
                 "cannot rewrite it for `{$from}`", 10
             );
         }
 
         log::debug("Register: `{$from}` => `{$to}`.", __CLASS__);
-        self::$aliases[$to] = $from;
+        static::$aliases[$to] = $from;
     }
 
     /**
@@ -496,7 +496,7 @@ namespace mysli\toolkit; class autoloader
          */
         if (defined("{$class}::__use"))
         {
-            self::resolve_use(
+            static::resolve_use(
                 $class,
                 constant("{$class}::__use")
             );
@@ -505,7 +505,7 @@ namespace mysli\toolkit; class autoloader
         /*
         Init this package, if not initialized yet by some other class.
          */
-        self::init($package, $abspath);
+        static::init($package, $abspath);
 
         /*
         If class has __init method, then call it, to initialize class.
@@ -518,7 +518,7 @@ namespace mysli\toolkit; class autoloader
          */
         if ($alias)
         {
-            self::register_alias($class, $alias);
+            static::register_alias($class, $alias);
             class_alias($class, $alias);
         }
 
@@ -539,7 +539,7 @@ namespace mysli\toolkit; class autoloader
         /*
         If already initialized, then return.
          */
-        if (in_array($package, self::$initialized))
+        if (in_array($package, static::$initialized))
             return;
 
         log::debug("Initialize: `{$package}`.", __CLASS__);
@@ -547,7 +547,7 @@ namespace mysli\toolkit; class autoloader
         /*
         Add self to the initialized list.
          */
-        self::$initialized[] = $package;
+        static::$initialized[] = $package;
 
         /*
         Make class name.
@@ -557,6 +557,6 @@ namespace mysli\toolkit; class autoloader
         /*
         Init class (load file, resolve __use)
          */
-        self::init_class($class);
+        static::init_class($class);
     }
 }

@@ -49,9 +49,9 @@ namespace mysli\dev\test\root\script; class test
         );
 
         if (!$watch)
-            return self::test($package, $diff);
+            return static::test($package, $diff);
         else
-            return self::watch($package, $diff);
+            return static::watch($package, $diff);
     }
 
     /**
@@ -64,7 +64,7 @@ namespace mysli\dev\test\root\script; class test
      */
     private static function test($pid, $diff)
     {
-        list($path, $package, $filter) = self::ppf($pid);
+        list($path, $package, $filter) = static::ppf($pid);
 
         if (!$package)
         {
@@ -73,7 +73,7 @@ namespace mysli\dev\test\root\script; class test
         }
 
         // Get list of tests to run, by providing a package name.
-        $testfiles = self::get_tests_by_pid($pid);
+        $testfiles = static::get_tests_by_pid($pid);
 
         // If there's no tests available, just skip...
         if (empty($testfiles))
@@ -158,7 +158,7 @@ namespace mysli\dev\test\root\script; class test
                     if ($diff)
                     {
                         ui::nl();
-                        self::generate_diff($res['expect'], $res['actual']);
+                        static::generate_diff($res['expect'], $res['actual']);
                     }
                     ui::nl();
                 }
@@ -166,7 +166,7 @@ namespace mysli\dev\test\root\script; class test
         }
 
         // Generate nice footer with all stats.
-        self::generate_stats(
+        static::generate_stats(
             $sum_succeeded, $sum_skipped, $sum_failed, $sum_all, $sum_time
         );
         ui::nl();
@@ -185,7 +185,7 @@ namespace mysli\dev\test\root\script; class test
      */
     private static function watch($pid, $diff)
     {
-        list($path, $package, $filter) = self::ppf($pid);
+        list($path, $package, $filter) = static::ppf($pid);
 
         // Check if package // Dir exists...
         if (!$package || !fs\dir::exists($path))
@@ -203,7 +203,7 @@ namespace mysli\dev\test\root\script; class test
         fs\file::observe(fs::binpath($package), function ($changes) use ($pid, $diff, $arguments)
         {
             // Re-run tests...
-            // self::test($pid, $diff);
+            // static::test($pid, $diff);
 
             // Call self over and over again
             // This is done in such way, so that changes in PHP files are
@@ -223,7 +223,7 @@ namespace mysli\dev\test\root\script; class test
      */
     private static function get_tests_by_pid($pid)
     {
-        list($path, $_, $filter) = self::ppf($pid);
+        list($path, $_, $filter) = static::ppf($pid);
 
         // Is actual directory there...
         if (!fs\dir::exists($path))
@@ -292,13 +292,13 @@ namespace mysli\dev\test\root\script; class test
         // Expected
         output::light_green(" :: EXPECT");
         output::green(str_repeat("^", $width+11));
-        self::output_diff( diff::plain($expect) );
+        static::output_diff( diff::plain($expect) );
         ui::nl();
 
         // Actual
         output::light_red(" :: RESULT");
         output::red(str_repeat("^", $width+11));
-        self::output_diff( diff::generate($actual, $expect) );
+        static::output_diff( diff::generate($actual, $expect) );
         ui::nl();
     }
 

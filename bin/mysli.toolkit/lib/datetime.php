@@ -79,7 +79,7 @@ namespace mysli\toolkit; class datetime
     {
         // Get default timezone if not set.
         if (is_null($timezone))
-            $timezone = self::get_default_timezone();
+            $timezone = static::get_default_timezone();
 
         // Grab current UTC datetime if not provided.
         if (!$datetime)
@@ -218,6 +218,6 @@ namespace mysli\toolkit; class datetime
      */
     static function f($format, $timestamp=null)
     {
-        return date($format, ($timestamp ? $timestamp : self::now()));
+        return date($format, ($timestamp ? $timestamp : static::now()));
     }
 }

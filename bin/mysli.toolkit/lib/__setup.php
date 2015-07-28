@@ -78,7 +78,7 @@ namespace mysli\toolkit; class __setup
          */
         // Add self to the enabled list.
         $pkg_list =
-            'mysli.toolkit '.self::get_version($binpath, 'mysli.toolkit')."\n";
+            'mysli.toolkit '.static::get_version($binpath, 'mysli.toolkit')."\n";
 
         if (!file_put_contents("{$cfgpath}/toolkit.pkg.list", $pkg_list))
             throw new \Exception(
@@ -126,7 +126,7 @@ namespace mysli\toolkit; class __setup
          */
         file_put_contents(
             "{$cfgpath}/pkg/mysli.toolkit.json",
-            json_encode(self::$default_config)
+            json_encode(static::$default_config)
         );
 
         /*

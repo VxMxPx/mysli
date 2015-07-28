@@ -101,7 +101,7 @@ namespace mysli\toolkit\type; class arr_path
     static function remove(array &$array, $path)
     {
         validate::need_str($path);
-        $array = self::remove_helper($array, $path, null);
+        $array = static::remove_helper($array, $path, null);
     }
 
     /**
@@ -128,7 +128,7 @@ namespace mysli\toolkit\type; class arr_path
 
             if (is_array($i))
             {
-                $result[$k] = self::remove_helper($i, $path, $cup);
+                $result[$k] = static::remove_helper($i, $path, $cup);
             }
             else
             {

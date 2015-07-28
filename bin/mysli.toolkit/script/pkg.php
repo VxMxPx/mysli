@@ -43,16 +43,16 @@ namespace mysli\toolkit\root\script; class pkg
         switch ($prog->get_option_at(0, 'name'))
         {
             case 'enable':
-                return self::enable($value);
+                return static::enable($value);
 
             case 'disable':
-                return self::disable($value);
+                return static::disable($value);
 
             case 'list':
-                return self::do_list($value);
+                return static::do_list($value);
 
             case 'meta':
-                return self::meta($value);
+                return static::meta($value);
 
             default:
                 ui::warning('Invalid command, use --help to see available commands.');
@@ -124,15 +124,15 @@ namespace mysli\toolkit\root\script; class pkg
         switch ($type) {
             case 'all':
                 $list = lib\pkg::list_all();
-                break;
+            break;
 
             case 'enabled':
                 $list = lib\pkg::list_enabled();
-                break;
+            break;
 
             case 'disabled':
                 $list = lib\pkg::list_disabled();
-                break;
+            break;
 
             default:
                 ui::warning(
@@ -142,7 +142,7 @@ namespace mysli\toolkit\root\script; class pkg
         }
 
         ui::t(
-            "<title>List of {$type} packages.</title>\n".
+            "<title>List of {$type} packages.</title>\n\n".
             "<ul>{list}</ul>",
             [
                 'list' => $list

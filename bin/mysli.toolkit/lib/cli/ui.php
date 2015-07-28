@@ -281,7 +281,7 @@ namespace mysli\toolkit\cli; class ui
             {
                 if (!empty($value))
                 {
-                    $out .= $new_line . self::al($value, true, $indent+$step);
+                    $out .= $new_line . static::al($value, true, $indent+$step);
                 }
                 else
                 {

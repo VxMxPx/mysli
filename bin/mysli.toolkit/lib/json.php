@@ -54,7 +54,7 @@ namespace mysli\toolkit; class json
         if (file::exists($filename))
         {
             $content = file::read($filename);
-            return self::decode($content, $assoc, $depth);
+            return static::decode($content, $assoc, $depth);
         }
         else
         {
@@ -77,7 +77,7 @@ namespace mysli\toolkit; class json
     static function decode($json, $assoc=false, $depth=512)
     {
         $decoded = json_decode($json, $assoc, $depth);
-        self::exception_on_error();
+        static::exception_on_error();
         return $decoded;
     }
 
@@ -105,7 +105,7 @@ namespace mysli\toolkit; class json
     static function encode_file($filename, $values, $options=0, $depth=512)
     {
         return (
-            file::write($filename, self::encode($values, $options, $depth)) !== false
+            file::write($filename, static::encode($values, $options, $depth)) !== false
         );
     }
 
@@ -129,7 +129,7 @@ namespace mysli\toolkit; class json
     static function encode($values, $options=0, $depth=512)
     {
         $json = json_encode($values, $options, $depth);
-        self::exception_on_error();
+        static::exception_on_error();
         return $json;
     }
 
@@ -151,7 +151,7 @@ namespace mysli\toolkit; class json
             else
             {
                 $error = arr::get(
-                    self::$json_errors,
+                    static::$json_errors,
                     json_last_error(),
                     'Unknown: ' . $json_last_error
                 );

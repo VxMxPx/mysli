@@ -524,7 +524,7 @@ namespace mysli\toolkit; class cookie
             $cookies = [];
 
             foreach ($name as $val)
-                $cookies[] = self::get($val, $default);
+                $cookies[] = static::get($val, $default);
 
             return $cookies;
         }

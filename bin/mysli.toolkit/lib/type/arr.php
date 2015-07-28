@@ -49,7 +49,7 @@ namespace mysli\toolkit\type; class arr
                 $value = mb_strtolower($value, 'UTF-8');
             }
 
-            $count[$value] = self::key_in($count, $value)
+            $count[$value] = static::key_in($count, $value)
                 ? $count[$value]+1
                 : 1;
         }
@@ -68,7 +68,7 @@ namespace mysli\toolkit\type; class arr
      */
     static function count_values_of(array $array, $value, $case_sensitive=true)
     {
-        $values = self::count_values($array, $case_sensitive);
+        $values = static::count_values($array, $case_sensitive);
         return isset($values[$value]) ? $values[$value] : 0;
     }
 
@@ -145,7 +145,7 @@ namespace mysli\toolkit\type; class arr
             );
         }
 
-        if (is_string(self::last($arguments)))
+        if (is_string(static::last($arguments)))
         {
             $type = array_pop($arguments);
 
@@ -179,7 +179,7 @@ namespace mysli\toolkit\type; class arr
             }
 
             // if merge all, then this will always be true
-            $is_associative = $type === self::merge_all || self::is_associative($array);
+            $is_associative = $type === self::merge_all || static::is_associative($array);
 
             foreach ($array as $key => $item)
             {
@@ -212,7 +212,7 @@ namespace mysli\toolkit\type; class arr
                             $item = [$item];
                         }
 
-                        $result[$key] = self::merge($result[$key], $item, $type);
+                        $result[$key] = static::merge($result[$key], $item, $type);
                     }
                 }
             }
@@ -419,7 +419,7 @@ namespace mysli\toolkit\type; class arr
      */
     static function get(array $array, $key, $default=null)
     {
-        if (!self::key_in($array, $key))
+        if (!static::key_in($array, $key))
         {
             return $default;
         }
@@ -453,7 +453,7 @@ namespace mysli\toolkit\type; class arr
 
         if (!is_array($default))
         {
-            $default = self::pad([], $default, count($keys));
+            $default = static::pad([], $default, count($keys));
         }
 
         if (empty($keys))
@@ -465,7 +465,7 @@ namespace mysli\toolkit\type; class arr
 
         foreach ($keys as $key)
         {
-            $result[] = self::get($array, $key, array_shift($default));
+            $result[] = static::get($array, $key, array_shift($default));
         }
 
         return $result;
@@ -566,7 +566,7 @@ namespace mysli\toolkit\type; class arr
         }
         else
         {
-            self::prepend($array, $value);
+            static::prepend($array, $value);
         }
     }
 
@@ -650,7 +650,7 @@ namespace mysli\toolkit\type; class arr
             {
                 if (!empty($value))
                 {
-                    $out .= $new_line . self::readable(
+                    $out .= $new_line . static::readable(
                         $value, $indent + $step, $step, $separator,
                         $new_line, $valuefy
                     );
@@ -740,7 +740,7 @@ namespace mysli\toolkit\type; class arr
 
             if (is_array($value))
             {
-                $out .= $new_line . self::readable_list(
+                $out .= $new_line . static::readable_list(
                     $value, $indent + $step, $step, $marker, $new_line, $valuefy
                 );
             }
@@ -792,7 +792,7 @@ namespace mysli\toolkit\type; class arr
         foreach($array as $val)
         {
             $value = explode($separator, $val, 2);
-            if (self::key_in($value, 0) && self::key_in($value, 1))
+            if (static::key_in($value, 0) && static::key_in($value, 1))
             {
                 $return[trim($value[0])] = trim($value[1]);
             }

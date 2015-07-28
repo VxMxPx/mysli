@@ -29,7 +29,7 @@ namespace mysli\toolkit; class log
      */
     static function debug($message, $context=null)
     {
-        self::add(self::debug, $message, $context);
+        static::add(self::debug, $message, $context);
     }
 
     /**
@@ -40,7 +40,7 @@ namespace mysli\toolkit; class log
      */
     static function info($message, $context=null)
     {
-        self::add(self::info, $message, $context);
+        static::add(self::info, $message, $context);
     }
 
     /**
@@ -51,7 +51,7 @@ namespace mysli\toolkit; class log
      */
     static function notice($message, $context=null)
     {
-        self::add(self::notice, $message, $context);
+        static::add(self::notice, $message, $context);
     }
 
     /**
@@ -62,7 +62,7 @@ namespace mysli\toolkit; class log
      */
     static function warning($message, $context=null)
     {
-        self::add(self::warning, $message, $context);
+        static::add(self::warning, $message, $context);
     }
 
     /**
@@ -73,7 +73,7 @@ namespace mysli\toolkit; class log
      */
     static function error($message, $context=null)
     {
-        self::add(self::error, $message, $context);
+        static::add(self::error, $message, $context);
     }
 
     /**
@@ -84,7 +84,7 @@ namespace mysli\toolkit; class log
      */
     static function panic($message, $context=null)
     {
-        self::add(self::panic, $message, $context);
+        static::add(self::panic, $message, $context);
     }
 
     /**
@@ -124,7 +124,7 @@ namespace mysli\toolkit; class log
             $sender = $context;
         }
 
-        self::$messages[] = [
+        static::$messages[] = [
             'type'      => $type,
             'from'      => $sender,
             'timestamp' => date('c'),
@@ -144,13 +144,13 @@ namespace mysli\toolkit; class log
     {
         if (!$type)
         {
-            return self::$messages;
+            return static::$messages;
         }
         else
         {
             $messages = [];
 
-            foreach (self::$messages as $message)
+            foreach (static::$messages as $message)
             {
                 if ($message['type'] === $type)
                     $messages[] = $message;

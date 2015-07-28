@@ -19,9 +19,9 @@ namespace mysli\toolkit; class router
      * --
      * @var array
      */
-    private static $filters = [
+    protected static $filters = [
         'any'      => '(.*?)',
-        'slug'     => '([a-z0-9_-]+)',
+        'slug'     => '([a-z0-9_\\-]+)',
         'alpha'    => '([a-z]+)',
         'numeric'  => '([0-9]+)',
         'alphanum' => '([a-z0-9]+)',
@@ -32,14 +32,14 @@ namespace mysli\toolkit; class router
      * --
      * @var string
      */
-    private static $routes_file;
+    protected static $routes_file;
 
     /**
      * Containing all registered routes.
      * --
      * @var array
      */
-    private static $routes = [];
+    protected static $routes = [];
 
     /**
      * Load the routes repository.
@@ -56,14 +56,14 @@ namespace mysli\toolkit; class router
     {
         $path = $path ?: fs::cfgpath('toolkit.routes.json');
 
-        if (self::$routes_file)
+        if (static::$routes_file)
             throw new exception\router("Already initialized.", 10);
 
         if (!file::exists($path))
             throw new exception\router("File not found: `{$path}`", 20);
 
-        self::$routes_file = $path;
-        self::read();
+        static::$routes_file = $path;
+        static::read();
     }
 
     /**
@@ -189,12 +189,12 @@ namespace mysli\toolkit; class router
      * @param boolean $write
      *        Save changes to file.
      * --
-     * @throws mysli\toolkit\exception\router 10 Invalid type.
+     * @throws mysli\toolkit\exception\router 10 Invalid Required `\$to` format.
      * @throws mysli\toolkit\exception\router 20 Invalid filter for route.
      * --
      * @return boolean
      */
-    function add($to, $route, $type=self::route_normal, $write=true)
+    static function add($to, $route, $type=self::route_normal, $write=true)
     {
         // If multiple routes, loop then return
         if (is_array($route))
@@ -202,10 +202,10 @@ namespace mysli\toolkit; class router
             foreach ($route as $method => $route_line)
             {
                 $tof = (strpos($to, '::')) ? $to : "{$to}::{$method}";
-                self::add($to, $route_line, $type, false);
+                static::add($to, $route_line, $type, false);
             }
 
-            return $write ? self::write() : true;
+            return $write ? static::write() : true;
         }
 
         /*
@@ -213,31 +213,30 @@ namespace mysli\toolkit; class router
          */
         $call = explode('::', $to);
 
-        /*
-        Special route, done right here.
-         */
-        if ($type === self::route_special)
+        if (!isset($call[1]))
         {
-            self::$routes[self::route_special][$route] = [
-                'call'       => $call,
-                'method'     => $method,
-                'type'       => self::route_special,
-                'route'      => $route,
-                'prefix'     => null,
-                'regex'      => null,
-                'parameters' => []
-            ];
-
-            return $write ? self::write() : true;
+            if ($type === self::route_special)
+                $call[1] = $route;
+            else
+                throw new exception\router(
+                    "Required `\$to` format is: `vendor.package.class::method`, ".
+                    "expections are `\$route` is array or `\$type` is `route_special`",
+                    10
+                );
         }
+
+        // Make copy of route to be modified...
+        $mroute = $route;
 
         /*
         Extract method
          */
-        if (preg_match('/^([a-z\|]+)\:.*$/i', $route, $match))
+        $method = [ 'GET', 'POST', 'DELETE', 'PUT' ];
+
+        if (preg_match('/^([a-z\|]+)\:(.*?)$/i', $route, $match))
         {
             $method = $match[1];
-            $rotue  = $match[2];
+            $mroute  = $match[2];
             unset($match);
 
             // Will be set to all bellow
@@ -247,16 +246,31 @@ namespace mysli\toolkit; class router
                 $method = explode('|', $method);
         }
 
-        if (!$method)
-            $method = [ 'get', 'post', 'delete', 'put' ];
+        /*
+        Special route, done right here.
+         */
+        if ($type === self::route_special)
+        {
+            static::$routes[self::route_special][$route] = [
+                'call'       => $call,
+                'method'     => $method,
+                'prefix'     => null,
+                'route'      => $route,
+                'regex'      => null,
+                'type'       => static::route_special,
+                'parameters' => []
+            ];
+
+            return $write ? static::write() : true;
+        }
 
         /*
         Extract prefix
          */
-        if (preg_match('/^\[([a-z\/]+)\](.*)$/i', $route, $match))
+        if (preg_match('/^\[([a-z0-9_\-\/]+)\](.*?)$/i', $mroute, $match))
         {
             $prefix = $match[1];
-            $route  = $match[2];
+            $mroute  = $match[2];
         }
         else
         {
@@ -269,9 +283,9 @@ namespace mysli\toolkit; class router
         $parameters = [];
         $regex      = null;
 
-        if ($route)
+        if ($mroute)
         {
-            $segments = explode('/', $route);
+            $segments = explode('/', $mroute);
 
             foreach ($segments as $id => $segment)
             {
@@ -283,22 +297,25 @@ namespace mysli\toolkit; class router
                 }
 
                 // Special segment?
-                if (preg_match('/^\{([a-z_]+)\|(?:([a-z]+)|(\(.*?\)))\}$/i', $segment, $match))
+                if (preg_match('/^\{([a-z_]+)\|((?:[a-z]+)|(?:\(.*?\)))\}(.*?)$/i', $segment, $match))
                 {
-                    list($_, $parameter, $filter) = $match;
+                    list($_, $parameter, $filter, $extra) = $match;
                     $parameters[] = $parameter;
 
                     if (substr($filter, 0, 1) !== '(')
                     {
-                        if (isset(self::$filters[$filter]))
-                            $filter = self::$filters[$filter];
+                        if (isset(static::$filters[$filter]))
+                            $filter = static::$filters[$filter];
                         else
                             throw new exception\router(
                                 "Invalid filter: `{$filter}` for `{$route}`.", 20
                             );
                     }
 
-                    $regex .= "/{$filter}";
+                    if ($extra)
+                        $extra = preg_quote($extra);
+
+                    $regex .= "/{$filter}{$extra}";
                 }
                 else
                 {
@@ -313,22 +330,17 @@ namespace mysli\toolkit; class router
         /*
         Set route by type
          */
-        if (isset(self::$routes[$type]))
-        {
-            self::$routes[$type][] = [
-                'call'       => $call,
-                'method'     => $method,
-                'prefix'     => $prefix,
-                'route'      => $route,
-                'regex'      => $regex,
-                'type'       => $type,
-                'parameters' => $parameters
-            ];
-        }
-        else
-            throw new exception\router("Invalid type: `{$type}`.", 10);
+        static::$routes[$type][] = [
+            'call'       => $call,
+            'method'     => $method,
+            'prefix'     => $prefix,
+            'route'      => $route,
+            'regex'      => $regex,
+            'type'       => $type,
+            'parameters' => $parameters
+        ];
 
-        return $write ? self::write() : true;
+        return $write ? static::write() : true;
     }
 
     /**
@@ -350,11 +362,25 @@ namespace mysli\toolkit; class router
      * @param string $type
      *        Null for any types.
      * --
+     * @throws mysli\toolkit\exception\router 10 Id need to contain `@` symbol.
+     * --
      * @return array [ array $route, array $route ]
      */
-    function get($id)
+    static function get($id)
     {
+        /*
+        Extract type if exists
+         */
+        if (strpos($id, ':'))
+            list($type, $id) = explode(':', $id, 2);
+        else
+            $type = null;
 
+        /*
+        Method
+         */
+        if (!strpos($id, '@'))
+            throw new exception\router("Id need to contain `@` symbol.", 10);
     }
 
     /**
@@ -373,7 +399,7 @@ namespace mysli\toolkit; class router
      * --
      * @return boolean
      */
-    function update($id, $key, $value)
+    static function update($id, $key, $value)
     {
 
     }
@@ -385,7 +411,7 @@ namespace mysli\toolkit; class router
      * --
      * @return boolean
      */
-    function remove($id)
+    static function remove($id)
     {
 
     }
@@ -397,22 +423,41 @@ namespace mysli\toolkit; class router
      * --
      * @return integer
      */
-    function count($id)
+    static function count($id)
     {
 
+    }
+
+    /**
+     * Dump who array of raw routes.
+     * --
+     * @param string $type Only routes of particular type; Null for all.
+     * --
+     * @throws mysli\toolkit\exception\router 10 Invalid type.
+     * --
+     * @return array
+     */
+    static function dump($type=null)
+    {
+        if (!$type)
+            return static::$routes;
+        elseif (array_key_exists($type, static::$routes))
+            return static::$routes[$type];
+        else
+            throw new exception\router("Invalid type `{$type}`.", 10);
     }
 
     /*
-    --- Private ----------------------------------------------------------------
+    --- Protected --------------------------------------------------------------
      */
 
-    private static function read()
+    protected static function read()
     {
-        self::$routes = json::decode_file(self::$routes_file, true);
+        static::$routes = json::decode_file(static::$routes_file, true);
     }
 
-    private static function write()
+    protected static function write()
     {
-        return json::encode_file(self::$routes_file, self::$routes);
+        return json::encode_file(static::$routes_file, static::$routes);
     }
 }

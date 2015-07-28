@@ -68,7 +68,7 @@ namespace mysli\toolkit; class fs
 
             foreach ($old as $o => $n)
             {
-                $renamed = $renamed + self::rename($o, $n);
+                $renamed = $renamed + static::rename($o, $n);
             }
 
             return $renamed;
@@ -93,7 +93,7 @@ namespace mysli\toolkit; class fs
     {
         $destination = dirname($filename);
         $filename    = basename($filename);
-        return md5(self::ds($destination, $filename)) . '_' . $filename;
+        return md5(static::ds($destination, $filename)) . '_' . $filename;
     }
 
     /**
@@ -141,13 +141,13 @@ namespace mysli\toolkit; class fs
         $base         = file::name($filename, false);
         $n            = 2;
 
-        while (file::exists(self::ds($directory, $new_filename)))
+        while (file::exists(static::ds($directory, $new_filename)))
         {
             $new_filename = $base . $divider . $n . $ext;
             $n++;
         }
 
-        return self::ds($directory, $new_filename);
+        return static::ds($directory, $new_filename);
     }
 
     /**
@@ -179,9 +179,9 @@ namespace mysli\toolkit; class fs
             );
         }
 
-        foreach (self::ls($directory) as $file)
+        foreach (static::ls($directory) as $file)
         {
-            $abs_path = self::ds($directory, $file);
+            $abs_path = static::ds($directory, $file);
 
             if ($rcut !== null)
             {
@@ -210,7 +210,7 @@ namespace mysli\toolkit; class fs
                 }
 
                 $collection = array_merge(
-                    $collection, self::map($abs_path, $callback, $rcut)
+                    $collection, static::map($abs_path, $callback, $rcut)
                 );
             }
         }
@@ -376,7 +376,7 @@ namespace mysli\toolkit; class fs
     {
         $arguments = func_get_args();
         $arguments = implode(DIRECTORY_SEPARATOR, $arguments);
-        return self::ds(MYSLI_APPPATH, $arguments);
+        return static::ds(MYSLI_APPPATH, $arguments);
     }
 
     /**
@@ -390,7 +390,7 @@ namespace mysli\toolkit; class fs
     {
         $arguments = func_get_args();
         $arguments = implode(DIRECTORY_SEPARATOR, $arguments);
-        return self::ds(MYSLI_BINPATH, $arguments);
+        return static::ds(MYSLI_BINPATH, $arguments);
     }
 
     /**
@@ -404,7 +404,7 @@ namespace mysli\toolkit; class fs
     {
         $arguments = func_get_args();
         $arguments = implode(DIRECTORY_SEPARATOR, $arguments);
-        return self::ds(MYSLI_PUBPATH, $arguments);
+        return static::ds(MYSLI_PUBPATH, $arguments);
     }
 
     /**
@@ -418,7 +418,7 @@ namespace mysli\toolkit; class fs
     {
         $arguments = func_get_args();
         $arguments = implode(DIRECTORY_SEPARATOR, $arguments);
-        return self::ds(MYSLI_TMPPATH, $arguments);
+        return static::ds(MYSLI_TMPPATH, $arguments);
     }
 
     /**
@@ -432,7 +432,7 @@ namespace mysli\toolkit; class fs
     {
         $arguments = func_get_args();
         $arguments = implode(DIRECTORY_SEPARATOR, $arguments);
-        return self::ds(MYSLI_CFGPATH, $arguments);
+        return static::ds(MYSLI_CFGPATH, $arguments);
     }
 
     /**
@@ -456,11 +456,11 @@ namespace mysli\toolkit; class fs
 
         if ($is_phar)
         {
-            return 'phar://'.self::binpath($package.'.phar/', $arguments);
+            return 'phar://'.static::binpath($package.'.phar/', $arguments);
         }
         else
         {
-            return self::binpath($package, $arguments);
+            return static::binpath($package, $arguments);
         }
     }
 
@@ -489,6 +489,6 @@ namespace mysli\toolkit; class fs
             }
         } while(strlen($dir) > 1);
 
-        return self::ds($dir, implode('/', $arguments));
+        return static::ds($dir, implode('/', $arguments));
     }
 }

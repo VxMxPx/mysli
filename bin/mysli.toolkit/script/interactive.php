@@ -40,7 +40,7 @@ namespace mysli\toolkit\root\script; class interactive
 
                 if (in_array($stdin, ['help', 'h', '?']))
                 {
-                    self::help();
+                    static::help();
                     return;
                 }
 

@@ -103,7 +103,7 @@ namespace mysli\toolkit; class ym
     {
         try
         {
-            return self::decode(file::read($filename));
+            return static::decode(file::read($filename));
         }
         catch (exception\ym $e)
         {
@@ -132,7 +132,7 @@ namespace mysli\toolkit; class ym
 
         $list   = [];
         $stack  = [&$list];
-        $indent = self::detect_indent($string);
+        $indent = static::detect_indent($string);
         $level  = 0;
         $string = str::to_unix_line_endings($string);
         $lines  = explode("\n", $string);
@@ -152,7 +152,7 @@ namespace mysli\toolkit; class ym
             }
 
             // Get current indentation level
-            $level = $indent ? self::get_level($line, $indent) : 0;
+            $level = $indent ? static::get_level($line, $indent) : 0;
             $stack = array_slice($stack, 0, $level+1);
 
             try
@@ -160,7 +160,7 @@ namespace mysli\toolkit; class ym
                 // List item...
                 if (substr(trim($line), 0, 1) === '-')
                 {
-                    list($_, $value) = self::proc_line(ltrim($line, "\t -"), true);
+                    list($_, $value) = static::proc_line(ltrim($line, "\t -"), true);
 
                     // just one - meaning sub category
                     if (!$value)
@@ -177,7 +177,7 @@ namespace mysli\toolkit; class ym
                     continue;
                 }
 
-                list($key, $value) = self::proc_line($line, false);
+                list($key, $value) = static::proc_line($line, false);
 
                 if ($value === null)
                 {
@@ -215,7 +215,7 @@ namespace mysli\toolkit; class ym
     {
         try
         {
-            return file::write($filename, self::encode($in));
+            return file::write($filename, static::encode($in));
         }
         catch (exception\ym $e)
         {
@@ -260,7 +260,7 @@ namespace mysli\toolkit; class ym
                 }
                 else
                 {
-                    $output .= "\n".self::encode($value, $lvl+1);
+                    $output .= "\n".static::encode($value, $lvl+1);
                 }
 
                 continue;

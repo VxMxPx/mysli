@@ -61,7 +61,7 @@ namespace mysli\toolkit; class pkg
     {
         $path = $path ?: MYSLI_CFGPATH."/toolkit.pkg.list";
 
-        if (self::$list_file)
+        if (static::$list_file)
         {
             throw new exception\pkg("Already initialized.", 10);
         }
@@ -71,9 +71,9 @@ namespace mysli\toolkit; class pkg
             throw new exception\pkg("File not found: `{$path}`", 20);
         }
 
-        self::$list_file = $path;
-        self::read();
-        self::reload_all();
+        static::$list_file = $path;
+        static::read();
+        static::reload_all();
     }
 
     /**
@@ -83,7 +83,7 @@ namespace mysli\toolkit; class pkg
      */
     static function list_enabled()
     {
-        return array_keys(self::$enabled);
+        return array_keys(static::$enabled);
     }
 
     /**
@@ -95,9 +95,9 @@ namespace mysli\toolkit; class pkg
     {
         $disabled = [];
 
-        foreach (self::$all as $package)
+        foreach (static::$all as $package)
         {
-            if (!self::is_enabled($package))
+            if (!static::is_enabled($package))
                 $disabled[] = $package;
         }
 
@@ -111,7 +111,7 @@ namespace mysli\toolkit; class pkg
      */
     static function list_all()
     {
-        return self::$all;
+        return static::$all;
     }
 
 
@@ -132,11 +132,11 @@ namespace mysli\toolkit; class pkg
     static function list_cli()
     {
         $cli = [];
-        $enabled = self::list_enabled();
+        $enabled = static::list_enabled();
 
         foreach ($enabled as $package)
         {
-            if (!($path = self::get_path($package)))
+            if (!($path = static::get_path($package)))
                 throw new exception\pkg("Package not found: `{$package}`.", 10);
 
             /*
@@ -234,12 +234,12 @@ namespace mysli\toolkit; class pkg
      */
     static function get_dependees($package, $deep=false, array $proc=[])
     {
-        $enabled = self::list_enabled();
+        $enabled = static::list_enabled();
         $list = [];
 
         foreach ($enabled as $spackage)
         {
-            $meta = self::get_meta($spackage);
+            $meta = static::get_meta($spackage);
 
             if ($meta['require'] && isset($meta['require'][$package]))
             {
@@ -267,7 +267,7 @@ namespace mysli\toolkit; class pkg
         foreach ($list as $spackage)
         {
             $list = array_merge(
-                self::get_dependees($dependency, true, $proc),
+                static::get_dependees($dependency, true, $proc),
                 $list
             );
         }
@@ -295,7 +295,7 @@ namespace mysli\toolkit; class pkg
      */
     static function get_dependencies($package, $deep=false, array $proc=[])
     {
-        $meta = self::get_meta($package);
+        $meta = static::get_meta($package);
 
         $list = [
             'enabled'  => [],
@@ -324,17 +324,17 @@ namespace mysli\toolkit; class pkg
             }
 
             // Normal package
-            if (!self::exists($dependency))
+            if (!static::exists($dependency))
             {
                 $list['missing'][] = $dependency;
             }
             else
             {
-                if (self::get_version($dependency) !== $req_version)
+                if (static::get_version($dependency) !== $req_version)
                 {
                     $list['version'][] = $dependency;
                 }
-                else if (self::is_enabled($dependency))
+                else if (static::is_enabled($dependency))
                 {
                     $list['enabled'][] = $dependency;
                 }
@@ -368,7 +368,7 @@ namespace mysli\toolkit; class pkg
 
         foreach ($list['disabled'] as $dependency)
         {
-            $nlist = self::get_dependencies($dependency, true, $proc);
+            $nlist = static::get_dependencies($dependency, true, $proc);
 
             $list['enabled']  = array_merge($nlist['enabled'],  $list['enabled']);
             $list['disabled'] = array_merge($nlist['disabled'], $list['disabled']);
@@ -394,7 +394,7 @@ namespace mysli\toolkit; class pkg
      */
     static function get_version($package)
     {
-        $meta = self::get_meta($package);
+        $meta = static::get_meta($package);
         return (int) $meta['version'];
     }
 
@@ -410,9 +410,9 @@ namespace mysli\toolkit; class pkg
      */
     static function get_meta($package, $reload=false)
     {
-        if ($reload || !isset(self::$meta_cache[$package]))
+        if ($reload || !isset(static::$meta_cache[$package]))
         {
-            $path = self::get_path($package);
+            $path = static::get_path($package);
             $path .= '/mysli.pkg.ym';
 
             if (!file::exists($path))
@@ -422,10 +422,10 @@ namespace mysli\toolkit; class pkg
                 );
             }
 
-            self::$meta_cache[$package] = ym::decode_file($path);
+            static::$meta_cache[$package] = ym::decode_file($path);
         }
 
-        return self::$meta_cache[$package];
+        return static::$meta_cache[$package];
     }
 
     /**
@@ -439,15 +439,15 @@ namespace mysli\toolkit; class pkg
     {
         $s = explode('\\', $namespace);
 
-        if (self::exists(implode('.', array_slice($s, 0, 3))))
+        if (static::exists(implode('.', array_slice($s, 0, 3))))
         {
             return implode('.', array_slice($s, 0, 3));
         }
-        elseif (self::exists(implode('.', array_slice($s, 0, 2))))
+        elseif (static::exists(implode('.', array_slice($s, 0, 2))))
         {
             return implode('.', array_slice($s, 0, 2));
         }
-        elseif (self::exists(implode('.', array_slice($s, 0, 1))))
+        elseif (static::exists(implode('.', array_slice($s, 0, 1))))
         {
             return implode('.', array_slice($s, 0, 1));
         }
@@ -527,7 +527,7 @@ namespace mysli\toolkit; class pkg
      */
     static function exists($package)
     {
-        return !!(self::exists_as($package));
+        return !!(static::exists_as($package));
     }
 
     /**
@@ -566,12 +566,12 @@ namespace mysli\toolkit; class pkg
     {
         log::info("Will enable package: `{$package}`", __CLASS__);
 
-        if (self::is_enabled($package))
+        if (static::is_enabled($package))
             throw new exception\pkg(
                 "Package is already enabled: `{$package}`", 10
             );
 
-        if (!self::exists($package))
+        if (!static::exists($package))
             throw new exception\pkg(
                 "Package doesn't exists: `{$package}`", 20
             );
@@ -582,7 +582,7 @@ namespace mysli\toolkit; class pkg
         if ($inc_dependencies)
         {
             // Get list of dependencies for this package.
-            $dependencies = self::get_dependencies($package, true);
+            $dependencies = static::get_dependencies($package, true);
 
             if (!empty($dependencies['missing']))
                 throw new exception\pkg(
@@ -603,7 +603,7 @@ namespace mysli\toolkit; class pkg
             {
                 foreach ($dependencies['disabled'] as $dependency)
                 {
-                    if (!self::enable($dependency, $with_setup, false))
+                    if (!static::enable($dependency, $with_setup, false))
                         throw new exception\pkg(
                             "Failed to enable dependency: `{$dependency}` ".
                             "for `{$package}`.", 50
@@ -612,13 +612,13 @@ namespace mysli\toolkit; class pkg
             }
         }
 
-        if (!self::run_setup($package, 'enable'))
+        if (!static::run_setup($package, 'enable'))
             throw new exception\pkg(
                 "Setup failed for: `{$package}`.", 60
             );
 
-        self::add($package, self::get_version($package));
-        return self::write();
+        static::add($package, static::get_version($package));
+        return static::write();
     }
 
     /**
@@ -650,12 +650,12 @@ namespace mysli\toolkit; class pkg
     {
         log::info("Will disable package: `{$package}`", __CLASS__);
 
-        if (self::is_disabled($package))
+        if (static::is_disabled($package))
             throw new exception\pkg(
                 "Package is already disabled: `{$package}`", 10
             );
 
-        if (!self::exists($package))
+        if (!static::exists($package))
             throw new exception\pkg(
                 "Package doesn't exists: `{$package}`", 20
             );
@@ -666,7 +666,7 @@ namespace mysli\toolkit; class pkg
         if ($inc_dependees)
         {
             // Get list of dependees for this package.
-            $dependees = self::get_dependees($package, true);
+            $dependees = static::get_dependees($package, true);
 
             foreach ($dependees as $dependee)
             {
@@ -674,7 +674,7 @@ namespace mysli\toolkit; class pkg
                 if (substr($dependee, 0, 14) === 'php.extension.')
                     continue;
 
-                if (!self::disable($dependee, $with_setup, false))
+                if (!static::disable($dependee, $with_setup, false))
                     throw new exception\pkg(
                         "Failed to disable dependee: ".
                         "`{$dependee}` for `{$package}`.", 30
@@ -682,13 +682,13 @@ namespace mysli\toolkit; class pkg
             }
         }
 
-        if (!self::run_setup($package, 'disable'))
+        if (!static::run_setup($package, 'disable'))
             throw new exception\pkg(
                 "Setup failed for: `{$package}`.", 40
             );
 
-        self::remove($package);
-        return self::write();
+        static::remove($package);
+        return static::write();
     }
 
     /**
@@ -704,7 +704,7 @@ namespace mysli\toolkit; class pkg
      */
     static function run_setup($package, $action)
     {
-        $file = self::get_path($package);
+        $file = static::get_path($package);
         $file .= '/lib/__setup.php';
 
         // There's no __setup file,
@@ -744,12 +744,12 @@ namespace mysli\toolkit; class pkg
      */
     static function add($package, $version)
     {
-        if (isset(self::$enabled[$package]))
+        if (isset(static::$enabled[$package]))
             throw new exception\pkg(
                 "Package {$package} already on the list.", 10
             );
 
-        self::$enabled[$package] = $version;
+        static::$enabled[$package] = $version;
     }
 
     /**
@@ -763,14 +763,14 @@ namespace mysli\toolkit; class pkg
      */
     static function remove($package)
     {
-        if (!isset(self::$enabled[$package]))
+        if (!isset(static::$enabled[$package]))
         {
             throw new exception\pkg(
                 "Trying to remove a non-existant package: `{$package}`", 10
             );
         }
 
-        unset(self::$enabled[$package]);
+        unset(static::$enabled[$package]);
     }
 
     /**
@@ -781,9 +781,9 @@ namespace mysli\toolkit; class pkg
      */
     static function update($package, $new_version)
     {
-        if (isset(self::$enabled[$package]))
+        if (isset(static::$enabled[$package]))
         {
-            self::$enabled[$package] = $new_version;
+            static::$enabled[$package] = $new_version;
         }
     }
 
@@ -796,7 +796,7 @@ namespace mysli\toolkit; class pkg
      */
     static function is_enabled($package)
     {
-        return isset(self::$enabled[$package]);
+        return isset(static::$enabled[$package]);
     }
 
     /**
@@ -808,7 +808,7 @@ namespace mysli\toolkit; class pkg
      */
     static function is_disabled($package)
     {
-        return !self::is_enabled($package);
+        return !static::is_enabled($package);
     }
 
     /*
@@ -823,7 +823,7 @@ namespace mysli\toolkit; class pkg
      */
     static function reload_all()
     {
-        self::$all = [];
+        static::$all = [];
         $binfiles = scandir(MYSLI_BINPATH);
 
         foreach ($binfiles as $package)
@@ -838,7 +838,7 @@ namespace mysli\toolkit; class pkg
                 $package = substr($package, 0, -5);
 
 
-            if (in_array($package, self::$all))
+            if (in_array($package, static::$all))
                 log::warning(
                     "Package `{$package}` exists both as a `phar` and a `source`.",
                     __CLASS__
@@ -848,7 +848,7 @@ namespace mysli\toolkit; class pkg
                 //     "please remove one of them or system will not boot.", 10
                 // );
 
-            $type = self::exists_as($package);
+            $type = static::exists_as($package);
 
             if (!$type)
                 throw new exception\pkg(
@@ -856,7 +856,7 @@ namespace mysli\toolkit; class pkg
                     "a valid package: `{$package}`, please remove it.", 20
                 );
 
-            self::$all[] = $package;
+            static::$all[] = $package;
         }
     }
 
@@ -865,8 +865,8 @@ namespace mysli\toolkit; class pkg
      */
     static function read()
     {
-        self::$enabled = [];
-        $list = file_get_contents(self::$list_file);
+        static::$enabled = [];
+        $list = file_get_contents(static::$list_file);
         $list = explode("\n", $list);
 
         foreach ($list as $line)
@@ -878,7 +878,7 @@ namespace mysli\toolkit; class pkg
 
             if (($name = trim($name)) && ($version = (int) $version))
             {
-                self::$enabled[$name] = $version;
+                static::$enabled[$name] = $version;
             }
         }
     }
@@ -892,9 +892,9 @@ namespace mysli\toolkit; class pkg
     {
         $list = '';
 
-        foreach (self::$enabled as $name => $version)
+        foreach (static::$enabled as $name => $version)
             $list .= "{$name} {$version}\n";
 
-        return !!file_put_contents(self::$list_file, $list);
+        return !!file_put_contents(static::$list_file, $list);
     }
 }

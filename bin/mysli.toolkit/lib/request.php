@@ -25,9 +25,9 @@ namespace mysli\toolkit; class request
      */
     static function __init($path=null)
     {
-        $path = $path ?: self::path();
+        $path = $path ?: static::path();
         $segments = trim($path, '/');
-        self::$segments = str::split_trim($segments, '/');
+        static::$segments = str::split_trim($segments, '/');
     }
 
     /**
@@ -45,11 +45,11 @@ namespace mysli\toolkit; class request
     {
         if ($id === null)
         {
-            return self::$segments;
+            return static::$segments;
         }
         else
         {
-            return arr::get(self::$segments, $id, $default);
+            return arr::get(static::$segments, $id, $default);
         }
     }
 
@@ -251,7 +251,7 @@ namespace mysli\toolkit; class request
      */
     static function url($with_query=false)
     {
-        $url = (self::is_ssl() ? 'https://' : 'http://') . self::host();
+        $url = (static::is_ssl() ? 'https://' : 'http://') . static::host();
 
         if ($with_query)
         {
@@ -328,27 +328,27 @@ namespace mysli\toolkit; class request
         // Check for fakes now
         if ($can_fake)
         {
-            if (self::has_post('REQUEST_METHOD'))
+            if (static::has_post('REQUEST_METHOD'))
             {
-                if (strtolower(self::post('REQUEST_METHOD')) === 'delete')
+                if (strtolower(static::post('REQUEST_METHOD')) === 'delete')
                 {
                     return self::method_delete;
                 }
 
-                if (strtolower(self::post('REQUEST_METHOD')) === 'put')
+                if (strtolower(static::post('REQUEST_METHOD')) === 'put')
                 {
                     return self::method_put;
                 }
             }
 
-            if (strtolower(self::get('REQUEST_METHOD')) === 'delete')
+            if (strtolower(static::get('REQUEST_METHOD')) === 'delete')
             {
                 return self::method_delete;
             }
         }
 
         // Is it post?
-        if (self::has_post())
+        if (static::has_post())
         {
             return self::method_post;
         }

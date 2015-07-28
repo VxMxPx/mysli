@@ -31,8 +31,8 @@ namespace mysli\dev\test; class test
 
         try
         {
-            $processed   = self::process(file::read($filename));
-            $processed[] = self::get_namespace($filename);
+            $processed   = static::process(file::read($filename));
+            $processed[] = static::get_namespace($filename);
 
             return $processed;
         }
@@ -50,7 +50,7 @@ namespace mysli\dev\test; class test
      * @throws mysli\dev\test\exception\test 10 Invalid tag.
      * @throws mysli\dev\test\exception\test 11 Unexpected tag `Description`.
      * @throws mysli\dev\test\exception\test 12 Unexpected tag `Expect`.
-     * @throws mysli\dev\test\exception\test 13 (@see self::resolve_expect())
+     * @throws mysli\dev\test\exception\test 13 (@see static::resolve_expect())
      * @throws mysli\dev\test\exception\test 14 Unexpected tag `Skip`.
      * @throws mysli\dev\test\exception\test 15 Unexpected tag `Use`.
      * @throws mysli\dev\test\exception\test 20 Invalid buffer.
@@ -128,7 +128,7 @@ namespace mysli\dev\test; class test
                         {
                             try
                             {
-                                $target['expect'] = self::resolve_expect($option);
+                                $target['expect'] = static::resolve_expect($option);
                                 $buffer = 'test';
                             }
                             catch (\Exception $e)
@@ -377,7 +377,7 @@ namespace mysli\dev\test; class test
         }
         catch (\Exception $e)
         {
-            $r = self::assert_statement($e, $test['expect']);
+            $r = static::assert_statement($e, $test['expect']);
             $r['skipped'] = null;
             $r['runtime'] = (microtime(true) - $timestart);
             return $r;
@@ -391,7 +391,7 @@ namespace mysli\dev\test; class test
         if ($test['expect'][0] === 'output')
         {
             $test['expect'][1] = implode("\n", $test['code']['expect']);
-            $r = self::assert_statement($output, $test['expect']);
+            $r = static::assert_statement($output, $test['expect']);
         }
         elseif ($test['expect'][0] === 'assertion')
         {
@@ -401,12 +401,12 @@ namespace mysli\dev\test; class test
             }
             else
             {
-                $r = self::assert_statement($result, $test['expect']);
+                $r = static::assert_statement($result, $test['expect']);
             }
         }
         else
         {
-            $r = self::assert_statement($result, $test['expect']);
+            $r = static::assert_statement($result, $test['expect']);
         }
 
         $r['skipped'] = null;

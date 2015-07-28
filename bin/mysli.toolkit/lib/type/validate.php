@@ -24,7 +24,7 @@ namespace mysli\toolkit\type; class validate
             );
         }
 
-        self::need_int_range($input, $min, $max, $message);
+        static::need_int_range($input, $min, $max, $message);
     }
 
     /**

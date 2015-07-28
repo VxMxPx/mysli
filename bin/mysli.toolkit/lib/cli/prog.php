@@ -443,7 +443,7 @@ namespace mysli\toolkit\cli; class prog
     /**
      * Get multiple values as an array.
      * --
-     * @param string $... See self::get_parameter()
+     * @param string $... (@see static::get_parameter())
      * --
      * @return array
      */
@@ -463,7 +463,7 @@ namespace mysli\toolkit\cli; class prog
     /**
      * Get multiple parameters as an array.
      * --
-     * @param string $... See self::get_parameter()
+     * @param string $... (@see static::get_parameter())
      * --
      * @return array
      */

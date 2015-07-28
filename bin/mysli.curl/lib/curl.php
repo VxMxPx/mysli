@@ -25,9 +25,9 @@
  * You can apply default, cookie, get or post options on constructed object:
  *
  *      $curl = new curl($url);
- *      self::set_defaults($curl);
+ *      static::set_defaults($curl);
  *      $curl->set_opt(CURLOPT_FOLLOWLOCATION, false);
- *      self::set_cookie($curl);
+ *      static::set_cookie($curl);
  *      $curl->exec();
  *
  * ## Configuration
@@ -191,10 +191,10 @@ namespace mysli\curl; class curl
     static function get($url, $cookie=false)
     {
         $curl = new self($url);
-        self::set_defaults($curl);
-        self::set_get($curl);
+        static::set_defaults($curl);
+        static::set_get($curl);
         if ($cookie)
-            self::set_cookie($curl);
+            static::set_cookie($curl);
 
         /*
         Get result, destroy instance and return.
@@ -217,10 +217,10 @@ namespace mysli\curl; class curl
     static function post($url, array $data=[], $cookie=false)
     {
         $curl = new self($url);
-        self::set_defaults($curl);
-        self::set_post($curl, $data);
+        static::set_defaults($curl);
+        static::set_post($curl, $data);
         if ($cookie)
-            self::set_cookie($curl);
+            static::set_cookie($curl);
 
         /*
         Get result, destroy instance and return.
@@ -240,8 +240,8 @@ namespace mysli\curl; class curl
         $curl->set_opt([
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HEADER         => false,
-            CURLOPT_COOKIEJAR      => self::get_cookie_path(),
-            CURLOPT_COOKIEFILE     => self::get_cookie_path()
+            CURLOPT_COOKIEJAR      => static::get_cookie_path(),
+            CURLOPT_COOKIEFILE     => static::get_cookie_path()
         ]);
     }
 
@@ -254,7 +254,7 @@ namespace mysli\curl; class curl
     static function set_post(\mysli\curl\curl $curl, array $data)
     {
         $curl->set_opt([
-            CURLOPT_USERAGENT      => self::get_user_agent(),
+            CURLOPT_USERAGENT      => static::get_user_agent(),
             CURLOPT_POST           => true,
             CURLOPT_HEADER         => false,
             CURLOPT_RETURNTRANSFER => true,
@@ -271,7 +271,7 @@ namespace mysli\curl; class curl
     static function set_get(\mysli\curl\curl $curl)
     {
         $curl->set_opt([
-            CURLOPT_USERAGENT      => self::get_user_agent(),
+            CURLOPT_USERAGENT      => static::get_user_agent(),
             CURLOPT_HEADER         => false,
             CURLOPT_RETURNTRANSFER => true,
         ]);

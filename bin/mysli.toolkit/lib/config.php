@@ -270,7 +270,7 @@ namespace mysli\toolkit; class config
     function destroy()
     {
         $this->data = [];
-        unset(self::$registry[$this->package]);
+        unset(static::$registry[$this->package]);
 
         return file::exists($this->filename)
             ? file::remove($this->filename)
@@ -291,7 +291,7 @@ namespace mysli\toolkit; class config
      */
     private function __construct($package)
     {
-        $this->package = self::ns_to_pkg($package);
+        $this->package = static::ns_to_pkg($package);
 
         log::debug("Create for package: `{$package}`.", __CLASS__);
 
@@ -370,15 +370,15 @@ namespace mysli\toolkit; class config
      */
     static function select($package, $key=false, $default=null)
     {
-        $package = self::ns_to_pkg($package);
+        $package = static::ns_to_pkg($package);
 
         if (!$package)
             throw new exception\config("Invalid package.", 10);
 
-        if (!isset(self::$registry[$package]))
-            self::$registry[$package] = new self($package);
+        if (!isset(static::$registry[$package]))
+            static::$registry[$package] = new self($package);
 
-        $config = self::$registry[$package];
+        $config = static::$registry[$package];
 
         return $key
             ? $config->get($key, $default)

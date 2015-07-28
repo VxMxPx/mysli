@@ -176,9 +176,9 @@ namespace mysli\toolkit; class response
             );
         }
 
-        event::trigger('toolkit.response::apply_headers', [self::$headers]);
+        event::trigger('toolkit.response::apply_headers', [static::$headers]);
 
-        foreach (self::$headers as $type => $header)
+        foreach (static::$headers as $type => $header)
         {
             if (substr($type, 0, 1) !== '-')
             {
@@ -206,7 +206,7 @@ namespace mysli\toolkit; class response
 
         foreach ($header as $type => $hdr)
         {
-            self::$headers[$type] = $hdr;
+            static::$headers[$type] = $hdr;
         }
     }
 
@@ -222,13 +222,13 @@ namespace mysli\toolkit; class response
     {
         if (!$id)
         {
-            return self::$headers;
+            return static::$headers;
         }
         else
         {
-            if (array_key_exists($id, self::$headers))
+            if (array_key_exists($id, static::$headers))
             {
-                return self::$headers[$id];
+                return static::$headers[$id];
             }
         }
     }
@@ -241,8 +241,8 @@ namespace mysli\toolkit; class response
      */
     static function replace($header, $type=null)
     {
-        self::clear();
-        self::set_header($header, $type);
+        static::clear();
+        static::set_header($header, $type);
     }
 
     /**
@@ -250,8 +250,8 @@ namespace mysli\toolkit; class response
      */
     static function clear()
     {
-        self::$headers = [];
-        self::$status  = 0;
+        static::$headers = [];
+        static::$status  = 0;
     }
 
     /**
@@ -261,7 +261,7 @@ namespace mysli\toolkit; class response
      */
     static function get_status()
     {
-        return self::$status;
+        return static::$status;
     }
 
     /**
@@ -277,23 +277,23 @@ namespace mysli\toolkit; class response
     {
         $status = (int) $status;
 
-        if (!isset(self::$statuses[$status]))
+        if (!isset(static::$statuses[$status]))
         {
             throw new exception\response(
                 "Not a valid status: `{$status}`", 10
             );
         }
 
-        self::$status = $status;
+        static::$status = $status;
 
-        self::set_header(
-            request::protocol().' '.$status.' '.self::$statuses[$status],
+        static::set_header(
+            request::protocol().' '.$status.' '.static::$statuses[$status],
             '-Status'
         );
 
         if ($location)
         {
-            self::set_header($location, 'Location');
+            static::set_header($location, 'Location');
         }
     }
 
@@ -304,7 +304,7 @@ namespace mysli\toolkit; class response
      */
     static function get_content_type()
     {
-        return self::get_header('Content-type');
+        return static::get_header('Content-type');
     }
 
     /**
@@ -315,6 +315,6 @@ namespace mysli\toolkit; class response
      */
     static function set_content_type($type, $charset='utf-8')
     {
-        self::set_header("{$type}; charset={$charset}", 'Content-type');
+        static::set_header("{$type}; charset={$charset}", 'Content-type');
     }
 }

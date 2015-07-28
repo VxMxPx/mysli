@@ -21,7 +21,7 @@ namespace mysli\toolkit; class crypt
      */
     static function encrypt($text, $key)
     {
-        return self::AES_encrypt($text, $key);
+        return static::AES_encrypt($text, $key);
     }
 
     /**
@@ -34,7 +34,7 @@ namespace mysli\toolkit; class crypt
      */
     static function decrypt($text, $key)
     {
-        return self::AES_decrypt($text, $key);
+        return static::AES_decrypt($text, $key);
     }
 
     /**
@@ -50,7 +50,7 @@ namespace mysli\toolkit; class crypt
     static function AES_encrypt($text, $key)
     {
         // Padding PKCS#7
-        $text = self::PKCS7_pad($text, 16);
+        $text = static::PKCS7_pad($text, 16);
 
         // Random IV
         $iv = mcrypt_create_iv(16, MCRYPT_DEV_URANDOM);
@@ -109,7 +109,7 @@ namespace mysli\toolkit; class crypt
         $enc_key  = substr($keys, 0, 32);
         $hmac_new = hash_hmac('sha256', $iv . $text, substr($keys, 32));
 
-        if (!self::compare_strings($hmac, $hmac_new))
+        if (!static::compare_strings($hmac, $hmac_new))
         {
             // to prevent timing attacks
             return false;
@@ -129,7 +129,7 @@ namespace mysli\toolkit; class crypt
             );
         }
 
-        return self::PKCS7_unpad($result);
+        return static::PKCS7_unpad($result);
     }
 
     /**
