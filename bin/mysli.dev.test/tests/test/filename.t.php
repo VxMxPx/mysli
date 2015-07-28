@@ -2,12 +2,12 @@
 
 #: Before
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-use \mysli\dev\testme\test;
+use \mysli\dev\test\test;
 
 
 #: Test Exception on Missing File
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#: Expect Exception mysli\dev\testme\exception\test 10 "File not found*"
+#: Expect Exception mysli\dev\test\exception\test 10 "File not found*"
 test::file(null);
 
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace mysli\dev\testme\root\script; class test
+namespace mysli\dev\test\root\script; class test
 {
     const __use = '
         .{ test -> lib.test, diff }
@@ -20,7 +20,7 @@ namespace mysli\dev\testme\root\script; class test
         /*
         Set params.
          */
-        $prog = new prog('Mysli Testing Utility', '', 'mysli.dev.testme.test');
+        $prog = new prog('Mysli Testing Utility', '', 'mysli.dev.test.test');
         $prog
         ->create_parameter('PACKAGE', [
             'required' => true,
@@ -91,18 +91,29 @@ namespace mysli\dev\testme\root\script; class test
         $sum_all       = 0;
         $sum_time      = 0;
 
+        $last_dir = null;
+
         /*
         Loop through tests...
          */
         foreach ($testfiles as $testfile)
         {
+            // If there's __init load once, it before file 0
+            if ($last_dir !== dirname($testfile))
+            {
+                $last_dir = dirname($testfile);
+                $__init = dirname($testfile).'/__init.php';
+                if (file_exists($__init))
+                    include($__init);
+            }
+
             // Test base filename
             $testfilebase = substr(basename($testfile), 0, -4);
 
             // Get results a from file
             try
             {
-                list($global, $tests) = lib\test::file($testfile);
+                list($global, $tests, $tnamespace) = lib\test::file($testfile);
             }
             catch (\Exception $e)
             {
@@ -114,7 +125,9 @@ namespace mysli\dev\testme\root\script; class test
             foreach ($tests as $testcase)
             {
                 // Generate test...
-                $test_generated = lib\test::generate($testcase, $global);
+                $test_generated = lib\test::generate(
+                    $testcase, $global, $tnamespace
+                );
 
                 // Run tests...
                 $res = lib\test::run($test_generated, $testcase, $global);

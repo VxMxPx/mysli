@@ -1,6 +1,6 @@
-package:     mysli.dev.packme
+package:     mysli.dev.test
 version:     1
-description: Command line utility for producing PHAR packages.
+description: Mysli Testing Utility.
 license:     GPL-3.0
 authors:
     - Marko Gajšt (Developer) <m@gaj.st>

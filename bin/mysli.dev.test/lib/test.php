@@ -1,9 +1,10 @@
 <?php
 
-namespace mysli\dev\testme; class test
+namespace mysli\dev\test; class test
 {
     const __use = '
         mysli.toolkit.{
+            fs,
             fs.file -> file,
             type.str -> str,
             log
@@ -16,10 +17,10 @@ namespace mysli\dev\testme; class test
      * --
      * @param string $filename Full absolute path.
      * --
-     * @throws mysli\dev\testme\exception\test 10 File not found.
+     * @throws mysli\dev\test\exception\test 10 File not found.
      * --
      * @return array
-     *         [ array $global, array $tests ]
+     *         [ array $global, array $tests, string $namespace ]
      */
     static function file($filename)
     {
@@ -30,7 +31,10 @@ namespace mysli\dev\testme; class test
 
         try
         {
-            return self::process(file::read($filename));
+            $processed   = self::process(file::read($filename));
+            $processed[] = self::get_namespace($filename);
+
+            return $processed;
         }
         catch (\Exception $e)
         {
@@ -43,13 +47,13 @@ namespace mysli\dev\testme; class test
      * --
      * @param  string $string
      * --
-     * @throws mysli\dev\testme\exception\test 10 Invalid tag.
-     * @throws mysli\dev\testme\exception\test 11 Unexpected tag `Description`.
-     * @throws mysli\dev\testme\exception\test 12 Unexpected tag `Expect`.
-     * @throws mysli\dev\testme\exception\test 13 (@see self::resolve_expect())
-     * @throws mysli\dev\testme\exception\test 14 Unexpected tag `Skip`.
-     * @throws mysli\dev\testme\exception\test 15 Unexpected tag `Use`.
-     * @throws mysli\dev\testme\exception\test 20 Invalid buffer.
+     * @throws mysli\dev\test\exception\test 10 Invalid tag.
+     * @throws mysli\dev\test\exception\test 11 Unexpected tag `Description`.
+     * @throws mysli\dev\test\exception\test 12 Unexpected tag `Expect`.
+     * @throws mysli\dev\test\exception\test 13 (@see self::resolve_expect())
+     * @throws mysli\dev\test\exception\test 14 Unexpected tag `Skip`.
+     * @throws mysli\dev\test\exception\test 15 Unexpected tag `Use`.
+     * @throws mysli\dev\test\exception\test 20 Invalid buffer.
      * --
      * @return array [ array $global, array $tests ]
      */
@@ -263,19 +267,20 @@ namespace mysli\dev\testme; class test
     /**
      * Generate actual test's code, to be eval.
      * --
-     * @param  array $test
-     * @param  array $global
+     * @param array  $test
+     * @param array  $global
+     * @param string $namespace
      * --
      * @return string
      */
-    static function generate(array $test, array $global)
+    static function generate(array $test, array $global, $namespace)
     {
         /*
         Define code, and append namespace + use.
          */
         $code = [];
-        $code[] = "namespace mysli\\dev\\testme\\____\\testcase;";
-        $code[] = "use \\mysli\\dev\\testme\\assert;";
+        $code[] = "namespace {$namespace};";
+        $code[] = "use \\mysli\\dev\\test\\assert;";
 
         /*
         Add lines to be run before each test
@@ -286,7 +291,7 @@ namespace mysli\dev\testme; class test
         /*
         Define Test Function
          */
-        $code[] = "\$mysli_testme_test_case = function ()\n{";
+        $code[] = "\$mysli_test_test_case = function ()\n{";
 
         /*
         Add line to be run before the test, in case of USE
@@ -308,7 +313,7 @@ namespace mysli\dev\testme; class test
         /*
         Execute function
          */
-        $code[] = "\$mysli_testme_test_result = \$mysli_testme_test_case();";
+        $code[] = "\$mysli_test_test_result = \$mysli_test_test_case();";
 
         /*
         Add line to be run after the test, in case of USE
@@ -329,7 +334,7 @@ namespace mysli\dev\testme; class test
         /*
         Add return statement.
          */
-        $code[] = "return \$mysli_testme_test_result;";
+        $code[] = "return \$mysli_test_test_result;";
 
         return implode("\n", $code);
     }
@@ -410,16 +415,39 @@ namespace mysli\dev\testme; class test
         return $r;
     }
 
+
     /*
     --- Private ----------------------------------------------------------------
      */
+
+    /**
+     * Get test's namespace from filename.
+     * --
+     * @param string $filename
+     * --
+     * @return string
+     */
+    private static function get_namespace($filename)
+    {
+        $class = substr($filename, strlen(fs::binpath()));
+        // toolkit.mysli/tests/router/add.t.php
+        $class = trim($class, '\\/');
+        // toolkit.mysli/tests/router
+        $class = dirname($class);
+        // toolkit.mysli/root/tests/router
+        $class = substr_replace($class, 'root/', strpos($class, '/')+1, 0);
+        // toolkit\mysli\root\tests\router
+        $class = str_replace(['/', '.'], '\\', $class);
+
+        return $class;
+    }
 
     /**
      * Resolve `expect` statement and return an array.
      * --
      * @param string $option
      * --
-     * @throws mysli\dev\testme\exception\test 10 Invalid type.
+     * @throws mysli\dev\test\exception\test 10 Invalid type.
      * --
      * @return array
      */
@@ -513,7 +541,7 @@ namespace mysli\dev\testme; class test
      * @param  mixed $actual
      * @param  array $expect
      * --
-     * @throws mysli\dev\testme\exception\test 10 Unknown type.
+     * @throws mysli\dev\test\exception\test 10 Unknown type.
      * --
      * @return array
      */

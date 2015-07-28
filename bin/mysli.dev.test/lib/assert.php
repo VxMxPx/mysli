@@ -14,7 +14,7 @@
  *     ]
  * ]
  */
-namespace mysli\dev\testme; class assert
+namespace mysli\dev\test; class assert
 {
     const __use = '.{ exception.assert }';
 

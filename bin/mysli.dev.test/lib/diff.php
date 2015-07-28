@@ -1,6 +1,6 @@
 <?php
 
-namespace mysli\dev\testme; class diff
+namespace mysli\dev\test; class diff
 {
     /**
      * Accept two arrays and generate report, comparing values and types of
@@ -19,7 +19,7 @@ namespace mysli\dev\testme; class diff
 
         foreach ($arr1 as $id => $line)
         {
-            if ($level === 1 && strpos($line, "\n"))
+            if ($level === 1 && is_string($line) && strpos($line, "\n"))
             {
                 $arr2[$id] = isset($arr2[$id]) ? explode("\n", $arr2[$id]) : [];
                 $line = explode("\n", $line);
@@ -75,7 +75,7 @@ namespace mysli\dev\testme; class diff
 
         foreach ($arr as $id => $line)
         {
-            if ($level === 1 && strpos($line, "\n"))
+            if ($level === 1 && is_string($line) && strpos($line, "\n"))
             {
                 $lines = array_merge(
                     $lines, self::plain(explode("\n", $line), 1)

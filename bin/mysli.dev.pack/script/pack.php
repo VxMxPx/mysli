@@ -1,6 +1,6 @@
 <?php
 
-namespace mysli\dev\packme\root\script; class pack
+namespace mysli\dev\pack\root\script; class pack
 {
     const __use = '
         mysli.toolkit.{
@@ -28,9 +28,9 @@ namespace mysli\dev\packme\root\script; class pack
     static function __run(array $args)
     {
         $prog = new prog(
-            'Mysli Packme',
+            'Mysli Pack',
             'Command line utility for producing PHAR packages.',
-            'mysli.dev.packme.pack'
+            'mysli.dev.pack.pack'
         );
         $prog
         ->create_parameter('--whitespace/-w', [
@@ -63,10 +63,10 @@ namespace mysli\dev\packme\root\script; class pack
      * @param boolean $whitespace
      * @param boolean $yes
      * --
-     * @event mysli.dev.packme.root.script.pack::create.ignore_list
+     * @event mysli.dev.pack.root.script.pack::create.ignore_list
      *        ( string $package, array $ignore )
      *
-     * @event mysli.dev.packme.root.script.pack::create.done
+     * @event mysli.dev.pack.root.script.pack::create.done
      *        ( string $package, \Phar $phar_instance )
      * --
      * @return boolean
@@ -185,7 +185,7 @@ namespace mysli\dev\packme\root\script; class pack
 
         // Anyone is invited to add to the list...
         event::trigger(
-            'mysli.dev.packme.root.script.pack::create.ignore_list',
+            'mysli.dev.pack.root.script.pack::create.ignore_list',
             [$package, &$ignore]
         );
 
@@ -258,7 +258,7 @@ namespace mysli\dev\packme\root\script; class pack
 
         // Trigger done event
         event::trigger(
-            'mysli.dev.packme.root.script.pack::create.done',
+            'mysli.dev.pack.root.script.pack::create.done',
             [$package, $phar_instance]
         );
 
@@ -438,11 +438,11 @@ namespace mysli\dev\packme\root\script; class pack
         $ignore[] = 'tests/';
         $ignore[] = '~releases/';
 
-        if (isset($meta['packme']))
+        if (isset($meta['pack']))
         {
-            if (isset($meta['packme']['ignore']) && is_array($meta['packme']['ignore']))
+            if (isset($meta['pack']['ignore']) && is_array($meta['pack']['ignore']))
             {
-                $ignore = array_merge($ignore, $meta['packme']['ignore']);
+                $ignore = array_merge($ignore, $meta['pack']['ignore']);
             }
         }
 
