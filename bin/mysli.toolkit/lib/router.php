@@ -190,7 +190,7 @@ namespace mysli\toolkit; class router
      *        Save changes to file.
      * --
      * @throws mysli\toolkit\exception\router 10 Invalid Required `\$to` format.
-     * @throws mysli\toolkit\exception\router 20 Invalid filter for route.
+     * @throws mysli\toolkit\exception\router 20 Route with such ID already exists.
      * --
      * @return boolean
      */
@@ -209,14 +209,12 @@ namespace mysli\toolkit; class router
         }
 
         /*
-        Extract call
+        Extract TO
          */
-        $call = explode('::', $to);
-
-        if (!isset($call[1]))
+        if (!strpos($to, '::'))
         {
-            if ($type === self::route_special)
-                $call[1] = $route;
+            if ($type === static::route_special)
+                $to = "{$to}::{$route}";
             else
                 throw new exception\router(
                     "Required `\$to` format is: `vendor.package.class::method`, ".
@@ -225,113 +223,34 @@ namespace mysli\toolkit; class router
                 );
         }
 
-        // Make copy of route to be modified...
-        $mroute = $route;
+        // Make Route ID method@vednor.package.class
+        $rid = static::create_rid($to);
 
-        /*
-        Extract method
-         */
-        $method = [ 'GET', 'POST', 'DELETE', 'PUT' ];
+        // Cannot be duplicated
+        if (isset(static::$routes[$type][$rid]))
+            throw new exception\router(
+                "Route with such ID already exists: `{$rid}`.", 20
+            );
 
-        if (preg_match('/^([a-z\|]+)\:(.*?)$/i', $route, $match))
+
+        list($method, $prefix, $croute) = static::extract_route($route);
+
+        if ($type !== static::route_special)
         {
-            $method = $match[1];
-            $mroute  = $match[2];
-            unset($match);
-
-            // Will be set to all bellow
-            if (strtolower($method) === 'any')
-                $method = null;
-            else
-                $method = explode('|', $method);
-        }
-
-        /*
-        Special route, done right here.
-         */
-        if ($type === self::route_special)
-        {
-            static::$routes[self::route_special][$route] = [
-                'call'       => $call,
-                'method'     => $method,
-                'prefix'     => null,
-                'route'      => $route,
-                'regex'      => null,
-                'type'       => static::route_special,
-                'parameters' => []
-            ];
-
-            return $write ? static::write() : true;
-        }
-
-        /*
-        Extract prefix
-         */
-        if (preg_match('/^\[([a-z0-9_\-\/]+)\](.*?)$/i', $mroute, $match))
-        {
-            $prefix = $match[1];
-            $mroute  = $match[2];
+            list($regex, $parameters) = static::extract_parameters($croute, $prefix);
         }
         else
         {
-            $prefix = null;
-        }
-
-        /*
-        If there's any route left, Extract parameters
-         */
-        $parameters = [];
-        $regex      = null;
-
-        if ($mroute)
-        {
-            $segments = explode('/', $mroute);
-
-            foreach ($segments as $id => $segment)
-            {
-                // The end
-                if ($segment === '...')
-                {
-                    $regex .= '/?.*?';
-                    break;
-                }
-
-                // Special segment?
-                if (preg_match('/^\{([a-z_]+)\|((?:[a-z]+)|(?:\(.*?\)))\}(.*?)$/i', $segment, $match))
-                {
-                    list($_, $parameter, $filter, $extra) = $match;
-                    $parameters[] = $parameter;
-
-                    if (substr($filter, 0, 1) !== '(')
-                    {
-                        if (isset(static::$filters[$filter]))
-                            $filter = static::$filters[$filter];
-                        else
-                            throw new exception\router(
-                                "Invalid filter: `{$filter}` for `{$route}`.", 20
-                            );
-                    }
-
-                    if ($extra)
-                        $extra = preg_quote($extra);
-
-                    $regex .= "/{$filter}{$extra}";
-                }
-                else
-                {
-                    $regex .= '/'.preg_quote($segment);
-                }
-            }
-            // Finish regex
-            $regex   = ltrim($regex, '/');
-            $regex   = "<^{$prefix}{$regex}$>i";
+            $regex = null;
+            $parameters = [];
         }
 
         /*
         Set route by type
          */
-        static::$routes[$type][] = [
-            'call'       => $call,
+        static::$routes[$type][$rid] = [
+            'to'         => $to,
+            'rid'        => $rid,
             'method'     => $method,
             'prefix'     => $prefix,
             'route'      => $route,
@@ -368,52 +287,228 @@ namespace mysli\toolkit; class router
      */
     static function get($id)
     {
-        /*
-        Extract type if exists
-         */
-        if (strpos($id, ':'))
-            list($type, $id) = explode(':', $id, 2);
-        else
-            $type = null;
+        // Init return
+        $return = [];
+
+        // Get type and regex-to from id.
+        list($type, $regexto) = static::resolve_id($id);
 
         /*
-        Method
+        Loop through types, and find route(s)
          */
-        if (!strpos($id, '@'))
-            throw new exception\router("Id need to contain `@` symbol.", 10);
+        foreach ($type as $in)
+        {
+            // No such type, go on...
+            if (!isset(static::$routes[$in]))
+                continue;
+
+            foreach (static::$routes[$in] as $rid => $route)
+            {
+                if (preg_match($regexto, $rid))
+                    $return["{$in}:{$rid}"] = $route;
+            }
+        }
+
+        return $return;
     }
+
 
     /**
      * Update or set specific option for a route(s).
      * The following values cannot be changed:
-     * - call, type, route, regex, parameters
-     * Allow to change:
-     * - array method, string prefix, ... any other costume parameter
+     * - rid, type, regex (use route), parameters (use route)
+     * Allowed to change:
+     * - string to    vendor.package.class::method
+     * - string route
+     * - array  method,
+     * - string prefix,
+     * - ... any other costume parameter
      *
      * Any costume option added though update, can be accessed when route is
      * passed to method, with: `$route->option('costume_key')`
+     *
+     * Please note, this will modify all matching routes. If you specify full Id
+     * (type:method@vendor.package.class), there's no chance of multiple routes
+     * being matched.
      * --
-     * @param string $id    (@see self::get())
+     * @param mixed  $id    (@see static::get()) or Route Array
      * @param string $key
      * @param mixed  $value
      * --
-     * @return boolean
+     * @throws mysli\toolkit\expcetion\router 10 Invalid ID type.
+     * @throws mysli\toolkit\expcetion\router 20 Route with such ID already exits.
+     * --
+     * @return mixed
+     *         integer Count of modified routes if ID is string
+     *         boolean Was saved successfully, if ID is array.
      */
     static function update($id, $key, $value)
     {
+        /*
+        ID is String
+         */
+        if (is_string($id)):
+            // Init return
+            $return = 0;
 
+            // Get type and regex-to from id.
+            list($type, $regexto) = static::resolve_id($id);
+
+            // Loop through types, and find route(s)
+            foreach ($type as $in)
+            {
+                // No such type, go on...
+                if (!isset(static::$routes[$in]))
+                    continue;
+
+                foreach (static::$routes[$in] as $rid => $route)
+                {
+                    if (preg_match($regexto, $rid))
+                    {
+                        if (static::update($route, $key, $value))
+                            $return++;
+                    }
+                }
+            }
+
+            return $return;
+        endif;
+
+
+        /*
+        ID is an Array
+         */
+        if (!is_array($id) || !isset($id['rid']))
+        {
+            throw new exception\router("Invalid ID type.", 10);
+        }
+
+        // Assign for easier reading
+        $route = $id;
+
+        // Check types which needs to be handled in special way
+
+        if ($key === 'to')
+        {
+            // New Route Id
+            $nrid = static::create_rid($value);
+
+            // If already set, exception...
+            if (isset(static::$routes[$route['type']][$nrid]))
+            {
+                throw new exception\router(
+                    "Route with such ID already exists: `{$nrid}`.", 20
+                );
+            }
+
+            unset(static::$routes[$route['type']][$route['rid']]);
+
+            // Set it
+            $route['to'] = $value;
+            $route['rid'] = $nrid;
+        }
+        elseif ($key === 'route')
+        {
+            list($method, $prefix, $nroute) = static::extract_route($value);
+
+            $route['route']  = $value;
+            $route['method'] = $method;
+            $route['prefix'] = $prefix;
+
+            if ($route['type'] !== static::route_special)
+            {
+                list($regex, $parameters) = static::extract_parameters(
+                    $nroute, $prefix
+                );
+
+                $route['regex']  = $regex;
+                $route['parameters'] = $parameters;
+            }
+        }
+        elseif ($key === 'method')
+        {
+            // Set raw method
+            $route['method'] = $value;
+
+            // Reconstruct
+            list($_, $prefix, $broute) = static::extract_route($route['route']);
+
+            $method = implode('|', $value);
+
+            if ($prefix)
+                $prefix = "[{$prefix}]";
+
+            $route['route'] = "{$method}:{$prefix}{$broute}";
+        }
+        elseif ($key === 'prefix')
+        {
+            list($method, $prefix, $broute) = static::extract_route($route['route']);
+
+            if ($value)
+                $new_prefix = "[{$value}]";
+            else
+                $new_prefix = '';
+
+            // Re-assemble
+            $froute = implode('|', $method).":{$new_prefix}{$broute}";
+
+            // Re-load
+            list($regex, $parameters) =
+                static::extract_parameters($broute, $value);
+
+            $route['prefix'] = $value;
+            $route['route']  = $froute;
+            $route['regex']  = $regex;
+            $route['parameters'] = $parameters;
+        }
+        else
+        {
+            $route[$key] = $value;
+        }
+
+        static::$routes[$route['type']][$route['rid']] = $route;
+
+        return static::write();
     }
 
     /**
      * Remove specific route(s).
      * --
-     * @param string $id (@see self::get())
+     * @param string $id (@see static::get())
      * --
-     * @return boolean
+     * @return integer Amount of removed items.
      */
     static function remove($id)
     {
+        // Init return
+        $return = 0;
 
+        // Get type and regex-to from id.
+        list($type, $regexto) = static::resolve_id($id);
+
+        /*
+        Loop through types, and find route(s)
+         */
+        foreach ($type as $in)
+        {
+            // No such type, go on...
+            if (!isset(static::$routes[$in]))
+                continue;
+
+            foreach (static::$routes[$in] as $rid => $route)
+            {
+                if (preg_match($regexto, $rid))
+                {
+                    unset(static::$routes[$id][$rid]);
+                    $return++;
+                }
+            }
+        }
+
+        if ($return > 0)
+            static::write();
+
+        return $return;
     }
 
     /**
@@ -425,7 +520,7 @@ namespace mysli\toolkit; class router
      */
     static function count($id)
     {
-
+        return count(static::get($id));
     }
 
     /**
@@ -449,6 +544,167 @@ namespace mysli\toolkit; class router
 
     /*
     --- Protected --------------------------------------------------------------
+     */
+
+    /**
+     * Extract route, return: method, prefix, new route without method and prefix.
+     * --
+     * @param string $route
+     * --
+     * @return array [ array $method, string $prefix, string $route ]
+     */
+    static protected function extract_route($route)
+    {
+        $method = null;
+
+        if (preg_match('/^([a-z\|]+)\:(.*?)$/i', $route, $match))
+        {
+            $method = strtoupper($match[1]);
+            $route  = $match[2];
+
+            // Will be set to all bellow
+            if ($method !== 'ANY')
+                $method = explode('|', $method);
+            else
+                $method = null;
+        }
+
+        $method = $method ?: [ 'GET', 'POST', 'DELETE', 'PUT' ];
+
+        // Extract prefix
+        if (preg_match('/^\[([a-z0-9_\-\/]+)\](.*?)$/i', $route, $match))
+        {
+            $prefix = $match[1];
+            $route  = $match[2];
+        }
+        else
+        {
+            $prefix = null;
+        }
+
+        return [ $method, $prefix, $route ];
+    }
+
+    /**
+     * Resolve route, return regex format route and parameters.
+     * This must be route without prefix and method.
+     * --
+     * @param string $route
+     * @param string $prefix
+     * --
+     * @throws mysli\toolkit\exception\router 10 Invalid filter for route.
+     * --
+     * @return array
+     *         [ string $regex, array $parameters ]
+     */
+    protected static function extract_parameters($route, $prefix)
+    {
+        /*
+        If there's any route left, Extract parameters
+         */
+        $parameters = [];
+        $regex      = null;
+
+        $segments = explode('/', $route);
+
+        foreach ($segments as $id => $segment)
+        {
+            // The end
+            if ($segment === '...')
+            {
+                $regex .= '/?.*?';
+                break;
+            }
+
+            // Special segment?
+            if (preg_match('/^\{([a-z_]+)\|((?:[a-z]+)|(?:\(.*?\)))\}(.*?)$/i', $segment, $match))
+            {
+                list($_, $parameter, $filter, $extra) = $match;
+                $parameters[] = $parameter;
+
+                if (substr($filter, 0, 1) !== '(')
+                {
+                    if (isset(static::$filters[$filter]))
+                        $filter = static::$filters[$filter];
+                    else
+                        throw new exception\router(
+                            "Invalid filter: `{$filter}` for `{$route}`.", 10
+                        );
+                }
+
+                if ($extra)
+                    $extra = preg_quote($extra);
+
+                $regex .= "/{$filter}{$extra}";
+            }
+            else
+            {
+                $regex .= '/'.preg_quote($segment);
+            }
+        }
+        // Finish regex
+        $regex   = ltrim($regex, '/');
+        $regex   = "<^{$prefix}{$regex}$>i";
+
+        return [ $regex, $parameters ];
+    }
+
+    /**
+     * Get route Id from TO.
+     * Example: vendor.package.class::method => method@vendor.package.class
+     * --
+     * @param  string $to
+     * --
+     * @return string
+     */
+    protected static function create_rid($to)
+    {
+        $rid = explode('::', $to, 2);
+        return $rid[1].'@'.$rid[0];
+    }
+
+    /**
+     * Resolve ID to get type and regex-to.
+     * --
+     * @param string $id
+     * --
+     * @return array [ array $type, string $regexto ]
+     */
+    protected static function resolve_id($id)
+    {
+        /*
+        Extract type if exists
+         */
+        if (strpos($id, ':'))
+            list($type, $id) = explode(':', $id, 2);
+        else
+            $type = null;
+
+        /*
+        Get TO
+         */
+        if (!strpos($id, '@'))
+            throw new exception\router("Id need to contain `@` symbol.", 10);
+
+        // Regex
+        $regexto = $id;
+        $regexto = preg_quote($regexto);
+        $regexto = str_replace('\\*', '.*?', $regexto);
+        $regexto = "/^{$regexto}$/";
+
+        /*
+        Define search type
+         */
+        if ($type)
+            $type = [ $type ];
+        else
+            $type = [ 'before', 'after', 'special', 'high', 'normal', 'low' ];
+
+        return [ $type, $regexto ];
+    }
+
+    /*
+    Read / Write
      */
 
     protected static function read()
