@@ -528,7 +528,7 @@ namespace mysli\toolkit\fs; class file
                 $matched_sub = static::find(
                     fs::ds($directory, $file), $filter, $deep, $mrel, $rootlen
                 );
-                $matched = array_merge($matched_sub, $matched);
+                $matched = array_merge($matched, $matched_sub);
                 continue;
             }
 
