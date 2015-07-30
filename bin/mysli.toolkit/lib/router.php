@@ -103,14 +103,22 @@ namespace mysli\toolkit; class router
      * format, and check on each request. If matched, the provided method will
      * be called, with one argument: `route` (@see mysli\toolkit\router\route).
      * The method needs to return boolean. If False is returned, router will
-     * continue to search and if another route will be not found, 404 will be
+     * continue to search and if another route will not be found, 404 will be
      * returned.
      *
      * The default type of route is `router::route_normal`, which will treat
      * added routes as of normal priority. In rare cases (like backend actions),
      * `router::route_high` can be used for high priority routes.
-     * In other case, `router::route_low`, to be checked at the end, if nothing
-     * else matched.
+     * Another option is, `router::route_low`, to be checked at the end,
+     * if nothing else matched.
+     *
+     * There are also `router::route_before` and `router::route_after` which
+     * will run before and after every other route. These two will not stop
+     * the router, event they return true, and will be always checked. They're
+     * mean for special actions (like setting language, etc...).
+     *
+     * Finally there is `router::route_special` which cover special actions,
+     * such as errors and index.
      * --
      * @example
      *
@@ -126,7 +134,7 @@ namespace mysli\toolkit; class router
      *         static function post(mysli\toolkit\router\route $route)
      *         {
      *             list($id, $year) = $route->parameter(['id', 'year']);
-     *             // Do the things...
+     *             // Do things...
      *             return true;
      *         }
      *     }
@@ -158,10 +166,10 @@ namespace mysli\toolkit; class router
      * --
      * @param string $to
      *        The route handler. Format: vendor.package.class::method, method
-     *        can be omitted when routes array is provided.
+     *        can be omitted when `$route` is an array.
      *
      * @param mixed $route
-     *        Null   when type is route_before or route_after.
+     *        Null   allowed when type is route_before or route_after.
      *        String when type is route_special, or if a single route is being added.
      *        Array  to add multiple routes. Format should be ['method' => 'route']
      *
@@ -170,24 +178,24 @@ namespace mysli\toolkit; class router
      *        `REQUEST_METHOD` can be: `POST`, `GET`, `PUT`, `DELETE` or `ANY`.
      *
      *        `[prefix/]` is variable part of URI, for example, for a BLOG package,
-     *        it might be `[blog/]`, but user can later change.
+     *        it might be `[blog/]`; user can later change it.
      *
      *        Segments can be named: `{segment|...}`, and must have specified type
      *        (which will be matched by regular expression): `{segment|alpha}`,
      *        predefined types are: numeric, alpha, alphanum, slug, any.
      *        User can specify a costume type (regular expression), by putting
-     *        it in bracket `()` for example: `{segment|([a-z]{2}\.[0-9]{4})`.
+     *        it in brackets `()` for example: `{segment|([a-z]{2}\.[0-9]{4})`.
      *
      * @param string $type
-     *        router::route_before  Run before each route.
-     *        router::route_after   Run after each route.
+     *        router::route_before  Run before other routes.
+     *        router::route_after   Run after other routes.
      *        router::route_special Special, use `$route`, accepts: index, error_404
      *        router::route_high    High priority route. It will be checked first.
      *        router::route_normal  Normal priority route.
      *        router::route_low     Low priority route. It will be checked last.
      *
      * @param boolean $write
-     *        Save changes to file.
+     *        Save changes to file to keep them permanently.
      * --
      * @throws mysli\toolkit\exception\router 10 Invalid Required `\$to` format.
      * @throws mysli\toolkit\exception\router 20 Route with such ID already exists.
@@ -599,11 +607,16 @@ namespace mysli\toolkit; class router
      */
     protected static function extract_parameters($route, $prefix)
     {
+        // Before/after can register null route
+        if (!$route)
+            return [ null, [] ];
+
         /*
         If there's any route left, Extract parameters
          */
         $parameters = [];
         $regex      = null;
+
 
         $segments = explode('/', $route);
 
