@@ -146,3 +146,24 @@ return assert::equals(
         'parameters' => []
     ]
 );
+
+#: Test Before, No Route
+router::add('vendor.blog.controller::method', null, router::route_before);
+$routes = router::dump(router::route_before);
+router::reset();
+return assert::equals(
+    $routes,
+    [
+        'method@vendor.blog.controller' =>
+        [
+            'to'     => 'vendor.blog.controller::method',
+            'rid'    => 'method@vendor.blog.controller',
+            'method' => [ 'GET', 'POST', 'DELETE', 'PUT' ],
+            'prefix' => null,
+            'route'  => null,
+            'regex'  => null,
+            'type'   => 'before',
+            'parameters' => []
+        ]
+    ]
+);
