@@ -101,6 +101,11 @@ namespace mysli\dev\test\root\script; class test
             // If there's __init load once, it before file 0
             if ($last_dir !== dirname($testfile))
             {
+                // Print class if necessary
+                $class = substr(dirname($testfile), strlen($path));
+                if ($class)
+                    ui::info("CLASS", $class);
+
                 $last_dir = dirname($testfile);
                 $__init = dirname($testfile).'/__init.php';
                 if (file_exists($__init))
