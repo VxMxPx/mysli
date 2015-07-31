@@ -30,6 +30,7 @@ namespace mysli\toolkit; class __init
 
         define('MYSLI_TMPPATH', MYSLI_APPPATH.'/tmp');
         define('MYSLI_CFGPATH', MYSLI_APPPATH.'/configuration');
+        define('MYSLI_CNTPATH', MYSLI_APPPATH.'/content');
 
         /*
         This might be called from PHAR, so adjust root DIR accordingly.

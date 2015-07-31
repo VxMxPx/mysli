@@ -27,6 +27,7 @@ namespace mysli\toolkit; class __setup
      * @throws \Exception 10 Cannot create temporary directory.
      * @throws \Exception 20 Cannot create configuration directory.
      * @throws \Exception 21 Couldn't create `pkg` directory in configuration path.
+     * @throws \Exception 22 Couldn't create content directory.
      * @throws \Exception 30 Cannot create toolkit.pkg.list.
      * @throws \Exception 40 Cannot create the tookit.php file.
      * @throws \Exception 50 Cannot create the tookit.events.json file.
@@ -39,6 +40,7 @@ namespace mysli\toolkit; class __setup
     {
         $tmppath = "{$apppath}/tmp";
         $cfgpath = "{$apppath}/configuration";
+        $cntpath = "{$apppath}/content";
 
         /*
         Create temporary directory if not there already.
@@ -47,7 +49,7 @@ namespace mysli\toolkit; class __setup
         {
             if (!mkdir($tmppath, 0755, true))
                 throw new \Exception(
-                    "Couldn't create temporary directory.", 10
+                    "Couldn't create `temporary` directory.", 10
                 );
         }
 
@@ -58,7 +60,7 @@ namespace mysli\toolkit; class __setup
         {
             if (!mkdir($cfgpath, 0755, true))
                 throw new \Exception(
-                    "Couldn't create configuration directory", 20
+                    "Couldn't create `configuration` directory", 20
                 );
         }
 
@@ -70,6 +72,17 @@ namespace mysli\toolkit; class __setup
             if (!mkdir("{$cfgpath}/pkg", 0755, true))
                 throw new \Exception(
                     "Couldn't create `pkg` directory in configuration path.", 21
+                );
+        }
+
+        /*
+        Create contents directory.
+         */
+        if (!file_exists($cntpath))
+        {
+            if (!mkdir($cntpath, 0755, true))
+                throw new \Exception(
+                    "Couldn't create `content` directory", 22
                 );
         }
 
