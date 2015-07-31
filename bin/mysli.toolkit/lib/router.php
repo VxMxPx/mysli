@@ -2,7 +2,15 @@
 
 namespace mysli\toolkit; class router
 {
-    const __use = '.{log, request, event, response, fs, json, exception.router}';
+    const __use = '.{
+        log,
+        request,
+        event,
+        response,
+        fs.fs -> fs,
+        json,
+        exception.router
+    }';
 
     /*
     Route types

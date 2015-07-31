@@ -58,7 +58,7 @@ namespace mysli\toolkit; class config
         .{
             pkg,
             json,
-            fs,
+            fs.fs   -> fs,
             fs.file -> file,
             log,
             type.arr -> arr,

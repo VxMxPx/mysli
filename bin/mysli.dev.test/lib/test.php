@@ -4,7 +4,7 @@ namespace mysli\dev\test; class test
 {
     const __use = '
         mysli.toolkit.{
-            fs,
+            fs.fs -> fs,
             fs.file -> file,
             type.str -> str,
             log

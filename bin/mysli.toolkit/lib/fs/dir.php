@@ -5,7 +5,7 @@ namespace mysli\toolkit\fs; class dir
     const __use = '
         .{
             log,
-            fs,
+            fs.fs   -> fs,
             fs.file -> file,
             exception.dir
         }

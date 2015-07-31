@@ -1,6 +1,6 @@
 <?php
 
-namespace mysli\toolkit; class fs
+namespace mysli\toolkit\fs; class fs
 {
     const __use = '
         .{
@@ -343,7 +343,7 @@ namespace mysli\toolkit; class fs
     /**
      * Correct Directory Separators.
      * --
-     * @param string ...
+     * @param string $...
      *        Accept multiple parameters, to build full path from them.
      * --
      * @return string
@@ -368,7 +368,8 @@ namespace mysli\toolkit; class fs
     /**
      * Retrun application path.
      * --
-     * @param string ... Accept multiple parameters, to build full path from them.
+     * @param string $...
+     *        Accept multiple parameters, to build full path from them.
      * --
      * @return string
      */
@@ -382,7 +383,8 @@ namespace mysli\toolkit; class fs
     /**
      * Retrun bin path.
      * --
-     * @param string ... Accept multiple parameters, to build full path from them.
+     * @param string $...
+     *        Accept multiple parameters, to build full path from them.
      * --
      * @return string
      */
@@ -396,7 +398,8 @@ namespace mysli\toolkit; class fs
     /**
      * Retrun public path.
      * --
-     * @param string ... Accept multiple parameters, to build full path from them.
+     * @param string $...
+     *        Accept multiple parameters, to build full path from them.
      * --
      * @return string
      */
@@ -410,7 +413,8 @@ namespace mysli\toolkit; class fs
     /**
      * Retrun temporary path.
      * --
-     * @param string ... Accept multiple parameters, to build full path from them.
+     * @param string $...
+     *        Accept multiple parameters, to build full path from them.
      * --
      * @return string
      */
@@ -424,7 +428,8 @@ namespace mysli\toolkit; class fs
     /**
      * Retrun configuration path.
      * --
-     * @param string ... Accept multiple parameters, to build full path from them.
+     * @param string $...
+     *        Accept multiple parameters, to build full path from them.
      * --
      * @return string
      */
@@ -436,12 +441,26 @@ namespace mysli\toolkit; class fs
     }
 
     /**
+     * Return contents path.
+     * --
+     * @param string $... Accept multiple parameters, to build full path from them.
+     * --
+     * @return string
+     */
+    static function cntpath()
+    {
+        $arguments = func_get_args();
+        $arguments = implode(DIRECTORY_SEPARATOR, $arguments);
+        return static::ds(MYSLI_CNTPATH, $arguments);
+    }
+
+    /**
      * Retrun packages real path.
      * This will take .phar packages into consideration, and return
      * phar://... in case of them.
      * --
      * @param string $package
-     * @param string ...
+     * @param string $...
      *        Accept multiple parameters, to build full path from them.
      * --
      * @return string
@@ -467,7 +486,7 @@ namespace mysli\toolkit; class fs
     /**
      * Return package's root from __DIR__ or package's name.
      * --
-     * @param  string ...
+     * @param  string $...
      *         Accept multiple parameters, to build full path from them.
      * --
      * @return string

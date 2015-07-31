@@ -4,7 +4,7 @@ namespace mysli\dev\pack\root\script; class pack
 {
     const __use = '
         mysli.toolkit.{
-            fs,
+            fs.fs   -> fs,
             fs.dir  -> dir,
             fs.file -> file,
             ym,

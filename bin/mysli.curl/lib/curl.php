@@ -66,7 +66,7 @@ namespace mysli\curl; class curl
 {
     const __use = '
         mysli.toolkit.{
-            fs,
+            fs.fs  -> fs,
             fs.dir -> dir,
             config
         }
