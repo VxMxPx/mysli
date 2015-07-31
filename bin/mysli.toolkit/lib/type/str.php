@@ -325,76 +325,66 @@ namespace mysli\toolkit\type; class str
      * Clean string data, to allow very narrow amount of specific characters.
      * --
      * @param string $string
-     * @param string $mask   aA1s = small a-z, up A-Z, numeric, spaces.
-     * @param string $custom Any custom characters (like ,-+*!?#).
+     *        String to be cleaned.
+     *
+     * @param string $mask
+     *        Provide one of the following:
+     *            alpha    - allow only a-z characters.
+     *            numeric  - allow only numeric characters.
+     *            alphanum - allow alpha and numeric characters.
+     *            slug     - allow slug alphanum and `_-`.
+     *        Or set costume regular expression:
+     *            <[^a-z\ ]+>i
+     *        Only matched characters will be erased.
      * --
      * @throws mysli\toolkit\exception\str
      *         10 Invalid $mask parameter.
      *
      * @throws mysli\toolkit\exception\validate
      *         723 Unexpected type, expected a string.
-     *
-     * @throws mysli\toolkit\exception\validate
-     *         724 Unexpected type, expected an integer or a string.
      * --
      * @return string
      */
-    static function clean($string, $mask='aA1s', $custom=null)
+    static function clean($string, $mask='alphanum')
     {
+        // Make sure string and mask are actually for a valid type...
         validate::need_str($string);
         validate::need_str($mask);
 
-        if ($custom)
-        {
-            validate::need_str_or_int($custom);
-        }
-
+        // Nothing to do here...
         if (empty($string))
-        {
             return '';
-        }
 
-        $filter = '';
-        $a = 'a-z';
-        $A = 'A-Z';
-        $n = '0-9';
-        $s = preg_quote(' ', '/');
+        // Regular expression? And, we're done...
+        if (substr($mask, 0, 1) === '<')
+            return preg_replace($mask, '', $string);
 
-        if ($mask)
+        switch ($mask)
         {
-            if (strpos($mask, 'a') !== false) { $filter .= $a; }
-            if (strpos($mask, 'A') !== false) { $filter .= $A; }
-            if (strpos($mask, '1') !== false) { $filter .= $n; }
-            if (strpos($mask, 's') !== false) { $filter .= $s; }
-            if ($custom            !== null)  { $filter .= preg_quote($custom, '/'); }
+            case 'alpha':
+                $filter = 'a-z';
+            break;
+
+            case 'numeric':
+                $filter = '0-9';
+            break;
+
+            case 'alphanum':
+                $filter = 'a-z0-9';
+            break;
+
+            case 'slug':
+                $filter = 'a-z0-9_\-';
+            break;
+
+            default:
+                throw new exception\str('Invalid $mask parameter.', 10);
         }
 
-        if (!$filter)
-            throw new exception\str('Invalid $mask parameter.', 10);
-
-        $filter = '/([^' . $filter . '])/sm';
+        $filter = '/([^' . $filter . '])/ism';
         $string = preg_replace($filter, '', $string);
 
         return $string;
-    }
-
-    /**
-     * Clean string data with the help of regular expression.
-     * Remove matches, use ^ to invert, for example: /[^a-z]/i
-     * --
-     * @throws mysli\toolkit\exception\validate
-     *         723 Unexpected type, expected a string.
-     * --
-     * @param string $string
-     * @param string $regex
-     * --
-     * @return string
-     */
-    static function clean_regex($string, $regex)
-    {
-        validate::need_str($string);
-        validate::need_str($regex);
-        return preg_replace($regex, '', $string);
     }
 
     /**
@@ -420,7 +410,7 @@ namespace mysli\toolkit\type; class str
 
         $string = static::to_lower($string);
         $string = static::normalize($string);
-        $string = static::clean($string, 'a1s', '-_');
+        $string = static::clean($string, '<[^a-z0-9_\-\ ]>');
         $string = preg_replace('/( |_|-)+/', $delimiter, $string);
         $string = trim($string, $delimiter);
 

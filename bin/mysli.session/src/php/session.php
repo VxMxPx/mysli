@@ -49,7 +49,7 @@ class session
         }
 
         // Clean session id
-        $session_id = str::clean($session_id, 'aA1', '_');
+        $session_id = str::clean($session_id, '<[^a-z0-9_]>o');
 
         // Does such session_id exists?
         $session_path = self::path_from_id($session_id);
