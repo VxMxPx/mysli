@@ -601,7 +601,14 @@ namespace mysli\toolkit\fs; class file
      * In case of `renamed` and `moved` additional details will be set, either:
      * `from => file` or `to => file`.
      *
-     * Please note, this list does NOT contain directories.
+     * Two entries will be added in case of rename and move, one for an old
+     * file and another for new. A new file will have key `from` and old file
+     * `to`.
+     *
+     * !! Please note, this list does NOT contain directories.
+     *
+     * !! This function will run until something else than `null`
+     * is returned by callback.
      *
      * ## Filter
      *
@@ -611,9 +618,6 @@ namespace mysli\toolkit\fs; class file
      *
      * Simple filter is also supported. (@see fs::filter_to_regex())
      *
-     * ## Return
-     *
-     * This function will run until something else than `null` is returned.
      * --
      * @example
      *
@@ -629,9 +633,8 @@ namespace mysli\toolkit\fs; class file
      * @param boolean  $deep      Observe sub-directories.
      * @param integer  $interval  Run every N seconds.
      * @param boolean  $frun      First run, if true, callback will be executed
-     *                            imediatelt when this method is called, rather
-     *                            than waiting for changes and execute only
-     *                            when changes are actually made...
+     *                            immediately when this method is called, rather
+     *                            than waiting for changes.
      * --
      * @throws mysli\toolkit\fs\file 10 Directory doesn't exists.
      * --
@@ -648,7 +651,7 @@ namespace mysli\toolkit\fs; class file
 
         // Initialize a null variables of signatures....
         $sig_new = null;
-        $sig_old = $frun ? [] : null;
+        $sig_old = null;
 
         // Go for it...
         do
@@ -665,8 +668,11 @@ namespace mysli\toolkit\fs; class file
                 $sig_new[$file] = filemtime($file);
 
             // If this is not first run...
-            if ($sig_old !== null && $sig_new !== $sig_old)
+            if (($frun && $sig_old === null) || ($sig_old !== null && $sig_new !== $sig_old))
             {
+                if ($sig_old === null)
+                    $sig_old = [];
+
                 foreach ($sig_new as $file => $signature)
                 {
                     if (!isset($sig_old[$file]))
