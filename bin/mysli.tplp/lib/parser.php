@@ -1,60 +1,25 @@
 <?php
 
-namespace mysli\util\tplp;
-
-__use(__namespace__, '
-    mysli.framework.pkgm
-    mysli.framework.json
-    mysli.framework.type/str
-    mysli.framework.fs/fs,file
-    mysli.framework.exception/* -> framework\exception\*
-');
-
-class parser
+namespace mysli\tplp; class parser
 {
-    private static $functions = [
-        "abs"           => "abs(%seg)",
-        "ucfirst"       => "ucfirst(%seg)",
-        "ucwords"       => "ucwords(%seg)",
-        "lower"         => "strtolower(%seg)",
-        "upper"         => "strtoupper(%seg)",
-        "date"          => "date(%1, strtotime(%seg))",
-        "join"          => "implode(%1, %seg)",
-        "split"         => "explode(%1, %seg, ...)",
-        "length"        => "strlen(%seg)",
-        "word_count"    => "str_word_count(%seg)",
-        "count"         => "count(%seg)",
-        "nl2br"         => "nl2br(%seg)",
-        "number_format" => "number_format(%seg, ...)",
-        "replace"       => "sprintf(%seg, ...)",
-        "round"         => "round(%seg, ...)",
-        "floor"         => "floor(%seg)",
-        "ceil"          => "ceil(%seg)",
-        "strip_tags"    => "strip_tags(%seg, ...)",
-        "show_tags"     => "htmlspecialchars(%seg)",
-        "trim"          => "trim(%seg, ...)",
-        "slice"         => "( is_array(%seg) ? array_slice(%seg, ...) ".
-                                            ": substr(%seg, ...) )",
-        "word_wrap"     => "wordwrap(%seg, %1, '<br/>')",
-        "max"           => "max(%seg, ...)",
-        "min"           => "min(%seg, ...)",
-        "column"        => "array_column(%seg, %1, ...)",
-        "reverse"       => "( is_array(%seg) ? array_reverse(%seg) ".
-                                            ": strrev(%seg) )",
-        "contains"      => "( (is_array(%seg) ? in_array(%1, %seg) ".
-                                            ": strpos(%seg, %1)) !== false )",
-        "key_exists"    => "array_key_exists(%1, %seg)",
-        "sum"           => "array_sum(%seg)",
-        "unique"        => "array_unique(%seg)",
-        "range"         => "range(%1, %2, ...)",
-        "random"        => "rand(%1, %2)"
-    ];
+    const __use = '
+        mysli.toolkit.{
+            fs.fs    -> fs,
+            type.str -> str,
+            fs.file  -> file
+        }
+        .{ exception.parser }
+    ';
 
     /**
      * Parse particular file (this will generate proper output with
      * namespaces, etc..)
-     * @param  string $file
-     * @param  string $root
+     * --
+     * @param string $file
+     * @param string $root
+     * --
+     * @throws mysli\tplp\exception\parser 10 Template file not found.
+     * --
      * @return string
      */
     static function file($file, $root)
@@ -63,18 +28,20 @@ class parser
 
         if (!file::exists($fullpath))
         {
-            throw new framework\exception\not_found(
-                "Template file not found: `{$fullpath}`", 1
+            throw new exception\parser(
+                "Template file not found: `{$fullpath}`", 10
             );
         }
 
         // Parse file
         $uses = [];
-        $parsed = self::parse($fullpath, $uses);
+        $parsed = static::parse($fullpath, $uses);
 
         // Generate namespace
-        $namespace = pkgm::path_to_namespace($fullpath)
-            ?: "tplp\\generic\\" . substr($file, 0, strrpos($file, '.'));
+        $namespace = strtolower(substr($file, 0, -9)); // .tpl.html
+        $namespace = str::clean($namespace, '<[^a-z0-9\/]+>');
+        $namespace = str_replace('/', '\\', $namespace);
+        $namespace = "tplp\\template\\{$namespace}";
 
         // Process uses
         $use = '';
@@ -88,19 +55,63 @@ class parser
         return "<?php\nnamespace {$namespace};\n{$use}?>{$parsed}";
     }
 
+    /*
+    --- Protected --------------------------------------------------------------
+     */
+
     /**
-     * Process template
-     * @param  string $filename
-     * @param  string $uses
-     * @param  array  $sets
-     * @param  string $module  weather to select only particular module in file
+     * Process template.
+     * --
+     * @param string $filename
+     * @param string $uses
+     * @param array  $sets
+     * @param string $module  Weather to select only particular module in file.
+     * --
+     * @throws mysli\tplp\exception\parser
+     *         10 Module not found.
+     *
+     * @throws mysli\tplp\exception\parser
+     *         20 Closed `::/let` tag before it was opened.
+     *
+     * @throws mysli\tplp\exception\parser
+     *         30 `::let` cannot nested in `::extend`, `::import` or `::set`.
+     *
+     * @throws mysli\tplp\exception\parser
+     *         40 `::let` is already opened on line...
+     *
+     * @throws mysli\tplp\exception\parser
+     *         50 `::set` must be wrapped with `::extend` or `::import`.
+     *
+     * @throws mysli\tplp\exception\parser
+     *         60 Closed `::/set` tag before it was opened.
+     *
+     * @throws mysli\tplp\exception\parser
+     *         70 Trying to close unopened tag.
+     *
+     * @throws mysli\tplp\exception\parser
+     *         80 Unclosed `::set` statement.
+     *
+     * @throws mysli\tplp\exception\parser
+     *         81 Unclosed statement.
+     *
+     * @throws mysli\tplp\exception\parser
+     *         82 Unclosed `::if` statement.
+     *
+     * @throws mysli\tplp\exception\parser
+     *         83 Unclosed `::for` statement.
+     *
+     * @throws mysli\tplp\exception\parser
+     *         84 Unclosed region.
+     * --
      * @return string
      */
-    private static function parse(
+    protected static function parse(
         $filename, array &$uses=[], array $sets=[], $module=null)
     {
-        $dirname  = dirname($filename);
-        $sfpath   = substr($filename, strlen(fs::pkgpath()));
+        $dirname = dirname($filename);
+
+        // sfpath is used only in error messages...
+        $sfpath = $filename;
 
         $template = file::read($filename);
         $template = str::to_unix_line_endings($template);
@@ -115,8 +126,8 @@ class parser
             }
             else
             {
-                throw new framework\exception\not_found(
-                    "Module `{$module}` not found in `{$sfpath}`"
+                throw new exception\parser(
+                    "Module `{$module}` not found in `{$sfpath}`", 10
                 );
             }
         }
@@ -154,16 +165,16 @@ class parser
         foreach ($lines as $lineno => $line)
         {
             // Find ::/let closed
-            if (self::find_close_let($line))
+            if (static::find_close_let($line))
             {
                 if (!$let)
                 {
                     throw new exception\parser(
-                        "Closed `::/let` tag before it was opened."
+                        "Closed `::/let` tag before it was opened.", 20
                     );
                 }
 
-                $p = self::process_let($let['lines'], $let['set']);
+                $p = static::process_let($let['lines'], $let['set']);
                 $output[] = "<?php {$let['id']} = {$p}; ?>";
                 $let = false;
                 unset($p);
@@ -178,11 +189,11 @@ class parser
             }
 
             // Escape \{ and \}
-            $line = self::escape_curly_brackets($line, true);
+            $line = static::escape_curly_brackets($line, true);
 
             // Check block region for close *} and }}}
             // If block was closed, it will be added to the output
-            if (($endblock = self::find_end_block($line, $block)))
+            if (($endblock = static::find_end_block($line, $block)))
             {
                 $output[] = $endblock;
             }
@@ -198,15 +209,15 @@ class parser
             }
 
             // Escape single quotes inside curly brackets {''}
-            $line = self::escape_single_quotes($line, true);
+            $line = static::escape_single_quotes($line, true);
 
             // Find block regions {{{ and {*
-            self::find_block_regions($line, $lineno, $block);
+            static::find_block_regions($line, $lineno, $block);
 
             try
             {
                 // Find ::print regions
-                list($line, $break) = self::find_print($line, $sets);
+                list($line, $break) = static::find_print($line, $sets);
                 if ($break)
                 {
                     $output[] = $line;
@@ -214,13 +225,13 @@ class parser
                 }
 
                 // Find ::let (opened)
-                if (($let_o = self::find_let($line)))
+                if (($let_o = static::find_let($line)))
                 {
                     if ($in_curr || $in_set)
                     {
                         throw new exception\parser(
                             "`::let` cannot nested in `::extend`, ".
-                            "`::import` or `::set`"
+                            "`::import` or `::set`", 30
                         );
                     }
 
@@ -228,7 +239,8 @@ class parser
                     {
                         throw new exception\parser(
                             "`::let` is already opened on line: ".
-                            "`{$let['lineno']}`");
+                            "`{$let['lineno']}`", 40
+                        );
                     }
                     else
                     {
@@ -237,9 +249,9 @@ class parser
 
                     if ($let['closed'])
                     {
-                        $p = self::find_var_and_func($let['lines']);
-                        $p = self::escape_single_quotes($p, false);
-                        $p = self::escape_curly_brackets($p, false);
+                        $p = static::find_var_and_func($let['lines']);
+                        $p = static::escape_single_quotes($p, false);
+                        $p = static::escape_curly_brackets($p, false);
                         $output[] = "<?php {$let['id']} = {$p}; ?>";
                         $let = false;
                         unset($p);
@@ -253,13 +265,13 @@ class parser
                 }
 
                 // Find ::set opened
-                if (($id = self::find_open_set($line)))
+                if (($id = static::find_open_set($line)))
                 {
                     if ($in_curr === false)
                     {
                         throw new exception\parser(
-                            "`::set` must be wrapped with ".
-                            "`::extend` or `::import`"
+                            "`::set` must be wrapped with `::extend` or `::import`",
+                            50
                         );
                     }
 
@@ -270,12 +282,12 @@ class parser
                 }
 
                 // Find ::set closed
-                if (self::find_close_set($line))
+                if (static::find_close_set($line))
                 {
                     if ($in_set === false)
                     {
                         throw new exception\parser(
-                            "closed `::/set` tag before it was opened"
+                            "Closed `::/set` tag before it was opened.", 60
                         );
                     }
 
@@ -286,18 +298,18 @@ class parser
                 }
 
                 // Find closed ::extend or ::import
-                if (($type = self::find_extend_import_close($line)))
+                if (($type = static::find_extend_import_close($line)))
                 {
                     if ($in_curr === false)
                     {
                         throw new exception\parser(
-                            "Closing unopened tag!"
+                            "Trying to close unopened tag.", 70
                         );
                     }
 
                     if ($type === 'import')
                     {
-                        $output[] = self::handle_import(
+                        $output[] = static::handle_import(
                             $in_curr, $uses, $dirname
                         );
                     }
@@ -308,17 +320,17 @@ class parser
                 }
 
                 // Find ::use statements
-                if (($id = self::find_use($line, $uses)))
+                if (($id = static::find_use($line, $uses)))
                 {
                     $uses[$id]['debug'][] = [
-                        'lines' => self::err_lines($lines, $lineno),
+                        'lines' => err_lines($lines, $lineno),
                         'file'  => $sfpath
                     ];
                     continue;
                 }
 
                 // Find ::extend statements
-                if (($id = self::find_extend($line, $extends)))
+                if (($id = static::find_extend($line, $extends)))
                 {
                     if ($extends[$id]['open'])
                     {
@@ -331,7 +343,7 @@ class parser
                 }
 
                 // Find ::import statements
-                if (($id = self::find_import($line, $imports)))
+                if (($id = static::find_import($line, $imports)))
                 {
                     if ($imports[$id]['open'])
                     {
@@ -340,7 +352,7 @@ class parser
                     }
                     else
                     {
-                        $output[] = self::handle_import(
+                        $output[] = static::handle_import(
                             $imports[$id], $uses, $dirname
                         );
                     }
@@ -349,13 +361,13 @@ class parser
                 }
 
                 // Find inline if {var if var else 'No-var'}
-                $line = self::find_inline_if($line);
+                $line = static::find_inline_if($line);
 
                 // Find variables and functions
-                $line = self::find_var_and_func($line);
+                $line = static::find_var_and_func($line);
 
                 // Find ::if and ::elif
-                list($line, $opened) = self::find_if($line);
+                list($line, $opened) = static::find_if($line);
                 if ($opened)
                 {
                     $open_tags['if'][0]++;
@@ -363,14 +375,14 @@ class parser
 
                 }
                 // Find: ::else ::/if ::/for ::break ::continue
-                list($line, $closed) = self::find_special_tags($line);
+                list($line, $closed) = static::find_special_tags($line);
                 if (array_key_exists($closed, $open_tags))
                 {
                     $open_tags[$closed][0]--;
                 }
 
                 // Find: ::for <id>, <var> in <collection>
-                list($line, $opened) = self::find_for($line);
+                list($line, $opened) = static::find_for($line);
                 if ($opened)
                 {
                     $open_tags['for'][0]++;
@@ -378,18 +390,19 @@ class parser
                 }
 
                 // Translation key: {@TRASNLATE}, {@TR(n)}, {@TR var}
-                $line = self::find_translation($line);
+                $line = static::find_translation($line);
             }
             catch (\Exception $e)
             {
-                throw new exception\parser(self::f_error(
-                    $lines, $lineno, $e->getMessage(), $sfpath)
+                throw new exception\parser(
+                    f_error($lines, $lineno, $e->getMessage(), $sfpath),
+                    $e->getCode()
                 );
             }
 
             // Restore escaped curly brackets and single quotes
-            $line = self::escape_curly_brackets($line, false);
-            $line = self::escape_single_quotes($line, false);
+            $line = static::escape_curly_brackets($line, false);
+            $line = static::escape_single_quotes($line, false);
 
             // Add the block
             if ($block['contents'])
@@ -415,46 +428,40 @@ class parser
         if ($in_set !== false)
         {
             throw new exception\parser(
-                self::f_error(
-                    $lines, $in_set_line, "Unclosed `::set` statement."
-                ),
-                $sfpath
+                f_error($lines, $in_set_line, "Unclosed `::set` statement.", $sfpath),
+                80
             );
         }
 
         if ($in_curr !== false)
         {
             throw new exception\parser(
-                self::f_error($lines, $in_curr_line, "Unclosed statement."),
-                $sfpath
+                f_error($lines, $in_curr_line, "Unclosed statement.", $sfpath),
+                81
             );
         }
 
         if ($open_tags['if'][0] > 0)
         {
             throw new exception\parser(
-                self::f_error(
-                    $lines, $open_tags['if'][1], "Unclosed `::if` statement."
-                ),
-                $sfpath
+                f_error($lines, $open_tags['if'][1], "Unclosed `::if` statement.", $sfpath),
+                82
             );
         }
 
         if ($open_tags['for'][0] > 0)
         {
             throw new exception\parser(
-                self::f_error(
-                    $lines, $open_tags['for'][1], "Unclosed `::for` statement."
-                ),
-                $sfpath
+                f_error($lines, $open_tags['for'][1], "Unclosed `::for` statement.", $sfpath),
+                83
             );
         }
 
         if ($block['close'])
         {
             throw new exception\parser(
-                self::f_error($lines, $block['start'], "Unclosed region."),
-                $sfpath
+                f_error($lines, $block['start'], "Unclosed region.", $sfpath),
+                84
             );
         }
 
@@ -472,13 +479,14 @@ class parser
                 // Try to include and parse file
                 try
                 {
-                    $path = self::resolve_relative_path($extfile, $dirname);
-                    $output = self::parse($path, $uses, $extend['set']);
+                    $path = static::resolve_relative_path($extfile, $dirname);
+                    $output = static::parse($path, $uses, $extend['set']);
                 }
                 catch (\Exception $e)
                 {
                     throw new exception\parser(
-                        self::f_error($lines, $extend['line'], $e->getMessage())
+                        f_error($lines, $extend['line'], $e->getMessage()),
+                        $e->getCode()
                     );
                 }
             }
@@ -486,31 +494,45 @@ class parser
 
         return $output;
     }
+
     /**
-     * Find ::let
-     * @param  string $line
-     * @return array [id, closed?, lines, ] if found, false otherwise
+     * Find `::let`.
+     * --
+     * @param string $line
+     * --
+     * @throws mysli\tplp\exception\parser
+     *         10 Missing assign statement (not enough elements).
+     *
+     * @throws mysli\tplp\exception\parser
+     *         20 Not a valid variable name.
+     *
+     * @throws mysli\tplp\exception\parser
+     *         30 Missing assign statement (::let var = 'value').
+     * --
+     * @return array
+     *         [ string id, boolean closed, string lines ] if found,
+     *         false otherwise
      */
-    private static function find_let($line)
+    protected static function find_let($line)
     {
         if (preg_match(
             '/^[ \t]*?::let ([a-z0-9_]+)( set (.*?))?( \= (.*?))?( do)?$/',
             $line, $match))
         {
             $result = ['lines' => [], 'set' => false];
-            $result['id'] = self::parse_variable(trim($match[1]));
+            $result['id'] = static::parse_variable(trim($match[1]));
 
             if (count($match) < 3)
             {
                 throw new exception\parser(
-                    "Missing assign statement (not enough elements)."
+                    "Missing assign statement (not enough elements).", 10
                 );
             }
 
             if (substr($result['id'], 0, 1) !== '$')
             {
                 throw new  exception\parser(
-                    "Not a valid variable name: `{$result['id']}`"
+                    "Not a valid variable name: `{$result['id']}`.", 20
                 );
             }
 
@@ -520,7 +542,7 @@ class parser
                 if (substr(trim($match[4]), 0, 1) !== '=')
                 {
                     throw new exception\parser(
-                        "Missing assign statement (::let var = 'value')"
+                        "Missing assign statement (::let var = 'value').", 30
                     );
                 }
                 $result['lines']  = trim($match[5]);
@@ -548,13 +570,25 @@ class parser
             return false;
         }
     }
+
     /**
-     * Process ::let value
-     * @param  array  $lines
-     * @param  string $set
+     * Process `::let` value.
+     * --
+     * @param array  $lines
+     * @param string $set
+     * --
+     * @throws mysli\tplp\exception\parser
+     *         10 Invalid `set` parameter, expected: ...
+     *
+     * @throws mysli\tplp\exception\parser
+     *         20 Expected parameter in format...
+     *
+     * @throws mysli\tplp\exception\parser
+     *         30 Expected dictionary divider...
+     * --
      * @return string
      */
-    private static function process_let(array $lines, $set)
+    protected static function process_let(array $lines, $set)
     {
         if (strpos($set, '('))
         {
@@ -571,7 +605,7 @@ class parser
         {
             throw new exception\parser(
                 "Invalid `set` parameter, expected: ".
-                "`dictionary`, `implode` or `array`."
+                "`dictionary`, `implode` or `array`.", 10
             );
         }
 
@@ -579,7 +613,7 @@ class parser
         {
             throw new exception\parser(
                 "Expected parameter for `{$set}` ".
-                "in format: `{$set}(<PARAMETER>)`"
+                "in format: `{$set}(<PARAMETER>)`", 20
             );
         }
 
@@ -593,7 +627,7 @@ class parser
                 {
                     throw new exception\parser(
                         "Expected dictionary divider: `{$arg}` in:\n".
-                        self::err_lines($liens, $lineno)
+                        err_lines($liens, $lineno), 30
                     );
                 }
 
@@ -625,22 +659,28 @@ class parser
 
         return $output;
     }
+
     /**
-     * Find closed ::/let
-     * @param  string $line
+     * Find closed `::/let`.
+     * --
+     * @param string $line
+     * --
      * @return boolean
      */
-    private static function find_close_let($line)
+    protected static function find_close_let($line)
     {
         return preg_match('/^[ \t]*?::\\/let?$/', $line);
     }
+
     /**
-     * Find ::print <content> regions
-     * @param  string $line
-     * @param  array  $sets
-     * @return array  [line, break]
+     * Find `::print <content>` regions.
+     * --
+     * @param string $line
+     * @param array  $sets
+     * --
+     * @return array [ string $line, boolean $break ]
      */
-    private static function find_print($line, array $sets)
+    protected static function find_print($line, array $sets)
     {
         if (preg_match('/^[ \t]*?::print ([a-z0-9_]+)$/', $line, $match))
         {
@@ -656,46 +696,58 @@ class parser
 
         return [$line, false];
     }
+
     /**
-     * Find open ::set
-     * @param  string $line
-     * @return string id if found, null otherwise
+     * Find open `::set`.
+     * --
+     * @param string $line
+     * --
+     * @return string Id if found, null otherwise.
      */
-    private static function find_open_set($line)
+    protected static function find_open_set($line)
     {
         if (preg_match('/^[ \t]*?::set ([a-z0-9_]+)$/', $line, $match))
         {
             return trim($match[1]);
         }
     }
+
     /**
-     * Find closed ::/set
-     * @param  string $line
+     * Find closed `::/set`.
+     * --
+     * @param string $line
+     * --
      * @return boolean
      */
-    private static function find_close_set($line)
+    protected static function find_close_set($line)
     {
         return preg_match('/^[ \t]*?::\\/set?$/', $line);
     }
+
     /**
-     * Find close for import and extend: ::/extend ::/import
-     * @param  string $line
+     * Find close for import and extend: `::/extend` `::/import`.
+     * --
+     * @param string $line
+     * --
      * @return boolean
      */
-    private static function find_extend_import_close($line)
+    protected static function find_extend_import_close($line)
     {
         if (preg_match('/^[ \t]*?::\/(import|extend)?$/', $line, $match))
         {
             return $match[1];
         }
     }
+
     /**
-     * Find ::import statements
-     * @param  string $line
-     * @param  array  $extend
-     * @return string id is found, null otherwise
+     * Find `::import` statements.
+     * --
+     * @param string $line
+     * @param array  $extend
+     * --
+     * @return string Id is found, null otherwise.
      */
-    private static function find_import($line, array &$extend)
+    protected static function find_import($line, array &$extend)
     {
         if (preg_match(
             '/^[ \t]*?::import ([a-z0-9_\.\/]+)(?: from ([a-z0-9_\.\/]+))?( do)?$/',
@@ -724,13 +776,16 @@ class parser
             return $id;
         }
     }
+
     /**
-     * Find ::extend statements
-     * @param  string $line
-     * @param  array  $extend
-     * @return string id is found, null otherwise
+     * Find `::extend` statements.
+     * --
+     * @param string $line
+     * @param array  $extend
+     * --
+     * @return string Id if found, null otherwise.
      */
-    private static function find_extend($line, array &$extend)
+    protected static function find_extend($line, array &$extend)
     {
         if (preg_match(
             '/^[ \t]*?::extend ([a-z0-9_\.\/]+) set ([a-z0-9_]+)( do)?$/',
@@ -746,13 +801,18 @@ class parser
             return $id;
         }
     }
+
     /**
-     * Find ::use statements
-     * @param  string $line
-     * @param  array  $uses
-     * @return string (id) if found, null otherwise
+     * Find `::use` statements.
+     * --
+     * @param string $line
+     * @param array  $uses
+     * --
+     * @throws mysli\tplp\exception\parser 10 Name is already previously declared.
+     * --
+     * @return string Id if found, null otherwise.
      */
-    private static function find_use($line, array &$uses)
+    protected static function find_use($line, array &$uses)
     {
         // Find ::use vendor.package( -> name)?
         if (preg_match(
@@ -775,14 +835,14 @@ class parser
                 if ($uses[$as]['use'] !== $use)
                 {
                     throw new exception\parser(
-                        self::f_error_use($use, $as, $uses[$as]['debug']), 1
+                        static::f_error_use($use, $as, $uses[$as]['debug']), 10
                     );
                 }
             }
             else
             {
                 $uses[$as] = [
-                    'statement' => "use ".str_replace('.', '\\', $use)."\\tplp\\util as {$as};",
+                    'statement' => "use ".str_replace('.', '\\', $use)."\\__tplp as {$as};",
                     'use'       => $use
                 ];
             }
@@ -790,28 +850,34 @@ class parser
             return $as;
         }
     }
+
     /**
-     * Process translation tags {@KEY}
-     * @param  string  $line
+     * Process translation tags `{@KEY}`.
+     * --
+     * @param string $line
+     * --
      * @return string
      */
-    private static function find_translation($line)
+    protected static function find_translation($line)
     {
         return preg_replace_callback('/{(@.*?)}/',
             function ($match)
             {
-                $parsed = self::parse_translation($match[1]);
+                $parsed = static::parse_translation($match[1]);
                 return "<?php echo {$parsed}; ?>";
             },
             $line
         );
     }
+
     /**
-     * Process ::for statement
-     * @param  string $line
-     * @return array  [string, boolean]
+     * Process `::for` statement.
+     * --
+     * @param string $line
+     * --
+     * @return array [ string $line, boolean $opened ]
      */
-    private static function find_for($line)
+    protected static function find_for($line)
     {
         $opened = false;
         $line = preg_replace_callback(
@@ -823,15 +889,15 @@ class parser
 
                 try
                 {
-                    $key = self::parse_variable(trim($match[1], ', '));
+                    $key = static::parse_variable(trim($match[1], ', '));
                 }
                 catch (\Exception $e)
                 {
                     // Pass
                 }
 
-                $val = self::parse_variable($match[2]);
-                $var = self::parse_variable_with_functions($match[3]);
+                $val = static::parse_variable($match[2]);
+                $var = static::parse_variable_with_functions($match[3]);
                 $exp = $key ? "{$key} => {$val}" : $val;
                 $opened = true;
 
@@ -864,12 +930,16 @@ class parser
 
         return [$line, $opened];
     }
+
     /**
-     * Process special tags like: ::continue, ::break, ::else, ::/for, ::/if
-     * @param  string $line
-     * @return array  [string, string]
+     * Process special tags:
+     * `::continue`, `::break`, `::else`, `::/for` and `::/if`.
+     * --
+     * @param string $line
+     * --
+     * @return array [ string $line, string $type ]
      */
-    private static function find_special_tags($line)
+    protected static function find_special_tags($line)
     {
         $type = '';
         $line = preg_replace_callback(
@@ -900,12 +970,15 @@ class parser
 
         return [$line, $type];
     }
+
     /**
-     * Process logical expression: var or var1 ...
-     * @param  string $expression
+     * Process logical expression: `var or var1 ...`.
+     * --
+     * @param string $expression
+     * --
      * @return string
      */
-    private static function parse_logical_expression($expression)
+    protected static function parse_logical_expression($expression)
     {
         return preg_replace_callback(
             '/(\\|\\| |&& |OR |AND )?'. // ) and ...
@@ -945,7 +1018,7 @@ class parser
 
                 if ($variable)
                 {
-                    $variable = self::parse_variable_with_functions($variable);
+                    $variable = static::parse_variable_with_functions($variable);
                 }
 
                 return trim($logical_before . $mod . $variable . $logical) . ' ';
@@ -953,12 +1026,15 @@ class parser
             $expression
         );
     }
+
     /**
-     * Find inline if {var if var else 'No-var'}
-     * @param  string $line
+     * Find inline if `{var if var else 'No-var'}`.
+     * --
+     * @param string $line
+     * --
      * @return string
      */
-    private static function find_inline_if($line)
+    protected static function find_inline_if($line)
     {
         return preg_replace_callback(
             '/{(.*?) if (.*?)(?: else (.*?))?}/',
@@ -968,11 +1044,11 @@ class parser
 
                 if (substr($var[0], 0, 1) === '@')
                 {
-                    $var[0] = self::parse_translation($var[0]);
+                    $var[0] = static::parse_translation($var[0]);
                 }
                 else
                 {
-                    $var[0] = self::parse_variable_with_functions($var[0]);
+                    $var[0] = static::parse_variable_with_functions($var[0]);
                 }
 
                 $var[1] = isset($match[3]) ? trim($match[3]) : '';
@@ -981,15 +1057,15 @@ class parser
                 {
                     if (substr($var[1], 0, 1) === '@')
                     {
-                        $var[1] = self::parse_translation($var[1]);
+                        $var[1] = static::parse_translation($var[1]);
                     }
                     else
                     {
-                        $var[1] = self::parse_variable_with_functions($var[1]);
+                        $var[1] = static::parse_variable_with_functions($var[1]);
                     }
                 }
 
-                $expression = trim(self::parse_logical_expression($match[2]));
+                $expression = trim(static::parse_logical_expression($match[2]));
 
                 return "<?php echo ({$expression}) ? {$var[0]} : " .
                     ($var[1] ? $var[1] : "''") . "; ?>";
@@ -997,12 +1073,15 @@ class parser
             $line
         );
     }
+
     /**
-     * Process ::if and ::elif
-     * @param  string  $line
-     * @return array   [string, boolean]
+     * Process `::if` and `::elif`.
+     * --
+     * @param string $line
+     * --
+     * @return array [ string $line, boolean $opened ]
      */
-    private static function find_if($line)
+    protected static function find_if($line)
     {
         $opened = false;
         $logical =
@@ -1010,7 +1089,7 @@ class parser
             '/::(if|elif) (.*)/',
             function ($match) use (&$opened)
             {
-                $expression = self::parse_logical_expression($match[2]);
+                $expression = static::parse_logical_expression($match[2]);
                 $type = ($match[1] === 'elif' ? 'elseif' : 'if');
                 // Line and opened status
                 $opened = ($type === 'if');
@@ -1022,15 +1101,20 @@ class parser
 
         return [$line, $opened];
     }
+
     /**
      * Find variables and functions.
      * Variables: {var}, {var[key]}, {var->prop}
      * Functions: {var|func}, {var|func:var,'param'},
      * {var|ns/method:var,'param'}
-     * @param  string  $line
+     * --
+     * @param string $line
+     * --
+     * @throws mysli\tplp\exception\parser 12 Not a valid variable (empty): ``.
+     * --
      * @return string
      */
-    private static function find_var_and_func($line)
+    protected static function find_var_and_func($line)
     {
         $line = preg_replace_callback(
             '/\{(?=[^@])(.*?)\}/',
@@ -1048,12 +1132,12 @@ class parser
                     $echo = 'echo ';
                 }
 
-                $var = self::parse_variable_with_functions(trim($match[1]));
+                $var = static::parse_variable_with_functions(trim($match[1]));
 
                 if (trim($var) === '')
                 {
                     throw new exception\parser(
-                        "Not a valid variable (empty): ``", 1
+                        "Not a valid variable (empty): ``.", 12
                     );
                 }
 
@@ -1064,14 +1148,17 @@ class parser
 
         return $line;
     }
+
     /**
-     * Process block regions like: {{{ and {*
-     * @param  string  $line
-     * @param  integer $lineno
-     * @param  array   $block
+     * Process block regions like: `{{{` and `{*`.
+     * --
+     * @param string  $line
+     * @param integer $lineno
+     * @param array   $block
+     * --
      * @return null
      */
-    private static function find_block_regions(&$line, $lineno, array &$block)
+    protected static function find_block_regions(&$line, $lineno, array &$block)
     {
         // {{{
         while (strpos($line, '{{{') !== false)
@@ -1110,13 +1197,16 @@ class parser
             }
         }
     }
+
     /**
-     * Process end block (like *} and }}})
-     * @param  string $line
-     * @param  array  $block
+     * Process end block like: `*}` and `}}}`.
+     * --
+     * @param string $line
+     * @param array  $block
+     * --
      * @return string
      */
-    private static function find_end_block(&$line, array &$block)
+    protected static function find_end_block(&$line, array &$block)
     {
         $output = false;
 
@@ -1137,13 +1227,16 @@ class parser
 
         return $output;
     }
+
     /**
-     * Process escaped curly brackets, e.g.: \{ and \}
-     * @param  string  $line
-     * @param  boolean $protect
+     * Process escaped curly brackets, e.g.: `\{` and `\}`.
+     * --
+     * @param string  $line
+     * @param boolean $protect
+     * --
      * @return string
      */
-    private static function escape_curly_brackets($line, $protect)
+    protected static function escape_curly_brackets($line, $protect)
     {
         if ($protect)
         {
@@ -1158,12 +1251,15 @@ class parser
 
         return $line;
     }
+
     /**
-     * Helper method to escape single quotes
-     * @param  string $match
+     * Helper method to escape single quotes.
+     * --
+     * @param string $match
+     * --
      * @return string
      */
-    private static function escape_single_quotes_in($match)
+    protected static function escape_single_quotes_in($match)
     {
         return preg_replace_callback(
             "/'(.*?)'/",
@@ -1176,13 +1272,16 @@ class parser
             $match
         );
     }
+
     /**
-     * Protect things wrapped in {''}
-     * @param  string  $line
-     * @param  boolean $protect protection on/off
+     * Protect things wrapped in `{''}`.
+     * --
+     * @param string  $line
+     * @param boolean $protect Protection on/off.
+     * --
      * @return string
      */
-    private static function escape_single_quotes($line, $protect)
+    protected static function escape_single_quotes($line, $protect)
     {
         if ($protect)
         {
@@ -1191,7 +1290,7 @@ class parser
                 "/^([ \t]*?::[a-z]*? .*?)$/",
                 function ($match)
                 {
-                    return self::escape_single_quotes_in($match[1]);
+                    return static::escape_single_quotes_in($match[1]);
                 },
                 $line
             );
@@ -1201,7 +1300,7 @@ class parser
                 "/{(.*?)}/",
                 function ($match)
                 {
-                    return '{'.self::escape_single_quotes_in($match[1]).'}';
+                    return '{'.static::escape_single_quotes_in($match[1]).'}';
                 },
                 $line
             );
@@ -1221,12 +1320,15 @@ class parser
 
         return $line;
     }
+
     /**
-     * Parse translation in format: @TRANSLATION(count) var
-     * @param  string $string
+     * Parse translation in format: `@TRANSLATION(count) var`.
+     * --
+     * @param string $string
+     * --
      * @return string
      */
-    private static function parse_translation($string)
+    protected static function parse_translation($string)
     {
         return preg_replace_callback(
             '/^@([A-Z0-9_]+)(?:\((.*?)\))?(.*?)$/',
@@ -1237,7 +1339,7 @@ class parser
 
                 if (!is_numeric($plural))
                 {
-                    $plural = self::parse_variable_with_functions($plural);
+                    $plural = static::parse_variable_with_functions($plural);
                 }
 
                 // Process variables
@@ -1247,11 +1349,11 @@ class parser
                 {
                     try
                     {
-                        $var = self::parse_variable(trim($var));
+                        $var = static::parse_variable(trim($var));
                     }
                     catch (\Exception $e)
                     {
-                        if ($e->getCode() !== 1)
+                        if ($e->getCode() !== 10)
                         {
                             throw $e;
                         }
@@ -1273,12 +1375,18 @@ class parser
             $string
         );
     }
+
     /**
-     * Process variable + function string. var|func|func
-     * @param  string $line
+     * Process variable + function: `var|func|func`.
+     * --
+     * @param string $line
+     * --
+     * @throws mysli\tplp\exception\parser
+     *         10 Function require argument in format `arg|func`...
+     * --
      * @return string
      */
-    private static function parse_variable_with_functions($line)
+    protected static function parse_variable_with_functions($line)
     {
         $line = trim($line);
 
@@ -1304,7 +1412,7 @@ class parser
         if ($has_var)
         {
             $variable = array_shift($segments);
-            $variable = self::parse_variable($variable);
+            $variable = static::parse_variable($variable);
         }
 
         $processed = '%seg';
@@ -1313,7 +1421,7 @@ class parser
         foreach ($segments as $segment)
         {
             $processed = str_replace(
-                '%seg', self::parse_functions($segment), $processed
+                '%seg', static::parse_functions($segment), $processed
             );
         }
 
@@ -1326,8 +1434,8 @@ class parser
                 if (substr($m, 0, 1) !== '$' && !strpos($m, '::'))
                 {
                     throw new exception\parser(
-                        "Function require argument in format `arg|func`: ".
-                        "`{$m}`", 2
+                        "Function require argument in format `arg|func`: `{$m}`",
+                        10
                     );
                 }
             }
@@ -1339,24 +1447,39 @@ class parser
             return str_replace('%seg', $variable, $processed);
         }
     }
+
     /**
      * Convert variables to PHP format.
-     * Example: something[key]->property to $something['key']->property
+     * Example:
+     *
+     *     something[key]->property // => $something['key']->property
+     *
      * Must be valid variable format! Return unchanged:
      * numbers, true, false, null...
-     * @param  string $variable
+     * --
+     * @param string $variable
+     * --
+     * @throws mysli\tplp\exception\parser
+     *         10 Not a valid variable (empty): ``.
+     *
+     * @throws mysli\tplp\exception\parser
+     *         20 Variable name cannot start with `$`...
+     *
+     * @throws mysli\tplp\exception\parser
+     *         21 Not a valid variable name...
+     *
+     * @throws mysli\tplp\exception\parser
+     *         22 Variable name cannot start with number...
+     * --
      * @return string
      */
-    private static function parse_variable($variable)
+    protected static function parse_variable($variable)
     {
         $variable = trim($variable);
 
         // Check if we have valid variable
         if ($variable === '')
-        {
-            throw new exception\parser(
-                "Not a valid variable (empty): ``", 1);
-        }
+            throw new exception\parser("Not a valid variable (empty): ``", 10);
 
         if (substr($variable, 0, 8) === '--MYSLI-') {
             return $variable;
@@ -1397,30 +1520,48 @@ class parser
         if (substr($variable, 0, 1) === '$')
         {
             throw new exception\parser(
-                "Variable name cannot start with `$`: `{$variable}`", 2);
+                "Variable name cannot start with `$`: `{$variable}`", 20
+            );
         }
 
         if (!preg_match(
             '/^[a-z0-9_]+((\\-\\>[a-z0-9_]+)|(\\[\'.+\'\\]))?$/i', $variable))
         {
             throw new exception\parser(
-                "Not a valid variable name: `{$variable}`", 4);
+                "Not a valid variable name: `{$variable}`", 21
+            );
         }
 
         if (is_numeric(substr($variable, 0, 1)))
         {
             throw new exception\parser(
-                "Variable name cannot start with number: `{$variable}`", 3);
+                "Variable name cannot start with number: `{$variable}`", 22
+            );
         }
 
         return '$' . $variable;
     }
+
     /**
      * Convert functions to PHP format.
-     * @param  string $function
+     * --
+     * @param string $function
+     * --
+     * @throws mysli\tplp\exception\parser
+     *         10 Missing parameter.
+     *
+     * @throws mysli\tplp\exception\parser
+     *         20 Function name cannot start with number...
+     *
+     * @throws mysli\tplp\exception\parser
+     *         21 Not a valid function name...
+     *
+     * @throws mysli\tplp\exception\parser
+     *         22 Function is not valid - too many segments.
+     * --
      * @return string
      */
-    private static function parse_functions($function)
+    protected static function parse_functions($function)
     {
         // Put function to meaningful pieces
         $function = trim($function);
@@ -1442,7 +1583,7 @@ class parser
         {
             try
             {
-                $segments[$key] = self::parse_variable($segment);
+                $segments[$key] = static::parse_variable($segment);
             }
             catch (\Exception $e)
             {
@@ -1451,9 +1592,9 @@ class parser
         }
 
         // If it's one of the native function, then we'll set it as such...
-        if (isset(self::$functions[$function]))
+        if (isset(static::$functions[$function]))
         {
-            $function = self::$functions[$function];
+            $function = static::$functions[$function];
 
             if (strpos($function, '%1') !== false)
             {
@@ -1471,7 +1612,8 @@ class parser
                 if (preg_match('/%[0-9]+/', $function))
                 {
                     throw new exception\parser(
-                        "Missing parameter: `{$function}`", 1);
+                        "Missing parameter: `{$function}`", 10
+                    );
                 }
             }
             return str_replace(
@@ -1484,13 +1626,15 @@ class parser
         if (is_numeric(substr($function, 0, 1)))
         {
             throw new exception\parser(
-                "Function name cannot start with number: `{$function}`", 2);
+                "Function name cannot start with number: `{$function}`", 20
+            );
         }
 
         if (!preg_match('/^[a-z0-9_\\/]+$/i', $function))
         {
             throw new exception\parser(
-                "Not a valid function name: `{$function}`", 3);
+                "Not a valid function name: `{$function}`", 21
+            );
         }
 
         // Imported static method call: blog/method => blog::method
@@ -1501,7 +1645,8 @@ class parser
             if (count($sfunction) !== 2)
             {
                 throw new exception\parser(
-                    "Function `{$function}` is not valid too many segments", 3);
+                    "Function `{$function}` is not valid - too many segments", 22
+                );
             }
 
             $function = implode('::', $sfunction);
@@ -1522,64 +1667,52 @@ class parser
             return $function . '(%seg, ' . implode(', ', $segments) . ')';
         }
     }
+
     /**
-     * Handle file import
-     * @param  array  $import
-     * @param  array  $uses
-     * @param  string $dir
+     * Handle file import.
+     * --
+     * @param array  $import
+     * @param array  $uses
+     * @param string $dir
+     * --
      * @return string
      */
-    private static function handle_import(array $import, array $uses, $dir)
+    protected static function handle_import(array $import, array $uses, $dir)
     {
-        $path = self::resolve_relative_path($import['file'], $dir);
-        return self::parse($path, $uses, $import['set'], $import['module']);
+        $path = static::resolve_relative_path($import['file'], $dir);
+        return static::parse($path, $uses, $import['set'], $import['module']);
     }
+
     /**
-     * Resolve relative filename for inclusions
-     * @param  string $relative
-     * @param  string $dir
+     * Resolve relative filename for inclusions.
+     * --
+     * @param string $relative
+     * @param string $dir
+     * --
+     * @throws mysli\tplp\exception\tplp 10 File not found...
+     * --
      * @return string
      */
-    private static function resolve_relative_path($relative, $dir)
+    protected static function resolve_relative_path($relative, $dir)
     {
-        if (substr($relative, 0, 1) === '/')
-        {
-            $path = fs::pkgpath($relative.'.tplp');
-        }
-        else
-        {
-            $path = realpath(fs::ds($dir, $relative.'.tplp'));
-        }
+        $path = realpath(fs::ds($dir, $relative.'.tpl.html'));
 
         if (!file::exists($path))
-        {
-            throw new framework\exception\not_found(
-                "File not found: `{$path}`", 1);
-        }
+            throw new exception\parser("File not found: `{$path}`", 10);
 
         return $path;
     }
-    /**
-     * Format generic exception message.
-     * @param  integer $lines
-     * @param  integer $current
-     * @param  string  $message
-     * @param  string  $file
-     * @return string
-     */
-    private static function f_error($lines, $current, $message, $file=null)
-    {
-        return $message . "\n" . self::err_lines($lines, $current, 3) .
-            ($file ? "File: `{$file}`\n" : "\n");
-    }
+
     /**
      * Format generic use exception message.
-     * @param  string $use
-     * @param  string $as
-     * @param  array  $previous_debug
+     * --
+     * @param string $use
+     * @param string $as
+     * @param array  $previous_debug
+     * --
      * @return string
      */
-    private static function f_error_use($use, $as, array $previous_debug)
+    protected static function f_error_use($use, $as, array $previous_debug)
     {
         $return = "Cannot use `{$use}` as `{$as}` because the name ".
         "is already previously declared in following location(s):\n";
@@ -1593,39 +1726,46 @@ class parser
 
         return $return;
     }
-    /**
-     * Return -$padding, $current, +$padding lines for exceptions, e.g.:
-     *   11. ::if true
-     * >>12.     {username|non_existant_function}
-     *   13. ::/if
-     * @param  array   $lines
-     * @param  integer $current
-     * @param  integer $padding
-     * @return string
+
+    /*
+    --- Properties -------------------------------------------------------------
      */
-    private static function err_lines($lines, $current, $padding=3)
-    {
-        $start    = $current - $padding;
-        $end      = $current + $padding;
-        $result   = '';
 
-        for ($position = $start; $position <= $end; $position++)
-        {
-            if (isset($lines[$position]))
-            {
-                if ($position === $current)
-                {
-                    $result .= ">>";
-                }
-                else
-                {
-                    $result .= "  ";
-                }
-
-                $result .= ($position+1).". {$lines[$position]}\n";
-            }
-        }
-
-        return $result;
-    }
+    protected static $functions = [
+        "abs"           => "abs(%seg)",
+        "ucfirst"       => "ucfirst(%seg)",
+        "ucwords"       => "ucwords(%seg)",
+        "lower"         => "strtolower(%seg)",
+        "upper"         => "strtoupper(%seg)",
+        "date"          => "date(%1, strtotime(%seg))",
+        "join"          => "implode(%1, %seg)",
+        "split"         => "explode(%1, %seg, ...)",
+        "length"        => "strlen(%seg)",
+        "word_count"    => "str_word_count(%seg)",
+        "count"         => "count(%seg)",
+        "nl2br"         => "nl2br(%seg)",
+        "number_format" => "number_format(%seg, ...)",
+        "replace"       => "sprintf(%seg, ...)",
+        "round"         => "round(%seg, ...)",
+        "floor"         => "floor(%seg)",
+        "ceil"          => "ceil(%seg)",
+        "strip_tags"    => "strip_tags(%seg, ...)",
+        "show_tags"     => "htmlspecialchars(%seg)",
+        "trim"          => "trim(%seg, ...)",
+        "slice"         => "( is_array(%seg) ? array_slice(%seg, ...) ".
+                                            ": substr(%seg, ...) )",
+        "word_wrap"     => "wordwrap(%seg, %1, '<br/>')",
+        "max"           => "max(%seg, ...)",
+        "min"           => "min(%seg, ...)",
+        "column"        => "array_column(%seg, %1, ...)",
+        "reverse"       => "( is_array(%seg) ? array_reverse(%seg) ".
+                                            ": strrev(%seg) )",
+        "contains"      => "( (is_array(%seg) ? in_array(%1, %seg) ".
+                                            ": strpos(%seg, %1)) !== false )",
+        "key_exists"    => "array_key_exists(%1, %seg)",
+        "sum"           => "array_sum(%seg)",
+        "unique"        => "array_unique(%seg)",
+        "range"         => "range(%1, %2, ...)",
+        "random"        => "rand(%1, %2)"
+    ];
 }

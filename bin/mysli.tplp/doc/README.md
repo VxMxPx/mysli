@@ -1,36 +1,39 @@
-# Mysli Util Tplp
+# Mysli Tplp
 
 ## Introduction
 
 Tplp (Template Parser) package is a simple template parser.
-All templates are parsed and saved as a regular PHP, hence resources usage
-is on minimum (it's run only once for each package when you build it).
+
+Templates can be parsed and cached on request, but it's better idea to pre
+process them and save them in your package with CLI
+(it's really easy, see **CLI** section bellow).
+
+Tplp works with regular PHP files too. You can completely avoid it, by just
+create normal files with `.php` extention.
 
 ## Usage
 
-In your package root create a new directory with name `tplp` which will be
+In your package root create a new directory `assets/tplp` which will be
 containing template files.
 
-The template files needs to have `.tplp.html` extension.
+The template files needs to have `.tpl.html` extension.
 You should save them as `UTF-8`, `no BOM`, with `LF` line endings.
 
 Example of such directory structure:
 
 ```
-vendor/
-    package/
+vendor.package/
+    assets/
         tplp/
-            layout.tplp.html
-            sidebar.tplp.html
-            list.tplp.html
+            layout.tpl.html
+            sidebar.tpl.html
+            list.tpl.html
 ```
 
-... other:
+... other, in class where templates are used:
 
 ```php
-__use(__namespace__, '
-    mysli.util.tplp
-');
+    const __use = 'mysli.tplp';
 
 $template = tplp::select('vendor.package');
 
@@ -41,25 +44,24 @@ $template->set_translator(i18n::select('vendor.package'));
 $template->render('template_name', $variables); // => HTML
 ```
 
-You'll have to use command line to parse templates:
+**Note** the default path can be changed. Modify `mysli.pkg.ym` file and add:
+
 ```
-./dot tplp vendor.package
-```
-
-Please see `./dot tplp -h` for list of all commands and help.
-
-You can define costume source and destionation path for your templates. 
-Add the following section to your `mysli.pkg.ym` file:
-
-```yaml
 tplp:
-    source:      tplp
-    destination: _dist/tplp
+    path: new/path
 ```
 
-You can exclude files from parsing by prefixing them with underline e.g.: 
-`_layout.tplp`. You should exclude layouts and modules -- those will be parsed 
-as they're imported by other file.
+The path will be relative to the package's root.
+
+
+## CLI
+
+Use `mysli template vendor.package` to pre-build all templates. Templates will
+be saved to `assets/tplp/~dist`.
+
+Files prefixed with underline e.g.: `_layout.tplp` will be excluded from parsing.
+You should exclude layouts and modules -- those will be parsed as they're
+imported by other file.
 
 ## Template Syntax
 
@@ -666,6 +668,13 @@ which can be included and used with:
 {var|pkg/method:param}
 ```
 
+The class which will be included in such manner needs to have foolowing class:
+
+```
+// vendor.package/lib/__tplp.php
+namespace vendor\package; class __tplp {}
+```
+
 ### Extend
 
 file.tplp
@@ -859,6 +868,7 @@ modules.tplp
     <p>I'm sidebar!</p>
     ::print hello
 ::/module
+
 ::module another
 ::/module
 ```
