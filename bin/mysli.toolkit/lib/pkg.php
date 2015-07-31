@@ -588,7 +588,7 @@ namespace mysli\toolkit; class pkg
                 throw new exception\pkg(
                     "Package `{$package}` cannot be enabled, ".
                     "because some dependencies are missing: `".
-                    implode(', ', $dependencies['missing'].'`.'), 30
+                    implode(', ', $dependencies['missing']).'`.', 30
                 );
 
 
@@ -596,7 +596,7 @@ namespace mysli\toolkit; class pkg
                 throw new exception\pkg(
                     "Package `{$package}` cannot be enabled, ".
                     "because some dependencies are at the wrong version: `".
-                    implode(', ', $dependencies['version'].'`.'), 40
+                    implode(', ', $dependencies['version']).'`.', 40
                 );
 
             if (count($dependencies['disabled']))
