@@ -1,5 +1,12 @@
---TEST--
---VIRTUAL (test.tplp)--
+<?php
+
+#: Before
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+use mysli\tplp\parser;
+use mysli\toolkit\fs\fs;
+use mysli\toolkit\fs\file;
+
+$file = <<<'FILE'
 <html>
 <body>
     {@HELLO}
@@ -10,14 +17,23 @@
     {@HELLO_USER user1, user2, false, 'string!'}
 </body>
 </html>
---FILE--
+FILE;
+file::write(fs::tmppath('dev.test/~test.tpl.html'), $file);
+
+
+#: After
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+file::remove(fs::tmppath('dev.test/~test.tpl.html'));
+
+
+#: Test Translation
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$processed = parser::file('~test.tpl.html', fs::tmppath('dev.test'));
+return assert::equals(
+    $processed,
+    <<<'EXPECT'
 <?php
-use mysli\util\tplp\parser;
-print_r(parser::file('test.tplp', __DIR__));
-?>
---EXPECT--
-<?php
-namespace tplp\generic\test;
+namespace tplp\template\test;
 ?><html>
 <body>
     <?php echo $tplp_func_translator_service('HELLO'); ?>
@@ -28,3 +44,5 @@ namespace tplp\generic\test;
     <?php echo $tplp_func_translator_service('HELLO_USER', [$user1, $user2, false, 'string!']); ?>
 </body>
 </html>
+EXPECT
+);

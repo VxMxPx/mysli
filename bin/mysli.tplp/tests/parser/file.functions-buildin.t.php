@@ -1,5 +1,12 @@
---TEST--
---VIRTUAL (test.tplp)--
+<?php
+
+#: Before
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+use mysli\tplp\parser;
+use mysli\toolkit\fs\fs;
+use mysli\toolkit\fs\file;
+
+$file = <<<'FILE'
 <html>
 <body>
     {-12|abs}
@@ -66,14 +73,23 @@
     {|random:0,5}
 </body>
 </html>
---FILE--
+FILE;
+file::write(fs::tmppath('dev.test/~test.tpl.html'), $file);
+
+
+#: After
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+file::remove(fs::tmppath('dev.test/~test.tpl.html'));
+
+
+#: Test Functions Build-in
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$processed = parser::file('~test.tpl.html', fs::tmppath('dev.test'));
+return assert::equals(
+    $processed,
+    <<<'EXPECT'
 <?php
-use mysli\util\tplp\parser;
-print_r(parser::file('test.tplp', __DIR__));
-?>
---EXPECT--
-<?php
-namespace tplp\generic\test;
+namespace tplp\template\test;
 ?><html>
 <body>
     <?php echo abs(-12); ?>
@@ -124,3 +140,5 @@ namespace tplp\generic\test;
     <?php echo rand(0, 5); ?>
 </body>
 </html>
+EXPECT
+);
