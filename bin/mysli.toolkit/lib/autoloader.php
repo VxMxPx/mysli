@@ -424,6 +424,11 @@ namespace mysli\toolkit; class autoloader
             return true;
 
         /*
+        Remove left backslash
+         */
+        $class = ltrim($class, '\\');
+
+        /*
         Get package's name from namespace
          */
         $package = pkg::by_namespace($class);
@@ -552,7 +557,7 @@ namespace mysli\toolkit; class autoloader
         /*
         Make class name.
          */
-        $class = '\\'.str_replace('.', '\\', $package).'\\__init';
+        $class = str_replace('.', '\\', $package).'\\__init';
 
         /*
         Init class (load file, resolve __use)
