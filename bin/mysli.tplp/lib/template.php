@@ -141,15 +141,21 @@ namespace mysli\tplp; class template
      * @param string $file
      *        A file which is bring replaced (no extension).
      *
-     * @param string $from_root
-     *        A root directory from which file is being loaded.
+     * @param mixed $with
+     *        Array:
+     *            Provide an array in following format:
+     *            [ string $root, string $filename ]
      *
-     * @param string $from_file
-     *        If not provided `{$file}` will be used.
+     *            $root: A root directory from which file is being loaded.
+     *            $filename: Actual filename of file being included.
+     *
+     *        String:
+     *            Provide actual template, rather than file. This will not seek
+     *            for file, but rather just use the provided template.
      */
-    function replace($file, $from_root, $from_file=null)
+    function replace($file, $with)
     {
-        $this->replace = [ $from_root, ($from_file?:$file) ];
+        $this->replace[$file] = $with;
     }
 
     /**
@@ -179,7 +185,7 @@ namespace mysli\tplp; class template
             // Parse...
             try
             {
-                $contents = parser::file($source[1], $source[0]);
+                $contents = parser::file($source[1], $source[0], $this->replace);
             }
             catch (\Exception $e)
             {
@@ -211,7 +217,15 @@ namespace mysli\tplp; class template
         }
 
         ob_start();
-        include($file);
+        if (isset($this->replace[$parsed[1]]) &&
+            is_string($this->replace[$parsed[1]]))
+        {
+            eval($this->replace[$parsed[1]]);
+        }
+        else
+        {
+            include($file);
+        }
         $result = ob_get_contents();
         ob_end_clean();
 
@@ -281,8 +295,20 @@ namespace mysli\tplp; class template
         if (isset($this->replace[$file]))
             array_unshift($checks, $this->replace[$file]);
 
-        foreach ($checks as list($root, $file))
+        foreach ($checks as $file)
         {
+            // We're replacing from source with...
+            if (is_string($file))
+            {
+                return [
+                    $this->root, "{$file}.php",  "{$this->root}/{$file}.php"
+                ];
+            }
+            else
+            {
+                list($root, $file) = $file;
+            }
+
             $temporariy = [
                 fs::tmppath('tplp'),
                 $this->tmppath_from_file($file, $root),
@@ -325,8 +351,22 @@ namespace mysli\tplp; class template
         if (isset($this->replace[$file]))
             array_unshift($checks, $this->replace[$file]);
 
-        foreach ($checks as list($root, $file))
+        foreach ($checks as $file)
         {
+            // We're replacing from source with...
+            if (is_string($file))
+            {
+                return [
+                    $this->root,
+                    "{$file}.tpl.html",
+                    "{$this->root}/{$file}.tpl.html"
+                ];
+            }
+            else
+            {
+                list($root, $file) = $file;
+            }
+
             $source = "{$root}/{$file}.tpl.html";
 
             if (file::exists($source))

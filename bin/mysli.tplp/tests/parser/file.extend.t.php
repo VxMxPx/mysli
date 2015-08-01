@@ -4,15 +4,14 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 use mysli\tplp\parser;
 use mysli\toolkit\fs\fs;
-use mysli\toolkit\fs\file;
 
+#: Define File
 $base = <<<'TEST'
 ::extend _layout set content
 <div>
     Some content here...
 </div>
 TEST;
-file::write(fs::tmppath('dev.test/~test.tpl.html'), $base);
 
 $_layout = <<<'_LAYOUT'
 <!DOCTYPE html>
@@ -25,18 +24,15 @@ $_layout = <<<'_LAYOUT'
 </body>
 </html>
 _LAYOUT;
-file::write(fs::tmppath('dev.test/_layout.tpl.html'), $_layout);
-
-
-#: After
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-file::remove(fs::tmppath('dev.test/~test.tpl.html'));
-file::remove(fs::tmppath('dev.test/_layout.tpl.html'));
-
 
 #: Test Extend
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-$processed = parser::file('~test.tpl.html', fs::tmppath('dev.test'));
+#: Use File
+$processed = parser::file(
+    '~test.tpl.html',
+    fs::tmppath('dev.test'),
+    [ '~test' => $base, '_layout' => $_layout ]
+);
 return assert::equals(
     $processed,
     <<<'EXPECT'

@@ -20,7 +20,6 @@ $base = <<<'TEST'
 </body>
 </html>
 TEST;
-file::write(fs::tmppath('dev.test/~test.tpl.html'), $base);
 
 $_modules = <<<'_MODULES'
 ::module sidebar
@@ -29,7 +28,6 @@ $_modules = <<<'_MODULES'
 </div>
 ::/module
 _MODULES;
-file::write(fs::tmppath('dev.test/_modules.tpl.html'), $_modules);
 
 
 #: Define Error
@@ -45,19 +43,16 @@ $base = <<<'TEST'
 </body>
 </html>
 TEST;
-file::write(fs::tmppath('dev.test/~test.tpl.html'), $base);
-
-
-#: After
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-file::remove(fs::tmppath('dev.test/~test.tpl.html'));
-file::remove(fs::tmppath('dev.test/_modules.tpl.html'));
 
 
 #: Test Import From
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #: Use Import
-$processed = parser::file('~test.tpl.html', fs::tmppath('dev.test'));
+$processed = parser::file(
+    '~test.tpl.html',
+    fs::tmppath('dev.test'),
+    [ '~test' => $base, '_modules' => $_modules ]
+);
 return assert::equals(
     $processed,
     <<<'EXPECT'
@@ -82,4 +77,8 @@ EXPECT
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #: Use Error
 #: Expect Exception mysli\tplp\exception\parser 10
-$processed = parser::file('~test.tpl.html', fs::tmppath('dev.test'));
+$processed = parser::file(
+    '~test.tpl.html',
+    fs::tmppath('dev.test'),
+    [ '~test' => $base ]
+);

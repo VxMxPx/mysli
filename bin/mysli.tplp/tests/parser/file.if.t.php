@@ -4,8 +4,6 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 use mysli\tplp\parser;
 use mysli\toolkit\fs\fs;
-use mysli\toolkit\fs\file;
-
 
 #: Define Basic
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -37,8 +35,6 @@ $file = <<<'FILE'
 </body>
 </html>
 FILE;
-file::write(fs::tmppath('dev.test/~test.tpl.html'), $file);
-
 
 #: Define Conditions
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -68,18 +64,16 @@ $file = <<<'FILE'
 ::if not one and not (two or (not three and not four or not (five and six)))
 ::/if
 FILE;
-file::write(fs::tmppath('dev.test/~test.tpl.html'), $file);
-
-
-#: After
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-file::remove(fs::tmppath('dev.test/~test.tpl.html'));
 
 
 #: Test If Basic
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #: Use Basic
-$processed = parser::file('~test.tpl.html', fs::tmppath('dev.test'));
+$processed = parser::file(
+    '~test.tpl.html',
+    fs::tmppath('dev.test'),
+    [ '~test' => $file ]
+);
 return assert::equals(
     $processed,
     <<<'EXPECT'
@@ -113,7 +107,11 @@ EXPECT
 #: Test If Multiple Conditions
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #: Use Conditions
-$processed = parser::file('~test.tpl.html', fs::tmppath('dev.test'));
+$processed = parser::file(
+    '~test.tpl.html',
+    fs::tmppath('dev.test'),
+    [ '~test' => $file ]
+);
 return assert::equals(
     $processed,
     <<<'EXPECT'

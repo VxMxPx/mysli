@@ -4,8 +4,8 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 use mysli\tplp\parser;
 use mysli\toolkit\fs\fs;
-use mysli\toolkit\fs\file;
 
+#: Define File
 $file = <<<'FILE'
 <html>
 <body>
@@ -74,17 +74,16 @@ $file = <<<'FILE'
 </body>
 </html>
 FILE;
-file::write(fs::tmppath('dev.test/~test.tpl.html'), $file);
-
-
-#: After
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-file::remove(fs::tmppath('dev.test/~test.tpl.html'));
 
 
 #: Test Functions Build-in
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-$processed = parser::file('~test.tpl.html', fs::tmppath('dev.test'));
+#: Use File
+$processed = parser::file(
+    '~test.tpl.html',
+    fs::tmppath('dev.test'),
+    [ '~test' => $file ]
+);
 return assert::equals(
     $processed,
     <<<'EXPECT'

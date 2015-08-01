@@ -4,8 +4,8 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 use mysli\tplp\parser;
 use mysli\toolkit\fs\fs;
-use mysli\toolkit\fs\file;
 
+#: Define File
 $base = <<<'TEST'
 <!DOCTYPE html>
 <html>
@@ -24,7 +24,6 @@ $base = <<<'TEST'
 </body>
 </html>
 TEST;
-file::write(fs::tmppath('dev.test/~test.tpl.html'), $base);
 
 $_modules = <<<'_MODULES'
 ::module sidebar
@@ -35,19 +34,16 @@ $_modules = <<<'_MODULES'
 </div>
 ::/module
 _MODULES;
-file::write(fs::tmppath('dev.test/_modules.tpl.html'), $_modules);
-
-
-#: After
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-file::remove(fs::tmppath('dev.test/~test.tpl.html'));
-file::remove(fs::tmppath('dev.test/_modules.tpl.html'));
 
 
 #: Test Import Do
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#: Use Import
-$processed = parser::file('~test.tpl.html', fs::tmppath('dev.test'));
+#: Use File
+$processed = parser::file(
+    '~test.tpl.html',
+    fs::tmppath('dev.test'),
+    [ '~test' => $base, '_modules' => $_modules ]
+);
 return assert::equals(
     $processed,
     <<<'EXPECT'

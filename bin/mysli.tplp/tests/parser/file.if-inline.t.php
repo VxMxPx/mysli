@@ -4,8 +4,8 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 use mysli\tplp\parser;
 use mysli\toolkit\fs\fs;
-use mysli\toolkit\fs\file;
 
+#: Define File
 $file = <<<'FILE'
 {name if name else 'Anonymous'}
 {user[posts] if user[posts]|count}
@@ -14,17 +14,15 @@ $file = <<<'FILE'
 {@ANONYMOUS if !name and not user[name]}
 {@ANONYMOUS(count) variable[1], variable[2] if !name and not user[name]}
 FILE;
-file::write(fs::tmppath('dev.test/~test.tpl.html'), $file);
-
-
-#: After
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-file::remove(fs::tmppath('dev.test/~test.tpl.html'));
-
 
 #: Test If Inline
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-$processed = parser::file('~test.tpl.html', fs::tmppath('dev.test'));
+#: Use File
+$processed = parser::file(
+    '~test.tpl.html',
+    fs::tmppath('dev.test'),
+    [ '~test' => $file ]
+);
 return assert::equals(
     $processed,
     <<<'EXPECT'

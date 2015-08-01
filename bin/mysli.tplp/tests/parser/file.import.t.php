@@ -4,8 +4,6 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 use mysli\tplp\parser;
 use mysli\toolkit\fs\fs;
-use mysli\toolkit\fs\file;
-
 
 #: Define Import
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -20,14 +18,12 @@ $base = <<<'TEST'
 </body>
 </html>
 TEST;
-file::write(fs::tmppath('dev.test/~test.tpl.html'), $base);
 
 $_sidebar = <<<'_SIDEBAR'
 <div class="sidebar">
     <p>Hello world!</p>
 </div>
 _SIDEBAR;
-file::write(fs::tmppath('dev.test/_sidebar.tpl.html'), $_sidebar);
 
 
 #: Define Error
@@ -43,19 +39,16 @@ $base = <<<'TEST'
 </body>
 </html>
 TEST;
-file::write(fs::tmppath('dev.test/~test.tpl.html'), $base);
-
-
-#: After
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-file::remove(fs::tmppath('dev.test/~test.tpl.html'));
-file::remove(fs::tmppath('dev.test/_sidebar.tpl.html'));
 
 
 #: Test Import
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #: Use Import
-$processed = parser::file('~test.tpl.html', fs::tmppath('dev.test'));
+$processed = parser::file(
+    '~test.tpl.html',
+    fs::tmppath('dev.test'),
+    [ '~test' => $base, '_sidebar' => $_sidebar ]
+);
 return assert::equals(
     $processed,
     <<<'EXPECT'
@@ -80,4 +73,8 @@ EXPECT
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #: Use Error
 #: Expect Exception mysli\tplp\exception\parser 10
-$processed = parser::file('~test.tpl.html', fs::tmppath('dev.test'));
+$processed = parser::file(
+    '~test.tpl.html',
+    fs::tmppath('dev.test'),
+    [ '~test' => $base ]
+);

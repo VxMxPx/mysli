@@ -17,16 +17,31 @@ namespace mysli\tplp; class parser
      * --
      * @param string $file
      * @param string $root
+     * @param array  $replace
+     *        List of `virtual` files, those might be loaded from different
+     *        location or not at all. This is meant for overrides of templates.
+     *        Array needs to be in following format:
+     *        [
+     *            // This will replace `file-name` file, with file from:
+     *            // $root.$replace_file_name
+     *            'file-name' => [ string $root, string $replace_file_name ],
+     *            // Or...
+     *            // Simply use string, this will not load file from file-system
+     *            // but rather just provided string.
+     *            'file-name' => 'Template',
+     *        ]
+     *
      * --
      * @throws mysli\tplp\exception\parser 10 Template file not found.
      * --
      * @return string
      */
-    static function file($file, $root)
+    static function file($file, $root, array $replace=[])
     {
         $fullpath = fs::ds($root, $file);
+        $filenoext = strtolower(substr($file, 0, -9)); // .tpl.html
 
-        if (!file::exists($fullpath))
+        if (!file::exists($fullpath) && !isset($replace[$filenoext]))
         {
             throw new exception\parser(
                 "Template file not found: `{$fullpath}`", 10
@@ -35,11 +50,10 @@ namespace mysli\tplp; class parser
 
         // Parse file
         $uses = [];
-        $parsed = static::parse($fullpath, $uses);
+        $parsed = static::parse($fullpath, $uses, [], null, $replace);
 
         // Generate namespace
-        $namespace = strtolower(substr($file, 0, -9)); // .tpl.html
-        $namespace = str::clean($namespace, '<[^a-z0-9\/]+>');
+        $namespace = str::clean($filenoext, '<[^a-z0-9\/]+>');
         $namespace = str_replace('/', '\\', $namespace);
         $namespace = "tplp\\template\\{$namespace}";
 
@@ -66,6 +80,7 @@ namespace mysli\tplp; class parser
      * @param string $uses
      * @param array  $sets
      * @param string $module  Weather to select only particular module in file.
+     * @param array  $replace (@see static::file())
      * --
      * @throws mysli\tplp\exception\parser
      *         10 Module not found.
@@ -106,15 +121,28 @@ namespace mysli\tplp; class parser
      * @return string
      */
     protected static function parse(
-        $filename, array &$uses=[], array $sets=[], $module=null)
+        $filename, array &$uses=[], array $sets=[], $module=null, array $replace=[])
     {
-        $dirname = dirname($filename);
+        // Overrides?
+        $filenoext = substr(basename($filename), 0, -9);
+        if (isset($replace[$filenoext]) && !is_array($replace[$filenoext]))
+        {
+            $template = $replace[$filenoext];
+        }
+        else
+        {
+            if (isset($replace[$filenoext]) && is_array($replace[$filenoext]))
+                $filename = implode('/', $replace[$filenoext]);
 
-        // sfpath is used only in error messages...
-        $sfpath = $filename;
+            $template = file::read($filename);
+        }
 
-        $template = file::read($filename);
         $template = str::to_unix_line_endings($template);
+
+        // Dir name and
+        // sfpath, used only in error messages...
+        $dirname = dirname($filename);
+        $sfpath = $filename;
 
         if ($module)
         {
@@ -310,7 +338,12 @@ namespace mysli\tplp; class parser
                     if ($type === 'import')
                     {
                         $output[] = static::handle_import(
-                            $in_curr, $uses, $dirname
+                            $in_curr['file'],
+                            $uses,
+                            $in_curr['set'],
+                            $in_curr['module'],
+                            $dirname,
+                            $replace
                         );
                     }
 
@@ -353,7 +386,12 @@ namespace mysli\tplp; class parser
                     else
                     {
                         $output[] = static::handle_import(
-                            $imports[$id], $uses, $dirname
+                            $imports[$id]['file'],
+                            $uses,
+                            $imports[$id]['set'],
+                            $imports[$id]['module'],
+                            $dirname,
+                            $replace
                         );
                     }
 
@@ -479,8 +517,14 @@ namespace mysli\tplp; class parser
                 // Try to include and parse file
                 try
                 {
-                    $path = static::resolve_relative_path($extfile, $dirname);
-                    $output = static::parse($path, $uses, $extend['set']);
+                    $output = static::handle_import(
+                        // $file, $uses, $set,        $module, $dir,     $replace
+                        $extfile, $uses, $extend['set'], null, $dirname, $replace
+                    );
+                    // $path = static::resolve_relative_path($extfile, $dirname);
+                    // $output = static::parse(
+                    //     $path, $uses, $extend['set'], null, $replace
+                    // );
                 }
                 catch (\Exception $e)
                 {
@@ -1671,16 +1715,32 @@ namespace mysli\tplp; class parser
     /**
      * Handle file import.
      * --
-     * @param array  $import
-     * @param array  $uses
-     * @param string $dir
+     * @param  string $file    Filename that needs to be imported.
+     * @param  array  $uses
+     * @param  array  $set
+     * @param  string $module
+     * @param  string $dir
+     * @param  array  $replace
      * --
      * @return string
      */
-    protected static function handle_import(array $import, array $uses, $dir)
+    protected static function handle_import(
+        $file, array $uses, $set, $module, $dir, $replace)
     {
-        $path = static::resolve_relative_path($import['file'], $dir);
-        return static::parse($path, $uses, $import['set'], $import['module']);
+        if (isset($replace[$file]))
+        {
+            if (is_array($replace[$file]))
+                $path = implode('/', $replace[$file]);
+            else
+                $path = "{$dir}/{$file}.tpl.html";
+        }
+        else
+            $path = static::resolve_relative_path($file, $dir);
+
+
+        return static::parse(
+            $path, $uses, $set, $module, $replace
+        );
     }
 
     /**
