@@ -371,6 +371,7 @@ namespace mysli\dev\test; class test
         // Run the actual test ...
         try
         {
+            set_error_handler(['\\mysli\\dev\\test\\test', 'error_handler']);
             ob_start();
             $result = eval($test_code);
             $output = ob_get_contents();
@@ -384,6 +385,7 @@ namespace mysli\dev\test; class test
         }
         finally
         {
+            restore_error_handler();
             ob_end_clean();
         }
 
@@ -614,5 +616,19 @@ namespace mysli\dev\test; class test
             default:
                 throw new exception\test("Unknown type: `{$type}`.", 10);
         }
+    }
+
+    /**
+     * All errors to exception for nice output.
+     * --
+     * @param  integer $number
+     * @param  string  $message
+     * @param  string  $file
+     * @param  integer $line
+     * @param  array   $context
+     */
+    static function error_handler($severity, $message, $file, $line, $context)
+    {
+        throw new \ErrorException($message, 0, $severity, $file, $line);
     }
 }
