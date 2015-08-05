@@ -272,7 +272,12 @@ namespace mysli\tplp; class parser
 
         // If no matches, return right now...
         if (empty($extends))
+        {
+
+            // Kill namespaces
+            $template = $this->remove_namespace($template);
             return $template;
+        }
 
         // Proceed
         foreach ($extends as $extend)
@@ -302,7 +307,26 @@ namespace mysli\tplp; class parser
             $template = $this->resolve_print($master, $set);
         }
 
+
+        // Kill namespaces
+        $template = $this->remove_namespace($template);
         return $template;
+    }
+
+    /**
+     * Remove previously set namespaces.
+     * --
+     * @param string $template
+     * --
+     * @return string
+     */
+    protected function remove_namespace($template)
+    {
+        return preg_replace(
+            '/\<\?php\R\/\/ NAMESPACE\:\Rnamespace [a-zA-Z0-9_\\\\]+;\R\?\>/ms',
+            '',
+            $template
+        );
     }
 
     /**
@@ -733,18 +757,22 @@ namespace mysli\tplp; class parser
         // Add NAMESPACE
         if ($namespace)
         {
+            $header[] = "<?php";
             $header[] = "// NAMESPACE:";
             $header[] = "namespace {$namespace};";
+            $header[] = "?>";
         }
 
         // Add USE\
         if (!empty($use))
         {
+            $header[] = "<?php";
             $header = array_merge($header, $use);
+            $header[] = "?>";
         }
 
         if (!empty($header))
-            return "<?php\n".implode("\n", $header)."\n?>";
+            return implode("\n", $header);
         else
             return '';
     }
