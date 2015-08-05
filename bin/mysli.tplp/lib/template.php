@@ -240,6 +240,9 @@ namespace mysli\tplp; class template
         {
             foreach (['tpl.php', 'tpl.html'] as $type)
             {
+                if (false === ($mfile = $this->locate_file($file, $type)))
+                    continue;
+
                 list($loaded, $template) = $mfile;
 
                 if ($loaded)
@@ -251,7 +254,7 @@ namespace mysli\tplp; class template
                 }
                 else
                 {
-                    $filename = basename($file);
+                    $template = basename($template);
                     $action = 'file';
                 }
 
@@ -325,21 +328,19 @@ namespace mysli\tplp; class template
                 return [ false, implode('/', $template) ];
         }
 
-        // Define pats
+        // Temporary only when looking for PHP
         if ($type === 'php')
-            $temporariy = [
-                fs::tmppath('tplp'),
-                $this->tmppath_from_file($file, $root),
-            ];
-        $dist = [ "{$root}/~dist", "{$file}.{$type}" ];
-        $source = [ "{$root}", "{$file}.{$type}" ];
+            $temporariy = fs::tmppath('tplp', $this->tmppath_from_file($file, $root));
+
+        $dist = "{$root}/~dist/{$file}.{$type}";
+        $source = "{$root}/{$file}.{$type}";
 
         // Check paths
-        if ($type === 'php' && file::exists(implode('/', $temporariy)))
+        if ($type === 'php' && file::exists($temporariy))
             return [ false, $temporariy ];
-        elseif (file::exists(implode('/', $dist)))
+        elseif (file::exists($dist))
             return [ false, $dist ];
-        elseif (file::exists(implode('/', $source)))
+        elseif (file::exists($source))
             return [ false, $source ];
         else
             return false;
