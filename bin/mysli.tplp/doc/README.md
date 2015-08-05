@@ -2,14 +2,14 @@
 
 ## Introduction
 
-Tplp (Template Parser) package is a simple template parser.
+Tplp (Template Parser) is a template parser.
 
-Templates can be parsed and cached on request, but it's better idea to pre
-process them and save them in your package with CLI
-(it's really easy, see **CLI** section bellow).
+Templates can be parsed and cached on request, but it's better idea to pre-process
+them and save them in your package root. This can be done with command line
+interface (see **CLI** section bellow).
 
 Tplp works with regular PHP files too. You can completely avoid it, by just
-create normal files with `.php` extention.
+creating normal files with `.php` extention.
 
 ## Usage
 
@@ -649,6 +649,85 @@ use three curly brackets:
         return 'Hello ' + who;
     }
 }}}
+```
+### Let
+
+New variables can be defined and modified in template by using `let`.
+
+```php
+::let variable = 'Foo-Bar'
+
+<?php
+    // Result
+    $variable = 'Foo-Bar';
+?>
+```
+
+... for multi-line text:
+
+```php
+::let multiline do
+    This is a multiline text,
+    it will act like a text in an HTML tag.
+::/let
+
+<?php
+    // Result
+    $multiline = 'This is a multiline text, it will act like a text in an HTML tag.';
+?>
+```
+
+... costume glue:
+
+```php
+::let items set implode(, ) do
+    item one
+    item two
+    item three
+::/let
+
+<?php
+    // Result
+    $items = 'item one, item two, item three';
+?>
+```
+
+... produce an array:
+
+```php
+::let an_array set array do
+    one
+    two
+    three
+::/let
+
+<?php
+    // Result
+    $an_array = [ 'one', 'two', 'three' ];
+?>
+```
+
+... dictionary:
+
+```php
+::let dict set dictionary(:) do
+    Dublin : Ireland
+    Moscow : Russia
+    Ljubljana : Slovenia
+    Paris : France
+    Kyiv : Ukraine
+::/let
+
+<?php
+    // Result
+    $dict = [
+        'Dublin' => 'Ireland',
+        'Moscow' => 'Russia',
+        'Ljubljana' => 'Slovenia',
+        'Paris' => 'France',
+        'Kyiv' => 'Ukraine'
+    ];
+?>
 ```
 
 ### Use
