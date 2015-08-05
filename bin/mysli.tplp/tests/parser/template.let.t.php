@@ -41,17 +41,11 @@ FILE;
 #: Test Let
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #: Use File
-$processed = parser::file(
-    '~test.tpl.html',
-    fs::tmppath('dev.test'),
-    [ '~test' => $file ]
-);
+$parser = new parser(fs::tmppath('dev.test'));
 return assert::equals(
-    $processed,
+    $parser->template($file),
     <<<'EXPECT'
-<?php
-namespace tplp\template\test;
-?><?php $var_name = 'Marko'; ?>
+<?php $var_name = 'Marko'; ?>
 <?php $var_multiline = 'This will act exactly the same as it would in HTML. This text will be displayed in single line. Tha\'s the thing... That\'s the escaped thing...'; ?>
 <?php $var_tags = 'one, two, three'; ?>
 <?php $var_array = unserialize('a:3:{i:0;s:8:"Item one";i:1;s:8:"Item two";i:2;s:10:"Item three";}'); ?>

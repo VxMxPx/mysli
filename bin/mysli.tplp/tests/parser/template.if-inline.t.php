@@ -18,17 +18,11 @@ FILE;
 #: Test If Inline
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #: Use File
-$processed = parser::file(
-    '~test.tpl.html',
-    fs::tmppath('dev.test'),
-    [ '~test' => $file ]
-);
+$parser = new parser(fs::tmppath('dev.test'));
 return assert::equals(
-    $processed,
+    $parser->template($file),
     <<<'EXPECT'
-<?php
-namespace tplp\template\test;
-?><?php echo ($name) ? $name : 'Anonymous'; ?>
+<?php echo ($name) ? $name : 'Anonymous'; ?>
 <?php echo (count($user['posts'])) ? $user['posts'] : ''; ?>
 <?php echo (!$name) ? 'Anonymous' : $name; ?>
 <?php echo (!$name and !$user['name']) ? 'Anonymous' : ''; ?>

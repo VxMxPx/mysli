@@ -19,17 +19,11 @@ FILE;
 #: Test Functions Costume
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #: Use File
-$processed = parser::file(
-    '~test.tpl.html',
-    fs::tmppath('dev.test'),
-    [ '~test' => $file ]
-);
+$parser = new parser(fs::tmppath('dev.test'));
 return assert::equals(
-    $processed,
+    $parser->template($file),
     <<<'EXPECT'
-<?php
-namespace tplp\template\test;
-?><html>
+<html>
 <body>
     <?php echo $tplp_func_var_fnct(max($variable, $var), true); ?>
     <?php echo $tplp_func_var_funct(true); ?>

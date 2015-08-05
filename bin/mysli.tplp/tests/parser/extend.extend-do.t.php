@@ -7,7 +7,12 @@ use mysli\toolkit\fs\fs;
 
 #: Define File
 $base = <<<'TEST'
-::extend _layout set content
+::extend _layout set content do
+    ::set styles
+    <link rel="stylesheet" type="text/css" href="main.css">
+    <link rel="stylesheet" type="text/css" href="mobile.css">
+    ::/set
+::/extend
 <div>
     Some content here...
 </div>
@@ -18,6 +23,7 @@ $_layout = <<<'_LAYOUT'
 <html>
 <head>
     <title>{title}</title>
+    ::print styles
 </head>
 <body>
     ::print content
@@ -25,23 +31,21 @@ $_layout = <<<'_LAYOUT'
 </html>
 _LAYOUT;
 
-#: Test Extend
+#: Test Extend Do
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #: Use File
-$processed = parser::file(
-    '~test.tpl.html',
-    fs::tmppath('dev.test'),
-    [ '~test' => $base, '_layout' => $_layout ]
-);
+$parser = new parser(fs::tmppath('dev.test'));
+$parser->replace('_layout.tpl.php', $parser->template($_layout));
+$parsed = $parser->template($base);
 return assert::equals(
-    $processed,
+    $parser->extend($parsed),
     <<<'EXPECT'
-<?php
-namespace tplp\template\test;
-?><!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
     <title><?php echo $title; ?></title>
+    <link rel="stylesheet" type="text/css" href="main.css">
+    <link rel="stylesheet" type="text/css" href="mobile.css">
 </head>
 <body>
 <div>

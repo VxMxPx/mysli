@@ -9,6 +9,7 @@ use mysli\toolkit\fs\fs;
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 $file = <<<'FILE'
 ::use mysli.cm.blog -> blog
+::use mysli.cm.page -> page
 <div>
     {variable}
 </div>
@@ -31,17 +32,13 @@ FILE;
 #: Test Use
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #: Use File
-$processed = parser::file(
-    '~test.tpl.html',
-    fs::tmppath('dev.test'),
-    [ '~test' => $file ]
-);
+$parser = new parser(fs::tmppath('dev.test'));
 return assert::equals(
-    $processed,
+    $parser->template($file),
     <<<'EXPECT'
 <?php
-namespace tplp\template\test;
 use mysli\cm\blog\__tplp as blog;
+use mysli\cm\page\__tplp as page;
 ?><div>
     <?php echo $variable; ?>
 </div>
@@ -53,8 +50,5 @@ EXPECT
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #: Use Error
 #: Expect Exception mysli\tplp\exception\parser 10
-$processed = parser::file(
-    '~test.tpl.html',
-    fs::tmppath('dev.test'),
-    [ '~test' => $file ]
-);
+$parser = new parser(fs::tmppath('dev.test'));
+$parser->template($file);

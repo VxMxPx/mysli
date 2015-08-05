@@ -1,0 +1,6 @@
+theme:       default
+description: Default Theme For Mysli Project.
+license:     GPL-3.0
+authors:
+    - Marko Gajšt (Developer) <m@gaj.st>
+require: No

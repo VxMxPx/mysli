@@ -5,6 +5,7 @@
 use mysli\tplp\parser;
 use mysli\toolkit\fs\fs;
 
+
 #: Define Import
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 $base = <<<'TEST'
@@ -14,16 +15,18 @@ $base = <<<'TEST'
     <title>{title}</title>
 </head>
 <body>
-    ::import _sidebar
+    ::import sidebar from _modules
 </body>
 </html>
 TEST;
 
-$_sidebar = <<<'_SIDEBAR'
+$_modules = <<<'_MODULES'
+::module sidebar
 <div class="sidebar">
     <p>Hello world!</p>
 </div>
-_SIDEBAR;
+::/module
+_MODULES;
 
 
 #: Define Error
@@ -35,26 +38,22 @@ $base = <<<'TEST'
     <title>{title}</title>
 </head>
 <body>
-    ::import _non_existant_file
+    ::import sidebar from non_existant
 </body>
 </html>
 TEST;
 
 
-#: Test Import
+#: Test Import From
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #: Use Import
-$processed = parser::file(
-    '~test.tpl.html',
-    fs::tmppath('dev.test'),
-    [ '~test' => $base, '_sidebar' => $_sidebar ]
-);
+$parser = new parser(fs::tmppath('dev.test'));
+$parser->replace('_modules.tpl.php', $parser->template($_modules));
+$parsed = $parser->template($base);
 return assert::equals(
-    $processed,
+    $parser->extend($parsed),
     <<<'EXPECT'
-<?php
-namespace tplp\template\test;
-?><!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
     <title><?php echo $title; ?></title>
@@ -69,12 +68,9 @@ EXPECT
 );
 
 
-#: Test Import Exception
+#: Test Import From, Exception
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #: Use Error
 #: Expect Exception mysli\tplp\exception\parser 10
-$processed = parser::file(
-    '~test.tpl.html',
-    fs::tmppath('dev.test'),
-    [ '~test' => $base ]
-);
+$parser = new parser(fs::tmppath('dev.test'));
+$parser->extend( $parser->template($base) );

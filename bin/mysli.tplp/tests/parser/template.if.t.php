@@ -69,17 +69,11 @@ FILE;
 #: Test If Basic
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #: Use Basic
-$processed = parser::file(
-    '~test.tpl.html',
-    fs::tmppath('dev.test'),
-    [ '~test' => $file ]
-);
+$parser = new parser(fs::tmppath('dev.test'));
 return assert::equals(
-    $processed,
+    $parser->template($file),
     <<<'EXPECT'
-<?php
-namespace tplp\template\test;
-?><html>
+<html>
 <body>
     <?php if ($variable > 0): ?>
         Above zero.
@@ -107,17 +101,11 @@ EXPECT
 #: Test If Multiple Conditions
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #: Use Conditions
-$processed = parser::file(
-    '~test.tpl.html',
-    fs::tmppath('dev.test'),
-    [ '~test' => $file ]
-);
+$parser = new parser(fs::tmppath('dev.test'));
 return assert::equals(
-    $processed,
+    $parser->template($file),
     <<<'EXPECT'
-<?php
-namespace tplp\template\test;
-?><?php if (!count($posts) and !count($comments)): ?>
+<?php if (!count($posts) and !count($comments)): ?>
 <?php endif; ?>
 <?php if ($one and ($two or ($three and $four or ($five and $six))) and $seven): ?>
 <?php endif; ?>

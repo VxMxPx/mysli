@@ -39,17 +39,13 @@ _MODULES;
 #: Test Import Do
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #: Use File
-$processed = parser::file(
-    '~test.tpl.html',
-    fs::tmppath('dev.test'),
-    [ '~test' => $base, '_modules' => $_modules ]
-);
+$parser = new parser(fs::tmppath('dev.test'));
+$parser->replace('_modules.tpl.php', $parser->template($_modules));
+$parsed = $parser->template($base);
 return assert::equals(
-    $processed,
+    $parser->extend($parsed),
     <<<'EXPECT'
-<?php
-namespace tplp\template\test;
-?><!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
     <title><?php echo $title; ?></title>

@@ -17,15 +17,11 @@ FILE;
 #: Test Escape String Block
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #: Use File
-$processed = parser::file(
-    '~test.tpl.html', fs::tmppath('dev.test'), [ '~test' => $file ]
-);
+$parser = new parser(fs::tmppath('dev.test'));
 return assert::equals(
-    $processed,
+    $parser->template($file),
     <<<'EXPECT'
-<?php
-namespace tplp\template\test;
-?><?php foreach ($tplp_func_funct('param') as $item): ?>
+<?php foreach ($tplp_func_funct('param') as $item): ?>
 <?php endforeach; ?>
     <?php if ($one !== 'value'): ?>
     <?php endif; ?>
