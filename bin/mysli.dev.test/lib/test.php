@@ -629,6 +629,7 @@ namespace mysli\dev\test; class test
      */
     static function error_handler($severity, $message, $file, $line, $context)
     {
+        $message = $message . "\nFile: {$file} on {$line}.";
         throw new \ErrorException($message, 0, $severity, $file, $line);
     }
 }
