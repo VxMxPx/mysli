@@ -1,3 +1,3 @@
 <?php
 
-namespace mysli\tplp\exception; class parser extends \mysli\toolkit\exception\base {}
+namespace mysli\tplp\exception; class template extends \mysli\toolkit\exception\base {}
