@@ -5,68 +5,190 @@ namespace mysli\tplp; class parser
     const __use = '
         mysli.toolkit.{
             fs.fs    -> fs,
-            type.str -> str,
-            fs.file  -> file
+            fs.dir   -> dir,
+            fs.file  -> file,
+            type.str -> str
         }
         .{ exception.parser }
     ';
 
     /**
-     * Parse particular file (this will generate proper output with
-     * namespaces, etc..)
+     * Construct parser.
+     * --
+     * @param string $root Template root directory.
+     * --
+     * @throws mysli\tplp\exception\parser 10 No such directory.
+     */
+    function __construct($root)
+    {
+        if (!dir::exists($root))
+            throw new exception\parser("No such directory: `{$root}`.", 10);
+
+        $this->root = $root;
+    }
+
+    /*
+    --- Entry Process ----------------------------------------------------------
+     */
+
+    /**
+     * Process a particular template file.
      * --
      * @param string $file
-     * @param string $root
-     * @param array  $replace
-     *        List of `virtual` files, those might be loaded from different
-     *        location or not at all. This is meant for overrides of templates.
-     *        Array needs to be in following format:
-     *        [
-     *            // This will replace `file-name` file, with file from:
-     *            // $root.$replace_file_name
-     *            'file-name' => [ string $root, string $replace_file_name ],
-     *            // Or...
-     *            // Simply use string, this will not load file from file-system
-     *            // but rather just provided string.
-     *            'file-name' => 'Template',
-     *        ]
+     *        Action will be determent from file extension.
+     *        If extension is `.tpl.php` extend will be called.
+     *        If extension is `.tpl.html` template will be called.
+     *        In any other case, exception.
      *
      * --
+     * @throws mysli\tplp\exception\parser  9 Invalid file extension.
      * @throws mysli\tplp\exception\parser 10 Template file not found.
      * --
      * @return string
      */
-    static function file($file, $root, array $replace=[])
+    function file($file)
     {
-        $fullpath = fs::ds($root, $file);
-        $filenoext = strtolower(substr($file, 0, -9)); // .tpl.html
+        // Check file extension
+        if (substr($file, -9) === '.tpl.html')
+        {
+            $action = 'template';
+            $filenoext = strtolower(substr($file, 0, -9)); // .tpl.html
+        }
+        elseif (substr($file, -8) === '.tpl.php')
+        {
+            $action = 'extend';
+            $filenoext = strtolower(substr($file, 0, -8)); // .tpl.php
+        }
+        else
+            throw new exception\parser(
+                "Invalid template extension: `{$file}`. ".
+                "Allowed: `.tpl.html` or `.tpl.php`.", 9
+            );
 
-        if (!file::exists($fullpath) && !isset($replace[$filenoext]))
+        // Set full absolute path
+        $fullpath = fs::ds($this->root, $file);
+
+        // Either file can be loaded from replaced or it must exists in FS...
+        if (!file::exists($fullpath) && !isset($this->replace[$file]))
         {
             throw new exception\parser(
                 "Template file not found: `{$fullpath}`", 10
             );
         }
 
-        // Parse file
-        $uses = [];
-        $parsed = static::parse($fullpath, $uses, [], null, $replace);
-
-        // Generate namespace
-        $namespace = str::clean($filenoext, '<[^a-z0-9\/]+>');
-        $namespace = str_replace('/', '\\', $namespace);
-        $namespace = "tplp\\template\\{$namespace}";
-
-        // Process uses
-        $use = '';
-
-        foreach ($uses as $usear)
+        // Overrides?
+        if (isset($this->replace[$file]) && !is_array($this->replace[$file]))
         {
-            $use .= $usear['statement'] . "\n";
+            $template = $this->replace[$file];
+        }
+        else
+        {
+            if (isset($this->replace[$file]) && is_array($this->replace[$file]))
+                $fullpath = implode('/', $replace[$file]);
+
+            $template = file::read($fullpath);
         }
 
-        // Final file format
-        return "<?php\nnamespace {$namespace};\n{$use}?>{$parsed}";
+        // Create namespace...
+        if ($action === 'extend')
+        {
+            $namespace = str::clean($filenoext, '<[^a-z0-9\/]+>');
+            $namespace = str_replace('/', '\\', $namespace);
+            $namespace = "tplp\\template\\{$namespace}";
+        }
+        else
+            $namespace = null;
+
+        return $this->{$action}($template, $namespace);
+    }
+
+    /**
+     * Resolve all includes for particular template. This can be a regular `tpl`
+     * template, or pre-processed PHP file (result of `$static=false`).
+     * --
+     * @param string $template
+     * --
+     * @return string
+     */
+    function extend($template, $namespace=null)
+    {
+        $parsed = $this->parse_extend($template);
+        $header = $this->make_header($namespace, []);
+        return $header.$parsed;
+    }
+
+    /**
+     * Process a particular template string. This will not read file from disk.
+     * --
+     * @param string $template
+     * @param string $namespace Define costume namespace.
+     * --
+     * @return string
+     */
+    function template($template, $namespace=null)
+    {
+        list($uses, $parsed) = $this->parse($template);
+        $header = $this->make_header($namespace, $uses);
+        return $header.$parsed;
+    }
+
+    /*
+    --- Other ------------------------------------------------------------------
+     */
+
+    /**
+     * Replace a particular template with another (override) or set a template
+     * that doesn't exists in a file system.
+     * --
+     * @param string $file File name to be replaced (with extension!)
+     * @param mixed  $with
+     *        What to replace file with:
+     *            array  [ string $root, string $file ] File will be loaded.
+     *            string $template To be used as an replacement.
+     */
+    function replace($file, $with)
+    {
+        $this->replace[$file] = $with;
+    }
+
+    /**
+     * Set new build-in function.
+     * Build-in functions will be translated to the native PHP function when
+     * template is processed.
+     *
+     * They can be very simple, like `isset`, which would work in following way:
+     *
+     *     {name|isset} => <?php isset($name); ?>
+     *
+     * Or complex, like for example `contains`:
+     *
+     *     {variable|contains:'cat'} =>>
+     *     <?php ( (is_array($variable)
+     *         ? in_array('cat', $variable)
+     *         : strpos('cat', $variable)) !== false );
+     *     ?>
+     *
+     * For examples (@see static::$default_functions)
+     * --
+     * @param string $name
+     *        Name of the function in template, for example `isset`.
+     *
+     * @param string $replace
+     *        Replacement for the function, if name would be `isset`, then
+     *        replacement could be, for example `isset(%seg)`, this must be
+     *        a native PHP function, with arguments assigned.
+     *        Following arguments are accepted:
+     *
+     *        %seg Segment right before function in template, for example, in
+     *             case of `isset` --- `{variable|isset}`, would translate to:
+     *             `isset($variable)`.
+     *        %1   First (or %Nth) required argument. If this argument is
+     *             missing, template parsing will failed with an error.
+     *        ...  All other (optional) arguments to be passed to the function.
+     */
+    function set_function($name, $replace)
+    {
+        $this->user_functions[$name] = $replace;
     }
 
     /*
@@ -74,13 +196,242 @@ namespace mysli\tplp; class parser
      */
 
     /**
+     * Resolve extend statements.
+     * --
+     * @param string $template
+     * --
+     * @return string
+     */
+    protected function parse_extend($template)
+    {
+        /*
+        ::import [module] from [do ... ::/import]
+         */
+        $template = preg_replace_callback(
+            '/^[ \t]*?'.
+            '::import (?<id>[a-z0-9\-_\.\/]+)'.
+            '(?: from (?<from>[a-z0-9\-_\.\/]+))?'.
+            '(?: do(?<do>.*?)::\/import)?$/ms',
+            function ($match)
+            {
+                if (isset($match['from']))
+                {
+                    $module = $match['id'];
+                    $file = $match['from'];
+                }
+                else
+                {
+                    $module = null;
+                    $file = $match['id'];
+                }
+
+                // Extract set...
+                if (isset($match['do']))
+                    $set = $this->extract_set($match['do']);
+                else
+                    $set = [];
+
+                // Load file
+                list($type, $template) = $this->load_file($file);
+
+                // Extract module
+                if ($module)
+                    $template = $this->extract_module($template, $module);
+
+                // Process
+                if ($type === 'html')
+                    $template = $this->template($template);
+                else
+                    $template = $this->parse_extend($template);
+
+                // Resolve prints and return
+                if (!empty($set))
+                    return $this->resolve_print($template, $set);
+                else
+                    return $template;
+            },
+            $template
+        );
+
+        /*
+        ::extend file set region [do ... ::/extend]
+         */
+        $extends = [];
+        $template = preg_replace_callback(
+            '/^[ \t]*?'.
+            '::extend (?<file>[a-z0-9\-_\.\/]+)'.
+            '(?: set (?<set>[a-z0-9\-_]+))'.
+            '(?: do(?<do>.*?)::\/extend)?$/ms',
+            function ($match) use (&$extends)
+            {
+                $extends[] = $match;
+                return '';
+            },
+            $template
+        );
+
+        // If no matches, return right now...
+        if (empty($extends))
+            return $template;
+
+        // Proceed
+        foreach ($extends as $extend)
+        {
+            // Set file
+            $file = $extend['file'];
+
+            // Initialize set
+            $set = [
+                $extend['set'] => trim(rtrim($template), "\n")
+            ];
+
+            // Extract sets...
+            if (isset($extend['do']))
+                $set = array_merge($this->extract_set($extend['do']), $set);
+
+            // Load master file...
+            list($type, $master) = $this->load_file($file);
+
+            // Process
+            if ($type === 'html')
+                $master = $this->template($master);
+            else
+                $master = $this->parse_extend($master);
+
+            // Resolve print and return
+            $template = $this->resolve_print($master, $set);
+        }
+
+        return $template;
+    }
+
+    /**
+     * Extract set chunks.
+     * --
+     * @param  string $template
+     * --
+     * @return array
+     */
+    protected function extract_set($template)
+    {
+        $set = [];
+        $r = preg_match_all(
+            '/^[ \t]*?::set (?<name>[a-z0-9\-_]+)(?<contents>.*?)::\/set$/ms',
+            $template,
+            $matches,
+            PREG_SET_ORDER
+        );
+
+        if ($r)
+        {
+            foreach ($matches as $match)
+                $set[$match['name']] = trim(rtrim($match['contents']), "\n");
+        }
+
+        return $set;
+    }
+
+    /**
+     * Resolve print regions...
+     * --
+     * @param  string $template
+     * @param  array  $set
+     * --
+     * @return string
+     */
+    protected function resolve_print($template, array $set)
+    {
+        return
+        preg_replace_callback(
+            '/^[ \t]*?::print ([a-z0-9\-_]+)$/m',
+            function ($match) use ($set)
+            {
+                if (isset($set[$match[1]]))
+                    return $set[$match[1]];
+            },
+            $template
+        );
+    }
+
+    /**
+     * Load a file from root, or find it in overwrites.
+     * This will look for: `.tpl.php`, then `.tpl.html`.
+     * --
+     * @param string $file With no extension.
+     * --
+     * @throws mysli\tplp\exception\parser 10 File not found.
+     * --
+     * @return array
+     *         [ string $type, string $contents ]
+     *         ... where `$type` can be `php` or `html`.
+     *
+     */
+    protected function load_file($file)
+    {
+        // See if should be replaced as php...
+        if (isset($this->replace["{$file}.tpl.php"]))
+        {
+            $type = 'php';
+            $replace = $this->replace["{$file}.tpl.php"];
+            if (is_array($replace))
+                $contents = file::read(implode('/', $replace));
+            else
+                $contents = $replace;
+        }
+        elseif (isset($this->replace["{$file}.tpl.html"]))
+        {
+            $type = 'html';
+            $replace = $this->replace["{$file}.tpl.html"];
+            if (is_array($replace))
+                $contents = file::read(implode('/', $replace));
+            else
+                $contents = $replace;
+        }
+        elseif (file::exists("{$this->root}/{$file}.tpl.php"))
+        {
+            $type = 'php';
+            $contents = file::read("{$this->root}/{$file}.tpl.php");
+        }
+        elseif (file::exists("{$this->root}/{$file}.tpl.php"))
+        {
+            $type = 'html';
+            $contents = file::read("{$this->root}/{$file}.tpl.html");
+        }
+        else
+            throw new exception\parser("File not found: `{$file}`.", 10);
+
+        return [ $type, $contents ];
+    }
+
+    /**
+     * Find module in a template.
+     * --
+     * @param  string $template
+     * @param  string $module
+     * --
+     * @throws mysli\tplp\exception\parser Module not found.
+     * --
+     * @return string
+     */
+    protected function extract_module($template, $module)
+    {
+        $search = preg_match(
+            '/^::module '.preg_quote($module, '/').'$\s(.*?)\s^::\/module$/ms',
+            $template,
+            $match
+        );
+
+        if ($search)
+            return $match[1];
+        else
+            throw new exception\parser("Module `{$module}` not found.", 10);
+    }
+
+    /**
      * Process template.
      * --
      * @param string $filename
-     * @param string $uses
-     * @param array  $sets
      * @param string $module  Weather to select only particular module in file.
-     * @param array  $replace (@see static::file())
      * --
      * @throws mysli\tplp\exception\parser
      *         10 Module not found.
@@ -95,18 +446,6 @@ namespace mysli\tplp; class parser
      *         40 `::let` is already opened on line...
      *
      * @throws mysli\tplp\exception\parser
-     *         50 `::set` must be wrapped with `::extend` or `::import`.
-     *
-     * @throws mysli\tplp\exception\parser
-     *         60 Closed `::/set` tag before it was opened.
-     *
-     * @throws mysli\tplp\exception\parser
-     *         70 Trying to close unopened tag.
-     *
-     * @throws mysli\tplp\exception\parser
-     *         80 Unclosed `::set` statement.
-     *
-     * @throws mysli\tplp\exception\parser
      *         81 Unclosed statement.
      *
      * @throws mysli\tplp\exception\parser
@@ -118,31 +457,12 @@ namespace mysli\tplp; class parser
      * @throws mysli\tplp\exception\parser
      *         84 Unclosed region.
      * --
-     * @return string
+     * @return array [ array $uses, string $output ]
      */
-    protected static function parse(
-        $filename, array &$uses=[], array $sets=[], $module=null, array $replace=[])
+    protected function parse($template, $module=null)
     {
-        // Overrides?
-        $filenoext = substr(basename($filename), 0, -9);
-        if (isset($replace[$filenoext]) && !is_array($replace[$filenoext]))
-        {
-            $template = $replace[$filenoext];
-        }
-        else
-        {
-            if (isset($replace[$filenoext]) && is_array($replace[$filenoext]))
-                $filename = implode('/', $replace[$filenoext]);
-
-            $template = file::read($filename);
-        }
-
         $template = str::to_unix_line_endings($template);
-
-        // Dir name and
-        // sfpath, used only in error messages...
-        $dirname = dirname($filename);
-        $sfpath = $filename;
+        $uses = [];
 
         if ($module)
         {
@@ -154,9 +474,7 @@ namespace mysli\tplp; class parser
             }
             else
             {
-                throw new exception\parser(
-                    "Module `{$module}` not found in `{$sfpath}`", 10
-                );
+                throw new exception\parser("Module `{$module}` not found.", 10);
             }
         }
 
@@ -168,8 +486,6 @@ namespace mysli\tplp; class parser
         // imports (::import)
         // let (::let)
         $output  = [];
-        $extends = [];
-        $imports = [];
         $let     = false;
 
         $in_curr_line = 0;
@@ -193,7 +509,7 @@ namespace mysli\tplp; class parser
         foreach ($lines as $lineno => $line)
         {
             // Find ::/let closed
-            if (static::find_close_let($line))
+            if ($this->find_close_let($line))
             {
                 if (!$let)
                 {
@@ -202,7 +518,7 @@ namespace mysli\tplp; class parser
                     );
                 }
 
-                $p = static::process_let($let['lines'], $let['set']);
+                $p = $this->process_let($let['lines'], $let['set']);
                 $output[] = "<?php {$let['id']} = {$p}; ?>";
                 $let = false;
                 unset($p);
@@ -217,11 +533,11 @@ namespace mysli\tplp; class parser
             }
 
             // Escape \{ and \}
-            $line = static::escape_curly_brackets($line, true);
+            $line = $this->escape_curly_brackets($line, true);
 
             // Check block region for close *} and }}}
             // If block was closed, it will be added to the output
-            if (($endblock = static::find_end_block($line, $block)))
+            if (($endblock = $this->find_end_block($line, $block)))
             {
                 $output[] = $endblock;
             }
@@ -237,23 +553,15 @@ namespace mysli\tplp; class parser
             }
 
             // Escape single quotes inside curly brackets {''}
-            $line = static::escape_single_quotes($line, true);
+            $line = $this->escape_single_quotes($line, true);
 
             // Find block regions {{{ and {*
-            static::find_block_regions($line, $lineno, $block);
+            $this->find_block_regions($line, $lineno, $block);
 
             try
             {
-                // Find ::print regions
-                list($line, $break) = static::find_print($line, $sets);
-                if ($break)
-                {
-                    $output[] = $line;
-                    continue;
-                }
-
                 // Find ::let (opened)
-                if (($let_o = static::find_let($line)))
+                if (($let_o = $this->find_let($line)))
                 {
                     if ($in_curr || $in_set)
                     {
@@ -277,9 +585,9 @@ namespace mysli\tplp; class parser
 
                     if ($let['closed'])
                     {
-                        $p = static::find_var_and_func($let['lines']);
-                        $p = static::escape_single_quotes($p, false);
-                        $p = static::escape_curly_brackets($p, false);
+                        $p = $this->find_var_and_func($let['lines']);
+                        $p = $this->escape_single_quotes($p, false);
+                        $p = $this->escape_curly_brackets($p, false);
                         $output[] = "<?php {$let['id']} = {$p}; ?>";
                         $let = false;
                         unset($p);
@@ -292,120 +600,23 @@ namespace mysli\tplp; class parser
                     continue;
                 }
 
-                // Find ::set opened
-                if (($id = static::find_open_set($line)))
-                {
-                    if ($in_curr === false)
-                    {
-                        throw new exception\parser(
-                            "`::set` must be wrapped with `::extend` or `::import`",
-                            50
-                        );
-                    }
-
-                    $in_set_line = $lineno;
-                    $in_curr['set'][$id] = [];
-                    $in_set = &$in_curr['set'][$id];
-                    continue;
-                }
-
-                // Find ::set closed
-                if (static::find_close_set($line))
-                {
-                    if ($in_set === false)
-                    {
-                        throw new exception\parser(
-                            "Closed `::/set` tag before it was opened.", 60
-                        );
-                    }
-
-                    $in_set = implode("\n", $in_set);
-                    unset($in_set);
-                    $in_set = false;
-                    continue;
-                }
-
-                // Find closed ::extend or ::import
-                if (($type = static::find_extend_import_close($line)))
-                {
-                    if ($in_curr === false)
-                    {
-                        throw new exception\parser(
-                            "Trying to close unopened tag.", 70
-                        );
-                    }
-
-                    if ($type === 'import')
-                    {
-                        $output[] = static::handle_import(
-                            $in_curr['file'],
-                            $uses,
-                            $in_curr['set'],
-                            $in_curr['module'],
-                            $dirname,
-                            $replace
-                        );
-                    }
-
-                    unset($in_curr);
-                    $in_curr = false;
-                    continue;
-                }
-
                 // Find ::use statements
-                if (($id = static::find_use($line, $uses)))
+                if (($id = $this->find_use($line, $uses)))
                 {
                     $uses[$id]['debug'][] = [
-                        'lines' => err_lines($lines, $lineno),
-                        'file'  => $sfpath
+                        'lines' => err_lines($lines, $lineno)
                     ];
                     continue;
                 }
 
-                // Find ::extend statements
-                if (($id = static::find_extend($line, $extends)))
-                {
-                    if ($extends[$id]['open'])
-                    {
-                        $in_curr_line = $lineno;
-                        $in_curr = &$extends[$id];
-                    }
-
-                    $extends[$id]['line'] = $lineno;
-                    continue;
-                }
-
-                // Find ::import statements
-                if (($id = static::find_import($line, $imports)))
-                {
-                    if ($imports[$id]['open'])
-                    {
-                        $in_curr_line = $lineno;
-                        $in_curr = &$imports[$id];
-                    }
-                    else
-                    {
-                        $output[] = static::handle_import(
-                            $imports[$id]['file'],
-                            $uses,
-                            $imports[$id]['set'],
-                            $imports[$id]['module'],
-                            $dirname,
-                            $replace
-                        );
-                    }
-
-                    continue;
-                }
-
                 // Find inline if {var if var else 'No-var'}
-                $line = static::find_inline_if($line);
+                $line = $this->find_inline_if($line);
 
                 // Find variables and functions
-                $line = static::find_var_and_func($line);
+                $line = $this->find_var_and_func($line);
 
                 // Find ::if and ::elif
-                list($line, $opened) = static::find_if($line);
+                list($line, $opened) = $this->find_if($line);
                 if ($opened)
                 {
                     $open_tags['if'][0]++;
@@ -413,14 +624,14 @@ namespace mysli\tplp; class parser
 
                 }
                 // Find: ::else ::/if ::/for ::break ::continue
-                list($line, $closed) = static::find_special_tags($line);
+                list($line, $closed) = $this->find_special_tags($line);
                 if (array_key_exists($closed, $open_tags))
                 {
                     $open_tags[$closed][0]--;
                 }
 
                 // Find: ::for <id>, <var> in <collection>
-                list($line, $opened) = static::find_for($line);
+                list($line, $opened) = $this->find_for($line);
                 if ($opened)
                 {
                     $open_tags['for'][0]++;
@@ -428,19 +639,19 @@ namespace mysli\tplp; class parser
                 }
 
                 // Translation key: {@TRASNLATE}, {@TR(n)}, {@TR var}
-                $line = static::find_translation($line);
+                $line = $this->find_translation($line);
             }
             catch (\Exception $e)
             {
                 throw new exception\parser(
-                    f_error($lines, $lineno, $e->getMessage(), $sfpath),
+                    f_error($lines, $lineno, $e->getMessage()),
                     $e->getCode()
                 );
             }
 
             // Restore escaped curly brackets and single quotes
-            $line = static::escape_curly_brackets($line, false);
-            $line = static::escape_single_quotes($line, false);
+            $line = $this->escape_curly_brackets($line, false);
+            $line = $this->escape_single_quotes($line, false);
 
             // Add the block
             if ($block['contents'])
@@ -463,18 +674,10 @@ namespace mysli\tplp; class parser
             }
         }
 
-        if ($in_set !== false)
-        {
-            throw new exception\parser(
-                f_error($lines, $in_set_line, "Unclosed `::set` statement.", $sfpath),
-                80
-            );
-        }
-
         if ($in_curr !== false)
         {
             throw new exception\parser(
-                f_error($lines, $in_curr_line, "Unclosed statement.", $sfpath),
+                f_error($lines, $in_curr_line, "Unclosed statement."),
                 81
             );
         }
@@ -482,7 +685,7 @@ namespace mysli\tplp; class parser
         if ($open_tags['if'][0] > 0)
         {
             throw new exception\parser(
-                f_error($lines, $open_tags['if'][1], "Unclosed `::if` statement.", $sfpath),
+                f_error($lines, $open_tags['if'][1], "Unclosed `::if` statement."),
                 82
             );
         }
@@ -490,7 +693,7 @@ namespace mysli\tplp; class parser
         if ($open_tags['for'][0] > 0)
         {
             throw new exception\parser(
-                f_error($lines, $open_tags['for'][1], "Unclosed `::for` statement.", $sfpath),
+                f_error($lines, $open_tags['for'][1], "Unclosed `::for` statement."),
                 83
             );
         }
@@ -498,7 +701,7 @@ namespace mysli\tplp; class parser
         if ($block['close'])
         {
             throw new exception\parser(
-                f_error($lines, $block['start'], "Unclosed region.", $sfpath),
+                f_error($lines, $block['start'], "Unclosed region."),
                 84
             );
         }
@@ -506,38 +709,46 @@ namespace mysli\tplp; class parser
         // Implode output
         $output = implode("\n", $output);
 
-        // Process extends
-        if (!empty($extends))
-        {
-            foreach ($extends as $extfile => $extend)
-            {
-                // Set own output as set
-                $extend['set'][$extend['self']] = $output;
+        return [ $uses, $output ];
+    }
 
-                // Try to include and parse file
-                try
-                {
-                    $output = static::handle_import(
-                        // $file, $uses, $set,        $module, $dir,     $replace
-                        $extfile, $uses, $extend['set'], null, $dirname, $replace
-                    );
-                    // $path = static::resolve_relative_path($extfile, $dirname);
-                    // $output = static::parse(
-                    //     $path, $uses, $extend['set'], null, $replace
-                    // );
-                }
-                catch (\Exception $e)
-                {
-                    throw new exception\parser(
-                        f_error($lines, $extend['line'], $e->getMessage()),
-                        $e->getCode()
-                    );
-                }
-            }
+    /**
+     * Make file header (add namespace and use statements).
+     * --
+     * @param  string $namespace
+     * @param  array  $uses
+     * --
+     * @return string
+     */
+    protected function make_header($namespace, array $uses)
+    {
+        // Process uses
+        $use = [];
+        foreach ($uses as $usear)
+            $use[] = $usear['statement'];
+
+        // Define header
+        $header = [];
+
+        // Add NAMESPACE
+        if ($namespace)
+        {
+            $header[] = "// NAMESPACE:";
+            $header[] = "namespace {$namespace};";
         }
 
-        return $output;
+        // Add USE\
+        if (!empty($use))
+        {
+            $header = array_merge($header, $use);
+        }
+
+        if (!empty($header))
+            return "<?php\n".implode("\n", $header)."\n?>";
+        else
+            return '';
     }
+
 
     /**
      * Find `::let`.
@@ -557,14 +768,14 @@ namespace mysli\tplp; class parser
      *         [ string id, boolean closed, string lines ] if found,
      *         false otherwise
      */
-    protected static function find_let($line)
+    protected function find_let($line)
     {
         if (preg_match(
             '/^[ \t]*?::let ([a-z0-9_]+)( set (.*?))?( \= (.*?))?( do)?$/',
             $line, $match))
         {
             $result = ['lines' => [], 'set' => false];
-            $result['id'] = static::parse_variable(trim($match[1]));
+            $result['id'] = $this->parse_variable(trim($match[1]));
 
             if (count($match) < 3)
             {
@@ -632,7 +843,7 @@ namespace mysli\tplp; class parser
      * --
      * @return string
      */
-    protected static function process_let(array $lines, $set)
+    protected function process_let(array $lines, $set)
     {
         if (strpos($set, '('))
         {
@@ -711,140 +922,11 @@ namespace mysli\tplp; class parser
      * --
      * @return boolean
      */
-    protected static function find_close_let($line)
+    protected function find_close_let($line)
     {
         return preg_match('/^[ \t]*?::\\/let?$/', $line);
     }
 
-    /**
-     * Find `::print <content>` regions.
-     * --
-     * @param string $line
-     * @param array  $sets
-     * --
-     * @return array [ string $line, boolean $break ]
-     */
-    protected static function find_print($line, array $sets)
-    {
-        if (preg_match('/^[ \t]*?::print ([a-z0-9_]+)$/', $line, $match))
-        {
-            if (isset($sets[$match[1]]))
-            {
-                return [$sets[$match[1]], true];
-            }
-            else
-            {
-                return ['', true];
-            }
-        }
-
-        return [$line, false];
-    }
-
-    /**
-     * Find open `::set`.
-     * --
-     * @param string $line
-     * --
-     * @return string Id if found, null otherwise.
-     */
-    protected static function find_open_set($line)
-    {
-        if (preg_match('/^[ \t]*?::set ([a-z0-9_]+)$/', $line, $match))
-        {
-            return trim($match[1]);
-        }
-    }
-
-    /**
-     * Find closed `::/set`.
-     * --
-     * @param string $line
-     * --
-     * @return boolean
-     */
-    protected static function find_close_set($line)
-    {
-        return preg_match('/^[ \t]*?::\\/set?$/', $line);
-    }
-
-    /**
-     * Find close for import and extend: `::/extend` `::/import`.
-     * --
-     * @param string $line
-     * --
-     * @return boolean
-     */
-    protected static function find_extend_import_close($line)
-    {
-        if (preg_match('/^[ \t]*?::\/(import|extend)?$/', $line, $match))
-        {
-            return $match[1];
-        }
-    }
-
-    /**
-     * Find `::import` statements.
-     * --
-     * @param string $line
-     * @param array  $extend
-     * --
-     * @return string Id is found, null otherwise.
-     */
-    protected static function find_import($line, array &$extend)
-    {
-        if (preg_match(
-            '/^[ \t]*?::import ([a-z0-9_\.\/]+)(?: from ([a-z0-9_\.\/]+))?( do)?$/',
-            $line, $match))
-        {
-            if (isset($match[2]) && $match[2] !== ' do')
-            {
-                $module = $match[1];
-                $id = trim($match[2]);
-                $open = isset($match[3]) ? true : false;
-            }
-            else
-            {
-                $module = false;
-                $id = $match[1];
-                $open = isset($match[2]) ? true : false;
-            }
-
-            $extend[$id] = [
-                'file'   => $id,
-                'open'   => $open,
-                'module' => $module,
-                'set'    => []
-            ];
-
-            return $id;
-        }
-    }
-
-    /**
-     * Find `::extend` statements.
-     * --
-     * @param string $line
-     * @param array  $extend
-     * --
-     * @return string Id if found, null otherwise.
-     */
-    protected static function find_extend($line, array &$extend)
-    {
-        if (preg_match(
-            '/^[ \t]*?::extend ([a-z0-9_\.\/]+) set ([a-z0-9_]+)( do)?$/',
-            $line, $match))
-        {
-            $id = trim($match[1]);
-            $extend[$id] = [
-                'open' => isset($match[3]),
-                'self' => trim($match[2]),
-                'set'  => []
-            ];
-
-            return $id;
-        }
-    }
 
     /**
      * Find `::use` statements.
@@ -856,7 +938,7 @@ namespace mysli\tplp; class parser
      * --
      * @return string Id if found, null otherwise.
      */
-    protected static function find_use($line, array &$uses)
+    protected function find_use($line, array &$uses)
     {
         // Find ::use vendor.package( -> name)?
         if (preg_match(
@@ -866,20 +948,16 @@ namespace mysli\tplp; class parser
             $use = $match[1];
 
             if (!isset($match[2]))
-            {
                 $as = substr($use, strrpos($use, '.')+1);
-            }
             else
-            {
                 $as = $match[2];
-            }
 
             if (isset($uses[$as]))
             {
                 if ($uses[$as]['use'] !== $use)
                 {
                     throw new exception\parser(
-                        static::f_error_use($use, $as, $uses[$as]['debug']), 10
+                        $this->f_error_use($use, $as, $uses[$as]['debug']), 10
                     );
                 }
             }
@@ -902,12 +980,12 @@ namespace mysli\tplp; class parser
      * --
      * @return string
      */
-    protected static function find_translation($line)
+    protected function find_translation($line)
     {
         return preg_replace_callback('/{(@.*?)}/',
             function ($match)
             {
-                $parsed = static::parse_translation($match[1]);
+                $parsed = $this->parse_translation($match[1]);
                 return "<?php echo {$parsed}; ?>";
             },
             $line
@@ -921,7 +999,7 @@ namespace mysli\tplp; class parser
      * --
      * @return array [ string $line, boolean $opened ]
      */
-    protected static function find_for($line)
+    protected function find_for($line)
     {
         $opened = false;
         $line = preg_replace_callback(
@@ -933,15 +1011,15 @@ namespace mysli\tplp; class parser
 
                 try
                 {
-                    $key = static::parse_variable(trim($match[1], ', '));
+                    $key = $this->parse_variable(trim($match[1], ', '));
                 }
                 catch (\Exception $e)
                 {
                     // Pass
                 }
 
-                $val = static::parse_variable($match[2]);
-                $var = static::parse_variable_with_functions($match[3]);
+                $val = $this->parse_variable($match[2]);
+                $var = $this->parse_variable_with_functions($match[3]);
                 $exp = $key ? "{$key} => {$val}" : $val;
                 $opened = true;
 
@@ -983,7 +1061,7 @@ namespace mysli\tplp; class parser
      * --
      * @return array [ string $line, string $type ]
      */
-    protected static function find_special_tags($line)
+    protected function find_special_tags($line)
     {
         $type = '';
         $line = preg_replace_callback(
@@ -1022,7 +1100,7 @@ namespace mysli\tplp; class parser
      * --
      * @return string
      */
-    protected static function parse_logical_expression($expression)
+    protected function parse_logical_expression($expression)
     {
         return preg_replace_callback(
             '/(\\|\\| |&& |OR |AND )?'. // ) and ...
@@ -1062,7 +1140,7 @@ namespace mysli\tplp; class parser
 
                 if ($variable)
                 {
-                    $variable = static::parse_variable_with_functions($variable);
+                    $variable = $this->parse_variable_with_functions($variable);
                 }
 
                 return trim($logical_before . $mod . $variable . $logical) . ' ';
@@ -1078,7 +1156,7 @@ namespace mysli\tplp; class parser
      * --
      * @return string
      */
-    protected static function find_inline_if($line)
+    protected function find_inline_if($line)
     {
         return preg_replace_callback(
             '/{(.*?) if (.*?)(?: else (.*?))?}/',
@@ -1088,11 +1166,11 @@ namespace mysli\tplp; class parser
 
                 if (substr($var[0], 0, 1) === '@')
                 {
-                    $var[0] = static::parse_translation($var[0]);
+                    $var[0] = $this->parse_translation($var[0]);
                 }
                 else
                 {
-                    $var[0] = static::parse_variable_with_functions($var[0]);
+                    $var[0] = $this->parse_variable_with_functions($var[0]);
                 }
 
                 $var[1] = isset($match[3]) ? trim($match[3]) : '';
@@ -1101,15 +1179,15 @@ namespace mysli\tplp; class parser
                 {
                     if (substr($var[1], 0, 1) === '@')
                     {
-                        $var[1] = static::parse_translation($var[1]);
+                        $var[1] = $this->parse_translation($var[1]);
                     }
                     else
                     {
-                        $var[1] = static::parse_variable_with_functions($var[1]);
+                        $var[1] = $this->parse_variable_with_functions($var[1]);
                     }
                 }
 
-                $expression = trim(static::parse_logical_expression($match[2]));
+                $expression = trim($this->parse_logical_expression($match[2]));
 
                 return "<?php echo ({$expression}) ? {$var[0]} : " .
                     ($var[1] ? $var[1] : "''") . "; ?>";
@@ -1125,7 +1203,7 @@ namespace mysli\tplp; class parser
      * --
      * @return array [ string $line, boolean $opened ]
      */
-    protected static function find_if($line)
+    protected function find_if($line)
     {
         $opened = false;
         $logical =
@@ -1133,7 +1211,7 @@ namespace mysli\tplp; class parser
             '/::(if|elif) (.*)/',
             function ($match) use (&$opened)
             {
-                $expression = static::parse_logical_expression($match[2]);
+                $expression = $this->parse_logical_expression($match[2]);
                 $type = ($match[1] === 'elif' ? 'elseif' : 'if');
                 // Line and opened status
                 $opened = ($type === 'if');
@@ -1158,7 +1236,7 @@ namespace mysli\tplp; class parser
      * --
      * @return string
      */
-    protected static function find_var_and_func($line)
+    protected function find_var_and_func($line)
     {
         $line = preg_replace_callback(
             '/\{(?=[^@])(.*?)\}/',
@@ -1176,7 +1254,7 @@ namespace mysli\tplp; class parser
                     $echo = 'echo ';
                 }
 
-                $var = static::parse_variable_with_functions(trim($match[1]));
+                $var = $this->parse_variable_with_functions(trim($match[1]));
 
                 if (trim($var) === '')
                 {
@@ -1202,7 +1280,7 @@ namespace mysli\tplp; class parser
      * --
      * @return null
      */
-    protected static function find_block_regions(&$line, $lineno, array &$block)
+    protected function find_block_regions(&$line, $lineno, array &$block)
     {
         // {{{
         while (strpos($line, '{{{') !== false)
@@ -1250,7 +1328,7 @@ namespace mysli\tplp; class parser
      * --
      * @return string
      */
-    protected static function find_end_block(&$line, array &$block)
+    protected function find_end_block(&$line, array &$block)
     {
         $output = false;
 
@@ -1280,7 +1358,7 @@ namespace mysli\tplp; class parser
      * --
      * @return string
      */
-    protected static function escape_curly_brackets($line, $protect)
+    protected function escape_curly_brackets($line, $protect)
     {
         if ($protect)
         {
@@ -1303,7 +1381,7 @@ namespace mysli\tplp; class parser
      * --
      * @return string
      */
-    protected static function escape_single_quotes_in($match)
+    protected function escape_single_quotes_in($match)
     {
         return preg_replace_callback(
             "/'(.*?)'/",
@@ -1325,7 +1403,7 @@ namespace mysli\tplp; class parser
      * --
      * @return string
      */
-    protected static function escape_single_quotes($line, $protect)
+    protected function escape_single_quotes($line, $protect)
     {
         if ($protect)
         {
@@ -1334,7 +1412,7 @@ namespace mysli\tplp; class parser
                 "/^([ \t]*?::[a-z]*? .*?)$/",
                 function ($match)
                 {
-                    return static::escape_single_quotes_in($match[1]);
+                    return $this->escape_single_quotes_in($match[1]);
                 },
                 $line
             );
@@ -1344,7 +1422,7 @@ namespace mysli\tplp; class parser
                 "/{(.*?)}/",
                 function ($match)
                 {
-                    return '{'.static::escape_single_quotes_in($match[1]).'}';
+                    return '{'.$this->escape_single_quotes_in($match[1]).'}';
                 },
                 $line
             );
@@ -1372,7 +1450,7 @@ namespace mysli\tplp; class parser
      * --
      * @return string
      */
-    protected static function parse_translation($string)
+    protected function parse_translation($string)
     {
         return preg_replace_callback(
             '/^@([A-Z0-9_]+)(?:\((.*?)\))?(.*?)$/',
@@ -1383,7 +1461,7 @@ namespace mysli\tplp; class parser
 
                 if (!is_numeric($plural))
                 {
-                    $plural = static::parse_variable_with_functions($plural);
+                    $plural = $this->parse_variable_with_functions($plural);
                 }
 
                 // Process variables
@@ -1393,7 +1471,7 @@ namespace mysli\tplp; class parser
                 {
                     try
                     {
-                        $var = static::parse_variable(trim($var));
+                        $var = $this->parse_variable(trim($var));
                     }
                     catch (\Exception $e)
                     {
@@ -1430,7 +1508,7 @@ namespace mysli\tplp; class parser
      * --
      * @return string
      */
-    protected static function parse_variable_with_functions($line)
+    protected function parse_variable_with_functions($line)
     {
         $line = trim($line);
 
@@ -1456,7 +1534,7 @@ namespace mysli\tplp; class parser
         if ($has_var)
         {
             $variable = array_shift($segments);
-            $variable = static::parse_variable($variable);
+            $variable = $this->parse_variable($variable);
         }
 
         $processed = '%seg';
@@ -1465,7 +1543,7 @@ namespace mysli\tplp; class parser
         foreach ($segments as $segment)
         {
             $processed = str_replace(
-                '%seg', static::parse_functions($segment), $processed
+                '%seg', $this->parse_functions($segment), $processed
             );
         }
 
@@ -1517,7 +1595,7 @@ namespace mysli\tplp; class parser
      * --
      * @return string
      */
-    protected static function parse_variable($variable)
+    protected function parse_variable($variable)
     {
         $variable = trim($variable);
 
@@ -1605,12 +1683,16 @@ namespace mysli\tplp; class parser
      * --
      * @return string
      */
-    protected static function parse_functions($function)
+    protected function parse_functions($function)
     {
         // Put function to meaningful pieces
         $function = trim($function);
         $segments = explode(':', $function);
         $function = trim(array_shift($segments));
+
+        $all_functions = array_merge(
+            static::$default_functions, $this->user_functions
+        );
 
         // Check if we any have segments...
         if (!isset($segments[0]))
@@ -1627,7 +1709,7 @@ namespace mysli\tplp; class parser
         {
             try
             {
-                $segments[$key] = static::parse_variable($segment);
+                $segments[$key] = $this->parse_variable($segment);
             }
             catch (\Exception $e)
             {
@@ -1636,9 +1718,9 @@ namespace mysli\tplp; class parser
         }
 
         // If it's one of the native function, then we'll set it as such...
-        if (isset(static::$functions[$function]))
+        if (isset($all_functions[$function]))
         {
-            $function = static::$functions[$function];
+            $function = $all_functions[$function];
 
             if (strpos($function, '%1') !== false)
             {
@@ -1724,7 +1806,7 @@ namespace mysli\tplp; class parser
      * --
      * @return string
      */
-    protected static function handle_import(
+    protected function handle_import(
         $file, array $uses, $set, $module, $dir, $replace)
     {
         if (isset($replace[$file]))
@@ -1735,10 +1817,10 @@ namespace mysli\tplp; class parser
                 $path = "{$dir}/{$file}.tpl.html";
         }
         else
-            $path = static::resolve_relative_path($file, $dir);
+            $path = $this->resolve_relative_path($file, $dir);
 
 
-        return static::parse(
+        return $this->parse(
             $path, $uses, $set, $module, $replace
         );
     }
@@ -1753,7 +1835,7 @@ namespace mysli\tplp; class parser
      * --
      * @return string
      */
-    protected static function resolve_relative_path($relative, $dir)
+    protected function resolve_relative_path($relative, $dir)
     {
         $path = realpath(fs::ds($dir, $relative.'.tpl.html'));
 
@@ -1772,14 +1854,14 @@ namespace mysli\tplp; class parser
      * --
      * @return string
      */
-    protected static function f_error_use($use, $as, array $previous_debug)
+    protected function f_error_use($use, $as, array $previous_debug)
     {
         $return = "Cannot use `{$use}` as `{$as}` because the name ".
         "is already previously declared in following location(s):\n";
 
         foreach ($previous_debug as $previous)
         {
-            $return .= $previous['lines']."File `{$previous['file']}`\n\n";
+            $return .= $previous['lines']."\n\n";
         }
 
         $return .= "ERROR:";
@@ -1791,7 +1873,40 @@ namespace mysli\tplp; class parser
     --- Properties -------------------------------------------------------------
      */
 
-    protected static $functions = [
+    /**
+     * Template's root directory.
+     * --
+     * @var string
+     */
+    protected $root;
+
+    /**
+     * Replaced files.
+     * --
+     * @var array
+     */
+    protected $replace = [];
+
+    /**
+     * Processed templates cache.
+     * --
+     * @var array
+     */
+
+    protected $cache = [];
+    /**
+     * Costume functions.
+     * --
+     * @var array
+     */
+    protected $user_functions = [];
+
+    /**
+     * Build in default functions.
+     * --
+     * @var array
+     */
+    protected static $default_functions = [
         "abs"           => "abs(%seg)",
         "ucfirst"       => "ucfirst(%seg)",
         "ucwords"       => "ucwords(%seg)",
@@ -1799,6 +1914,7 @@ namespace mysli\tplp; class parser
         "upper"         => "strtoupper(%seg)",
         "date"          => "date(%1, strtotime(%seg))",
         "join"          => "implode(%1, %seg)",
+        "isset"         => "isset(%seg)",
         "split"         => "explode(%1, %seg, ...)",
         "length"        => "strlen(%seg)",
         "word_count"    => "str_word_count(%seg)",
