@@ -19,37 +19,45 @@ namespace mysli\tplp; class template
      * --
      * @var string
      */
-    private $root;
+    protected$root;
 
     /**
      * Translator instance.
      * --
      * @var mixed
      */
-    private $translator;
+    protected$translator;
 
     /**
      * Variables set for this instance.
      * --
      * @var array
      */
-    private $variables = [];
+    protected$variables = [];
 
     /**
      * Replaced files.
      * --
      * @var array
      */
-    private $replace = [];
+    protected$replace = [];
+
+    /**
+     * Instance of parser.
+     * --
+     * @var mysli\tplp\parser
+     */
+    protected $parser;
 
     /**
      * Instance of template.
      * --
-     * @param string $root
+     * @param string $root Template's root directory.
      */
     function __construct($root)
     {
         $this->root = $root;
+        $this->parser = new parser($root);
     }
 
     /**
@@ -139,7 +147,7 @@ namespace mysli\tplp; class template
      * those will be made from the current root.
      * --
      * @param string $file
-     *        A file which is bring replaced (no extension).
+     *        A file which is bring replaced (with extension!!).
      *
      * @param mixed $with
      *        Array:
@@ -155,6 +163,7 @@ namespace mysli\tplp; class template
      */
     function replace($file, $with)
     {
+        $this->parser->replace($file, $with);
         $this->replace[$file] = $with;
     }
 
@@ -164,49 +173,12 @@ namespace mysli\tplp; class template
      * @param string $file
      * @param array  $variables
      * --
-     * @throws mysli\tplp\exception\template 10 File not found...
-     * @throws mysli\tplp\exception\template 20 Parsing failed...
-     * --
      * @return string
      */
     function render($file, array $variables=[])
     {
-        $parsed = $this->locate_parsed($file);
-
-        if (!$parsed)
-        {
-            $source = $this->locate_source($file);
-
-            if (!$source)
-                throw new exception\template(
-                    "File not found: `{$file}` for `{$this->root}`.", 10
-                );
-
-            // Parse...
-            try
-            {
-                $contents = parser::file($source[1], $source[0], $this->replace);
-            }
-            catch (\Exception $e)
-            {
-                throw new exception\template(
-                    "Parsing of file `{$file}` failed with message: ".
-                    $e->getMessage(), 20
-                );
-            }
-
-            // Save file to temporary folder
-            $tempfilename = $this->tmppath_from_file($source[1], $source[0]);
-            file::write(fs::tmppath('tplp', $tempfilename), $contents);
-
-            $parsed = [
-                fs::tmppath('tplp'),
-                $tempfilename,
-                fs::tmppath('tplp', $tempfilename)
-            ];
-        }
-
-        $file = $parsed[2];
+        // Find cached file / extend / parse file...
+        list($loaded, $file) = $this->get_file($file);
 
         // Assign variables...
         $variables = array_merge($this->variables, $variables);
@@ -217,15 +189,10 @@ namespace mysli\tplp; class template
         }
 
         ob_start();
-        if (isset($this->replace[$parsed[1]]) &&
-            is_string($this->replace[$parsed[1]]))
-        {
-            eval($this->replace[$parsed[1]]);
-        }
+        if ($loaded)
+            eval($file);
         else
-        {
             include($file);
-        }
         $result = ob_get_contents();
         ob_end_clean();
 
@@ -243,17 +210,74 @@ namespace mysli\tplp; class template
      */
     function has($file)
     {
-        if (file::exists("{$this->root}/{$file}.php"))
-            return true;
-        elseif (file::exists("{$this->root}/{$file}.tpl.html"))
-            return true;
-        else
-            return false;
+        return
+        file::exists("{$this->root}/{$file}.php") ||
+        file::exists("{$this->root}/{$file}.tpl.php") ||
+        file::exists("{$this->root}/{$file}.tpl.html");
     }
 
     /*
     --- Protected --------------------------------------------------------------
      */
+
+    /**
+     * Acquire file, or create it if it doesn't exists.
+     * --
+     * @param string $file
+     * --
+     * @throws mysli\tplp\exception\template 10 No such file...
+     * @throws mysli\tplp\exception\template 20 Parsing failed...
+     * --
+     * @return array [ boolean $loaded, string $file ]
+     */
+    protected function get_file($file)
+    {
+        if (false !== ($mfile = $this->locate_file($file, 'php')))
+        {
+            return $mfile;
+        }
+        else
+        {
+            foreach (['tpl.php', 'tpl.html'] as $type)
+            {
+                list($loaded, $template) = $mfile;
+
+                if ($loaded)
+                {
+                    if ($type === 'tpl.php')
+                        $action = 'extend';
+                    else
+                        $action = 'template';
+                }
+                else
+                {
+                    $filename = basename($file);
+                    $action = 'file';
+                }
+
+                // Parse // extend...
+                try
+                {
+                    $processed = $this->parser->{$action}($template);
+                }
+                catch (\Exception $e)
+                {
+                    throw new exception\template(
+                        "Parsing of file `{$file}` failed with message: ".
+                        $e->getMessage(), 20
+                    );
+                }
+
+                // Save file to temporary folder
+                $tempfilename = $this->tmppath_from_file($file, $this->root);
+                file::write(fs::tmppath('tplp', $tempfilename), $processed);
+                return [ false, fs::tmppath('tplp', $tempfilename) ];
+            }
+        }
+
+        // No file found, oops...
+        throw new exception\template("No such file: `{$file}`.", 10);
+    }
 
     /**
      * Get a full absolute path to the temporary file, from a filename.
@@ -275,104 +299,49 @@ namespace mysli\tplp; class template
 
     /**
      * Locate particular file, and return a full-file path.
-     * This will look only for parsed (`.php`) versions of file.
-     *
      * Primary query target will be replaced files (@see static::replace()).
      * --
      * @param string $file
+     * @param string $type php|tpl.php|tpl.html
      * @param string $root If not provided `$this->root` will be used.
      * --
-     * @return array [ string $root, string $file, string $full_path ]
+     * @return mixed
+     *         array [ boolean $loaded, string $file ]
+     *         boolean false If not found
      */
-    protected function locate_parsed($file, $root=null)
+    protected function locate_file($file, $type, $root=null)
     {
+        // Define root if not send in
         if (!$root)
             $root = $this->root;
 
-        $checks[] = [ $root, $file ];
-
         // Insert replace to be checked
-        if (isset($this->replace[$file]))
-            array_unshift($checks, $this->replace[$file]);
-
-        foreach ($checks as $file)
+        if (isset($this->replace["{$file}.{$type}"]))
         {
-            // We're replacing from source with...
-            if (is_string($file))
-            {
-                return [
-                    $this->root, "{$file}.php",  "{$this->root}/{$file}.php"
-                ];
-            }
+            $template = $this->replace["{$file}.{$type}"];
+            if (is_string($template))
+                return [ true, $template ];
             else
-            {
-                list($root, $file) = $file;
-            }
+                return [ false, implode('/', $template) ];
+        }
 
+        // Define pats
+        if ($type === 'php')
             $temporariy = [
                 fs::tmppath('tplp'),
                 $this->tmppath_from_file($file, $root),
             ];
-            $temporariy[] = implode('/', $temporariy);
+        $dist = [ "{$root}/~dist", "{$file}.{$type}" ];
+        $source = [ "{$root}", "{$file}.{$type}" ];
 
-            $dist   = [ "{$root}/~dist", "{$file}.php" ];
-            $dist[] = implode("/", $dist);
-
-            $source   = [ "{$root}", "{$file}.php" ];
-            $source[] = implode('/', $source);
-
-            if (file::exists($temporariy[2]))
-                return $temporariy;
-            elseif (file::exists($dist[2]))
-                return $dist;
-            elseif (file::exists($source[2]))
-                return $source;
-        }
-
-        return null;
-    }
-
-    /**
-     * Locate particular file, and return a full-file path.
-     * This will look only for source (`.tpl.html`) versions of file.
-     * --
-     * @param string $file
-     * --
-     * @return array [ string $root, string $file, string $full_path ]
-     */
-    protected function locate_source($file, $root=null)
-    {
-        if (!$root)
-            $root = $this->root;
-
-        $checks[] = [ $root, $file ];
-
-        // Insert replace to be checked
-        if (isset($this->replace[$file]))
-            array_unshift($checks, $this->replace[$file]);
-
-        foreach ($checks as $file)
-        {
-            // We're replacing from source with...
-            if (is_string($file))
-            {
-                return [
-                    $this->root,
-                    "{$file}.tpl.html",
-                    "{$this->root}/{$file}.tpl.html"
-                ];
-            }
-            else
-            {
-                list($root, $file) = $file;
-            }
-
-            $source = "{$root}/{$file}.tpl.html";
-
-            if (file::exists($source))
-                return [ $root, "{$file}.tpl.html", $source ];
-        }
-
-        return null;
+        // Check paths
+        if ($type === 'php' && file::exists(implode('/', $temporariy)))
+            return [ false, $temporariy ];
+        elseif (file::exists(implode('/', $dist)))
+            return [ false, $dist ];
+        elseif (file::exists(implode('/', $source)))
+            return [ false, $source ];
+        else
+            return false;
     }
 }
