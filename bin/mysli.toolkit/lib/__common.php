@@ -41,6 +41,20 @@ function dump_e()
 }
 
 /**
+ * Dump, but don't die - fwrite STDOUT results.
+ * --
+ * @param mixed $... Variables to dump.
+ * --
+ * @return null
+ */
+function dump_s()
+{
+    fwrite(STDOUT, call_user_func_array('dump_r', func_get_args()));
+    fwrite(STDOUT, PHP_EOL);
+    flush();
+}
+
+/**
  * Dump, but don't die - return results instead.
  * --
  * @param mixed $... Variables to dump.
@@ -74,20 +88,25 @@ function dump_r()
 }
 
 /**
- * Format generic exception message when processing multi line input.
+ * Format generic exception message when parsing string.
+ * If `$lines` are array `static::err_lines()` will be used,
+ * otherwise `static::err_char`.
  * --
- * @param  array   $lines
+ * @param  mixed   $lines
  * @param  integer $current
  * @param  string  $message
  * @param  string  $file
  * --
  * @return string
  */
-function f_error(array $lines, $current, $message, $file=null)
+function f_error($lines, $current, $message, $file=null)
 {
     return
         $message . "\n" .
-        err_lines($lines, $current, 3) .
+        (is_array($lines)
+            ? err_lines($lines, $current, 3)
+            : err_char($lines, $current)
+        ).
         ($file ? "File: `{$file}`\n" : "\n");
 }
 
@@ -129,6 +148,26 @@ function err_lines(array $lines, $current, $padding=3)
     }
 
     return $result;
+}
+
+/**
+ * Mark particular character in line.
+ * --
+ * @example
+ * There's an error I require dot.
+ * ----------------^--------------
+ * --
+ * @param string  $line       Full line.
+ * @param integer $at         At which character error occurred.
+ * --
+ * @return string
+ */
+function err_char($line, $at)
+{
+    $output  = $line."\n";
+    $output .= str_repeat(' ', $at);
+    $output .= '^';
+    return $output;
 }
 
 /**
