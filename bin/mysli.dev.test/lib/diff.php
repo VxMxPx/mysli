@@ -50,7 +50,11 @@ namespace mysli\dev\test; class diff
                     $lines,
                     static::generate(
                         $line,
-                        (isset($arr2[$id]) ? $arr2[$id] : [null]),
+                        (isset($arr2[$id])
+                            ? (is_array($arr2[$id])
+                                ? $arr2[$id]
+                                : [$arr2[$id]])
+                            : [null]),
                         $level+1
                     )
                 );
