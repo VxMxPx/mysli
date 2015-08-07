@@ -60,6 +60,18 @@
  *             - one
  *             - two
  *
+ * Inline array:
+ *
+ *     fruits: [ banana, pineapple, pear, orange, strawberry ]
+ *
+ * Inline array can be associative:
+ *
+ *     fruits: [ banana: 2, pineapple: 1, pear: 23, orange: 4, strawberry: 120 ]
+ *
+ * Quotes can be used to make item string rather than associative:
+ *
+ *     fruits: [ "banana: 2", pineapple: 1, ... ]
+ *
  * Comments:
  *
  * Comments must start with hash (`#`) which can be indented...
@@ -85,6 +97,7 @@ namespace mysli\toolkit; class ym
     const __use = '
         .{
             type.str -> str,
+            type.arr -> arr,
             fs.file  -> file,
             exception.ym
         }
@@ -292,7 +305,7 @@ namespace mysli\toolkit; class ym
     }
 
     /*
-    --- Private ----------------------------------------------------------------
+    --- Protected --------------------------------------------------------------
      */
 
     /**
@@ -302,12 +315,14 @@ namespace mysli\toolkit; class ym
      * @param boolean $li   List item?
      * --
      * @throws mysli\toolkit\exception\ym 10 Missing colon.
+     * @throws mysli\toolkit\exception\ym 20 Expected array to be closed.
      * --
      * @return array
      */
-    private static function proc_line($line, $li)
+    protected static function proc_line($line, $li)
     {
-        if (!$li) {
+        if (!$li)
+        {
             $segments = explode(':', trim($line), 2);
             $key   = null;
             $value = null;
@@ -331,37 +346,240 @@ namespace mysli\toolkit; class ym
 
         $value = trim($value, "\t ");
 
-        if ($value)
+        return [$key, static::valufy($value)];
+    }
+
+    /**
+     * Resolve inline array and return array.
+     * --
+     * @param  string $line
+     * --
+     * @throws mysli\toolkit\exception\ym  5 Unexpected character.
+     * @throws mysli\toolkit\exception\ym  9 Unexpected colon, expecting value.
+     * @throws mysli\toolkit\exception\ym 10 Unexpected colon.
+     * @throws mysli\toolkit\exception\ym 20 Unclosed array.
+     * --
+     * @return array
+     */
+    protected static function resolve_array($line)
+    {
+        // $line = trim($line, " \t[]");
+
+        // Weather next character should be escaped \\
+        $escaped = false;
+
+        // Weather is is envelope ""
+        $envelope = false;
+
+        // Array key
+        $key = null;
+
+        // Current buffer
+        $buffer = null;
+
+        // Weather next item is needed
+        // (in such case only acceptable characters are: ` `, `]`, `,`, EOL)
+        $need_next = false;
+
+        $collection = [];
+
+        // Current array stack...
+        $pocket = [ &$collection ];
+
+        $characters = preg_split("//u", $line, -1, PREG_SPLIT_NO_EMPTY);
+
+        foreach ($characters as $cpos => $char)
         {
-            if (is_numeric($value))
+            // Properly handle closed lists, proceeding with no comma...
+            if ($need_next)
             {
-                $value = strpos($value, '.')
-                    ? (float) $value
-                    : (int) $value;
+                if ($char == ',' || $char == ']')
+                    $need_next = false;
+                elseif ($char != ' ')
+                    throw new exception\ym(
+                        f_error(
+                            $line, $cpos,
+                            "Unexpected character, expecting: `]` or `,`"
+                        ), 5
+                    );
             }
-            elseif ($value === '[]')
+
+            // Handle escaped or enveloped \ or "
+            if ( ($escaped || $envelope) && ($char !== '"' && $char !== '\\'))
             {
-                $value = [];
+                $buffer .= $char;
+                continue;
             }
-            elseif (in_array(strtolower($value), ['yes', 'true']))
+
+            // Handle special characters or add character to the list...
+            switch ($char)
             {
-                $value = true;
+                /*
+                ESCAPE
+                 */
+                case '\\':
+                    if ($escaped)
+                    {
+                        $buffer .= '\\';
+                        $escaped = false;
+                    }
+                    else
+                        $escaped = true;
+                break;
+
+                /*
+                Buffer start
+                 */
+                case '"':
+                    $buffer .= '"';
+
+                    if ($escaped)
+                    {
+                        $escaped = false;
+                        break;
+                    }
+
+                    $envelope = !$envelope;
+                break;
+
+                /*
+                Key/value separator
+                 */
+                case ':':
+                    if ($key !== null)
+                    {
+                        throw new exception\ym(
+                            f_error($line, $cpos, "Unexpected colon, expecting value..."), 9
+                        );
+                    }
+
+                    // Key : Value
+                    if (!empty(trim($buffer)))
+                    {
+                        $key = trim( trim($buffer), '"' );
+                        $buffer = null;
+                    }
+                    else
+                    {
+                        throw new exception\ym(
+                            f_error($line, $cpos, "Unexpected colon..."), 10
+                        );
+                    }
+                break;
+
+                /*
+                Comma
+                 */
+                case ',':
+                    $buffer = trim($buffer);
+                    if (!empty(trim($buffer, '"')))
+                    {
+                        $buffer = static::valufy($buffer);
+                        if ($key !== null)
+                            $pocket[count($pocket)-1][$key] = $buffer;
+                        else
+                            $pocket[count($pocket)-1][] = $buffer;
+                    }
+
+                    $buffer = $key = null;
+                break;
+
+                /*
+                Sub Array, Open
+                 */
+                case '[':
+                    $array = [];
+
+                    if ($key !== null)
+                        $pocket[count($pocket)-1][$key] = &$array;
+                    else
+                        $pocket[count($pocket)-1][] = &$array;
+
+                    $buffer = $key = null;
+                    $pocket[] = &$array;
+                    unset($array);
+                break;
+
+                /*
+                Sub Array, Close
+                 */
+                case ']':
+                    $buffer = trim($buffer);
+                    if (!empty(trim($buffer, '"')))
+                    {
+                        $buffer = static::valufy($buffer);
+                        if ($key !== null)
+                            $pocket[count($pocket)-1][$key] = $buffer;
+                        else
+                            $pocket[count($pocket)-1][] = $buffer;
+                    }
+
+                    $need_next = true;
+                    $key = $buffer = null;
+                    array_pop($pocket);
+                break;
+
+                /*
+                Append!
+                 */
+                default:
+                    $buffer .= $char;
+                break;
             }
-            elseif (in_array(strtolower($value), ['no', 'false']))
-            {
-                $value = false;
-            }
-            else
-            {
-                $value = trim($value, '"');
-            }
+        }
+
+        // Check of errors...
+        if (count($pocket) > 1)
+        {
+            throw new exception\ym("Unclosed array.", 20);
+        }
+
+        $buffer = $key = null;
+        return $collection[0];
+    }
+
+    /**
+     * Convert string representation of value to correct type.
+     * --
+     * @param  string $value
+     * --
+     * @return mixed
+     */
+    protected static function valufy($value)
+    {
+        if (empty($value))
+            return null;
+
+        if (is_numeric($value))
+        {
+            return strpos($value, '.')
+                ? (float) $value
+                : (int) $value;
+        }
+        elseif ($value === '[]')
+        {
+            return [];
+        }
+        elseif (substr($value, 0, 1) === '[')
+        {
+            if (substr($value, -1) !== ']')
+                throw new exception\ym("Expected array to be closed.", 20);
+
+            // Resolve array
+            return static::resolve_array($value);
+        }
+        elseif (in_array(strtolower($value), ['yes', 'true']))
+        {
+            return true;
+        }
+        elseif (in_array(strtolower($value), ['no', 'false']))
+        {
+            return false;
         }
         else
         {
-            $value = null;
+            return trim($value, '"');
         }
-
-        return [$key, $value];
     }
 
     /**
@@ -372,7 +590,7 @@ namespace mysli\toolkit; class ym
      * --
      * @return integer
      */
-    private static function get_level($line, $indent)
+    protected static function get_level($line, $indent)
     {
         $level = 0;
         $indent_length = strlen($indent);
@@ -393,7 +611,7 @@ namespace mysli\toolkit; class ym
      * --
      * @return mixed
      */
-    private static function detect_indent($string)
+    protected static function detect_indent($string)
     {
         if (preg_match('/(^[ \t]+)/m', $string, $matches))
         {

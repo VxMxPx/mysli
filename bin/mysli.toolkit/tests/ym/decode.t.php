@@ -60,21 +60,6 @@ return assert::equals(
     ]
 );
 
-#: Test Empty Array
-$decoded = ym::decode('
-name: bar
-require: []
-line: foo
-');
-return assert::equals(
-    $decoded,
-    [
-        'name' => 'bar',
-        'require' => [],
-        'line' => 'foo'
-    ]
-);
-
 #: Test Empty File
 $decoded = ym::decode('');
 return assert::equals($decoded, []);
