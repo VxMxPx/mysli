@@ -19,6 +19,14 @@ namespace mysli\frontend; class frontend
      * @return boolean
      */
     static function render($contents, array $template)
+    {}
+
+    /**
+     * Output 404!
+     * --
+     * @return void
+     */
+    static function error404()
     {
 
     }
