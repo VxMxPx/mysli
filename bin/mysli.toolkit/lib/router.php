@@ -197,7 +197,7 @@ namespace mysli\toolkit; class router
      * @param string $type
      *        router::route_before  Run before other routes.
      *        router::route_after   Run after other routes.
-     *        router::route_special Special, use `$route`, accepts: index, error_404
+     *        router::route_special Special, use `$route`, accepts: index, error404
      *        router::route_high    High priority route. It will be checked first.
      *        router::route_normal  Normal priority route.
      *        router::route_low     Low priority route. It will be checked last.
@@ -286,7 +286,6 @@ namespace mysli\toolkit; class router
      *        - type:method@vendor.package.class
      *            - special:index@vendor.blog.controller
      *            - before:set@vendor.i18n.controller
-     *            - normal:*@vendor.blog.controller
      *        - method@vendor.package.class
      *            - post@vendor.blog.controller
      *        - *@vendor.package.class
