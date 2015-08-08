@@ -272,7 +272,7 @@ namespace mysli\tplp; class template
                 }
 
                 // Save file to temporary folder
-                $tempfilename = $this->tmppath_from_file($file, $this->root);
+                $tempfilename = tplp::tmpname($file, $this->root);
                 file::write(fs::tmppath('tplp', $tempfilename), $processed);
                 return [ false, fs::tmppath('tplp', $tempfilename) ];
             }
@@ -280,24 +280,6 @@ namespace mysli\tplp; class template
 
         // No file found, oops...
         throw new exception\template("No such file: `{$file}`.", 10);
-    }
-
-    /**
-     * Get a full absolute path to the temporary file, from a filename.
-     * Result example, for a file named: `blog/post`
-     * cb647a447c6841d5e5840b44194ed0a4-blog-d-post.php
-     * --
-     * @param string $file
-     * @param string $root
-     * --
-     * @return string
-     */
-    protected function tmppath_from_file($file, $root)
-    {
-        return
-            md5("{$root}{$file}.php").
-            '-'.
-            str_replace('/', '-d-', $file).'.php';
     }
 
     /**
@@ -330,7 +312,7 @@ namespace mysli\tplp; class template
 
         // Temporary only when looking for PHP
         if ($type === 'php')
-            $temporariy = fs::tmppath('tplp', $this->tmppath_from_file($file, $root));
+            $temporariy = fs::tmppath('tplp', tplp::tmpname($file, $root));
 
         $dist = "{$root}/~dist/{$file}.{$type}";
         $source = "{$root}/{$file}.{$type}";

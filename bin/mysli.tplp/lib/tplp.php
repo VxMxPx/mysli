@@ -8,7 +8,7 @@ namespace mysli\tplp; class tplp
             pkg,
             fs.fs  -> fs,
             fs.dir -> dir,
-            type.arr_path -> arr_path
+            type.arr_path -> arrp
         }
     ';
 
@@ -84,8 +84,27 @@ namespace mysli\tplp; class tplp
             throw new exception\tplp("No such package: `{$package}`.", 10);
 
         $meta = pkg::get_meta($package);
-        $path = arr_path($meta, 'tplp.path', 'assets/tplp');
+        $path = arrp::get($meta, 'tplp.path', 'assets/tplp');
 
         return fs::pkgreal($path);
+    }
+
+    /**
+     * Get a full filename for temporary file, from a path+filename.
+     *
+     * Result example, for a file named: `blog/post`
+     * cb647a447c6841d5e5840b44194ed0a4-blog-d-post.php
+     * --
+     * @param string $file
+     * @param string $root
+     * --
+     * @return string
+     */
+    static function tmpname($file, $root)
+    {
+        return
+            md5("{$root}{$file}.php").
+            '-'.
+            str_replace('/', '-d-', $file).'.php';
     }
 }
