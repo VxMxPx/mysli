@@ -4,6 +4,7 @@ namespace mysli\frontend; class __setup
 {
     const __use = 'mysli.toolkit.{
         config,
+        router,
         fs.fs -> fs,
         fs.dir -> dir,
         fs.file -> file
@@ -11,15 +12,63 @@ namespace mysli\frontend; class __setup
 
     static function enable()
     {
-        return dir::create(fs::cntpath('themes/default')) &&
-            file::write(
-                fs::cntpath('themes/default/theme.ym'),
-                'source: [ mysli.toolkit, assets/theme ]'
-            );
+        $c = config::select('mysli.frontend');
+        $c->init([
+            'i18n' => [ 'en-us', null ]
+        ]);
+
+        /*
+        Return...
+         */
+        return
+
+        // Create Directory With Default Tehemes
+        dir::create(fs::cntpath('themes/default'))
+
+        and
+
+        // Write Default Theme
+        file::write(
+            fs::cntpath('themes/default/theme.ym'),
+            'source: [ mysli.toolkit, assets/theme ]'
+        )
+
+        and
+
+        // Add Route Which Will Handle 404
+        router::add(
+            'mysli.frontend.frontend',
+            'error404',
+            router::route_special
+        )
+
+        and
+
+        // Save config
+        $c->save()
+
+        // Done
+        ;
     }
 
     static function disable()
     {
-        return dir::remove(fs::cntpath('themes/default'));
+        return
+
+        // Remove default theme
+        dir::remove(fs::cntpath('themes/default'))
+
+        and
+
+        // Unregister route
+        !!router::remove('*@mysli.frontend.frontend')
+
+        and
+
+        // Drop Config
+        config::select('mysli.frontend')->destroy()
+
+        // Done
+        ;
     }
 }
