@@ -1,14 +1,8 @@
-package:     mysli.util.i18n
+package:     mysli.i18n
 version:     1
 description: Internationalization Library.
 license:     GPL-3.0
 authors:
     - Marko Gajšt (Developer) <m@gaj.st>
 require:
-    mysli.framework.exception: 1
-    mysli.framework.event:     1
-    mysli.framework.pkgm:      1
-    mysli.framework.type:      1
-    mysli.framework.json:      1
-    mysli.framework.fs:        1
-    mysli.util.config:         1
+    mysli.toolkit: 1

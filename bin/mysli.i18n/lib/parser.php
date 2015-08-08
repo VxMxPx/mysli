@@ -2,22 +2,27 @@
 
 namespace mysli\i18n; class parser
 {
-    const __use = 'mysli.toolkit.type.{str,arr}';
+    const __use = 'mysli.toolkit.type.{ str, arr }';
 
     /**
-     * Convert Mysli Translation (mt) to array.
+     * Parse language file and return to array.
+     * --
      * @param string $translation
+     * @param string $language    Which language is this file for?
+     * --
      * @return array
      */
-    public static function parse($translation)
+    public static function process($translation, $language=null)
     {
         $mt = $translation;
 
         $matches;
         $collection = [
             '.meta' => [
-                'created_on' => gmdate('YmdHis'),
-                'modified'   => false
+                'language'       => $language,
+                'created_on'     => gmdate('YmdHis'),
+                'updated_on'     => gmdate('YmdHis'),
+                'parser_version' => 1
             ]
         ];
 
@@ -80,6 +85,6 @@ namespace mysli\i18n; class parser
             }
         }
 
-        return $collection;
+        return $language ? [ $language => $collection ] : $collection;
     }
 }

@@ -3,41 +3,171 @@
 namespace mysli\i18n; class translator
 {
     const __use = '
-        mysli.toolkit.exception.* -> toolkit.exception.*
+        .{
+            i18n,
+            parser,
+            exception.translator
+        }
+        mysli.toolkit.{
+            json,
+            fs.fs -> fs,
+            fs.dir -> dir,
+            fs.file -> file
+        }
     ';
 
+    /**
+     * Primary language used for translations.
+     * --
+     * @var string
+     */
     protected $primary;
+
+    /**
+     * Secondary language used for translations.
+     * --
+     * @var string
+     */
     protected $secondary;
 
+    /**
+     * All appended dictionaries.
+     * --
+     * @var array
+     */
     protected $dictionary = [];
 
-    function __construct($dictionary, $primary, $secondary)
-    {
-        $this->dictionary = $dictionary;
-        $this->primary    = $primary;
-        $this->secondary  = $secondary;
-    }
     /**
-     * Check if particular language exists in cache.
-     * @param  string $language
-     * @return integer Number of keys for particular language,
-     *                 0 if language doesn't exists.
+     * Instantiate Translator.
+     * --
+     * @param string $primary
+     * @param string $secondary
      */
-    function exists($language)
+    function __construct($primary, $secondary)
     {
-        if (isset($this->dictionary[$language]))
+        $this->primary   = $primary;
+        $this->secondary = $secondary;
+    }
+
+    /**
+     * Add new dictionary to the collection.
+     * This will merge, rewriting duplicated values.
+     * --
+     * @param array $dictionary
+     */
+    function append(array $dictionary)
+    {
+        $this->dictionary = array_merge($this->dictionary, $dictionary);
+    }
+
+    /**
+     * Load new dictionary and add it to the collection.
+     * If neessary process it.
+     *
+     * Process:
+     *
+     * $path is package? => Resolve it and get full absolute path...
+     * Exists $path/$language.json ? => Load
+     * Exists $path/~dist/$language.json ? => Load
+     * Exists tmp/i18n/qid_$language.json ? => Load
+     *
+     * Exists $path/$language.lng ? => Process => Save to Cache => Load
+     * --
+     * @param string $path
+     *        Full absolute path or package's name to be auto resolved.
+     *
+     * @param string $language
+     *        Language to load.
+     *        If not provided both default laguages will be loaded.
+     * --
+     * @throws mysli\i18n\exception\translator 10 Invalid path.
+     * @throws mysli\i18n\exception\translator 20 Invalid language format.
+     * --
+     * @return integer Number of successfully loaded dictionaries.
+     */
+    function load($path, $language=null)
+    {
+        // Process both defaults...
+        if ($language === null)
         {
-            return count($this->dictionary[$language]) - 1;
+            $n = 0;
+            foreach ([$this->primary, $this->secondary] as $language)
+            {
+                if ($language === null) continue;
+                $n = $n + $this->load($path, $language);
+            }
+            return $n;
+        }
+
+        // Was package send in rather than path...
+        if (preg_match('/[a-z0-9\.]+/i', $path))
+            $path = i18n::get_path($path);
+
+        if (!dir::exists($path))
+            throw new exception\translator("Invalid path: `{$path}`.", 10);
+
+        if (!preg_match('/^([a-z]{2}\-?){1,4}$/', $language))
+            throw new exception\translator(
+                "Invalid language format: `{$language}`.", 20
+            );
+
+        // Define paths
+        $root_json = "{$path}/{$language}.json";
+        $dist_json = "{$path}/~dist/{$language}.json";
+        $tmp_json  = fs::tmppath('i18n', i18n::tmpname($language, $path));
+        $root_src  = "{$path}/{$language}.lng";
+
+        if (file::exists($root_json))
+        {
+            $dictionary = json::decode_file($root_json, true);
+        }
+        elseif (file::exists($dist_json))
+        {
+            $dictionary = json::decode_file($dist_json, true);
+        }
+        elseif (file::exists($tmp_json))
+        {
+            $dictionary = json::decode_file($tmp_json, true);
+        }
+        elseif (file::exists($root_src))
+        {
+            $lng = file::read($root_src);
+            $dictionary = parser::process($lng, $language);
+            json::encode_file($tmp_json, $dictionary);
         }
         else
         {
             return 0;
         }
+
+        $this->append($dictionary);
+        return 1;
     }
+
+    /**
+     * Check if particular language exists in dictionary.
+     * --
+     * @param  string $language
+     * --
+     * @return integer
+     *         Number of keys for particular language,
+     *         Null if language doesn't exists.
+     */
+    function exists($language)
+    {
+        if (isset($this->dictionary[$language]))
+            return count($this->dictionary[$language]) - 1;
+        else
+            return;
+    }
+
     /**
      * Set/get primary language for translations.
      * This will be automatically set, when the i18n/translator is constructed.
-     * @param string $language if not set then current value is returned
+     * --
+     * @param string $language
+     *        If not provided then current value is returned.
+     * --
      * @return string
      */
     function primary($language=null)
@@ -49,10 +179,14 @@ namespace mysli\i18n; class translator
 
         return $this->primary;
     }
+
     /**
      * Set/get secondary language for translations.
      * This will be automatically set, when the i18n/translator is constructed.
-     * @param string $language if not set then current value is returned
+     * --
+     * @param string $language
+     *        If not provided then current value is returned.
+     * --
      * @return string
      */
     function secondary($language=null)
@@ -64,29 +198,40 @@ namespace mysli\i18n; class translator
 
         return $this->secondary;
     }
+
     /**
      * Return whole dictionary as an array.
+     * --
      * @return array
      */
     function as_array()
     {
         return $this->dictionary;
     }
+
     /**
      * Translate the key, using particular language.
-     * @param  mixed  $key      Following options are available:
-     *   - string: key, in format key | KEY
-     *   - array : [key, switch], e.g., ['COMMENTS', $comments->count()]
-     * @param  string $language e.g., en, ru
-     * @param  mixed  $variable Variables to be replaced in string.
-     * @return string, null if key not found!
+     * --
+     * @param mixed $key
+     *        Following options are available:
+     *        - string: key, in format key | KEY
+     *        - array : [key, switch], e.g., ['COMMENTS', $comments->count()]
+     *
+     * @param string $language
+     *        E.g., en, ru
+     *
+     * @param mixed $variable
+     *        Variables to be replaced in string.
+     * --
+     * @throws mysli\i18n\exception\translator 10 Badly formatted key.
+     * --
+     * @return string
+     *         Null if key not found.
      */
     function translate_as($key, $language, $variable=[])
     {
         if (!is_array($variable))
-        {
             $variable = [$variable];
-        }
 
         if (is_array($key))
         {
@@ -111,9 +256,7 @@ namespace mysli\i18n; class translator
 
         // Non-existent language requested
         if (!$this->exists($language))
-        {
             return;
-        }
 
         $dictionary = &$this->dictionary[$language];
 
@@ -221,9 +364,10 @@ namespace mysli\i18n; class translator
             {
                 if (preg_match('/[^0-9\*]/', $dmod))
                 {
-                    throw new framework\exception\data(
+                    throw new exception\translator(
                         "Badly formated key `{$dmod}[{$key}]` ".
-                        "for language: `{$language}`. Allowed [0-9\\*].", 1
+                        "for language: `{$language}`. Allowed [0-9\\*].",
+                        10
                     );
                 }
 
@@ -244,32 +388,43 @@ namespace mysli\i18n; class translator
         // No match!
         return;
     }
+
     /**
      * Translate the key!
-     * @param  mixed $key      Following options are available:
-     *   - string: key, in format key | KEY
-     *   - array : [key, switch], e.g., ['COMMENTS', $comments->count()]
-     * @param  mixed $variable Variables to be replaced in string.
-     * @return string, null if key not found!
+     * --
+     * @param mixed $key
+     *        Following options are available:
+     *        - string: key, in format key | KEY
+     *        - array : [key, switch], e.g., ['COMMENTS', $comments->count()]
+     *
+     * @param mixed $variable
+     *        Variables to be replaced in string.
+     * --
+     * @return string
+     *         Null if key not found.
      */
     function translate($key, $variable=[])
     {
         if (!is_array($variable))
-        {
             $variable = [$variable];
-        }
 
         return $this->translate_as($key, $this->primary,   $variable)
             ?: $this->translate_as($key, $this->secondary, $variable);
     }
 
+    /*
+    --- Protected --------------------------------------------------------------
+     */
+
     /**
      * Process variables.
-     * @param  string $value
-     * @param  array  $variables
+     * --
+     * @param string $value
+     * @param array  $variables
+     * --
      * @return string
      */
-    private function process_variables($value, array $variables)
+    protected function process_variables($value, array $variables)
     {
         if (empty($variables))
         {

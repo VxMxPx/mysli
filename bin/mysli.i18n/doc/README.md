@@ -3,7 +3,7 @@
 ## Introduction
 
 I18n offers internationalization and localization support for packages.
-Special `.mt` (mysli translation) files with a simple syntax are used.
+Special `.lng` (mysli translation) files with a simple syntax are used.
 Those files gets cached / converted to a regular JSON.
 
 ## Usage
@@ -35,7 +35,7 @@ You'll have to use command line to parse language:
 This will create a new file `_dist/i18n.json` with parsed values for your languages.
 Please see `./dot i18n -h` for list of all commands and help.
 
-If you'd like to change default paths, add a new segment in `mysli.pkg.ym`, 
+If you'd like to change default paths, add a new segment in `mysli.pkg.ym`,
 with following content:
 
 ```yaml
