@@ -142,12 +142,28 @@ namespace mysli\toolkit\cli; class ui
     /**
      * Used for titles.
      * --
-     * @param string $string
-     * @param boolean $return weather result should be return rather than output
+     * @param string  $string
+     * @param boolean $return
+     *        Weather result should be return rather than output.
      * --
      * @return string
      */
     static function title($string, $return=false)
+    {
+        $f = "\e[1m{$string}\e[0m";
+        if ($return) return $f; else output::line($f);
+    }
+
+    /**
+     * Make output more important.
+     * --
+     * @param string  $string
+     * @param boolean $return
+     *        Weather result should be return rather than output.
+     * --
+     * @return string
+     */
+    static function strong($string, $return=false)
     {
         $f = "\e[1m{$string}\e[0m";
         if ($return) return $f; else output::line($f);
