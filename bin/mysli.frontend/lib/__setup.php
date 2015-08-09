@@ -14,7 +14,12 @@ namespace mysli\frontend; class __setup
     {
         $c = config::select('mysli.frontend');
         $c->init([
-            'i18n' => [ 'en-us', null ]
+
+            'locale.from'    => [ 'string', null ],
+            'locale.default' => [ 'string', 'en' ],
+            'locale.accept'  => [ 'array',  ['en-us' => 'us'] ],
+
+            'template.active'  => [ 'string', 'default' ]
         ]);
 
         /*
@@ -53,22 +58,16 @@ namespace mysli\frontend; class __setup
 
     static function disable()
     {
-        return
-
         // Remove default theme
-        dir::remove(fs::cntpath('themes/default'))
-
-        and
+        dir::remove(fs::cntpath('themes/default'));
 
         // Unregister route
-        !!router::remove('*@mysli.frontend.frontend')
-
-        and
+        router::remove('*@mysli.frontend.frontend');
 
         // Drop Config
-        config::select('mysli.frontend')->destroy()
+        config::select('mysli.frontend')->destroy();
 
         // Done
-        ;
+        return true;
     }
 }

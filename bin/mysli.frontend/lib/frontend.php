@@ -28,6 +28,6 @@ namespace mysli\frontend; class frontend
      */
     static function error404()
     {
-
+        die('Yep, 404 works...');
     }
 }
