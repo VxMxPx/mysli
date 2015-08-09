@@ -88,7 +88,7 @@ namespace mysli\toolkit; class request
      * Get _POST values.
      * --
      * @param mixed $key
-     *        false  return all keys
+     *        null   return all keys
      *        string return particular key
      *        array  return keys specified in array
      *
@@ -98,7 +98,7 @@ namespace mysli\toolkit; class request
      * @return mixed
      *         String or array, deepening on key.
      */
-    static function post($key=false, $default=null)
+    static function post($key=null, $default=null)
     {
         if (!$key)
         {
