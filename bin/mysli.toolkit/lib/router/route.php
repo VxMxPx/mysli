@@ -4,14 +4,30 @@ namespace mysli\toolkit\router; class route
 {
     const __use = '.{ type.arr -> arr, exception.router }';
 
-    private $uri;
-    private $container = [
+    protected $uri;
+    protected $method;
+    protected $container = [
         'get'     => [],
         'post'    => [],
-        'cookie'  => [],
         'option'  => [],
         'segment' => [],
     ];
+
+    /**
+     * Instance of route.
+     * --
+     * @param string $uri
+     * @param string $method
+     * @param array  $get
+     * @param array  $post
+     */
+    function __construct($uri, $method, $get, $post)
+    {
+        $this->set_uri($uri);
+        $this->set_method($method);
+        $this->set_get($get);
+        $this->set_post($post);
+    }
 
     /*
     --- Uri --------------------------------------------------------------------
@@ -37,8 +53,29 @@ namespace mysli\toolkit\router; class route
         $this->uri = $uri;
     }
 
+    /**
+     * Get current route's method.
+     * POST|GET|PUT|DELETE
+     * --
+     * @return string
+     */
+    function method()
+    {
+        return $this->method;
+    }
+
+    /**
+     * Set current route's method.
+     * --
+     * @param string $method
+     */
+    function set_method($method)
+    {
+        $this->method = $method;
+    }
+
     /*
-    --- Get, Post, Cookie, Option, Segment -------------------------------------
+    --- Get, Post, Option, Segment ---------------------------------------------
      */
 
     /**
@@ -55,8 +92,8 @@ namespace mysli\toolkit\router; class route
     {
         if (strpos($method, '_'))
         {
-            $action = substr($method, 0, 3);
-            $id = substr($method, 3);
+            $action = substr($method, 0, 4);
+            $id = substr($method, 4);
         }
         else
         {
@@ -64,15 +101,17 @@ namespace mysli\toolkit\router; class route
             $id = $method;
         }
 
-        if (!isset($this->container[$id]))
+        if (!array_key_exists($id, $this->container))
+        {
             throw new exception\router("Invalid method: `{$method}`.", 10);
+        }
 
         array_unshift($args, $id);
         return call_user_func_array([$this, "{$action}generic"], $args);
     }
 
     /*
-    --- Private ----------------------------------------------------------------
+    --- Protected --------------------------------------------------------------
      */
 
     /**
@@ -94,7 +133,7 @@ namespace mysli\toolkit\router; class route
      * --
      * @return mixed
      */
-    private function generic($domain, $key=null, $default=null)
+    protected function generic($domain, $key=null, $default=null)
     {
         if (is_null($key))
             return $this->container[$domain];
@@ -112,7 +151,7 @@ namespace mysli\toolkit\router; class route
      * --
      * @return boolean
      */
-    private function has_generic($key=null)
+    protected function has_generic($key=null)
     {
         if (is_null($key))
             return !!count($this->container[$domain]);
@@ -133,7 +172,7 @@ namespace mysli\toolkit\router; class route
      *
      * @param mixed $value
      */
-    private function set_generic($domain, $key, $value=null)
+    protected function set_generic($domain, $key, $value=null)
     {
         if (is_array($key))
         {
