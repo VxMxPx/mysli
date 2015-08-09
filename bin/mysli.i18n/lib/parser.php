@@ -34,7 +34,7 @@ namespace mysli\i18n; class parser
 
         // Match
         preg_match_all(
-            '/(^@[A-Z_]+)(\[[0-9\*\+\-\.a-z,]+\])?[\ \t\n]+(.*?)(?=^@|^#)/sm',
+            '/(^@[A-Z0-9_]+)(\[[0-9\*\+\-\.a-z,]+\])?[\ \t\n]+(.*?)(?=^@|^#)/sm',
             $mt,
             $matches,
             PREG_SET_ORDER
