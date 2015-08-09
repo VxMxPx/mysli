@@ -4,12 +4,13 @@ namespace mysli\tplp; class template
 {
     const __use = '
         .{
-            tplp,
-            parser,
+            tplp
+            parser
             exception.template
         }
         mysli.toolkit.{
-            fs.fs   -> fs,
+            fs.fs   -> fs
+            fs.dir  -> dir
             fs.file -> file
         }
     ';
@@ -57,6 +58,10 @@ namespace mysli\tplp; class template
     function __construct($root)
     {
         $this->root = $root;
+
+        if (dir::exists(fs::ds($root, '~dist')))
+            $root = "{$root}/~dist";
+
         $this->parser = new parser($root);
     }
 

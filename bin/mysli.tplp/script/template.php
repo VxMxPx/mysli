@@ -148,6 +148,13 @@ namespace mysli\tplp\root\script; class template
                 }
             }
 
+            ui::nl();
+
+            // Drop cache
+            fs\file::remove(
+                fs\file::find(fs::tmppath('tplp'), '*.php')
+            );
+
             // Creak, e.g run only once...
             if (!$watch)
                 return true;
