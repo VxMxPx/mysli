@@ -9,6 +9,7 @@ namespace mysli\toolkit; class router
         response,
         fs.fs -> fs,
         json,
+        router.route,
         exception.router
     }';
 
@@ -75,29 +76,127 @@ namespace mysli\toolkit; class router
     }
 
     /**
-     * Resolve routes and trigger an event.
-     * --
-     * @event toolkit.router::resolve.route(string $method, string $route)
-     * @event toolkit.router::resolve.404(string $method, string $route)
+     * Resolve routes and call corresponding method.
      */
     static function resolve()
     {
-        // Get route and remove any * < > character.
-        $route = implode('/', request::segment());
-        $route = str_replace(['*', '<', '>'], '', $route);
-        $method = strtolower(request::method());
+        // Make route,...
+        $route = new router\route(
+            implode('/', request::segment()),
+            request::method(),
+            request::get(),
+            request::post()
+        );
 
-        event::trigger("toolkit.router::resolve.route", [$method, $route]);
+        // Run before
+        static::resolve_one(static::$routes['before'], $route, null, false);
 
-        if (response::get_status() === 0)
+        if (empty($route->uri()))
         {
-            log::info(
-                "No answer for: `{$method}:{$route}`, going 404.", __CLASS__
+            // Index...
+            $result = static::resolve_one(
+                static::$routes['special'], $route, 'index'
             );
-
-            response::set_status(404);
-            event::trigger('toolkit.router::resolve.404', [$method, $route]);
         }
+        else
+        {
+            // Go through all...
+            foreach ([ 'high', 'normal', 'low' ] as $pool)
+            {
+                $result = static::resolve_one(static::$routes[$pool], $route);
+
+                if ($result)
+                {
+                    break;
+                }
+            }
+        }
+
+        // No route?
+        if ($result === false)
+        {
+            static::resolve_one(
+                static::$routes['special'], $route, 'error404'
+            );
+        }
+
+        // Run After
+        static::resolve_one(static::$routes['after'], $route, null, false);
+    }
+
+    /**
+     * Resolve specific route.
+     * --
+     * @param array $pool
+     *
+     * @param router\route $route
+     *
+     * @param mixed $special
+     *        Null   Will accept `null` routers as || regex (before, after).
+     *        String Will look for specific router (index, error404)
+     *        False  Will try to match regex.
+     *
+     * @param boolean $break
+     *        When route is found (and called function return != false) should
+     *        it break the loop and stop looking for next route?
+     * --
+     * @return mixed
+     *         Execution result, if route not found, false.
+     */
+    protected static function resolve_one(
+        $pool, router\route $route, $special=false, $break=true)
+    {
+        foreach ($pool as $rid => $rdata)
+        {
+            if
+            (
+                in_array($route->method(), $rdata['method'])
+
+                and
+
+                (
+                    ($special === null && $rdata['route'] === null)
+
+                    or
+
+                    (is_string($special) && $rdata['regex'] === $special)
+
+                    or
+
+                    preg_match($rdata['regex'], $route->uri(), $matched)
+                )
+            )
+            {
+                if (!isset($matched) || !is_array($matched))
+                {
+                    $matched = [];
+                }
+
+                // Set segment
+                foreach ($rdata['parameters'] as $pid => $parameter)
+                {
+                    if (isset($matched[$pid+1]))
+                    {
+                        $route->set_segment($parameter, $matched[$pid+1]);
+                    }
+                }
+
+                // Run method...
+                $result = call_user_func(
+                    str_replace('.', '\\', $rdata['to']), $route
+                );
+
+                if ($break && $result !== false)
+                {
+                    return $result;
+                }
+            }
+        }
+
+        // If it came so far, then either router was not found, or break was
+        // see to false, so that it looped though all routes.
+        // In first case false needs to be returned, in second, true.
+        return !$break;
     }
 
     /*
@@ -230,7 +329,14 @@ namespace mysli\toolkit; class router
         if (!strpos($to, '::'))
         {
             if ($type === static::route_special)
-                $to = "{$to}::{$route}";
+            {
+                if (strpos($route, ':'))
+                    $mroute = substr($route, strpos($route, ':')+1);
+                else
+                    $mroute = $route;
+
+                $to = "{$to}::{$mroute}";
+            }
             else
                 throw new exception\router(
                     "Required `\$to` format is: `vendor.package.class::method`, ".
@@ -257,7 +363,7 @@ namespace mysli\toolkit; class router
         }
         else
         {
-            $regex = null;
+            $regex = $croute;
             $parameters = [];
         }
 
@@ -512,9 +618,10 @@ namespace mysli\toolkit; class router
 
             foreach (static::$routes[$in] as $rid => $route)
             {
+                // dump($regexto, $rid);
                 if (preg_match($regexto, $rid))
                 {
-                    unset(static::$routes[$id][$rid]);
+                    unset(static::$routes[$in][$rid]);
                     $return++;
                 }
             }
@@ -673,14 +780,20 @@ namespace mysli\toolkit; class router
      * Get route Id from TO.
      * Example: vendor.package.class::method => method@vendor.package.class
      * --
-     * @param  string $to
+     * @param string $to
+     * --
+     * @throws mysli\toolkit\exception\router 10 Cannot create RID.
      * --
      * @return string
      */
     protected static function create_rid($to)
     {
-        $rid = explode('::', $to, 2);
-        return $rid[1].'@'.$rid[0];
+        if (!strpos($to, '::'))
+            throw new exception\router(
+                "Cannot create RID, invalid path: `{$to}`.", 10);
+
+        list($call, $method) = explode('::', $to, 2);
+        return $method.'@'.$call;
     }
 
     /**
@@ -730,6 +843,12 @@ namespace mysli\toolkit; class router
     protected static function read()
     {
         static::$routes = json::decode_file(static::$routes_file, true);
+
+        // Set defaults
+        foreach ([ 'before', 'after', 'special', 'high', 'normal', 'low' ] as $id) {
+            if (!isset(static::$routes[$id]) || !is_array(static::$routes[$id]))
+                static::$routes[$id] = [];
+        }
     }
 
     protected static function write()
