@@ -2,13 +2,16 @@
 
 namespace mysli\frontend; class __setup
 {
-    const __use = 'mysli.toolkit.{
-        config,
-        router,
-        fs.fs -> fs,
-        fs.dir -> dir,
-        fs.file -> file
-    }';
+    const __use = '
+        .{ theme }
+        mysli.toolkit.{
+            config,
+            router,
+            fs.fs -> fs,
+            fs.dir -> dir,
+            fs.file -> file
+        }
+    ';
 
     static function enable()
     {
@@ -16,8 +19,8 @@ namespace mysli\frontend; class __setup
         $c->init([
 
             'locale.from'    => [ 'string', null ],
-            'locale.default' => [ 'string', 'en' ],
-            'locale.accept'  => [ 'array',  ['en-us' => 'us'] ],
+            'locale.default' => [ 'string', 'us' ],
+            'locale.accept'  => [ 'array',  [ 'us' => 'en-us' ] ],
 
             'theme.active'   => [ 'string', 'default' ]
         ]);
@@ -45,6 +48,13 @@ namespace mysli\frontend; class __setup
             'mysli.frontend.frontend',
             'error404',
             router::route_special
+        )
+
+        and
+
+        !! dir::copy(
+            fs::pkgreal('mysli.frontend', 'assets/theme/public'),
+            fs::pubpath('themes/default')
         )
 
         and
