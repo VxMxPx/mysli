@@ -141,7 +141,25 @@ return assert::equals(
         'method' => [ 'GET', 'POST', 'DELETE', 'PUT' ],
         'prefix' => null,
         'route'  => 'index',
-        'regex'  => null,
+        'regex'  => 'index',
+        'type'   => 'special',
+        'parameters' => []
+    ]
+);
+
+#: Test With Method
+router::add('vendor.blog.controller', 'PUT:index', router::route_special);
+$routes = router::dump(router::route_special);
+router::reset();
+return assert::equals(
+    $routes['index@vendor.blog.controller'],
+    [
+        'to'     => 'vendor.blog.controller::index',
+        'rid'    => 'index@vendor.blog.controller',
+        'method' => [ 'PUT' ],
+        'prefix' => null,
+        'route'  => 'PUT:index',
+        'regex'  => 'index',
         'type'   => 'special',
         'parameters' => []
     ]
