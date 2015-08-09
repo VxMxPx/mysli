@@ -3,10 +3,7 @@
 namespace mysli\frontend; class frontend
 {
     const __use = '
-        mysli.tplp
-        mysli.toolkit.{
-            output
-        }
+        mysli.tplp, mysli.toolkit.{ response, output }
     ';
 
     /**
@@ -29,5 +26,6 @@ namespace mysli\frontend; class frontend
     static function error404($route)
     {
         response::set_status(404);
+        die('404');
     }
 }

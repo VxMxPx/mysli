@@ -19,7 +19,7 @@ namespace mysli\frontend; class __setup
             'locale.default' => [ 'string', 'en' ],
             'locale.accept'  => [ 'array',  ['en-us' => 'us'] ],
 
-            'template.active'  => [ 'string', 'default' ]
+            'theme.active'   => [ 'string', 'default' ]
         ]);
 
         /*
