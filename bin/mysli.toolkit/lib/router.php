@@ -163,7 +163,13 @@ namespace mysli\toolkit; class router
 
                     or
 
-                    preg_match($rdata['regex'], $route->uri(), $matched)
+                    (
+                        !is_string($special)
+
+                        and
+
+                        preg_match($rdata['regex'], $route->uri(), $matched)
+                    )
                 )
             )
             {
@@ -305,7 +311,6 @@ namespace mysli\toolkit; class router
      *        Save changes to file to keep them permanently.
      * --
      * @throws mysli\toolkit\exception\router 10 Invalid Required `\$to` format.
-     * @throws mysli\toolkit\exception\router 20 Route with such ID already exists.
      * --
      * @return boolean
      */
@@ -348,11 +353,12 @@ namespace mysli\toolkit; class router
         // Make Route ID method@vednor.package.class
         $rid = static::create_rid($to);
 
-        // Cannot be duplicated
-        if (isset(static::$routes[$type][$rid]))
-            throw new exception\router(
-                "Route with such ID already exists: `{$rid}`.", 20
-            );
+        // TODO: Can override?
+        // // Cannot be duplicated
+        // if (isset(static::$routes[$type][$rid]))
+        //     throw new exception\router(
+        //         "Route with such ID already exists: `{$rid}`.", 20
+        //     );
 
 
         list($method, $prefix, $croute) = static::extract_route($route);
