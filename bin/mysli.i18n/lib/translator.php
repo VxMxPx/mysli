@@ -100,8 +100,10 @@ namespace mysli\i18n; class translator
         }
 
         // Was package send in rather than path...
-        if (preg_match('/[a-z0-9\.]+/i', $path))
+        if (preg_match('/^[a-z0-9\.]+$/i', $path))
+        {
             $path = i18n::get_path($path);
+        }
 
         if (!dir::exists($path))
             throw new exception\translator("Invalid path: `{$path}`.", 10);
