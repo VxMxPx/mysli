@@ -133,14 +133,6 @@ namespace mysli\toolkit; class autoloader
      *
      * @throws \Exception
      *         20 Block not opened.
-     *
-     * @throws \Exception
-     *         30 Unexpected semicolon (,) at the end of the line, when
-     *         closing block.
-     *
-     * @throws \Exception
-     *         40 Expected semicolon (,) at the end of the line, when
-     *         in block.
      */
     static function resolve_use($class, $use)
     {
@@ -170,6 +162,11 @@ namespace mysli\toolkit; class autoloader
          */
         $in_block = false;
         $now_line = '';
+
+        /*
+        Comma means new line
+         */
+        $use = str_replace(',', "\n", $use);
 
         /*
         Lines from use statement.
@@ -225,16 +222,7 @@ namespace mysli\toolkit; class autoloader
                     ));
                 }
 
-                // It's expected that last line has no semicolon.
-                if (substr($now_line, -1) === ',')
-                {
-                    throw new \Exception(f_error($lines, $lineno-1,
-                        "Unexpected semicolon (,) at the end of the line, when".
-                        "closing block. For: `{$class}`.", 30
-                    ));
-                }
-
-                $line = $now_line.$line;
+                $line = $now_line.($line === '}' ? '' : ', ').$line;
                 $in_block = false;
 
                 // Go on, this line need to be processed as it would normally be
@@ -244,17 +232,7 @@ namespace mysli\toolkit; class autoloader
             // Are we in block right now?
             if ($in_block)
             {
-                // It's expected that line will end with `,` when we're in block
-                if (substr($now_line, -1) !== ',' &&
-                    substr($now_line, -1) !== '{')
-                {
-                    throw new \Exception(f_error($lines, $lineno-1,
-                        "Expected semicolon (,) at the end of the line, when".
-                        "in block. For: `{$class}`.", 40
-                    ));
-                }
-
-                $now_line .= $line;
+                $now_line .= ",".$line;
                 continue;
             }
 
