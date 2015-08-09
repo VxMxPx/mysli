@@ -6,4 +6,5 @@ authors:
     - Marko Gajšt (Developer) <m@gaj.st>
 require:
     mysli.toolkit: 1
-    mysli.tplp: 1
+    mysli.tplp:    1
+    mysli.i18n:    1
