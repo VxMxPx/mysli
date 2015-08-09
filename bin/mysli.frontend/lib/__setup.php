@@ -35,7 +35,7 @@ namespace mysli\frontend; class __setup
         // Write Default Theme
         file::write(
             fs::cntpath('themes/default/theme.ym'),
-            'source: [ mysli.toolkit, assets/theme ]'
+            'source: [ mysli.frontend, assets/theme ]'
         )
 
         and
