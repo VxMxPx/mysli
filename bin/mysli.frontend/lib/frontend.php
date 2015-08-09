@@ -26,8 +26,8 @@ namespace mysli\frontend; class frontend
      * --
      * @return void
      */
-    static function error404()
+    static function error404($route)
     {
-        die('Yep, 404 works...');
+        response::set_status(404);
     }
 }
