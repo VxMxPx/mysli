@@ -51,7 +51,7 @@ namespace mysli\frontend; class frontend
 
         if ($template->has('error404'))
         {
-            output::set($template->render('error404'));
+            output::set($template->render('error404', [ 'title' => '404 Error' ]));
             return true;
         }
         else
