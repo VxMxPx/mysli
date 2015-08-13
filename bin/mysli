@@ -1,603 +1,381 @@
 #!/usr/bin/env php
 <?php
 
+namespace mysli;
+
 /**
- * Mysli Command Line Utility.
- * --
- * NOTE the SELF EXECUTION at the end!
+ * Run Mysi Command Line. Note the self-execution.
  * --
  * @return void
  */
-namespace mysli\root; class __init
+function __run()
 {
-    /**
-     * Run Mysli
-     * --
-     * @return void
+    /*
+    Set timezone to UTC temporarily
      */
-    static function __run()
+    date_default_timezone_set('UTC');
+
+    /*
+    Report all errors.
+     */
+    error_reporting(E_ALL);
+
+    /*
+    For now display all error too, this might be changed by toolkit later.
+     */
+    ini_set('display_errors', true);
+
+    /*
+    Initialize Arguments and Command
+     */
+    $args = $_SERVER['argv'];
+
+    // Define debug true (if -v provided)
+    if (in_array('-v', $args))
     {
-        /*
-        Set timezone to UTC temporarily
-         */
-        date_default_timezone_set('UTC');
-
-        /*
-        Report all errors.
-         */
-        error_reporting(E_ALL);
-        /*
-        For now display all error too, this might be changed by toolkit later.
-         */
-        ini_set('display_errors', true);
-
-        /*
-        Check if current PHP version is sufficient to proceed.
-         */
-        if (!(version_compare(PHP_VERSION, self::need_version) >= 0))
-            trigger_error(
-                'PHP needs to be at least version `'.self::need_version.'` '.
-                'Your version: `'.PHP_VERSION.'`',
-                E_USER_ERROR
-            );
-
-        /*
-        Initialize Arguments and Command
-         */
-        $args = $_SERVER['argv'];
-        $command = isset($args[1]) ? $args[1] : false;
-
-        /*
-        Discover Paths and SafeMode.
-         */
-
-        // LOC filename
-        $loc = 'mysli.loc.php';
-
-        // Get current working directory
-        $cwd = rtrim(getcwd(), '\\/');
-
-        // Set safe mode to false
-        // Safe mode is situation when System is NOT initialized.
-        // Either `mysli` is called from bin or from an empty directory.
-        $safemode = true;
-
-        // Apppath is CWD
-        $apppath = $cwd;
-
-        // Full current CWD to be cut down...
-        $fcwd = $cwd;
-
-        // Using CWD, Check if LOC exists anywhere down the line...
-        do
-        {
-            // Try to find LOC in any sub-directory...
-            if (file_exists("{$fcwd}/{$loc}"))
-            {
-                $safemode = false;
-                $apppath = $fcwd;
-                break;
-            }
-
-            $fcwd = dirname($fcwd);
-
-        } while(strlen($fcwd) > 3);
-
-        // Check if it's safe mode.
-        // In such case only internal commands can be called.
-        if ($safemode || $command === '--self')
-        {
-            if ($command === '--self')
-                $command = isset($args[2]) ? $args[2] : null;
-
-            // If there's no command, or command is -h or --help, display help
-            if (!$command || $command === '-h' || $command === '--help')
-            {
-                print(
-                    str_replace(
-                        '{commands}',
-                        self::format_commands(self::$commands),
-                        self::safemode_messages
-                    )
-                );
-                exit(0);
-            }
-
-            /*
-            Execute command if exists.
-             */
-
-            // Check if script exists.
-            if (!isset(self::$commands['--self '.$command]))
-            {
-                print("Invalid command! Use `-h` to see list available commands");
-                exit(1);
-            }
-
-            // Prepare arguments
-            $args = array_slice($args, 3);
-
-            // Apppath needs to be set!
-            if (!in_array('--apppath', $args))
-                array_unshift($args, '--apppath', $apppath);
-
-            // Execute
-            $r = call_user_func(
-                ['mysli\\root\\__init', "safemode_{$command}"],
-                $args
-            );
-
-            print("\n");
-
-            exit($r ? 0 : 1);
-        }
-        /*
-        --- Standard Mode ------------------------------------------------------
-         */
-        else
-        {
-            // Read loc file
-            include "{$apppath}/{$loc}";
-
-            // There should be couple of constants available now, with relative paths.
-            // From those we can load the toolkit and boot the system.
-
-            // First check if all paths are defined.
-            if (!defined('MYSLI_LOC_BINPATH'))
-                trigger_error(
-                    "Binary path not defined! `MYSLI_LOC_BINPATH`. ".
-                    "Check `mysli.loc.php` file.",
-                    E_USER_ERROR
-                );
-
-            if (!defined('MYSLI_LOC_PUBPATH'))
-                trigger_error(
-                    "Public path not defined! `MYSLI_LOC_PUBPATH`. ".
-                    "Check `mysli.loc.php` file.",
-                    E_USER_ERROR
-                );
-
-            // Set PUBPATH
-            $pubpath = realpath($apppath.'/'.MYSLI_LOC_PUBPATH);
-
-            if (!$pubpath)
-                trigger_error(
-                    "Public path not found in: `{$apppath}` looking for: `".
-                    MYSLI_LOC_PUBPATH."`.",
-                    E_USER_ERROR
-                );
-
-            // Set BINPATH
-            $binpath = realpath($apppath.'/'.MYSLI_LOC_BINPATH);
-
-            if (!$binpath)
-                trigger_error(
-                    "Binary path not found in: `{$apppath}` looking for: `".
-                    MYSLI_LOC_BINPATH."`.",
-                    E_USER_ERROR
-                );
-
-            /*
-            Load toolkit
-             */
-            $toolkit_conf = "{$apppath}/configuration/toolkit.php";
-            if (!file_exists($toolkit_conf))
-                trigger_error(
-                    "Toolkit configuration not found in `{apppath}/configuration/toolkit.php`",
-                    E_USER_ERROR
-                );
-
-            // Toolkit conf will define TOOLKIT_LOAD, which will hold information on how to
-            // initialize toolkit. This file will also allow toolkit to be replace by any
-            // other vendor.
-            include $toolkit_conf;
-
-            // TOOLKIT_LOAD is written in format:
-            // binary_name:::init_filename_to_load:::namespaced_method_to_call
-            // Example: mysl.toolkit:::toolkit.init:::mysli\toolkit\toolkit_init::__init
-            list($tk_bin, $tk_file, $tk_call) = explode(':::', TOOLKIT_LOAD);
-
-            // Resolve toolkit's base directory
-            if (file_exists("{$binpath}/{$tk_bin}.phar"))
-                $tk_dir = "phar://{$binpath}/{$tk_bin}.phar";
-            elseif (file_exists("{$binpath}/{$tk_bin}"))
-                $tk_dir = "{$binpath}/{$tk_bin}";
-            else
-                trigger_error("Toolkit not found `{$binpath}/{$tk_bin}`.", E_USER_ERROR);
-
-            // Toolkit file, which contains init class.
-            $tk_file = "{$tk_dir}/lib/{$tk_file}.php";
-
-            if (!file_exists($tk_file))
-                trigger_error(
-                    "Toolkit `init` file not found: `{$tk_file}`.",
-                    E_USER_ERROR
-                );
-
-            include $tk_file;
-
-            list($tk_class, $tk_method) = explode('::', $tk_call, 2);
-
-            if (!class_exists($tk_class, false))
-                trigger_error("Toolkit class not foun: `{$tk_class}`", E_USER_ERROR);
-
-            // __init toolkit
-            call_user_func_array($tk_call, [$apppath, $binpath, $pubpath]);
-
-            // Run toolkit `cli`
-            call_user_func("{$tk_class}::cli", array_slice($args, 1));
-        }
+        unset($args[ array_search('-v', $args) ]);
+        define('MYSLI_ROOT_DEBUG', true);
+    }
+    else
+    {
+        define('MYSLI_ROOT_DEBUG', false);
     }
 
-    /**
-     * Handle System Init.
-     * --
-     * @param array $arguments
-     * --
-     * @return boolean
+    $command = isset($args[1]) ? $args[1] : false;
+
+    /*
+    Preform self-test (PHP version, required libraries, ...)
+    And print warnings/errors/success
      */
-    static function safemode_init(array $arguments)
+    log_debug("About to preform Mysli self-test...");
+    $messages = self_test();
+
+    if (!empty($messages))
     {
-        /*
-        Process arguments
-        Since no `CLI` libraries are available yet, deal with arguments by hand.
-        */
-
-        // Is it help
-        if (in_array('-h', $arguments) || in_array('--help', $arguments))
+        foreach ($messages as $message)
         {
-            print(self::safemode_init_help);
-            return true;
+            log_error($message);
         }
 
-        // Fetch --apppath
-        $apppath_i = array_search('--apppath', $arguments);
-        if ($apppath_i === false || !isset($arguments[((int)$apppath_i)+1]))
-        {
-            print("\n--apppath argument is required.\n");
-            return false;
-        }
-        else
-        {
-            $apppath = $arguments[((int)$apppath_i)+1];
-        }
+        exit(1);
+    }
 
-        // Fetch --binpath
-        $binpath_i = array_search('--binpath', $arguments);
-        if ($binpath_i === false || !isset($arguments[((int)$binpath_i)+1]))
-        {
-            $binpath = './bin';
-        }
-        else
-        {
-            $binpath = $arguments[((int)$binpath_i)+1];
-        }
-        $r_binpath = self::fix_dir($binpath);
+    /*
+    Discover Paths and SafeMode.
+     */
 
-        // Fetch --pubpath
-        $pubpath_i = array_search('--pubpath', $arguments);
-        if ($pubpath_i === false || !isset($arguments[((int)$pubpath_i)+1]))
-        {
-            $pubpath = './public';
-        }
-        else
-        {
-            $pubpath = $arguments[((int)$pubpath_i)+1];
-        }
-        $r_pubpath = self::fix_dir($pubpath);
+    // LOC filename
+    $loc = 'mysli.loc.php';
 
-        /*
-        Set base variables.
-         */
-        $toolkit = 'mysli.toolkit';
-        $is_toolkit_phar = false;
+    // Get current working directory
+    $cwd = rtrim(getcwd(), '\\/');
 
-        print("\nMysli Platform Init\n");
-        print("Checking for directories...\n");
+    // Set safe mode to false
+    // Safe mode is situation when System is NOT initialized.
+    // Either `mysli` is called from bin or from an empty directory.
+    $safemode = true;
 
-        if (!@is_writable($apppath))
+    // Apppath is CWD
+    $apppath = $cwd;
+
+    // Full current CWD to be cut down...
+    $fcwd = $cwd;
+
+    // Using CWD, Check if LOC exists anywhere down the line...
+    log_debug("Looking for LOC.");
+    do
+    {
+        log_debug("... {$fcwd}/{$loc}");
+        // Try to find LOC in any sub-directory...
+        if (file_exists("{$fcwd}/{$loc}"))
         {
-            print("\n!! Application directory must be writable `{$apppath}`.");
-            return false;
+            log_debug("FOUND!");
+            $safemode = false;
+            $apppath = $fcwd;
+            break;
         }
 
-        /*
-        Resolve and create bin and public paths.
-         */
-        if (!($binpath = self::do_dir('binpath', $apppath, $r_binpath)))
-            return false;
+        $fcwd = dirname($fcwd);
 
-        if (!($pubpath = self::do_dir('pubpath', $apppath, $r_pubpath)))
-            return false;
+    } while(strlen($fcwd) > 3);
 
-        /*
-        Check if toolkit exists in the directory.
-         */
-        if (file_exists("{$binpath}/{$toolkit}.phar"))
-        {
-            $is_toolkit_phar = true;
-        }
-        else
-        {
-            if (!file_exists("{$binpath}/{$toolkit}"))
-            {
-                print("\n!! Toolkit ({$toolkit}) not found in `{$binpath}`.");
-                return false;
-            }
-        }
-        print("\nOK `{$toolkit}`");
+    // Check if it's safe mode.
+    // In such case only internal commands can be called.
+    if ($safemode || $command === '--self')
+    {
+        log_debug('Will initialize --self.');
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        init_self($apppath, $command, $args);
+    }
+    else
+    {
+        log_debug('Will initialize toolkit.');
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        init_toolkit($apppath, $loc, $args);
+    }
+}
 
-        /*
-        Run toolkit setup
-         */
-        try
-        {
-            // Get dnyamic name, in came of `mysli.toolkit` it would be `toolkit`,
-            // but in case of vendor.package, would be package.
-            $tk_name = substr($toolkit, strrpos($toolkit, '.')+1);
+__run();
 
-            // Setup filename, different if phar.
-            $toolkit_setup_file = $is_toolkit_phar
-                ? "phar://{$binpath}/{$toolkit}.phar/lib/__setup.php"
-                : "{$binpath}/{$toolkit}/lib/__setup.php";
+/*
+--- Init -----------------------------------------------------------------------
+ */
 
-            // Setup file must exists.
-            if (!file_exists($toolkit_setup_file))
-            {
-                print(
-                    "\n!! Toolkit setup file not found: `{$toolkit_setup_file}`"
-                );
-                return false;
-            }
+/**
+ * Initialize internal command.
+ * --
+ * @param string $apppath
+ * @param string $command
+ * @param array  $args
+ */
+function init_self($apppath, $command, array $args)
+{
+    // Define help messages
+    $help =
+        "Command Line for Mysli Platform\n\n".
+        "If you'd like to mange initialized application, please execute `mysli` ".
+        "from root directory of that application.\n\n".
+        "Usage: mysli --self <command> [options...]\n\n".
+        "You can always use mysli <command> -h to get help for a specific command.\n\n".
+        "Please note, this is a safe mode, only commands which are related ".
+        "to this utility are available.\n\n".
+        "List of available commands:\n\n".
+        "{commands}\n";
 
-            // Include setup file
-            include $toolkit_setup_file;
+    if ($command === '--self')
+    {
+        $command = isset($args[2]) ? $args[2] : null;
+    }
 
-            // Construct classname & namespace
-            $tk_class = str_replace('.', '\\', $toolkit.".__setup");
-
-            if (!class_exists($tk_class, false))
-            {
-                print(
-                    "\n!! Toolkit setup file was loaded ".
-                    "but it doesn't contain class `{$to_class}`."
-                );
-                return false;
-            }
-
-            if (!call_user_func_array(
-                [$tk_class, 'enable'], [$apppath, $binpath, $pubpath]))
-            {
-                print("\n!! Toolkit setup failed, without explanation.");
-                return false;
-            }
-            else
-            {
-                print("\nOK Toolkit setup successful.");
-            }
-        }
-        catch (\Exception $e)
-        {
-            print(
-                "\n!! Toolkit setup failed, with message:\n".$e->getMessage()
-            );
-            return false;
-        }
-
-        /*
-        Write mysli.loc.php file
-         */
-        $loc = str_replace(
-            ['{{TIMESTAMP}}', '{{BINPATH}}', '{{PUBPATH}}'],
-            [gmdate('c'), $r_binpath, $r_pubpath],
-            self::loc_template
+    // If there's no command, or command is -h or --help, display help
+    if (!$command || $command === '-h' || $command === '--help')
+    {
+        log_info(
+            str_replace(
+                '{commands}',
+                format_commands(get_commands()),
+                $help
+            )
         );
-
-        if (!file_put_contents("{$apppath}/mysli.loc.php", $loc."\n"))
-        {
-            print(
-                "\n!! Couldn't write `loc` file to: `{$apppath}/mysli.loc.php`."
-            );
-            return false;
-        }
-        else
-        {
-            print("\nOK Wrote `loc` file to: `{$apppath}/mysli.loc.php`.");
-        }
-
-        /*
-        Done.
-         */
-        print("\nOK Initialization is now done. System should be usable.");
-        return true;
+        exit(0);
     }
 
-    static function safemode_install()
-    { echo "\nNot implemented yet.\n"; }
-
-    static function safemode_update()
-    { echo "\nNot implemented yet.\n"; }
-
-    static function safemode_remove()
-    { echo "\nNot implemented yet.\n"; }
-
-    /*
-    --- Private ----------------------------------------------------------------
-     */
-
-    /**
-     * Return a string of nicely formatted commands + help.
-     * --
-     * @param array $commands
-     * --
-     * @return string
-     */
-    private static function format_commands(array $commands)
+    // Check if script exists.
+    $commands = get_commands();
+    if (!isset($commands['--self '.$command]))
     {
-        $longest = 0;
-        $output = [];
-
-        foreach ($commands as $command => $_)
-        {
-            if (strlen($command) > $longest)
-                $longest = strlen($command);
-        }
-
-        foreach ($commands as $command => $help)
-        {
-            $help = wordwrap($help, 75-($longest+6));
-            $help = explode("\n", $help);
-            $message = "    ".str_pad($command, $longest)."  {$help[0]}";
-            if (count($help) > 1)
-            {
-                unset($help[0]);
-                $help = implode("\n".str_repeat(' ', $longest+6), $help);
-                $message .= $help;
-            }
-
-            $output[] = $message;
-        }
-
-        return implode("\n", $output);
+        log_warning("Invalid command! Use `-h` to see list available commands");
+        exit(1);
     }
 
-    /**
-     * Append ./ for relative paths. Used when saving loc file.
-     * --
-     * @param  string $value
-     * --
-     * @return string
-     */
-    private static function fix_dir($value)
+    // Prepare arguments
+    $args = array_slice($args, 3);
+
+    // Apppath needs to be set!
+    if (!in_array('--apppath', $args))
     {
-        if (substr($value, 0, 3) !== '../' && substr($value, 0, 2) !== './' &&
-            substr($value, 0, 1) !== '/')
-        {
-            return "./{$value}";
-        }
-        else
-        {
-            return $value;
-        }
+        array_unshift($args, '--apppath', $apppath);
     }
 
-    /**
-     * Attempt to create directory if not there already.
-     * --
-     * @param  string $name
-     * @param  string $apppath
-     * @param  string $realpath
-     * --
-     * @return string
-     */
-    private static function do_dir($name, $apppath, $realpath)
+    log_debug("Will execute: `\\mysli\\smexec_{$command}`.");
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    $r = call_user_func("\\mysli\\smexec_{$command}", $args);
+
+    print("\n");
+
+    exit($r ? 0 : 1);
+}
+
+/**
+ * Initialize Toolkit.
+ * --
+ * @param string $apppath
+ * @param string $loc
+ * @param array  $args
+ */
+function init_toolkit($apppath, $loc, array $args)
+{
+    log_debug("Read loc file");
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~
+    include "{$apppath}/{$loc}";
+
+    // There should be couple of constants available now, with relative paths.
+    // From those we can load the toolkit and boot the system.
+
+    log_debug('Check if all paths are defined.');
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    if (!defined('MYSLI_LOC_BINPATH'))
     {
-        $path = self::resolve_relative($apppath, $realpath);
-
-        if ($path[1])
-        {
-            if (!@is_writable($path[0]))
-            {
-                print(
-                    "\n!! Couldn't create `{$name}`: `{$path[1]}`, ".
-                    "the directory is not writable: `{$path[0]}`."
-                );
-                return null;
-            }
-
-            if (!preg_match('/^[a-z0-9\/_.\-]+$/i', $path[1]))
-            {
-                print(
-                    "\n!! Couldn't create `{$name}`: `{$path[1]}`, ".
-                    "please limit your directory name to: alphanumeric with ".
-                    "spaces and `._-` characters."
-                );
-                return null;
-            }
-
-            $path = implode('', $path);
-
-            if (mkdir($path, 0777, true))
-            {
-                print("\nOK The `{$name}` was created: `{$path}`");
-            }
-            else
-            {
-                print("\n!! Couldn't create `{$name}`: `{$path}`");
-                return null;
-            }
-        }
-        else
-        {
-            $path = $path[0];
-            print("\nOK The `{$name}` exists: `{$path}`");
-        }
-
-        return $path;
+        panic(
+            "Binary path not defined! `MYSLI_LOC_BINPATH`. ".
+            "Check `mysli.loc.php` file."
+        );
     }
 
-    /**
-     * Resolve relative path (to be absolute).
-     * This works even if (part of the) path doesn't exists.
-     * Return array with two elements, first is the existing part, and second is
-     * non existing path.
-     * --
-     * @example
-     * if we have such path: /home/user/non-existing-dir/sub
-     * Result will be: ['/home/user/', 'non-existing-dir/sub']
-     * --
-     * @param string $relative_to
-     * @param string $path
-     * --
-     * @return array [ string $exists, string $create ]
-     */
-    private static function resolve_relative($relative_to, $path)
+    if (!defined('MYSLI_LOC_PUBPATH'))
     {
-        // We're dealing with absolute path
-        if (substr($path, 1, 1) !== ':' && substr($path, 0, 1) !== '/')
-        {
-            $path =
-                rtrim($relative_to, '\\/').
-                DIRECTORY_SEPARATOR.
-                ltrim($path, '\\/');
-        }
+        panic(
+            "Public path not defined! `MYSLI_LOC_PUBPATH`. ".
+            "Check `mysli.loc.php` file."
+        );
+    }
 
-        $existing = $path;
-        $cut_off  = '';
+    // Set PUBPATH
+    $pubpath = realpath($apppath.'/'.MYSLI_LOC_PUBPATH);
+    log_debug("Public path: `{$pubpath}`.");
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-        do
-        {
-            if (is_dir($existing))
-            {
-                break;
-            }
+    if (!$pubpath)
+    {
+        panic(
+            "Public path not found in: `{$apppath}` looking for: `".
+            MYSLI_LOC_PUBPATH."`."
+        );
+    }
 
-            if ($existing === dirname($existing))
-            {
-                break;
-            }
+    // Set BINPATH
+    $binpath = realpath($apppath.'/'.MYSLI_LOC_BINPATH);
+    log_debug("BIN path: `{$binpath}`.");
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-            $cut_off .= $cut_off . DIRECTORY_SEPARATOR . basename($existing);
-            $existing = dirname($existing);
-
-        } while (true);
-
-        return [realpath($existing), $cut_off];
+    if (!$binpath)
+    {
+        panic(
+            "Binary path not found in: `{$apppath}` looking for: `".
+            MYSLI_LOC_BINPATH."`."
+        );
     }
 
     /*
-    --- Constants --------------------------------------------------------------
+    Load toolkit
      */
+    $toolkit_conf = "{$apppath}/configuration/toolkit.php";
+    log_debug("Toolkit configuration path: `{$toolkit_conf}`.");
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    if (!file_exists($toolkit_conf))
+    {
+        panic("Toolkit configuration not found!");
+    }
+
+    // Toolkit conf will define TOOLKIT_LOAD, which will hold information on how to
+    // initialize toolkit. This file will also allow toolkit to be replace by any
+    // other vendor.
+    include $toolkit_conf;
+
+    // TOOLKIT_LOAD is written in format:
+    // binary_name:::init_filename_to_load:::namespaced_method_to_call
+    // Example: mysl.toolkit:::toolkit.init:::mysli\toolkit\toolkit_init::__init
+    list($tk_bin, $tk_file, $tk_call) = explode(':::', TOOLKIT_LOAD);
+
+    log_debug('Resolve toolkit\'s base directory');
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    if (file_exists("{$binpath}/{$tk_bin}.phar"))
+    {
+        $tk_dir = "phar://{$binpath}/{$tk_bin}.phar";
+    }
+    elseif (file_exists("{$binpath}/{$tk_bin}"))
+    {
+        $tk_dir = "{$binpath}/{$tk_bin}";
+    }
+    else
+    {
+        panic("Toolkit not found `{$binpath}/{$tk_bin}`.");
+    }
+    log_debug("Toolkit directory: `{$tk_dir}`.");
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    // Toolkit file, which contains init class.
+    $tk_file = "{$tk_dir}/lib/{$tk_file}.php";
+    log_debug("Toolkit init file: `{$tk_file}`.");
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    if (!file_exists($tk_file))
+    {
+        panic("Toolkit `init` file not found: `{$tk_file}`.");
+    }
+
+    include $tk_file;
+
+    list($tk_class, $tk_method) = explode('::', $tk_call, 2);
+    log_debug("Toolkit class: `{$tk_class}`, toolkit method: `{$tk_method}`.");
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    if (!class_exists($tk_class, false))
+    {
+        panic("Toolkit class not found: `{$tk_class}`.");
+    }
+
+    log_debug("Call initialization method.");
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    call_user_func_array($tk_call, [$apppath, $binpath, $pubpath]);
+
+    log_debug("Run toolkit's CLI method.");
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    call_user_func("{$tk_class}::cli", array_slice($args, 1));
+}
+
+/*
+--- Utilities ------------------------------------------------------------------
+ */
+
+/**
+ * Preform system check: PHP version, required extensions.
+ * --
+ * @return array
+ *         Error message, empty if none.
+ */
+function self_test()
+{
+    $need_version = '5.6.0';
+    $messages = [];
 
     /*
-    At least this version is needed to proceed.
+    Check if current PHP version is sufficient to proceed.
      */
-    const need_version = '5.6.0';
+    if (!(version_compare(PHP_VERSION, $need_version) >= 0))
+    {
+        $messages[] =
+            'PHP must be at least version `'.$need_version.'` '.
+            'Current version: `'.PHP_VERSION.'`';
+    }
 
     /*
-    List of available self- commands
+    JSON extention
      */
-    private static $commands = [
+    if (!extension_loaded('json'))
+    {
+        $messages[] = 'JSON extention is required. Please enable `json`.';
+    }
+
+    /*
+    Multibyte String
+     */
+    if (!extension_loaded('mbstring'))
+    {
+        $messages[] =
+            'Multibyte String extention is required. Please enable `mbstring`.';
+    }
+
+    /*
+    Phar
+     */
+    if (!extension_loaded('phar'))
+    {
+        $messages[] =
+            'PHAR extention is required. Please enable `phar`.';
+    }
+
+    return $messages;
+}
+
+/**
+ * Array list of available internal commands + help for each of them.
+ * --
+ * @return array
+ */
+function get_commands()
+{
+    return [
         '--self init'    =>
             'Initialize Mysli Toolkit in current directory.',
 
@@ -614,70 +392,465 @@ namespace mysli\root; class __init
         '--self update'  =>
             'Update this script. You need to be root to do this.'
     ];
+}
 
-    /*
-    Help message to be displayed in CLI.
-     */
-    const safemode_messages = "
-Command Line for Mysli Platform
+/**
+ * Format list of commands.
+ * --
+ * @param array $commands
+ * --
+ * @return string
+ */
+function format_commands(array $commands)
+{
+    $longest = 0;
+    $output = [];
 
-If you'd like to mange initialized application, please execute `mysli` from root directory of that application.
+    foreach ($commands as $command => $_)
+    {
+        if (strlen($command) > $longest)
+            $longest = strlen($command);
+    }
 
-Usage: mysli --self <command> [options...]
+    foreach ($commands as $command => $help)
+    {
+        $help = wordwrap($help, 75-($longest+6));
+        $help = explode("\n", $help);
+        $message = "    ".str_pad($command, $longest)."  {$help[0]}";
+        if (count($help) > 1)
+        {
+            unset($help[0]);
+            $help = implode("\n".str_repeat(' ', $longest+6), $help);
+            $message .= $help;
+        }
 
-You can always use mysli <command> -h to get help for a specific command.
+        $output[] = $message;
+    }
 
-Please note, this is a safe mode, only commands which are related to this utility are available.
+    return implode("\n", $output);
+}
 
-List of available commands:
+/**
+ * Append ./ for relative paths. Used when saving loc file.
+ * --
+ * @param  string $value
+ * --
+ * @return string
+ */
+function fix_dir($value)
+{
+    if (substr($value, 0, 3) !== '../' && substr($value, 0, 2) !== './' &&
+        substr($value, 0, 1) !== '/')
+    {
+        return "./{$value}";
+    }
+    else
+    {
+        return $value;
+    }
+}
 
-{commands}\n";
+/**
+ * Attempt to create directory if not there already.
+ * --
+ * @param  string $name
+ * @param  string $apppath
+ * @param  string $realpath
+ * --
+ * @return string
+ */
+function do_dir($name, $apppath, $realpath)
+{
+    $path = resolve_relative($apppath, $realpath);
 
-    /*
-    LOC file template
-     */
-    const loc_template = <<<'LOC'
-<?php
+    if ($path[1])
+    {
+        if (!@is_writable($path[0]))
+        {
+            log_error(
+                "Couldn't create `{$name}`: `{$path[1]}`, ".
+                "the directory is not writable: `{$path[0]}`."
+            );
+            return null;
+        }
+
+        if (!preg_match('/^[a-z0-9\/_.\-]+$/i', $path[1]))
+        {
+            log_error(
+                "Couldn't create `{$name}`: `{$path[1]}`, ".
+                "please limit your directory name to: alphanumeric with ".
+                "spaces and `._-` characters."
+            );
+            return null;
+        }
+
+        $path = implode('', $path);
+
+        if (mkdir($path, 0777, true))
+        {
+            log_info("OK The `{$name}` was created: `{$path}`");
+        }
+        else
+        {
+            log_error("Couldn't create `{$name}`: `{$path}`");
+            return null;
+        }
+    }
+    else
+    {
+        $path = $path[0];
+        log_info("OK The `{$name}` exists: `{$path}`");
+    }
+
+    return $path;
+}
+
+/**
+ * Resolve relative path (to be absolute).
+ * This works even if (part of the) path doesn't exists.
+ * Return array with two elements, first is the existing part, and second is
+ * non existing path.
+ * --
+ * @example
+ * if we have such path: /home/user/non-existing-dir/sub
+ * Result will be: ['/home/user/', 'non-existing-dir/sub']
+ * --
+ * @param string $relative_to
+ * @param string $path
+ * --
+ * @return array [ string $exists, string $create ]
+ */
+function resolve_relative($relative_to, $path)
+{
+    // We're dealing with absolute path
+    if (substr($path, 1, 1) !== ':' && substr($path, 0, 1) !== '/')
+    {
+        $path =
+            rtrim($relative_to, '\\/').
+            DIRECTORY_SEPARATOR.
+            ltrim($path, '\\/');
+    }
+
+    $existing = $path;
+    $cut_off  = '';
+
+    do
+    {
+        if (is_dir($existing))
+        {
+            break;
+        }
+
+        if ($existing === dirname($existing))
+        {
+            break;
+        }
+
+        $cut_off .= $cut_off . DIRECTORY_SEPARATOR . basename($existing);
+        $existing = dirname($existing);
+
+    } while (true);
+
+    return [realpath($existing), $cut_off];
+}
+
+/**
+ * Stop the script execution and print error message.
+ * --
+ * @param string $message
+ */
+function panic($message)
+{
+    echo "[!] {$message}";
+    exit(120);
+}
 
 /*
-This file was automatically generated when system was initialized.
+--- Log ------------------------------------------------------------------------
  */
 
-// Loc file creation timestamp
-define(
-    'MYSLI_LOC_TIMESTAMP',
-    '{{TIMESTAMP}}'
-);
+/**
+ * Debug message. It will be displayed only if MYSLI_ROOT_DEBUG is true.
+ * --
+ * @param string $message
+ */
+function log_debug($message)
+{
+    if (MYSLI_ROOT_DEBUG)
+    {
+        echo "[D] {$message}\n";
+    }
+}
 
-// All paths MUST be relative to the application (this file's) folder.
+/**
+ * Print General information.
+ * --
+ * @param string $message
+ */
+function log_info($message)
+{
+    echo "{$message}\n";
+}
 
-// BINPATH is binary path, where all system .phar files are stored.
-define('MYSLI_LOC_BINPATH', '{{BINPATH}}');
+/**
+ * Print Error.
+ * --
+ * @param string $message
+ */
+function log_error($message)
+{
+    echo "[E] {$message}\n";
+}
 
-// PUBPATH is public path, files saved in it, will be browser accessible.
-define('MYSLI_LOC_PUBPATH', '{{PUBPATH}}');
+/**
+ * Print Warning.
+ * --
+ * @param string $message
+ */
+function log_warning($message)
+{
+    echo "[W] {$message}\n";
+}
 
-LOC;
+/*
+--- Save Mode Execute ----------------------------------------------------------
+ */
+
+/**
+ * Initialize New Mysli System.
+ * --
+ * @param array $arguments
+ * --
+ * @return boolean
+ */
+function smexec_init(array $arguments)
+{
+    $help =
+        "Mysli Platform Initialization\n\n".
+        "Please execute init in the root directory of your application.\n\n".
+        "The init will create `bin/` folder (if it doesn't already exists) ".
+        "and acquire Mysli Toolkit automatically.\n\n".
+        "NOTE: paths MUST be relative to the (current) application path.\n\n".
+        "Options:\n\n".
+        "    --apppath            Full absolute application path.\n".
+        "    --binpath [./bin]    Binaries path (where all .phar packages are located).\n".
+        "    --pubpath [./public] Publicly accessible directory.\n";
+
+    $loc_template =
+        "<?php\n\n".
+        "/*\nThis file was automatically generated when system was initialized.\n */\n\n".
+        "// Loc file creation timestamp\n".
+        "define(\n    'MYSLI_LOC_TIMESTAMP',\n    '{{TIMESTAMP}}'\n);\n\n".
+        "// All paths MUST be relative to the application (this file's) folder.\n\n".
+        "// BINPATH is binary path, where all system .phar files are stored.\n".
+        "define('MYSLI_LOC_BINPATH', '{{BINPATH}}');\n\n".
+        "// PUBPATH is public path, files saved in it, will be browser accessible.\n".
+        "define('MYSLI_LOC_PUBPATH', '{{PUBPATH}}');\n";
 
     /*
-    Command line help text.
+    Process arguments
+    Since no `CLI` libraries are available yet, deal with arguments by hand.
+    */
+
+    // Is it help
+    if (in_array('-h', $arguments) || in_array('--help', $arguments))
+    {
+        log_info($help);
+        # ~~~~~~~~~~~~~~
+        return true;
+    }
+
+    // Fetch --apppath
+    $apppath_i = array_search('--apppath', $arguments);
+    if ($apppath_i === false || !isset($arguments[((int)$apppath_i)+1]))
+    {
+        log_warning("--apppath argument is required.");
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        return false;
+    }
+    else
+    {
+        $apppath = $arguments[((int)$apppath_i)+1];
+        log_debug("Application path is: `{$apppath}`.");
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    }
+
+    // Fetch --binpath
+    $binpath_i = array_search('--binpath', $arguments);
+    if ($binpath_i === false || !isset($arguments[((int)$binpath_i)+1]))
+    {
+        $binpath = './bin';
+    }
+    else
+    {
+        $binpath = $arguments[((int)$binpath_i)+1];
+    }
+    $r_binpath = fix_dir($binpath);
+    log_debug("Bin path: `{$binpath}`, real: `{$r_binpath}`.");
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    // Fetch --pubpath
+    $pubpath_i = array_search('--pubpath', $arguments);
+    if ($pubpath_i === false || !isset($arguments[((int)$pubpath_i)+1]))
+    {
+        $pubpath = './public';
+    }
+    else
+    {
+        $pubpath = $arguments[((int)$pubpath_i)+1];
+    }
+    $r_pubpath = fix_dir($pubpath);
+    log_debug("Public path: `{$pubpath}`, real: `{$r_pubpath}`.");
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    /*
+    Set base variables.
      */
-    const safemode_init_help = <<<'HELP'
+    $toolkit = 'mysli.toolkit';
+    $is_toolkit_phar = false;
 
-Mysli Platform Initialization
+    log_info("Mysli Platform Init");
+    log_debug("Checking for directories...");
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Please execute init in the root directory of your application.
+    if (!@is_writable($apppath))
+    {
+        log_warning("Application directory must be writable `{$apppath}`.");
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        return false;
+    }
 
-The init will create `bin/` folder (if it doesn't already exists) and acquire Mysli Toolkit automatically.
+    /*
+    Resolve and create bin and public paths.
+     */
+    if (!($binpath = do_dir('binpath', $apppath, $r_binpath)))
+    {
+        return false;
+    }
 
-NOTE: paths MUST be relative to the (current) application path.
+    if (!($pubpath = do_dir('pubpath', $apppath, $r_pubpath)))
+    {
+        return false;
+    }
 
-Options:
+    /*
+    Check if toolkit exists in the directory.
+     */
+    if (file_exists("{$binpath}/{$toolkit}.phar"))
+    {
+        $is_toolkit_phar = true;
+        log_debug("Found `{$toolkit}` in `{$binpath}/{$toolkit}.phar`.");
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    }
+    else
+    {
+        if (!file_exists("{$binpath}/{$toolkit}"))
+        {
+            log_error("Toolkit `{$toolkit}` not found in `{$binpath}`.");
+            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            return false;
+        }
+        else
+        {
+            log_debug("Found `{$toolkit}` in `{$binpath}/{$toolkit}`.");
+            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        }
+    }
 
-    --apppath            Full absolute application path.
-    --binpath [./bin]    Binaries path (where all .phar packages are located).
-    --pubpath [./public] Publicly accessible directory.
+    /*
+    Run toolkit setup
+     */
+    try
+    {
+        // Get dnyamic name, in came of `mysli.toolkit` it would be `toolkit`,
+        // but in case of vendor.package, would be package.
+        $tk_name = substr($toolkit, strrpos($toolkit, '.')+1);
+        log_debug("Toolkit name: `{$tk_name}`.");
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-HELP;
+        // Setup filename, different if phar.
+        $toolkit_setup_file = $is_toolkit_phar
+            ? "phar://{$binpath}/{$toolkit}.phar/lib/__setup.php"
+            : "{$binpath}/{$toolkit}/lib/__setup.php";
+        log_debug("Toolkit setup file: `{$toolkit_setup_file}`");
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-} \mysli\root\__init::__run();
+        // Setup file must exists.
+        if (!file_exists($toolkit_setup_file))
+        {
+            log_error("Toolkit setup file not found: `{$toolkit_setup_file}`");
+            return false;
+        }
+
+        // Include setup file
+        include $toolkit_setup_file;
+
+        // Construct classname & namespace
+        $tk_class = str_replace('.', '\\', $toolkit.".__setup");
+
+        if (!class_exists($tk_class, false))
+        {
+            log_error(
+                "Toolkit setup file was loaded but ".
+                "it doesn't contain a valid class `{$to_class}`."
+            );
+            return false;
+        }
+
+        if (!call_user_func_array(
+            [$tk_class, 'enable'], [$apppath, $binpath, $pubpath]))
+        {
+            log_error("Toolkit setup failed, without an explanation.");
+            return false;
+        }
+        else
+        {
+            log_info("OK Toolkit setup was successful.");
+        }
+    }
+    catch (\Exception $e)
+    {
+        log_error("Toolkit setup failed, with message:\n".$e->getMessage());
+        return false;
+    }
+
+    /*
+    Write mysli.loc.php file
+     */
+    $loc = str_replace(
+        ['{{TIMESTAMP}}', '{{BINPATH}}', '{{PUBPATH}}'],
+        [gmdate('c'), $r_binpath, $r_pubpath],
+        $loc_template
+    );
+
+    if (!file_put_contents("{$apppath}/mysli.loc.php", $loc."\n"))
+    {
+        log_error("Couldn't write `loc` file to: `{$apppath}/mysli.loc.php`.");
+        return false;
+    }
+    else
+    {
+        log_info("OK Wrote `loc` file to: `{$apppath}/mysli.loc.php`.");
+    }
+
+    /*
+    Done.
+     */
+    log_info("OK Initialization is now done. System should be usable.");
+    return true;
+}
+
+function smexec_install()
+{
+    log_info("Not implemented yet.");
+}
+
+function smexec_update()
+{
+    log_info("Not implemented yet.");
+}
+
+function smexec_remove()
+{
+    log_info("Not implemented yet.");
+}
