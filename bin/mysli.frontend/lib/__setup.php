@@ -5,10 +5,10 @@ namespace mysli\frontend; class __setup
     const __use = '
         .{ theme }
         mysli.toolkit.{
-            config,
-            router,
-            fs.fs -> fs,
-            fs.dir -> dir,
+            config
+            router
+            fs.fs   -> fs
+            fs.dir  -> dir
             fs.file -> file
         }
     ';
@@ -16,14 +16,15 @@ namespace mysli\frontend; class __setup
     static function enable()
     {
         $c = config::select('mysli.frontend');
-        $c->init([
+        $c->init(
+            [
+                'locale.from'    => [ 'string', null ],
+                'locale.default' => [ 'string', 'us' ],
+                'locale.accept'  => [ 'array',  [ 'us' => 'en-us' ] ],
 
-            'locale.from'    => [ 'string', null ],
-            'locale.default' => [ 'string', 'us' ],
-            'locale.accept'  => [ 'array',  [ 'us' => 'en-us' ] ],
-
-            'theme.active'   => [ 'string', 'default' ]
-        ]);
+                'theme.active'   => [ 'string', 'default' ]
+            ]
+        );
 
         /*
         Return...
