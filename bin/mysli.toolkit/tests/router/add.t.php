@@ -185,3 +185,11 @@ return assert::equals(
         ]
     ]
 );
+
+#: Test No Method (Array)
+#: Expect True
+router::add('vendor.blog.controller', [ 'method' => 'tag/...' ]);
+$routes = router::dump(router::route_normal);
+router::reset();
+return isset($routes['method@vendor.blog.controller'])
+    && is_array($routes['method@vendor.blog.controller']);

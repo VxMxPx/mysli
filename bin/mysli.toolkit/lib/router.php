@@ -321,7 +321,7 @@ namespace mysli\toolkit; class router
         {
             foreach ($route as $method => $route_line)
             {
-                $tof = (strpos($to, '::')) ? $to : "{$to}::{$method}";
+                $to = (strpos($to, '::')) ? $to : "{$to}::{$method}";
                 static::add($to, $route_line, $type, false);
             }
 
@@ -345,7 +345,7 @@ namespace mysli\toolkit; class router
             else
                 throw new exception\router(
                     "Required `\$to` format is: `vendor.package.class::method`, ".
-                    "expections are `\$route` is array or `\$type` is `route_special`",
+                    "exceptions are `\$route` is array or `\$type` is `route_special`",
                     10
                 );
         }
