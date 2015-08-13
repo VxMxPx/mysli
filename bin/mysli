@@ -30,15 +30,20 @@ function __run()
      */
     $args = $_SERVER['argv'];
 
-    // Define debug true (if -v provided)
-    if (in_array('-v', $args))
+    /*
+    Resolve global arguments
+     */
+    foreach (get_variables() as $garg => list($garg_def, $_))
     {
-        unset($args[ array_search('-v', $args) ]);
-        define('MYSLI_ROOT_DEBUG', true);
-    }
-    else
-    {
-        define('MYSLI_ROOT_DEBUG', false);
+        if (in_array($garg, $args))
+        {
+            unset($args[ array_search($garg, $args) ]);
+            define($garg_def, true);
+        }
+        else
+        {
+            define($garg_def, false);
+        }
     }
 
     $command = isset($args[1]) ? $args[1] : false;
@@ -140,7 +145,9 @@ function init_self($apppath, $command, array $args)
         "Please note, this is a safe mode, only commands which are related ".
         "to this utility are available.\n\n".
         "List of available commands:\n\n".
-        "{commands}\n";
+        "{commands}\n\n".
+        "List of available settings:\n\n".
+        "{settings}\n";
 
     if ($command === '--self')
     {
@@ -152,8 +159,14 @@ function init_self($apppath, $command, array $args)
     {
         log_info(
             str_replace(
-                '{commands}',
-                format_commands(get_commands()),
+                [
+                    '{commands}',
+                    '{settings}'
+                ],
+                [
+                    format_commands(get_commands()),
+                    format_commands(get_variables())
+                ],
                 $help
             )
         );
@@ -372,6 +385,7 @@ function self_test()
  * Array list of available internal commands + help for each of them.
  * --
  * @return array
+ *         [ command => help, ... ]
  */
 function get_commands()
 {
@@ -395,6 +409,65 @@ function get_commands()
 }
 
 /**
+ * Array list of avaiable internal variables + help for each of them.
+ * --
+ * @return array
+ *         [ command => [ DEFINE, help ] ]
+ */
+function get_variables()
+{
+    return [
+        '--self-no-colors' => [ 'MYSLI_ROOT_NO_COLORS', 'Turn colors in an output off.' ],
+        '--self-debug'     => [ 'MYSLI_ROOT_DEBUG',     'Output debug messages.' ],
+    ];
+}
+
+/**
+ * Detect terminal width.
+ * --
+ * @return integer
+ */
+function terminal_width()
+{
+    if (!is_win())
+    {
+        return exec('tput cols');
+    }
+    else
+    {
+        $result = popen('mode');
+        preg_match('/^ *Columns\: *([0-9]+)$/m', $result, $matches);
+        return $matches[1];
+    }
+}
+/**
+ * Check if script is running in windows environment.
+ * --
+ * @return boolean
+ */
+function is_win()
+{
+    return strtoupper(substr(PHP_OS, 0, 3) === 'WIN');
+}
+
+/**
+ * Simple popen wrapper.
+ * --
+ * @param string $command
+ * @param string $mode
+ * --
+ * @return string
+ */
+function popen($command, $mode='r')
+{
+    $fp = popen($command, $mode);
+    $result = stream_get_contents($fp);
+    pclose($fp);
+
+    return $result;
+}
+
+/**
  * Format list of commands.
  * --
  * @param array $commands
@@ -405,23 +478,31 @@ function format_commands(array $commands)
 {
     $longest = 0;
     $output = [];
+    $term_width = terminal_width();
 
     foreach ($commands as $command => $_)
     {
         if (strlen($command) > $longest)
+        {
             $longest = strlen($command);
+        }
     }
 
     foreach ($commands as $command => $help)
     {
-        $help = wordwrap($help, 75-($longest+6));
+        if (is_array($help))
+        {
+            $help = array_pop($help);
+        }
+
+        $help = wordwrap($help, $term_width-($longest+6), "\n");
         $help = explode("\n", $help);
         $message = "    ".str_pad($command, $longest)."  {$help[0]}";
         if (count($help) > 1)
         {
             unset($help[0]);
             $help = implode("\n".str_repeat(' ', $longest+6), $help);
-            $message .= $help;
+            $message .= "\n".str_repeat(' ', $longest+6).$help;
         }
 
         $output[] = $message;
