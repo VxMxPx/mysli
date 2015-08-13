@@ -2,10 +2,7 @@
 
 namespace mysli\toolkit\type; class str
 {
-    const __use = '
-        .{ log, exception.str }
-        .type.{ validate, int }
-    ';
+    const __use = '.{ log, exception.str }, .type.{ validate, int }';
 
     /**
      * Set the default encoding, which can be changed later.
@@ -21,10 +18,9 @@ namespace mysli\toolkit\type; class str
     /**
      * Set/Get internal character encoding.
      * --
-     * @throws mysli\toolkit\exception\str
-     *         10 Invalid encoding.
-     * --
      * @param string $encoding
+     * --
+     * @throws mysli\toolkit\exception\str 10 Invalid encoding.
      * --
      * @return string
      */
