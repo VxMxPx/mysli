@@ -82,7 +82,7 @@ $pet->name = 'Riki';
 // Template
 Hello, {variable}!
 Your name is {user[uname]}.
-Your pet name is {$pet->name}.
+Your pet name is {pet->name}.
 ```
 
 ```
