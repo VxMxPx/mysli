@@ -267,7 +267,7 @@ namespace mysli\toolkit; class pkg
         foreach ($list as $spackage)
         {
             $list = array_merge(
-                static::get_dependees($dependency, true, $proc),
+                static::get_dependees($spackage, true, $proc),
                 $list
             );
         }
