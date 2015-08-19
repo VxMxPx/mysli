@@ -93,7 +93,7 @@ The translation files needs to have `.lng` extension, and should be saved as
 `UTF-8`, `no BOM`, with `LF` line endings, preferably to `assets/i18n` folder
 of package's root.
 
-## General
+### General
 
 The basic syntax is:
 
@@ -173,7 +173,7 @@ $translator->translate(['comments', 23]); // => Three or more comments!
 $translator->translate(['temperature', -12]); // => It's freezing!
 ```
 
-Particular range of numbers can be targeted,putting three dots between two values:
+Particular range of numbers can be targeted, putting three dots between two values:
 
 ```
 @AGE[0...2] Hopes
