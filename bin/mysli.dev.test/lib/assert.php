@@ -84,6 +84,7 @@ namespace mysli\dev\test; class assert
 
     /**
      * Generate information about variable.
+     * --
      * @param  mixed $variable
      * --
      * @return array
