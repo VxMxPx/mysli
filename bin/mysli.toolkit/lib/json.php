@@ -1,18 +1,5 @@
 <?php
 
-/**
- * # Json
- *
- * A very simple JSON manipulation class, depends on native functions.
- *
- * ## Usage
- *
- * Use `encode` to encode a JSON string, and `decode` to decode it.
- * Additional to that, methods which will read/write directly from file
- * are available:
- *
- *      json::decode_file($filename, true);
- */
 namespace mysli\toolkit; class json
 {
     const __use = '
@@ -136,7 +123,7 @@ namespace mysli\toolkit; class json
     /**
      * Throw data exception if json error is detected.
      * --
-     * @throws mysli\toolkit\exception\json 10 JSON error.
+     * @throws mysli\toolkit\exception\json N JSON error.
      */
     private static function exception_on_error()
     {
@@ -157,7 +144,7 @@ namespace mysli\toolkit; class json
                 );
             }
 
-            throw new exception\json("JSON error: `{$error}`.", 10);
+            throw new exception\json("JSON error: `{$error}`.", $last_error);
         }
     }
 }

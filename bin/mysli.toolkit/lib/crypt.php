@@ -1,14 +1,5 @@
 <?php
 
-/**
- * # Crypt
- *
- * Cryptography library.
- *
- * Based on:
- * http://www.zimuel.it/
- * http://github.com/zendframework/zf2
- */
 namespace mysli\toolkit; class crypt
 {
     /**

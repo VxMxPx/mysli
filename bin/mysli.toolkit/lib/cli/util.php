@@ -1,10 +1,5 @@
 <?php
 
-/**
- * # Util
- *
- * Various utilities used in command line interface.
- */
 namespace mysli\toolkit\cli; class util
 {
     const __use = '.cli.output';

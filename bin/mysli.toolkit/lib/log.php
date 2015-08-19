@@ -1,10 +1,5 @@
 <?php
 
-/**
- * # Log
- *
- * A basic logger.
- */
 namespace mysli\toolkit; class log
 {
     const debug   = 'debug';

@@ -1,13 +1,5 @@
 <?php
 
-/**
- * # Ui
- *
- * Use this class to achieve consistent CLI outputs.
- *
- * Commands, the exception is `template`, will not output string automatically,
- * but will rather return formated string.
- */
 namespace mysli\toolkit\cli; class ui
 {
     const __use = '.cli.output';

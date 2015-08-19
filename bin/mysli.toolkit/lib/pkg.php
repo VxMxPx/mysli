@@ -1,10 +1,5 @@
 <?php
 
-/**
- * # Pkg
- *
- * Manage packages.
- */
 namespace mysli\toolkit; class pkg
 {
     const __use = '
