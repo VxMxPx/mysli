@@ -738,7 +738,7 @@ namespace mysli\toolkit; class router
         $regex      = null;
 
 
-        $segments = explode('/', $route);
+        $segments = preg_split('/(?<!\\\\)\//', $route);
 
         foreach ($segments as $id => $segment)
         {
