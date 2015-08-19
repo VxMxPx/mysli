@@ -33,7 +33,7 @@ vendor.package/
 ... other, in class where templates are used:
 
 ```php
-    const __use = 'mysli.tplp';
+const __use = 'mysli.tpl.html';
 
 $template = tplp::select('vendor.package');
 
@@ -59,8 +59,8 @@ The path will be relative to the package's root.
 Use `mysli template vendor.package` to pre-build all templates. Templates will
 be saved to `assets/tplp/~dist`.
 
-Files prefixed with underline e.g.: `_layout.tplp` will be excluded from parsing.
-You should exclude layouts and modules -- those will be parsed as they're
+Files prefixed with underline e.g.: `_layout.tpl.html` will be excluded from parsing.
+You should prefix layouts and modules -- those will be parsed as they're
 imported by other file.
 
 ## Template Syntax
@@ -765,7 +765,7 @@ file.tplp
 </div>
 ```
 
-layout.tplp
+layout.tpl.html
 
 ```html
 <html>
@@ -789,7 +789,7 @@ layout.tplp
 
 You can extend multiple templates:
 
-file.tplp
+file.tpl.html
 
 ```html
 ::extend layout set content
@@ -799,7 +799,7 @@ file.tplp
 </div>
 ```
 
-layout.tplp
+layout.tpl.html
 
 ```html
 <body>
@@ -807,7 +807,7 @@ layout.tplp
 </body>
 ```
 
-master.tplp
+master.tpl.html
 
 ```html
 <html>
@@ -829,7 +829,7 @@ master.tplp
 
 You can set additional parameters:
 
-file.tplp
+file.tpl.html
 
 ```html
 ::extend layout set content do
@@ -842,7 +842,7 @@ file.tplp
 </div>
 ```
 
-layout.tplp
+layout.tpl.html
 
 ```html
 <html>
@@ -872,7 +872,7 @@ layout.tplp
 
 ### Import
 
-file.tplp
+file.tpl.html
 
 ```html
 <div class="sidebar">
@@ -880,7 +880,7 @@ file.tplp
 </div>
 ```
 
-sidebar.tplp
+sidebar.tpl.html
 
 ```html
 <p>I'm sidebar!</p>
@@ -896,7 +896,7 @@ sidebar.tplp
 
 You can set additional parameters:
 
-file.tplp
+file.tpl.html
 
 ```html
 <div class="sidebar">
@@ -908,7 +908,7 @@ file.tplp
 </div>
 ```
 
-sidebar.tplp
+sidebar.tpl.html
 
 ```html
 <p>I'm sidebar!</p>
@@ -928,7 +928,7 @@ sidebar.tplp
 
 You can define modules in a file and import them individually:
 
-file.tplp
+file.tpl.html
 
 ```html
 <div class="sidebar">
@@ -940,7 +940,7 @@ file.tplp
 </div>
 ```
 
-modules.tplp
+modules.tpl.html
 
 ```html
 ::module sidebar
@@ -963,7 +963,7 @@ modules.tplp
 
 ## License
 
-The Mysli Util Tplp is licensed under the GPL-3.0 or later.
+The GPL-3.0 or later.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
