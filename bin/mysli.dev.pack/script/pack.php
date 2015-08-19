@@ -4,16 +4,16 @@ namespace mysli\dev\pack\root\script; class pack
 {
     const __use = '
         mysli.toolkit.{
-            fs.fs   -> fs,
-            fs.dir  -> dir,
-            fs.file -> file,
-            ym,
-            pkg,
-            event,
-            cli.ui     -> ui,
-            cli.prog   -> prog,
-            cli.param  -> param,
-            cli.input  -> input,
+            fs.fs   -> fs
+            fs.dir  -> dir
+            fs.file -> file
+            ym
+            pkg
+            event
+            cli.ui     -> ui
+            cli.prog   -> prog
+            cli.param  -> param
+            cli.input  -> input
             cli.output -> output
         }
     ';
