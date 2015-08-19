@@ -101,6 +101,24 @@ return assert::equals(
     ]
 );
 
+#: Test Regular Expression Costume With Escaped Slash
+router::add(
+    'vendor.blog.controller',
+    [ 'method' => 'GET:{page|([a-z0-9_\-\/])}.html' ],
+    router::route_low
+);
+$routes = router::dump(router::route_low);
+router::reset();
+return assert::equals(
+    [
+        $routes['method@vendor.blog.controller']['regex'],
+        $routes['method@vendor.blog.controller']['parameters']
+    ],
+    [
+        '<^([a-z0-9_\-\/])\.html$>i', ['page']
+    ]
+);
+
 #: Test Many Segments
 router::add('vendor.blog.controller::method', '{path|any}/{page|alpha}.html');
 $routes = router::dump(router::route_normal);
