@@ -2,13 +2,21 @@
 
 namespace mysli\toolkit; class __setup
 {
+    /**
+     * Default configurations.
+     * --
+     * @var array
+     */
     private static $default_config = [
-        // Cookies default configurations
-        'cookie.prefix'      => ['string',  ''],
-        'cookie.encrypt'     => ['boolean', false],
-        'cookie.encrypt_key' => ['string',  null],
-        'cookie.sign'        => ['boolean', false],
-        'cookie.sign_key'    => ['string',  null]
+        // Cookies
+        'cookie.prefix'      => [ 'string',  ''    ],
+        'cookie.encrypt'     => [ 'boolean', false ],
+        'cookie.encrypt_key' => [ 'string',  null  ],
+        'cookie.sign'        => [ 'boolean', false ],
+        'cookie.sign_key'    => [ 'string',  null  ],
+
+        // JSON
+        'json.encode_pretty_print' => [ 'boolean', true ],
     ];
 
     /**

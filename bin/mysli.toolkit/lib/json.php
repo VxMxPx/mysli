@@ -4,9 +4,10 @@ namespace mysli\toolkit; class json
 {
     const __use = '
         .{
-            fs.fs    -> fs,
-            fs.file  -> file,
-            type.arr -> arr,
+            config
+            fs.fs   -> fs
+            fs.file -> file
+            type.arr -> arr
             exception.json
         }
     ';
@@ -54,14 +55,21 @@ namespace mysli\toolkit; class json
     /**
      * Decode a JSON string, and return it as Array or Object.
      * --
-     * @param  string  $json the json string being decoded.
-     * @param  boolean $assoc when TRUE, returned object will be converted
-     *                        into associative array.
-     * @param  integet $depth user specified recursion depth.
+     * @param string  $json
+     *        The json string being decoded.
+     *
+     * @param boolean $assoc
+     *        When TRUE, returned object will be converted to associative array.
+     *
+     * @param integer $options
+     *        See: https://secure.php.net/manual/en/function.json-decode.php
+     *
+     * @param integet $depth
+     *        User specified recursion depth.
      * --
      * @return mixed
      */
-    static function decode($json, $assoc=false, $depth=512)
+    static function decode($json, $assoc=false, $options=0, $depth=512)
     {
         $decoded = json_decode($json, $assoc, $depth);
         static::exception_on_error();
@@ -82,7 +90,7 @@ namespace mysli\toolkit; class json
      * @param integer $options
      *        Bitmask consisting of:
      *        JSON_HEX_QUOT, JSON_HEX_TAG, JSON_HEX_AMP, JSON_HEX_APOS,
-     *        JSON_FORCE_OBJECT.
+     *        JSON_FORCE_OBJECT, ...
      *
      * @param integer $depth
      *        The maximum depth. Must be greater than zero.
@@ -115,6 +123,13 @@ namespace mysli\toolkit; class json
      */
     static function encode($values, $options=0, $depth=512)
     {
+        if ($options === 0)
+        {
+            if (config::select('mysli.toolkit', 'json.encode_pretty_print'))
+            {
+                $options = JSON_PRETTY_PRINT;
+            }
+        }
         $json = json_encode($values, $options, $depth);
         static::exception_on_error();
         return $json;

@@ -1,6 +1,6 @@
 # Json
 
-A very simple JSON manipulation class, depends on native functions.
+A JSON manipulation class, depends on native functions.
 
 ## Usage
 
@@ -11,6 +11,14 @@ are available:
     json::decode_file($filename, true);
 
 On error `mysli\toolkit\exception\json` will be thrown.
+
+## Configuration
+
+**ENCODE_PRETTY_PRINT**
+
+Use whitespace in returned data to format it.
+
+     boolean mysli.toolkit, json.encode_pretty_print, [true]
 
 ## See Also
 
