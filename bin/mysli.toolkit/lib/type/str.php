@@ -815,6 +815,18 @@ namespace mysli\toolkit\type; class str
         }
     }
 
+    /**
+     * Split string to lines. (Taking \n, ... into account).
+     * --
+     * @param  string $string
+     * --
+     * @return array
+     */
+    static function lines($string)
+    {
+        return preg_split("/\r\n|\n|\r/", $string);
+    }
+
     /*
     --- Properties -------------------------------------------------------------
      */
