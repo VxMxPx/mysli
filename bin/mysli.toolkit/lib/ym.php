@@ -51,15 +51,63 @@ namespace mysli\toolkit; class ym
             return [];
         }
 
-        $list   = [];
-        $stack  = [&$list];
+        // So far converted string.
+        $list = [];
+        // Handle levels.
+        $stack = [&$list];
+        // Indentation type + size
         $indent = static::detect_indent($string);
-        $level  = 0;
-        $string = str::to_unix_line_endings($string);
-        $lines  = explode("\n", $string);
+        // Current indentation level.
+        $level = 0;
+        // To array
+        $lines = str::lines($string);
+        // Multiline
+        // $type is QUOTE (""), INDENT (> )
+        // $divider is either "\n" or ' ' (defines how new lines are divided).
+        $multiline = [
+            'enabled' => false,
+            'buffer'  => '',
+            'type'    => 'INDENT',
+            'divider' => ' ',
+            'level'   => 0,
+            'key'     => null
+        ];
 
         foreach ($lines as $lineno => $line)
         {
+            // Get current indentation level
+            $level = $indent ? static::get_level($line, $indent) : 0;
+
+            // Buffering multiline text?
+            if ($multiline['enabled'] === true)
+            {
+                if ($multiline['type'] === 'QUOTE')
+                {
+                    $multiline['buffer'] .= $multiline['divider'].trim($line);
+
+                    if (substr($line, -1) === '"' && substr($line, -2) !== '\\"')
+                    {
+                        // End buffer
+                        $stack[$multiline['level']][$multiline['key']] = rtrim($multiline['buffer'], '"');
+                        $multiline['enabled'] = false;
+                    }
+                    continue;
+                }
+                elseif ($multiline['type'] === 'INDENT')
+                {
+                    if ($level === $multiline['level']+1)
+                    {
+                        $multiline['buffer'] .= $multiline['divider'].trim($line);
+                        continue;
+                    }
+                    else
+                    {
+                        $stack[$multiline['level']][$multiline['key']] = ltrim($multiline['buffer']);
+                        $multiline['enabled'] = false;
+                    }
+                }
+            }
+
             // An empty line
             if (!trim($line))
             {
@@ -72,8 +120,6 @@ namespace mysli\toolkit; class ym
                 continue;
             }
 
-            // Get current indentation level
-            $level = $indent ? static::get_level($line, $indent) : 0;
             $stack = array_slice($stack, 0, $level+1);
 
             try
@@ -99,6 +145,25 @@ namespace mysli\toolkit; class ym
                 }
 
                 list($key, $value) = static::proc_line($line, false);
+                // Multiline?
+                if (($value === '>' || $value === '|') ||
+                    substr($value, 0, 1) === '"' && substr($value, -1) !== '"')
+                {
+                    // Define multiline
+                    $multiline = [
+                        'enabled' => true,
+                        'buffer'  => trim($value, '">|'),
+                        'type'    => (substr($value, 0, 1) !== '"' ? 'INDENT' : 'QUOTE'),
+                        'divider' => $value === '|' ? "\n" : ' ',
+                        'level'   => $level,
+                        'key'     => $key
+                    ];
+                    continue;
+                }
+                else
+                {
+                    $value = static::valufy($value);
+                }
 
                 if ($value === null)
                 {
@@ -220,12 +285,15 @@ namespace mysli\toolkit; class ym
      * Extract key / value from line!
      * --
      * @param string  $line
-     * @param boolean $li   List item?
+     *
+     * @param boolean $li
+     *        List item?
      * --
      * @throws mysli\toolkit\exception\ym 10 Missing colon.
      * @throws mysli\toolkit\exception\ym 20 Expected array to be closed.
      * --
      * @return array
+     *         [ string $key, string $value ]
      */
     protected static function proc_line($line, $li)
     {
@@ -254,7 +322,7 @@ namespace mysli\toolkit; class ym
 
         $value = trim($value, "\t ");
 
-        return [$key, static::valufy($value)];
+        return [$key, $value];
     }
 
     /**
@@ -517,7 +585,7 @@ namespace mysli\toolkit; class ym
      * --
      * @param string $string
      * --
-     * @return mixed
+     * @return string
      */
     protected static function detect_indent($string)
     {
