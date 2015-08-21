@@ -29,7 +29,7 @@ namespace mysli\front\page; class __setup
 
         // Create router to handle pages
         router::add('mysli.front.page.frontend', [
-            'page' => 'GET:{page|([a-z0-9_\-\/])}.html'
+            'page' => 'GET:{page|([a-z0-9_\-\/]+)}.html'
         ], router::route_low)
 
         and
