@@ -9,7 +9,8 @@ namespace mysli\assets; class assets
         mysli.toolkit.{pkgm,json,ym,config,router}
     ';
 
-    private static $web_dir = 'assets';
+    const web_dir = 'assets';
+
     private static $cache = [];
 
     /**
@@ -20,7 +21,7 @@ namespace mysli\assets; class assets
      */
     static function get_public_path($package)
     {
-        return web::path(self::$web_dir, $package);
+        return web::path(static::web_dir, $package);
     }
     /**
      * Get full absolute public url for particular package.
@@ -30,7 +31,7 @@ namespace mysli\assets; class assets
      */
     static function get_public_url($package)
     {
-        return web::url(self::$web_dir.'/'.$package);
+        return web::url(static::web_dir.'/'.$package);
     }
     /**
      * Get parsed ext, e.g.: stly => css
@@ -191,7 +192,7 @@ namespace mysli\assets; class assets
 
             if (!$debug)
             {
-                $links[] = web::url(self::$web_dir."/{$package}/{$main}");
+                $links[] = web::url(static::web_dir."/{$package}/{$main}");
             }
             else
             {
@@ -204,7 +205,7 @@ namespace mysli\assets; class assets
                     if (!$filter ||
                         substr($asset, -(strlen($filter))) === $filter)
                     {
-                        $links[] = web::url(self::$web_dir."/{$package}/{$asset}");
+                        $links[] = web::url(static::web_dir."/{$package}/{$asset}");
                     }
                 }
             }

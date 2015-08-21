@@ -1,13 +1,10 @@
 <?php
 
-namespace mysli\assets; class assets_tplp
+namespace mysli\assets; class __tplp
 {
     const __use = '
-        .assets
-        mysli.toolkit.exception.* -> toolkit.exception.*
+        .{ assets }
     ';
-
-    private static $web_dir = 'assets';
 
     /**
      * {'mysli.cms.blog/js/main.js'|assets/tags}
