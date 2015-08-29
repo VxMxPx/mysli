@@ -225,16 +225,6 @@ namespace mysli\toolkit; class request
         if (isset($_SERVER['REQUEST_URI']))
         {
             $path = explode('?', $_SERVER['REQUEST_URI'])[0];
-
-            $script_name = isset($_SERVER['SCRIPT_NAME'])
-                ? $_SERVER['SCRIPT_NAME']
-                : null;
-
-            if (substr($path, 0, strlen($script_name)) === $script_name)
-            {
-                $path = substr($path, strlen($script_name));
-            }
-
             return $path;
         }
 
