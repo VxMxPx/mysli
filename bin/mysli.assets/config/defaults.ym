@@ -1,35 +1,36 @@
-settings:
-    require:
-        cleancss:
-            command: {id} --version
-            expect:  3.*.*
-            level:   warn
-            message: >
-                CSS Compression might not work.
-                Missing `{id}` (npm install -g clean-css).
-                Expected version `{expect}` got `{result}`."
-        stylus:
-            command: {id} --version
-            expect:  0.*.*
-            level:   warn
-            message: >
-                Styl files might not be processed.
-                Missing `{id}` (npm install -g {id}).
-                Expected version `{expect}` got `{result}`.
-        uglifyjs:
-            command: {id} --version
-            expect:  uglifyjs 2.*.*
-            level:   warn
-            message: >
-                JS files might not be compressed.
-                Missing `{id}` (npm install -g {$id}).
-                Expected version `{expect}` got `{result}`.
-    compress:
-        css: cleancss {source} -o {dest}
-        js:  uglifyjs -c -o {dest} {source} --screw-ie8
-    process:
-        css:  cp {source} {dest}
-        js:   cp {source} {dest}
-        styl: stylus {source} -o {dest_dir}
-    ext:
-        styl: css
+require:
+    cleancss:
+        command: {id} --version
+        expect:  3.*.*
+        level:   warn
+        message: >
+            CSS Compression might not work.
+            Missing `{id}` (npm install -g clean-css).
+            Expected version `{expect}` got `{result}`."
+    stylus:
+        command: {id} --version
+        expect:  0.*.*
+        level:   warn
+        message: >
+            Styl files might not be processed.
+            Missing `{id}` (npm install -g {id}).
+            Expected version `{expect}` got `{result}`.
+    uglifyjs:
+        command: {id} --version
+        expect:  uglifyjs 2.*.*
+        level:   warn
+        message: >
+            JS files might not be compressed.
+            Missing `{id}` (npm install -g {$id}).
+            Expected version `{expect}` got `{result}`.
+
+process:
+    styl:
+        process: stylus {src/file} -o {dest/file.css}
+        compress: cleancss {dest/file.css} -o {dest/file.min.css}
+    css:
+        process: cp {src/file} {dest/file}
+        compress: cleancss {src/file} -o {dest/file.min.css}
+    js:
+        process: cp {src/file} {dest/file}
+        compress: uglifyjs -c -o {dest/file.min.js} {src/file} --screw-ie8
