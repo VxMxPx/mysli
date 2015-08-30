@@ -799,7 +799,7 @@ namespace mysli\tplp; class parser
     protected function find_let($line)
     {
         if (preg_match(
-            '/^[ \t]*?::let ([a-z0-9_]+)( set (.*?))?( \= (.*?))?( do)?$/',
+            '/^[ \t]*?::let ([a-z0-9_]+)( set (.*?))?( \= (.*?))?( from)?$/',
             $line, $match))
         {
             $result = ['lines' => [], 'set' => false];
@@ -819,8 +819,8 @@ namespace mysli\tplp; class parser
                 );
             }
 
-            // Do we have do ?
-            if (trim($match[count($match)-1]) !== 'do')
+            // Do we have from?
+            if (trim($match[count($match)-1]) !== 'from')
             {
                 if (substr(trim($match[4]), 0, 1) !== '=')
                 {
@@ -1651,10 +1651,16 @@ namespace mysli\tplp; class parser
             return $variable;
         }
 
+        // Find variable.one and escape it for now.
+        $variable = str_replace('.', "\x1f", $variable);
+
+        // Find variable[one][two] and convert it to variable['one']['two']
         $variable = preg_replace_callback(
             '/\[(.*?)\]/',
             function ($match)
             {
+                $match[1] = str_replace("\x1f", '.', $match[1]);
+
                 if (substr($match[1], 0, 1) === '\\')
                 {
                     return '[' . substr($match[1], 1) . ']';
@@ -1667,6 +1673,9 @@ namespace mysli\tplp; class parser
             $variable
         );
 
+        // Restore variable.one
+        $variable = str_replace("\x1f", '->', $variable);
+
         if (substr($variable, 0, 1) === '$')
         {
             throw new exception\parser(
@@ -1675,7 +1684,7 @@ namespace mysli\tplp; class parser
         }
 
         if (!preg_match(
-            '/^[a-z0-9_]+((\\-\\>[a-z0-9_]+)|(\\[\'.+\'\\]))?$/i', $variable))
+            '/^[a-z0-9_]+((\\-\\>[a-z0-9_]+)|(\\[\'.+\'\\]))*?$/i', $variable))
         {
             throw new exception\parser(
                 "Not a valid variable name: `{$variable}`", 21
@@ -1784,7 +1793,7 @@ namespace mysli\tplp; class parser
             );
         }
 
-        if (!preg_match('/^[a-z0-9_\\/]+$/i', $function))
+        if (!preg_match('/^[a-z0-9_\.]+$/i', $function))
         {
             throw new exception\parser(
                 "Not a valid function name: `{$function}`", 21
@@ -1792,9 +1801,9 @@ namespace mysli\tplp; class parser
         }
 
         // Imported static method call: blog/method => blog::method
-        if (strpos($function, '/') !== false)
+        if (strpos($function, '.') !== false)
         {
-            $sfunction = explode('/', $function);
+            $sfunction = explode('.', $function);
 
             if (count($sfunction) !== 2)
             {

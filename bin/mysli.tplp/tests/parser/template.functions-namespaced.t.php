@@ -9,25 +9,26 @@ use mysli\toolkit\fs\fs;
 $file = <<<'FILE'
 <html>
 <body>
-    {variable|max:var|var_fnct:true}
-    {|var_funct:true}
-    {|blog.func:true}
+    ::use mysli.assets
+    {'css/main.css'|assets.tags:'template:default'}
+    {|assets.tags:variable.property}
 </body>
 </html>
 FILE;
 
-#: Test Functions Costume
+#: Test Function Namespaced
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #: Use File
 $parser = new parser(fs::tmppath('dev.test'));
 return assert::equals(
     $parser->template($file),
     <<<'EXPECT'
-<html>
+<?php
+use mysli\assets\__tplp as assets;
+?><html>
 <body>
-    <?php echo $tplp_func_var_fnct(max($variable, $var), true); ?>
-    <?php echo $tplp_func_var_funct(true); ?>
-    <?php echo blog::func(true); ?>
+    <?php echo assets::tags('css/main.css', 'template:default'); ?>
+    <?php echo assets::tags($variable->property); ?>
 </body>
 </html>
 EXPECT

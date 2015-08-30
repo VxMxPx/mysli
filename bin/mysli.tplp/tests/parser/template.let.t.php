@@ -9,26 +9,26 @@ use mysli\toolkit\fs\fs;
 $file = <<<'FILE'
 ::let var_name = 'Marko'
 
-::let var_multiline do
+::let var_multiline from
     This will act exactly the same
     as it would in HTML. This text will be displayed in single line.
     That's the thing...
     That\'s the escaped thing...
 ::/let
 
-::let var_tags set implode(, ) do
+::let var_tags set implode(, ) from
     one
     two
     three
 ::/let
 
-::let var_array set array do
+::let var_array set array from
     Item one
     Item two
     Item three
 ::/let
 
-::let var_cities set dictionary(:) do
+::let var_cities set dictionary(:) from
     Dublin : Ireland
     Moscow : Russia
     Ljubljana : Slovenia
