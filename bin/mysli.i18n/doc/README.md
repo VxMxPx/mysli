@@ -6,6 +6,6 @@ Mysli Internationalization Package.
 
 - [Introduction](introduction.md)
 - [Usage](usage.md)
-- [For Translators](for_translators.md)
+- [For Translators](for-translators.md)
 - [API](api.md)
 - [License](license.md)
