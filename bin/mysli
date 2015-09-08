@@ -3,6 +3,8 @@
 
 namespace mysli;
 
+const VERSION = '1.r150903';
+
 /**
  * Run Mysi Command Line. Note the self-execution.
  * --
@@ -404,7 +406,10 @@ function get_commands()
             'You need to be root to do this.',
 
         '--self update'  =>
-            'Update this script. You need to be root to do this.'
+            'Update this script. You need to be root to do this.',
+
+        '--self version' =>
+            'Output version information.',
     ];
 }
 
@@ -417,7 +422,7 @@ function get_commands()
 function get_variables()
 {
     return [
-        '--self-no-colors' => [ 'MYSLI_ROOT_NO_COLORS', 'Turn colors in an output off.' ],
+        '--self-no-colors' => [ 'MYSLI_ROOT_NO_COLORS', 'Turn off output colors.' ],
         '--self-debug'     => [ 'MYSLI_ROOT_DEBUG',     'Output debug messages.' ],
     ];
 }
@@ -934,4 +939,10 @@ function smexec_update()
 function smexec_remove()
 {
     log_info("Not implemented yet.");
+}
+
+function smexec_version()
+{
+    log_info("Mysli Command Line Utiliy, Version ".VERSION);
+    return true;
 }
