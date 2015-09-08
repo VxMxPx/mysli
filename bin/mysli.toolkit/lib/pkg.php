@@ -383,14 +383,35 @@ namespace mysli\toolkit; class pkg
     /**
      * Get version for package.
      * --
-     * @param string $package
+     * @param string  $package
+     * @param boolean $release Return version.release
      * --
-     * @return integer
+     * @return string
      */
-    static function get_version($package)
+    static function get_version($package, $release=false)
     {
-        $meta = static::get_meta($package);
-        return (int) $meta['version'];
+        try
+        {
+            $meta = static::get_meta($package);
+        }
+        catch (\Exception $e)
+        {
+            return null;
+        }
+
+        if (!is_array($meta))
+        {
+            return null;
+        }
+
+        $version = $meta['version'];
+
+        if ($release)
+        {
+            $version .= '.'.(isset($meta['release']) ? $meta['release'] : 'rsrc');
+        }
+
+        return $version;
     }
 
     /**
