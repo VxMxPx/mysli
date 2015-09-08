@@ -2,7 +2,10 @@
 
 namespace mysli\toolkit\cli; class prog
 {
-    const __use = '.cli.{ util, ui }';
+    const __use = '
+        .cli.{ util, ui }
+        .pkg
+    ';
 
     /**
      * This is meta data for this particular CLI program.
@@ -12,9 +15,11 @@ namespace mysli\toolkit\cli; class prog
      */
     private $meta = [
         'title'            => null,
-        'description'      => null,
         'command'          => null,
-        'description_long' => null
+        'description'      => null,
+        'description_long' => null,
+        'has_help'         => true,
+        'version'          => false,
     ];
 
     /**
@@ -25,11 +30,18 @@ namespace mysli\toolkit\cli; class prog
     private $is_valid = null;
 
     /**
-     * Weather help was required.
+     * Weather help was requested.
      * --
      * @var boolean
      */
     private $is_help = null;
+
+    /**
+     * Weather version was requested.
+     * --
+     * @var boolean
+     */
+    private $is_version = null;
 
     /**
      * Collection of messages, set on validation.
@@ -56,26 +68,80 @@ namespace mysli\toolkit\cli; class prog
      * Instance of PROG. Accepts basic meta data.
      * --
      * @param string $title
-     * @param string $description
      * @param string $command
-     * @param string $description_long
      */
-    function __construct(
-        $title, $description=null, $command=null, $description_long=null)
+    function __construct($title, $command=null)
     {
-        $this->meta = [
-            'title'            => (string) $title,
-            'description'      => (string) $description,
-            'command'          => (string) $command,
-            'description_long' => (string) $description_long
-        ];
+        $this->set_title($title);
+        $this->set_command($command);
+    }
+
+    /**
+     * Set program's title.
+     * --
+     * @param string $title
+     */
+    function set_title($title)
+    {
+        $this->meta['title'] = (string) $title;
+    }
+
+    /**
+     * Set program's command (command being executed).
+     * --
+     * @param string $command In format: vendor.package.script
+     */
+    function set_command($command)
+    {
+        $this->meta['command'] = (string) $command;
+    }
+
+    /**
+     * Set program's short and long description to be displayed on HELP screen.
+     * --
+     * @param string $short
+     * @param string $long
+     */
+    function set_description($short, $long=null)
+    {
+        $this->meta['description'] = (string) $short;
+        $this->meta['description_long'] = (string) $long;
+    }
+
+    /**
+     * Enable/disable help screen.
+     * --
+     * @param boolean $help
+     */
+    function set_help($help)
+    {
+        $this->meta['has_help'] = !! $help;
+    }
+
+    /**
+     * Enable/disable version display.
+     * --
+     * @param string $version
+     *        Either actual version, or vendor.package if acquire is true.
+     *
+     * @param boolean $acquire
+     *        Version can be automatically read from mysli.pkg.ym
+     */
+    function set_version($version, $acquire=true)
+    {
+        if ($acquire && $version)
+        {
+            $version = pkg::get_version($version, true);
+        }
+
+        $this->meta['version'] = (string) $version;
     }
 
     /**
      * Create and assign new parameter.
      * --
-     * @param  string $id
-     * @param  array  $options
+     * @param string $id
+     * @param array  $options
      * --
      * @throws \Exception 10 No such method.
      * --
@@ -168,12 +234,24 @@ namespace mysli\toolkit\cli; class prog
 
         /*
         If help was set, set help to true and return.
-        When help is passed in, result is not valid not invalid, hence null.
+        When help is passed in, result is not valid nor invalid, hence null.
          */
         if (isset($this->arguments[0]) &&
             in_array($this->arguments[0], ['-h', '--help']))
         {
             $this->is_help = true;
+            $this->is_valid = null;
+            return true;
+        }
+
+        /*
+        If version was set, set version to true and return.
+        When version is passed in, result is not valid nor invalid, hence null.
+         */
+        if (isset($this->arguments[0]) &&
+            in_array($this->arguments[0], ['--version']))
+        {
+            $this->is_version = true;
             $this->is_valid = null;
             return true;
         }
@@ -381,6 +459,26 @@ namespace mysli\toolkit\cli; class prog
             );
 
         return trim($output, "\n");
+    }
+
+    /**
+     * Weather version was required, and should be displayed.
+     * --
+     * @return boolean
+     */
+    function is_version()
+    {
+        return $this->is_version;
+    }
+
+    /**
+     * Actually return version string.
+     * --
+     * @return string
+     */
+    function version()
+    {
+        return $this->meta['title'].' Version '.$this->meta['version'];
     }
 
     /**
@@ -706,6 +804,32 @@ namespace mysli\toolkit\cli; class prog
                 $ldefault = strlen($params[$pid]['default']);
         }
 
+        // Version?
+        if ($type !== 'positional')
+        {
+            if ($this->meta['version'])
+            {
+                $params['--version'] = [
+                    'key'     => '--version',
+                    'default' => '',
+                    'help'    => 'Display version information.',
+                ];
+            }
+
+            // Add help
+            $params['-h/--help'] = [
+                'key'     => '-h, --help',
+                'default' => '',
+                'help'    => 'Display this help.',
+            ];
+
+            // 10 for -h, --help
+            if ($lkey <= 10)
+            {
+                $lkey = 10;
+            }
+        }
+
         // Full length of key + default + spaces:
         // --key [default]
         $lfull = ($lkey + 2) + ($ldefault ? $ldefault + 3 : 2);
@@ -751,14 +875,15 @@ namespace mysli\toolkit\cli; class prog
      */
 
     /**
-     * Validate prog and print messages to CLI if failed or if help was requested.
+     * Validate prog and print messages to CLI if failed
+     * or if help or version was requested.
      * --
      * @param \mysli\toolkit\prog $prog
      * @param array               $arguments
      * --
      * @return boolean
      *         NULL  if successfull (nothing happened).
-     *         TRUE  if help was printed.
+     *         TRUE  if help or version was printed.
      *         FALSE if failed.
      */
     static function validate_and_print(self $prog, array $arguments=null)
@@ -775,6 +900,11 @@ namespace mysli\toolkit\cli; class prog
         else if ($prog->is_help())
         {
             ui::line($prog->help());
+            return true;
+        }
+        else if ($prog->is_version())
+        {
+            ui::line($prog->version());
             return true;
         }
         else
