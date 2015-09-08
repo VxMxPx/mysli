@@ -1,36 +1,76 @@
-require:
-    cleancss:
-        command: {id} --version
-        expect:  3.*.*
-        level:   warn
-        message: >
-            CSS Compression might not work.
-            Missing `{id}` (npm install -g clean-css).
-            Expected version `{expect}` got `{result}`."
-    stylus:
-        command: {id} --version
-        expect:  0.*.*
-        level:   warn
-        message: >
-            Styl files might not be processed.
-            Missing `{id}` (npm install -g {id}).
-            Expected version `{expect}` got `{result}`.
-    uglifyjs:
-        command: {id} --version
-        expect:  uglifyjs 2.*.*
-        level:   warn
-        message: >
-            JS files might not be compressed.
-            Missing `{id}` (npm install -g {$id}).
-            Expected version `{expect}` got `{result}`.
+id: default:assets
+
+tags:
+    css:
+        match: [ css ]
+        tag: '<link rel="stylesheet" type="text/css" href="{link}">'
+    js:
+        match: [ js ]
+        tag: '<script type="text/javascript" src="{link}"></script>'
+    img:
+        match: [ jpg, png, gif ]
+        tag: '<img src="{link}" />'
 
 process:
     styl:
-        process: stylus {src/file} -o {dest/file.css}
-        compress: cleancss {dest/file.css} -o {dest/file.min.css}
+        match: *.styl
+        require:
+            - stylus --version | grep ^0.*$
+        process:
+            - stylus {src/file} -o {dest/file.css}
+            - {dest/file.css}
+        compress:
+            - {process/css/compress}
     css:
-        process: cp {src/file} {dest/file}
-        compress: cleancss {src/file} -o {dest/file.min.css}
+        match: *.css
+        require:
+            - cleancss --version | grep ^3.*$
+        process:
+            - cp {src/file} {dest/file}
+            - {dest/file}
+        compress:
+            - cleancss {dest/file.css} -o {dest/file.min.css}
+            - {dest/file.min.css}
     js:
-        process: cp {src/file} {dest/file}
-        compress: uglifyjs -c -o {dest/file.min.js} {src/file} --screw-ie8
+        match: *.js
+        require:
+            - uglifyjs --version | grep "^uglifyjs 2.*$"
+        process:
+            - cp {src/file} {dest/file}
+            - {dest/file}
+        compress:
+            - uglifyjs -c -o {dest/file.min.js} {dest/file} --screw-ie8
+            - {dest/file.min.js}
+    tplp:
+        match: *.tplp.html
+        require:
+            - mysli --self version | grep "^Mysli .*$"
+            - mysli template --version | grep "^Mysli .*$"
+        process:
+            - myli tplp -f {src/file} {dest/}
+            - {dest/file.php}
+    i18n:
+        match: *.lng
+        require:
+            - mysli --self version | grep "^Mysli .*$"
+            - mysli i18n --version | grep "^Mysli .*$"
+        process:
+            - mysli i18n -f {src/file} {dest/}
+            - {dest/file.json}
+    copy:
+        match: *.*
+        require:
+            - cp --version | grep "^cp .*$"
+        process:
+            - cp -r {src/file} {dest/file}
+            - {dest/file}
+
+files:
+    tplp:
+        process: [ tplp ]
+        publish: No
+        include: *.tplp
+    i18n:
+        process: [ i18n ]
+        publish: No
+        include: *.lng
