@@ -180,7 +180,8 @@ namespace mysli\toolkit\cli; class param
         // Does value needs to be inverted?
         if ($this->option('invert'))
         {
-            switch ($this->option('type')) {
+            switch ($this->option('type'))
+            {
                 case 'string':
                     $this->value = strrev($this->value);
                     break;
@@ -189,8 +190,8 @@ namespace mysli\toolkit\cli; class param
                     $this->value = !$this->value;
                     break;
 
-                case 'integer':
                 case 'float':
+                case 'integer':
                     $this->value = $this->value*-1;
                     break;
 
