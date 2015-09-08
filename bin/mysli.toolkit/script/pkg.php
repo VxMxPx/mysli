@@ -16,7 +16,12 @@ namespace mysli\toolkit\root\script; class pkg
         /*
         Set parameters.
          */
-        $prog = new prog('Mysli Pkg', 'Manage Mysli Packages.', 'mysli.toolkit.pkg');
+        $prog = new prog('Mysli Pkg', 'mysli.toolkit.pkg');
+
+        $prog->set_help(true);
+        $prog->set_version('mysli.toolkit', true);
+        $prog->set_description('Manage Mysli Packages.');
+
         $prog
         ->create_parameter('-e/--enable', [
             'help' => 'Enable a package',

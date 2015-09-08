@@ -2,7 +2,6 @@
 
 namespace mysli\tplp\root\script; class template
 {
-
     const __use = '
         .{ parser, tplp }
         mysli.toolkit.cli.{ prog, param, ui, output, util }
@@ -10,7 +9,7 @@ namespace mysli\tplp\root\script; class template
     ';
 
     /**
-     * Run testing utility.
+     * Run Template CLI.
      * --
      * @param array $args
      * --
@@ -21,7 +20,11 @@ namespace mysli\tplp\root\script; class template
         /*
         Set params.
          */
-        $prog = new prog('Mysli Template Tplp', '', 'mysli.tplp.template');
+        $prog = new prog('Mysli Template Tplp', 'mysli.tplp.template');
+
+        $prog->set_help(true);
+        $prog->set_version('mysli.tplp', true);
+
         $prog
         ->create_parameter('PACKAGE', [
             'required' => true,

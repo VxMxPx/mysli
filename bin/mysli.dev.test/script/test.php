@@ -20,7 +20,11 @@ namespace mysli\dev\test\root\script; class test
         /*
         Set params.
          */
-        $prog = new prog('Mysli Testing Utility', '', 'mysli.dev.test.test');
+        $prog = new prog('Mysli Testing Utility', 'mysli.dev.test.test');
+
+        $prog->set_help(true);
+        $prog->set_version('mysli.dev.test', true);
+
         $prog
         ->create_parameter('PACKAGE', [
             'required' => true,

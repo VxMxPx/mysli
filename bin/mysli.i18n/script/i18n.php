@@ -21,7 +21,11 @@ namespace mysli\i18n\root\script; class i18n
         /*
         Set params.
          */
-        $prog = new prog('Mysli I18n', '', 'mysli.i18n.i18n');
+        $prog = new prog('Mysli I18n', 'mysli.i18n.i18n');
+
+        $prog->set_help(true);
+        $prog->set_version('mysli.i18n', true);
+
         $prog
         ->create_parameter('PACKAGE', [
             'required' => true,

@@ -20,11 +20,11 @@ namespace mysli\frontend\root\script; class theme
         /*
         Set parameters.
          */
-        $prog = new prog(
-            'Mysli Frontend Theme',
-            'Manage Themes Manager.',
-            'mysli.frontend.theme'
-        );
+        $prog = new prog('Mysli Frontend Theme', 'mysli.frontend.theme');
+
+        $prog->set_help(true);
+        $prog->set_version('mysli.frontend', true);
+        $prog->set_description('Manage Themes.');
 
         $prog
         ->create_parameter('-a/--activate', [

@@ -27,11 +27,12 @@ namespace mysli\dev\pack\root\script; class pack
      */
     static function __run(array $args)
     {
-        $prog = new prog(
-            'Mysli Pack',
-            'Command line utility for producing PHAR packages.',
-            'mysli.dev.pack.pack'
-        );
+        $prog = new prog('Mysli Pack', 'mysli.dev.pack.pack');
+
+        $prog->set_description('Command line utility for producing PHAR packages.');
+        $prog->set_help(true);
+        $prog->set_version('mysli.dev.pack', true);
+
         $prog
         ->create_parameter('--whitespace/-w', [
             'type' => 'boolean',
