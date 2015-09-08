@@ -1,0 +1,39 @@
+process:
+    typescript:
+        match: [ *.ts ]
+        require:
+            - tsc --version | grep "^Version 1.*$"
+        process:
+            - tsc --outDir {dest/} {src/file} --target ES5 -d
+            - {dest/file.js}
+        compress:
+            - {js/compress}
+
+files:
+    ui/css:
+        process: [ styl, css ]
+        merge: mrg-ui.css
+        include:
+            - variables.styl
+            - fonts.css
+            - font-awesome.css
+            - mixins.styl
+            - common.styl
+            - *.styl
+            - *.css
+    ui/js:
+        process: [ typescript, js ]
+        merge: mrg-ui.js
+        include:
+            - *.ts
+            - *.js
+    common/js:
+        process: [ typescript ]
+        merge: mrg-common.js
+        include: *.ts
+    external:
+        process: [ typescript ]
+        merge: mrg-external.js
+        include: *.ts
+    fonts:
+        process: [ copy ]

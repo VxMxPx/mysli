@@ -1,0 +1,30 @@
+@import "variables"
+
+.ui-navigation
+    &.style-alt
+        color: #333
+        text-decoration: none
+        a
+            color: #fff
+        .ui-button, .ui-button:hover, .ui-button:focus
+            border-bottom: 1px solid rgba(255, 255, 255, .1)
+            box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .3)
+    .ui-button, .ui-button:hover, .ui-button:focus
+        -webkit-border-radius: 0
+        -moz-border-radius: 0
+        border-radius: 0
+        outline: 0
+        border: 0
+        width: 100%
+        text-transform: none
+        text-align: left
+        padding: 15px
+        border-bottom: 1px solid rgba(0, 0, 0, .1)
+        box-shadow: inset 0 -1px 0 rgba(255, 255, 255, .3)
+        &:active
+            padding: 17px 15px 13px
+    .ui-navigation-options
+        &.collapsed
+            display: none
+        &.expanded
+            display: block
