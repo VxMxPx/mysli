@@ -72,9 +72,9 @@ namespace mysli\i18n\root\script; class i18n
             return false;
         }
 
-        // Create ~dist folder if not there...
-        if (!fs\dir::exists("{$path}/~dist"))
-            fs\dir::create("{$path}/~dist");
+        // Create dist~ folder if not there...
+        if (!fs\dir::exists("{$path}/dist~"))
+            fs\dir::create("{$path}/dist~");
 
         // Wait for changes
         return fs\file::observe($path, function ($changes) use ($path, $watch)
@@ -87,7 +87,7 @@ namespace mysli\i18n\root\script; class i18n
 
                 // Dist filename and path
                 $rpfile = substr($rfile, 0, -4).'.json'; // Cut .lng
-                $dspath = "{$path}/~dist/{$rpfile}";
+                $dspath = "{$path}/dist~/{$rpfile}";
 
                 // Print action and file...
                 ui::info(ucfirst($change['action']), $rfile);

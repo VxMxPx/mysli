@@ -59,8 +59,8 @@ namespace mysli\tplp; class template
     {
         $this->root = $root;
 
-        if (dir::exists(fs::ds($root, '~dist')))
-            $root = "{$root}/~dist";
+        if (dir::exists(fs::ds($root, 'dist~')))
+            $root = "{$root}/dist~";
 
         $this->parser = new parser($root);
     }
@@ -206,7 +206,7 @@ namespace mysli\tplp; class template
 
     /**
      * Check weather particular template SOURCE file exists.
-     * This will omit temporary folder, ~dist
+     * This will omit temporary folder, dist~
      * and replaced files (@see static::replace()).
      * --
      * @param string $file
@@ -319,7 +319,7 @@ namespace mysli\tplp; class template
         if ($type === 'php')
             $temporariy = fs::tmppath('tplp', tplp::tmpname($file, $root));
 
-        $dist = "{$root}/~dist/{$file}.{$type}";
+        $dist = "{$root}/dist~/{$file}.{$type}";
         $source = "{$root}/{$file}.{$type}";
 
         // Check paths

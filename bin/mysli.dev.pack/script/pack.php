@@ -118,7 +118,7 @@ namespace mysli\dev\pack\root\script; class pack
         $phar_name .= $pkg_pre_release ? "-{$pkg_pre_release}" : '';
 
         // Path where phar will be saved
-        $phar_root = fs::ds($pkg_root, '~releases');
+        $phar_root = fs::ds($pkg_root, 'releases~');
 
         // Actual full pahr path (inc filename)
         $phar_afile = fs::ds($phar_root, $phar_name.'.phar');
@@ -437,7 +437,7 @@ namespace mysli\dev\pack\root\script; class pack
         // Big License
         $ignore[] = 'doc/COPYING';
         $ignore[] = 'tests/';
-        $ignore[] = '~releases/';
+        $ignore[] = 'releases~/';
 
         if (isset($meta['pack']))
         {

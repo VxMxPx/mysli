@@ -33,7 +33,7 @@ i18n:
 ## Command Line
 
 Command line interface can be used to pre-process language files.
-Pre-processing will convert `lng` to `json` and saved them into `~dist`
+Pre-processing will convert `lng` to `json` and saved them into `dist~`
 directory of languages root (see above).
 This will create permanent cache, and hence processing of `lng` file on first
 request will not be necessary. It's recommended to produce cached version of

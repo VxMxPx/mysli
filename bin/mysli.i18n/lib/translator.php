@@ -68,7 +68,7 @@ namespace mysli\i18n; class translator
      *
      * $path is package? => Resolve it and get full absolute path...
      * Exists $path/$language.json ? => Load
-     * Exists $path/~dist/$language.json ? => Load
+     * Exists $path/dist~/$language.json ? => Load
      * Exists tmp/i18n/qid_$language.json ? => Load
      *
      * Exists $path/$language.lng ? => Process => Save to Cache => Load
@@ -115,7 +115,7 @@ namespace mysli\i18n; class translator
 
         // Define paths
         $root_json = "{$path}/{$language}.json";
-        $dist_json = "{$path}/~dist/{$language}.json";
+        $dist_json = "{$path}/dist~/{$language}.json";
         $tmp_json  = fs::tmppath('i18n', i18n::tmpname($language, $path));
         $root_src  = "{$path}/{$language}.lng";
 

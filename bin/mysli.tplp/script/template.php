@@ -79,9 +79,9 @@ namespace mysli\tplp\root\script; class template
             return false;
         }
 
-        // Create ~dist folder if not there...
-        if (!fs\dir::exists("{$path}/~dist"))
-            fs\dir::create("{$path}/~dist");
+        // Create dist~ folder if not there...
+        if (!fs\dir::exists("{$path}/dist~"))
+            fs\dir::create("{$path}/dist~");
 
         $parser = new parser($path);
 
@@ -97,7 +97,7 @@ namespace mysli\tplp\root\script; class template
 
                 // Dist filename and path
                 $rpfile = substr($rfile, 0, -9).($static?'.php':'.tpl.php'); // Cut .tpl.html
-                $dspath = "{$path}/~dist/{$rpfile}";
+                $dspath = "{$path}/dist~/{$rpfile}";
 
                 // Print action and file...
                 ui::info(ucfirst($change['action']), $rfile);
