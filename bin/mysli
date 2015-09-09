@@ -3,7 +3,7 @@
 
 namespace mysli;
 
-const VERSION = '1.r150903';
+const VERSION = '1.r150909';
 
 /**
  * Run Mysi Command Line. Note the self-execution.
@@ -39,7 +39,8 @@ function __run()
     {
         if (in_array($garg, $args))
         {
-            unset($args[ array_search($garg, $args) ]);
+            // unset($args[ array_search($garg, $args) ]);
+            array_splice($args, array_search($garg, $args), 1);
             define($garg_def, true);
         }
         else
@@ -647,7 +648,7 @@ function resolve_relative($relative_to, $path)
  */
 function panic($message)
 {
-    echo "[!] {$message}";
+    echo "\n{!!} {$message}\n";
     exit(120);
 }
 
@@ -664,7 +665,7 @@ function log_debug($message)
 {
     if (MYSLI_ROOT_DEBUG)
     {
-        echo "[D] {$message}\n";
+        echo "\n{$message}";
     }
 }
 
@@ -675,7 +676,7 @@ function log_debug($message)
  */
 function log_info($message)
 {
-    echo "{$message}\n";
+    echo "\n{$message}";
 }
 
 /**
@@ -685,7 +686,7 @@ function log_info($message)
  */
 function log_error($message)
 {
-    echo "[E] {$message}\n";
+    echo "\n{$message}";
 }
 
 /**
@@ -695,7 +696,7 @@ function log_error($message)
  */
 function log_warning($message)
 {
-    echo "[W] {$message}\n";
+    echo "\n{$message}";
 }
 
 /*
@@ -865,6 +866,7 @@ function smexec_init(array $arguments)
         if (!file_exists($toolkit_setup_file))
         {
             log_error("Toolkit setup file not found: `{$toolkit_setup_file}`");
+            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             return false;
         }
 
@@ -880,6 +882,7 @@ function smexec_init(array $arguments)
                 "Toolkit setup file was loaded but ".
                 "it doesn't contain a valid class `{$to_class}`."
             );
+            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             return false;
         }
 
@@ -887,16 +890,19 @@ function smexec_init(array $arguments)
             [$tk_class, 'enable'], [$apppath, $binpath, $pubpath]))
         {
             log_error("Toolkit setup failed, without an explanation.");
+            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             return false;
         }
         else
         {
             log_info("OK Toolkit setup was successful.");
+            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         }
     }
     catch (\Exception $e)
     {
         log_error("Toolkit setup failed, with message:\n".$e->getMessage());
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         return false;
     }
 
@@ -912,37 +918,79 @@ function smexec_init(array $arguments)
     if (!file_put_contents("{$apppath}/mysli.loc.php", $loc."\n"))
     {
         log_error("Couldn't write `loc` file to: `{$apppath}/mysli.loc.php`.");
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         return false;
     }
     else
     {
         log_info("OK Wrote `loc` file to: `{$apppath}/mysli.loc.php`.");
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     }
 
     /*
     Done.
      */
     log_info("OK Initialization is now done. System should be usable.");
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     return true;
 }
 
-function smexec_install()
+function smexec_install(array $arguments)
 {
-    log_info("Not implemented yet.");
+    $path = isset($arguments[2]) ? $arguments[2] : '/usr/bin';
+    $path = rtrim($path).'/mysli';
+
+    $content = file_get_contents(__FILE__);
+
+    if (@file_put_contents($path, $content))
+    {
+        log_info("Mysli was successfully installed to `{$path}`.");
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+        if (!@chmod($path, 0755))
+        {
+            log_warning(
+                "Can't make an executable.\n".
+                "You can do it yourself: `sudo chmod +x {$path}`."
+            );
+            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        }
+
+        return true;
+    }
+    else
+    {
+        log_warning("Failed to install Mysli to `{$path}`. Make sure you're a root.");
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        return false;
+    }
 }
 
 function smexec_update()
 {
     log_info("Not implemented yet.");
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 }
 
 function smexec_remove()
 {
-    log_info("Not implemented yet.");
+    if (@unlink(__FILE__))
+    {
+        log_info("Mysli was successfully removed.");
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        return true;
+    }
+    else
+    {
+        log_warning("Failed to remove Mysli. Make sure you're a root.");
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        return false;
+    }
 }
 
 function smexec_version()
 {
     log_info("Mysli Command Line Utiliy, Version ".VERSION);
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     return true;
 }
