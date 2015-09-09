@@ -437,6 +437,17 @@ namespace mysli\toolkit\cli; class prog
             : '';
 
         /*
+        Other options
+         */
+        $oargs_title = 'Other:';
+        $oargs = '';
+        if ($this->meta['version'])
+        {
+            $oargs .= "    --version  Display version information.\n";
+        }
+        $oargs .= "-h, --help     Display this help.";
+
+        /*
         Should output be styled?
          */
         if ($style)
@@ -445,6 +456,8 @@ namespace mysli\toolkit\cli; class prog
 
             if ($dargs)
                 $dargs_title = ui::title($dargs_title, true);
+
+            $oargs_title = ui::title($oargs_title, true);
         }
 
         $output =
@@ -453,6 +466,7 @@ namespace mysli\toolkit\cli; class prog
             "\nUsage: ./dot {$command} {$sargs}\n".
             ($pargs ? "\n{$pargs}\n" : '').
             ($dargs ? "\n{$dargs_title}\n{$dargs}\n" : '').
+            "\n{$oargs_title}\n{$oargs}\n".
             ($description_long
                 ? "\n".wordwrap($description_long, $terminal_width)."\n"
                 : ''
@@ -802,32 +816,6 @@ namespace mysli\toolkit\cli; class prog
             // Adjust longest default length
             if (strlen($params[$pid]['default']) > $ldefault)
                 $ldefault = strlen($params[$pid]['default']);
-        }
-
-        // Version?
-        if ($type !== 'positional')
-        {
-            if ($this->meta['version'])
-            {
-                $params['--version'] = [
-                    'key'     => '--version',
-                    'default' => '',
-                    'help'    => 'Display version information.',
-                ];
-            }
-
-            // Add help
-            $params['-h/--help'] = [
-                'key'     => '-h, --help',
-                'default' => '',
-                'help'    => 'Display this help.',
-            ];
-
-            // 10 for -h, --help
-            if ($lkey <= 10)
-            {
-                $lkey = 10;
-            }
         }
 
         // Full length of key + default + spaces:
