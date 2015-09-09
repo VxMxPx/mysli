@@ -1,6 +1,5 @@
 package:     mysli.toolkit
 version:     1
-release:     source
 description: Mysli Toolkit Core Library.
 license:     GPL-3.0
 authors:
