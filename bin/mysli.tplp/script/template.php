@@ -175,7 +175,7 @@ namespace mysli\tplp\root\script; class template
     protected static function resolve_path($path)
     {
         // Package
-        if (preg_match('/^[a-z0-9\.]$/', $path))
+        if (preg_match('/^[a-z0-9\.]+$/', $path))
         {
             $path = pkg::get_path($path);
         }
