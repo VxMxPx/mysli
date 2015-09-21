@@ -23,13 +23,3 @@ assets:
     path: new/path
     map: map.ym
 ```
-
-Assets are not limited only to packages, to build assets in any other directory
-like for example in themes, use path to the map file:
-
-```
-mysli assets -wp ./content/themes/default/assets
-```
-
-In such case `map.ym` needs to contain an unique ID, see [Usage](usage.md) for
-more information. In above example ID would be `theme:default`.

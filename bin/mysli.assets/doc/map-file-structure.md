@@ -8,8 +8,6 @@ Map file has two functions:
 Bellow is the example of a map file:
 
 ```yaml
-id: default:assets
-
 tags:
     css:
         match: [ css ]
@@ -117,15 +115,6 @@ all possible usages for how assets building works. In most cases map files
 will be simpler.
 
 ## Explanation of keys
-
-### ID
-
-Id can be entirely omitted if you're using assets in package. In case of packages
-ID will be automatically assigned (to be `package:vendor.name`). ID is mostly
-used for themes, in such case convention is to use `theme:theme_name` as an
-ID. ID is used later in template to access assets, for example:
-`{ 'css' | assets.tag : 'theme:theme_name' }` would grab `css`
-assets for ID `theme:theme_name`.
 
 ### TAGS
 
