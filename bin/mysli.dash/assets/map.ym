@@ -2,12 +2,11 @@ process:
     typescript:
         match: [ *.ts ]
         require:
-            - tsc --version | grep "^Version 1.*$"
+            - tsc --version | grep "Version 1.*$"
         process:
             - tsc --outDir {dest/} {src/file} --target ES5 -d
             - {dest/file.js}
-        compress:
-            - {js/compress}
+        compress: &js.compress
 
 files:
     ui/css:
@@ -24,7 +23,7 @@ files:
     ui/js:
         process: [ typescript, js ]
         merge: mrg-ui.js
-        include:
+        source:
             - *.ts
             - *.js
     common/js:
