@@ -57,17 +57,19 @@ defined __use statement).
 To simplify, here's a list of checks autoloader will do, when for example
 method `\vendor\package\foo::bar` is called:
 
- vendor.package/ (!)
-     lib/__init.php (?)
-         const \vendor\package\__init\__use (?)
-         \vendor\package\__init::__init() (?)
-     lib/foo.php (!)
-         const \vendor\package\foo\__use (?)
-         \vendor\package\foo::__init() (?)
-         \vendor\package\foo::bar() (!)
+```
+vendor.package/ (!)
+    lib/__init.php (?)
+        const \vendor\package\__init\__use (?)
+        \vendor\package\__init::__init() (?)
+    lib/foo.php (!)
+        const \vendor\package\foo\__use (?)
+        \vendor\package\foo::__init() (?)
+        \vendor\package\foo::bar() (!)
 
 (!) = Required, will failed if not found
 (?) = Optional
+```
 
 All initializations are done only once per request, if class method is called
 the second time, class it will not be initialized again, the same is true for
