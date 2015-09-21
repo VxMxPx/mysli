@@ -142,7 +142,7 @@ namespace mysli\i18n\root\script; class i18n
     protected static function resolve_path($path)
     {
         // Package
-        if (preg_match('/^[a-z0-9\.]$/', $path))
+        if (preg_match('/^[a-z0-9\.]+$/', $path))
         {
             $path = pkg::get_path($path);
         }
