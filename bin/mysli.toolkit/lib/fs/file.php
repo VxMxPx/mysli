@@ -16,7 +16,11 @@ namespace mysli\toolkit\fs; class file
     const replace = 2;
 
     /**
-     * Return only extension of file if available otherwise an empty string.
+     * Return only extension of file if available otherwise null.
+     *
+     * Example:
+     *
+     *     ui.min.js => .js
      * --
      * @param string $filename
      * --
@@ -25,21 +29,14 @@ namespace mysli\toolkit\fs; class file
     static function extension($filename)
     {
         $file = basename($filename);
-
-        if (strpos($file, '.') === false)
-        {
-            return '';
-        }
-
-        $extension = explode('.', strrev($file), 2);
-        return strrev($extension[0]);
+        return strpos($file, '.') ? substr($file, strrpos($file, '.')) : null;
     }
 
     /**
      * Get filename.
      * --
      * @param string  $filename
-     * @param boolean $extension
+     * @param boolean $extension Include file extention?
      * --
      * @return string
      */
@@ -49,12 +46,10 @@ namespace mysli\toolkit\fs; class file
 
         if (!$extension)
         {
-            $file_ext = static::extension($filename);
-            $file_ext = strlen($file_ext);
-
-            if ($file_ext > 0)
+            $ext = static::extension($filename);
+            if ($ext)
             {
-                return substr($filename, 0, ($file_ext + 1) * -1);
+                return substr($filename, 0, -(strlen($ext)));
             }
         }
 
@@ -586,7 +581,7 @@ namespace mysli\toolkit\fs; class file
 
 
     /**
-     * Observe files in particular directory for changes,
+     * Observe files in a particular directory for changes,
      * and call $callback when changes are detected.
      *
      * ## Callback
@@ -627,7 +622,7 @@ namespace mysli\toolkit\fs; class file
      *     }, '*.sh', 1);
      *
      * --
-     * @param string   $directory The directory observe.
+     * @param string   $directory The directory to observe.
      * @param callable $callback  Function to be called when changes occurs.
      * @param string   $filter    Observe only particular files.
      * @param boolean  $deep      Observe sub-directories.
