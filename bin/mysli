@@ -400,14 +400,14 @@ function get_commands()
             'Install this script to the `/usr/bin` directory to be always accessible. '.
             'You can use [PATH], e.g.: `mysli --self install /my/costume/path`, '.
             'to select where to be installed, default is `/usr/bin`. '.
-            'You need to be root to do this.',
+            'You might need to be root to do this.',
 
         '--self remove'  =>
             'Remove this script from the current location. '.
-            'You need to be root to do this.',
+            'You might need to be root to do this.',
 
         '--self update'  =>
-            'Update this script. You need to be root to do this.',
+            'Update this script. You might need to be root to do this.',
 
         '--self version' =>
             'Output version information.',
