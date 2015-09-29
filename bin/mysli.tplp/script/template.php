@@ -4,8 +4,8 @@ namespace mysli\tplp\root\script; class template
 {
     const __use = '
         .{ parser, tplp }
-        mysli.toolkit.cli.{ prog, param, ui, output, util }
-        mysli.toolkit.{ pkg, fs.fs -> fs, fs.file, fs.dir }
+        mysli.toolkit.cli.{ prog, param, ui, output, util, input }
+        mysli.toolkit.{ pkg, fs.fs -> fs, fs.file, fs.dir, type.arr -> arr }
     ';
 
     /**
@@ -27,11 +27,16 @@ namespace mysli\tplp\root\script; class template
 
         $prog
         ->create_parameter('PACKAGE', [
-            'required' => true,
             'help'     => 'Package\'s templates to be parsed, in format: '.
                         '`vendor.package`. '.
                         'Alternatively relative path to the templates root '.
                         'can be used. Use `./` for current directory.'
+        ])
+        ->create_parameter('--interactive/-i', [
+            // 'exclude' => ['-s', '-w'],
+            'type'    => 'boolean',
+            'def'     => false,
+            'help'    => 'Run template parser in an interactive mode.'
         ])
         ->create_parameter('--static/-s', [
             'type' => 'boolean',
@@ -49,17 +54,69 @@ namespace mysli\tplp\root\script; class template
         if (null !== ($r = prog::validate_and_print($prog, $args)))
             return $r;
 
-        list($package, $static, $watch) = $prog->get_values('package', '-s', '-w');
+        list($package, $static, $watch, $interactive) =
+            $prog->get_values('package', '-s', '-w', '-i');
 
-        // Package to path...
-        $path = static::resolve_path($package);
+        if (!$package && !$interactive)
+        {
+            ui::warning('Package name is required.');
+            return false;
+        }
+        else if ($interactive)
+        {
+            return static::interactive();
+        }
+        else
+        {
+            // Package to path...
+            $path = static::resolve_path($package);
+            return static::parse($path, $static, $watch);
+        }
 
-        return static::parse($path, $static, $watch);
     }
 
     /*
     --- Protected --------------------------------------------------------------
      */
+
+    /**
+     * Run in a interactive mode.
+     * --
+     * @return boolean
+     */
+    protected static function interactive()
+    {
+        ui::line('Hi! This is an interative console for the Mysli Template.');
+        ui::line('Double empty line will process and print the result.');
+        ui::line('Type `!exit` to quit.');
+
+        $buffer = [];
+
+        $parser = new parser(fs::tmppath('tplp'));
+
+        // Now wait for the user input
+        input::line('>> ',
+            function ($stdin) use ($parser, &$buffer)
+            {
+                if (in_array(strtolower($stdin), ['!exit']))
+                    return true;
+
+                if ($stdin === '' && (arr::last($buffer) === ''))
+                {
+                    $template = trim(implode("\n", $buffer));
+                    $buffer = [];
+
+                    ui::line( $parser->template($template) );
+
+                    return;
+                }
+
+                $buffer[] = $stdin;
+            }
+        );
+
+        return true;
+    }
 
     /**
      * Parse templates in particular path, and watch for change.
