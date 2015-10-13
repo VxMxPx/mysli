@@ -91,11 +91,10 @@ namespace mysli\tplp\root\script; class template
         ui::line('Type `!exit` to quit.');
 
         $buffer = [];
-
         $parser = new parser(fs::tmppath('tplp'));
 
         // Now wait for the user input
-        input::line('>> ',
+        return input::line('>> ',
             function ($stdin) use ($parser, &$buffer)
             {
                 if (in_array(strtolower($stdin), ['!exit']))
@@ -106,7 +105,14 @@ namespace mysli\tplp\root\script; class template
                     $template = trim(implode("\n", $buffer));
                     $buffer = [];
 
-                    ui::line( $parser->template($template) );
+                    try
+                    {
+                        ui::line( $parser->template($template) );
+                    }
+                    catch (\Exception $e)
+                    {
+                        ui::error( $e->getMessage() );
+                    }
 
                     return;
                 }
@@ -114,8 +120,6 @@ namespace mysli\tplp\root\script; class template
                 $buffer[] = $stdin;
             }
         );
-
-        return true;
     }
 
     /**
