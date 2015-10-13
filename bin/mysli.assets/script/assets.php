@@ -38,7 +38,7 @@ namespace mysli\assets\root\script; class assets
             'def'  => false,
             'help' => 'Watch directory and re-parse when changes occurs.'
         ])
-        ->create_parameter('--debug/-d', [
+        ->create_parameter('--dev/-d', [
             'type' => 'boolean',
             'def'  => true,
             'help' => 'This will not compress nor merge assets, resulting in faster processing.'
@@ -55,20 +55,18 @@ namespace mysli\assets\root\script; class assets
         if (null !== ($r = prog::validate_and_print($prog, $args)))
             return $r;
 
-        list($package, $publish, $debug, $file, $watch) =
+        list($package, $publish, $dev, $file, $watch) =
             $prog->get_values('package', '-p', '-d', '-f', '-w');
 
-        if (preg_match('/^[a-z0-9\.]+$/', $package))
-        {
-            // Was package provided rather than path?
-            $path = pkg::get_path($package);
-        }
-        else
+        if (!preg_match('/^[a-z0-9\.]+$/', $package))
         {
             // Relative path
             $path = realpath(getcwd()."/{$package}");
             $package = pkg::by_path($path);
         }
+
+        // Get assets path
+        $path = lib\assets::path($package);
 
         if (!dir::exists($path))
         {
@@ -78,13 +76,14 @@ namespace mysli\assets\root\script; class assets
 
         // Get map array
         $map = lib\assets::map($package);
+
         if (!$map)
         {
             ui::warn("Couldn't find `map.ym` for: `{$package}`.");
             return false;
         }
 
-        return static::process($map, $path, $publish, $debug, $file, $watch);
+        return static::process($map, $path, $publish, $dev, $file, $watch);
     }
 
     /*
@@ -104,8 +103,8 @@ namespace mysli\assets\root\script; class assets
      *        Weather assets shold be published on build.
      *        This will copy modified assets to the public directory.
      *
-     * @param boolean $debug
-     *        Weather this is a debug mode.
+     * @param boolean $development
+     *        Weather this is a development mode.
      *        This will not compress nor merge assets.
      *
      * @param string $id
@@ -116,7 +115,7 @@ namespace mysli\assets\root\script; class assets
      * --
      * @return boolean
      */
-    protected static function process(array $map, $path, $publish, $debug, $id, $watch)
+    protected static function process(array $map, $path, $publish, $dev, $id, $watch)
     {
         // If id provided, select it.
         if ($id)
@@ -145,17 +144,87 @@ namespace mysli\assets\root\script; class assets
             return false;
         }
 
-        // Discover files
-        $includes = lib\assets::resolve_source_files($path, $map, $id);
+        // Discover includes
+        $incd = lib\assets::get_dev_list($path, $map, $id);
+
+        // Make flat includes list of quick access --- get rid of IDs
+        // e.g. from ID => [ file, file, file ], ID => [], ...
+        //        to file => [..., ID], file => [..., ID], file => [ID], ...
+        $includes = [];
+        foreach ($incd as $inc_id => $inc_files)
+        {
+            foreach ($inc_files as $inc_file_id => &$inc_file_opt)
+            {
+                $inc_file_opt['id'] = $inc_id;
+                $includes[$inc_file_id] = $inc_file_opt;
+            }
+        }
 
         // Start observing FS for changes
-        file::observe($path, function ($changes) use ($map, $includes)
+        file::observe($path, function ($changes) use ($path, $map, $includes, $incd)
         {
-            // List of IDs + individual files within to be modified.
-            $modfy = [];
+            foreach ($changes as $file => $mod)
+            {
+                if ($mod['action'] === 'removed')
+                {
+                    if (!isset($includes[$file])) continue;
 
+                    // Remove file(s) from dist folder
+                    dump_e("Removed: $file");
+                }
+                else if ($mod['action'] === 'moved' || $mod['action'] === 'renamed')
+                {
+                    // Moved and renamed always set two entries.
+                    // New entry with key 'from' and old entry with a key 'to'.
+                    // The old entry can be ignored.
+                    if (isset($mod['to']))
+                        continue;
 
+                    if (!isset($includes[$file])) continue;
 
+                    dump_e("Moved: $file");
+                }
+                else if ($mod['action'] === 'added')
+                {
+                    // Anyone cares about this file?
+                    if ( ! ($a_id = lib\assets::id_from_file($file, $path, $map)))
+                        continue;
+
+                    // Care only about target ID
+                    if (!isset($incd[$a_id]))
+                        continue;
+
+                    dump_e("Added: $file");
+                }
+                else // action === modified
+                {
+                    if (!isset($includes[$file])) continue;
+
+                    dump_e("Modified: $file");
+                }
+
+                // if remove file
+                //      remove file from dist
+                //      if dev
+                //          remove file from public
+                //      else
+                //          rebuild all
+                //          merge
+                //          master copy to public
+                // else if moved or renamed
+                //      move file in dist
+                //      if dev
+                //          move file in public
+                // else // if added or modified
+                //      process file
+                //      if dev
+                //          copy to public
+                //      else
+                //          merge
+                //          master copy to public
+                //
+                //
+            }
         }, null, true, 3, true);
     }
 
