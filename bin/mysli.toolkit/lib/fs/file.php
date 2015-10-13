@@ -22,21 +22,30 @@ namespace mysli\toolkit\fs; class file
      *
      *     ui.min.js => .js
      * --
-     * @param string $filename
+     * @param string  $path
+     * @param boolean $invert  Return only file ratherthan extension.
      * --
      * @return string
      */
-    static function extension($filename)
+    static function extension($path, $invert=false)
     {
-        $file = basename($filename);
-        return strpos($file, '.') ? substr($file, strrpos($file, '.')) : null;
+        $file = basename($path);
+        $extension = strpos($file, '.') ? substr($file, strrpos($file, '.')) : null;
+        if ($invert)
+        {
+            return substr($path, 0, -strlen($extension));
+        }
+        else
+        {
+            return $extension;
+        }
     }
 
     /**
      * Get filename.
      * --
      * @param string  $filename
-     * @param boolean $extension Include file extention?
+     * @param boolean $extension Include file extension?
      * --
      * @return string
      */
