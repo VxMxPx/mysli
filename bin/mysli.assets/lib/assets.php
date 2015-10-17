@@ -161,7 +161,7 @@ namespace mysli\assets; class assets
      *     processed,  // Processed filename + relative path
      *     compressed, // Compressed filename + relative path
      * --
-     * @param string $filename
+     * @param string $filename    Full absolute path.
      * @param string $root        Assets root.
      * @param array  $processors  List of processors for this particular file.
      * @param array  $variables   Costume variables (src/, dest/)
@@ -362,14 +362,12 @@ namespace mysli\assets; class assets
      */
     static function id_from_file($path, $root, array $map)
     {
-        $path_seg = substr($path, strlen($root));
-        $path_seg = trim( dirname($path_seg), '\\/' );
-
+        $path_seg = trim(substr($path, strlen($root)), '\\/');
         $file = file::name($path);
 
         foreach ($map['files'] as $id => $opt)
         {
-            if ($path_seg !== $id)
+            if (strpos($path_seg, $id) !== 0)
                 continue;
 
             if (!is_array($opt['include']))
@@ -394,6 +392,57 @@ namespace mysli\assets; class assets
 
         // Not found
         return null;
+    }
+
+    /**
+     * Get processes for a particular file.
+     * This will take file extension into account.
+     * --
+     * @param string $file             Actual filename (no path).
+     * @param array  $file_processors  Processors assigned to ID.
+     * @param array  $processors       All processors available.
+     * --
+     * @throws mysli\assets\exception\assets 10 No such process.
+     * --
+     * @return array
+     */
+    static function get_processors($file, array $file_processors, array $processors)
+    {
+        $list = [];
+
+        foreach ($file_processors as $procid)
+        {
+            // Processor must be on a list
+            if (!isset($processors[$procid]))
+            {
+                throw new exception\assets(
+                    "No such process defined: `{$procid}`.", 10
+                );
+            }
+
+            // Grab processor from the main list
+            $process = $processors[$procid];
+
+            // If match is not specified as an array, convert it now
+            if (!is_array($process['match']))
+            {
+                $process['match'] = [ $process['match'] ];
+            }
+
+            // Loop through matches and see if we can match any of them with a
+            // provided filename --- in such case add processor to the list.
+            foreach ($process['match'] as $match)
+            {
+                $match = fs::filter_to_regex($match);
+                if (preg_match($match, $file))
+                {
+                    $list[] = $process;
+                    break;
+                }
+            }
+        }
+
+        return $list;
     }
 
     /*
@@ -517,57 +566,4 @@ namespace mysli\assets; class assets
 
         return $processes;
     }
-
-    /**
-     * Get processes for a particular file.
-     * This will take file extension into account.
-     * --
-     * @param string $file             Actual filename (no path).
-     * @param array  $file_processors  Processors assigned to ID.
-     * @param array  $processors       All processors available.
-     * --
-     * @throws mysli\assets\exception\assets 10 No such process.
-     * --
-     * @return array
-     */
-    protected static function get_processors(
-        $file, array $file_processors, array $processors)
-    {
-        $list = [];
-
-        foreach ($file_processors as $procid)
-        {
-            // Processor must be on a list
-            if (!isset($processors[$procid]))
-            {
-                throw new exception\assets(
-                    "No such process defined: `{$procid}`.", 10
-                );
-            }
-
-            // Grab processor from the main list
-            $process = $processors[$procid];
-
-            // If match is not specified as an array, convert it now
-            if (!is_array($process['match']))
-            {
-                $process['match'] = [ $process['match'] ];
-            }
-
-            // Loop through matches and see if we can match any of them with a
-            // provided filename --- in such case add processor to the list.
-            foreach ($process['match'] as $match)
-            {
-                $match = fs::filter_to_regex($match);
-                if (preg_match($match, $file))
-                {
-                    $list[] = $process;
-                    break;
-                }
-            }
-        }
-
-        return $list;
-    }
-
 }
