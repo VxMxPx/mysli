@@ -95,7 +95,7 @@ namespace mysli\toolkit; class html
 
         if ($content !== null)
         {
-            $tagc .= ">\n{$content}</{$tag}>";
+            $tagc .= ">{$content}</{$tag}>";
         }
         else
         {
