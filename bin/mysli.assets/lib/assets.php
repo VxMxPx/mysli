@@ -58,8 +58,18 @@ namespace mysli\assets; class assets
                 fs::pkgreal('mysli.assets', 'config/defaults.ym')
             );
 
-            // Merge with map!
-            $map = arr::merge($map_default, $map);
+            // Merge with defaults!
+            foreach ($map_default as $mkey => $mopt)
+            {
+                if (!isset($map[$mkey]))
+                {
+                    $map[$mkey] = $mopt;
+                }
+                else
+                {
+                    $map[$mkey] = array_merge($mopt, $map[$mkey]);
+                }
+            }
 
             // Resolve relative processes
             $map['process'] = static::resolve_processors_links($map['process']);
@@ -182,10 +192,12 @@ namespace mysli\assets; class assets
 
         $fopt = [
             // Relative filename
-            'rel_path'      => ltrim(dirname(substr($filename, strlen($root))), '/'),
-            'rel_file'      => file::name($filename),
-            'processed'     => null,
-            'compressed'    => null,
+            'abs_path'   => $filename,
+            'rel_path'   => ltrim(dirname(substr($filename, strlen($root))), '/'),
+            'rel_file'   => file::name($filename),
+            'processed'  => null,
+            'compressed' => null,
+            'processors' => $processors
         ];
 
         foreach ($processors as $processor)
