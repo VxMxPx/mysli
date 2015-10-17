@@ -154,36 +154,20 @@ namespace mysli\toolkit; class pkg
                     // with a same name is already defined by another package.
                     $spackage = explode('.', $package);
 
-                    // Script's unique id
-                    $id = $script;
-
                     // Script full name
-                    $full = "{$package}.{$script}";
+                    if (substr($package, strrpos($package, '.')+1) !== $script)
+                        $full = "{$package}.{$script}";
+                    else
+                        $full = $package;
 
-                    /*
-                     * If such script name already exist, then package name
-                     * will be pre-pended, if that exists too, vendor will
-                     * be pre-pended, ...
-                     *
-                     * Example:
-                     *   vendor/package/i_am_script => i_am_script
-                     *   another/package/i_am_script => package.i_am_script
-                     *   yet_another/package/i_am_script => yet_another.package.i_am_script
-                     *   4th/package/i_am_script => 4th.package.i_am_script
-                     */
-                    while (isset($cli[$id]))
-                    {
-                        if (empty($spackage))
-                            throw new exception\pkg(
-                                "Cannot construct package's unique ID, ".
-                                "for: `{$package}`", 20
-                            );
-
-                        $id = array_pop($spackage).'.'.$id;
-                    }
-
-                    // Shortcut
-                    $cli[$id] = $full;
+                    // Add to the list
+                    $cli[$full] = [
+                        'script'   => $script,
+                        'absolute' => "{$package}.{$script}",
+                        'class'    =>
+                            str_replace('.', '\\', $package).
+                            '\root\script\\'.$script
+                    ];
                 }
             }
         }
