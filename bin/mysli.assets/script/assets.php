@@ -3,7 +3,7 @@
 namespace mysli\assets\root\script; class assets
 {
     const __use = '
-        .{ assets -> lib.assets }
+        .{ assets -> lib.assets, exception.assets }
         mysli.toolkit.{ log, pkg }
         mysli.toolkit.cli.{ prog, param, ui }
         mysli.toolkit.fs.{ observer, fs, file, dir }
@@ -40,24 +40,18 @@ namespace mysli\assets\root\script; class assets
         ])
         ->create_parameter('--dev/-d', [
             'type'   => 'boolean',
-            'def'    => true,
-            'invert' => true,
-            'help'   => 'This will not compress nor merge assets, resulting in faster processing.'
+            'def'    => false,
+            'help'   => 'This will not compress nor merge assets, resulting in faster processing.'.
+                        'Processed files will be published.'
         ])
-        ->create_parameter('--publish/-p', [
-            'type' => 'boolean',
-            'def'  => false,
-            'help' => 'Copy files to public directory.'
-        ])
-        ->create_parameter('--file/-f', [
-            'help' => 'Observe only specific file or directory (defined in map.ym).'
+        ->create_parameter('--id/-i', [
+            'help' => 'Observe only specific ID (defined in map.ym).'
         ]);
 
         if (null !== ($r = prog::validate_and_print($prog, $args)))
             return $r;
 
-        list($package, $publish, $dev, $file, $watch) =
-            $prog->get_values('package', '-p', '-d', '-f', '-w');
+        list($package, $dev, $id, $watch) = $prog->get_values('package', '-d', '-i', '-w');
 
         if (!preg_match('/^[a-z0-9\.]+$/', $package))
         {
@@ -66,33 +60,7 @@ namespace mysli\assets\root\script; class assets
             $package = pkg::by_path($path);
         }
 
-        // Get assets path
-        $path = lib\assets::path($package);
-
-        if (!dir::exists($path))
-        {
-            ui::warning("Couldn't resolve: `{$package}`, no such path: `{$path}`.");
-            return false;
-        }
-
-        // Get map array
-        $map = lib\assets::map($package);
-
-        if (!$map)
-        {
-            ui::warn("Couldn't find `map.ym` for: `{$package}`.");
-            return false;
-        }
-
-        return static::process(
-            $map,
-            $path,
-            $package,
-            $publish,
-            $dev,
-            $file,
-            $watch
-        );
+        return static::process($package, $dev, $id, $watch);
     }
 
     /*
@@ -102,18 +70,8 @@ namespace mysli\assets\root\script; class assets
     /**
      * Process assets.
      * --
-     * @param array $map
-     *        An array assets map (map.ym).
-     *
-     * @param string $path
-     *        A full absolute path to the assets root.
-     *
      * @param string $package
      *        Package ID.
-     *
-     * @param boolean $publish
-     *        Weather assets shold be published on build.
-     *        This will copy modified assets to the public directory.
      *
      * @param boolean $development
      *        Weather this is a development mode.
@@ -127,93 +85,101 @@ namespace mysli\assets\root\script; class assets
      * --
      * @return boolean
      */
-    protected static function process(
-        array $map, $path, $package, $publish, $dev, $id, $watch)
+    protected static function process($package, $dev, $id, $watch)
     {
-        // If id provided, select it.
-        if ($id)
-        {
-            $file_arr = isset($map['files'][$id]) ? $map['files'][$id] : false;
-            if (!$file_arr)
-            {
-                ui::error("No such file defined in `map.ym`: `{$id}`.");
-                return false;
-            }
-            else
-            {
-                $map['files'] = [
-                    $file = $file_arr
-                ];
-            }
-        }
+        // Get assets path
+        $path = lib\assets::path($package);
 
-        // Check for requirements
-        if (!static::requirements($map))
+        if (!dir::exists($path))
         {
-            ui::error(
-                'Error',
-                'Your system did not meet requirements, please install missing modules.'
-            );
+            ui::warning("Couldn't resolve: `{$package}`, no such path: `{$path}`.");
             return false;
         }
 
-        // Discover includes
-        $incd = lib\assets::get_dev_list($path, $map, $id);
-
-        // List of IDs we're observing
-        $ids  = array_keys($incd);
-
-        // Make flat includes list of quick access --- get rid of IDs
-        // e.g. from ID => [ file, file, file ], ID => [], ...
-        //        to file => [..., ID], file => [..., ID], file => [ID], ...
-        $includes = [];
-        foreach ($incd as $inc_id => $inc_files)
-        {
-            foreach ($inc_files as $inc_file_id => &$inc_file_opt)
-            {
-                $inc_file_opt['id'] = $inc_id;
-                $includes[$inc_file_id] = $inc_file_opt;
-            }
-        }
+        // Define defaults
+        $map = $includes = [];
 
         // Setup observer
         $observer = new observer($path);
         $observer->set_interval(3);
+        $observer->set_limit($watch ? 0 : 1);
 
         // Start observing FS for changes
-        // added|removed|modified|renamed|moved
-        $observer->observe(
-        function ($changes)
-        use ($map, $path, $package, $publish, $dev, &$includes, $ids)
+        $observer->observe(function ($changes)
+            use (&$map, &$includes, $path, $package, $dev, $id)
         {
-            // List of IDs to fully rebuild!
-            $rebuild = [];
+            if (empty($map) || isset($changes[fs::ds($path, 'map.ym')]))
+            {
+                ui::line("(Re)load `map.ym`.");
+
+                // Get map and includes
+                try
+                {
+                    $map = static::reload_map($package, $id);
+                }
+                catch (\Exception $e)
+                {
+                    ui::error($e->getMessage());
+                    return false;
+                }
+
+                // Check for requirements
+                if (!static::requirements($map))
+                {
+                    ui::error(
+                        'Error',
+                        'Your system did not meet requirements, '.
+                        'please install missing modules.'
+                    );
+                    return false;
+                }
+
+                $includes = lib\assets::get_dev_list($path, $map, $id);
+                $rebuild = array_keys($includes);
+                $changes = [];
+            }
+            else
+            {
+                // List of IDs to fully rebuild!
+                $rebuild = [];
+            }
 
             foreach ($changes as $file => $mod)
             {
-                if (strpos($file, 'dist~') !== false)
-                    continue;
+                // Find file in includes
+                foreach ($includes as $incid => $incfiles)
+                {
+                    if (isset($incfiles[$file]))
+                    {
+                        $file = $incfiles[$file];
+                        $file['id'] = $incid;
+                    }
+                }
 
-                // Removed (Alos covers: moved, renamed (which will have `to` set))
+                // Output head & action
+                $oact  = substr(ucfirst($mod['action']), 0, 3);
+                $ohead = "({$oact} ".date('H:i:s').')';
+
+                // Removed (Also covers: moved, renamed (which will have `to` set))
                 if ($mod['action'] === 'removed' || isset($mod['to']))
                 {
-                    if (!isset($includes[$file])) continue;
+                    if (!is_array($file)) continue;
 
                     ui::warning(
-                        '(Del '.date('H:i:s').')',
-                        "{$includes[$file]['rel_path']}/{$includes[$file]['rel_file']}"
+                        $ohead,
+                        "{$file['rel_path']}/{$file['rel_file']}"
                     );
 
                     // Remove file(s) from dist folder
                     $remove = [
                         // dist~/processed
-                        fs::ds($path, $includes[$file]['processed']),
+                        fs::ds($path, $file['processed']),
                         // dist~/compressed
-                        fs::ds($path, $includes[$file]['compressed']),
+                        fs::ds($path, $file['compressed']),
                         // public/processed
-                        fs::ds(lib\assets::pubpath($package), $includes[$file]['processed']),
+                        fs::ds(lib\assets::pubpath($package), $file['processed']),
                         // public/compressed
-                        fs::ds(lib\assets::pubpath($package), $includes[$file]['compressed']),
+                        fs::ds(lib\assets::pubpath($package), $file['compressed']),
                     ];
 
                     // Remove files from dist
@@ -224,8 +190,8 @@ namespace mysli\assets\root\script; class assets
                     }
 
                     // Remove file from list
-                    $id = $includes[$file]['id'];
-                    unset($includes[$file]);
+                    $id = $file['id'];
+                    unset($includes[$id][$file['abs_path']]);
 
                     // Not dev? Then rebuild
                     if (!$dev)
@@ -233,14 +199,14 @@ namespace mysli\assets\root\script; class assets
                 }
                 else if ($mod['action'] === 'added' || isset($mod['from'])) // added|moved|renamed
                 {
-                    if (!isset($includes[$file]))
+                    if (!is_array($file))
                     {
                         // Anyone cares about this file?
                         if ( ! ($id = lib\assets::id_from_file($file, $path, $map)))
                             continue;
 
                         // Care only about target ID
-                        if (!in_array($id, $ids))
+                        if (!isset($includes[$id]))
                             continue;
 
                         // Resolve file paths and append it
@@ -254,54 +220,49 @@ namespace mysli\assets\root\script; class assets
                             )
                         );
                         $filemeta['id'] = $id;
-                        $includes[$file] = $filemeta;
-                    }
-                    else
-                    {
-                        $id = $includes[$file]['id'];
+                        $includes[$id][$file] = $filemeta;
+                        $file = $filemeta;
                     }
 
                     ui::success(
-                        '(Add '.date('H:i:s').')',
-                        "{$includes[$file]['rel_path']}/{$includes[$file]['rel_file']}"
+                        $ohead,
+                        "{$file['rel_path']}/{$file['rel_file']}"
                     );
 
                     // Now rebuild
                     // TODO: Implement triggers (e.g. `!` to rebuild whole stack)
-                    if (!in_array($id, $rebuild))
+                    if (!in_array($file['id'], $rebuild))
                     {
                         if (!$dev)
                         {
-                            $rebuild[] = $id;
+                            $rebuild[] = $file['id'];
                         }
                         else
                         {
-                            static::rebuild($map, $id, $file, $publish);
+                            static::rebuild([ $file ], $package, $dev);
                         }
                     }
                 }
                 else // modified
                 {
-                    if (!isset($includes[$file])) continue;
+                    if (!is_array($file)) continue;
 
                     ui::info(
-                        '(Mod '.date('H:i:s').')',
-                        "{$includes[$file]['rel_path']}/{$includes[$file]['rel_file']}"
+                        $ohead,
+                        "{$file['rel_path']}/{$file['rel_file']}"
                     );
-
-                    $id = $includes[$file]['id'];
 
                     // Now rebuild
                     // TODO: Implement triggers (e.g. `!` to rebuild whole stack)
-                    if (!in_array($id, $rebuild))
+                    if (!in_array($file['id'], $rebuild))
                     {
                         if (!$dev)
                         {
-                            $rebuild[] = $id;
+                            $rebuild[] = $file['id'];
                         }
                         else
                         {
-                            static::rebuild($map, $id, $file, $publish);
+                            static::rebuild([ $file ], $package, $dev);
                         }
                     }
                 }
@@ -311,29 +272,71 @@ namespace mysli\assets\root\script; class assets
             $rebuild = array_unique($rebuild);
             foreach ($rebuild as $rid)
             {
-                static::rebuild($map, $rid, null, $publish);
+                ui::nl();
+                ui::line("Rebuild all files in {$rid}");
+                static::rebuild($includes[$rid], $package, $dev);
             }
         });
+
+        return true;
     }
 
     /**
-     * Rebuild file(s) for particulad map.
+     * Rebuild file(s) for particular map.
      * --
-     * @param array   $map
-     * @param string  $id
-     * @param string  $file     Null to rebuld all files under ID.
-     * @param boolean $publish  Weather to publish files.
-     * --
-     * @return null
+     * @param array   $files    (Resolved) Files to process.
+     * @param string  $package
+     * @param boolean $dev
      */
-    protected static function rebuild(array $map, $id, $file, $publish)
+    protected static function rebuild(array $files, $package, $dev)
     {
-        ui::nl();
-        ui::line('Rebuilding '.($file ? "file {$id}/".file::name($file) : "all files in {$id}"));
+        foreach ($files as $file)
+        {
+
+        }
     }
 
     /**
-     * Check weather all required modules are availables on a system.
+     * Reload map and grab required ID.
+     * --
+     * @param  string $package
+     * @param  string $id
+     * --
+     * @throws mysli\assets\exception\assets 10 Couldn't find `map.ym`.
+     * @throws mysli\assets\exception\assets 20 ID not defined in `map.ym`.
+     * --
+     * @return array
+     */
+    protected static function reload_map($package, $id)
+    {
+        // Get map array
+        $map = lib\assets::map($package);
+
+        // Discover includes
+
+        if (!$map)
+            throw new exception\assets(
+                "Couldn't find `map.ym` for: `{$package}`.", 10
+            );
+
+        // If id provided, select it.
+        if ($id)
+        {
+            $file_arr = isset($map['files'][$id]) ? $map['files'][$id] : false;
+
+            if (!$file_arr)
+                throw new exception\assets(
+                    "No such file defined in `map.ym`: `{$id}`.", 20
+                );
+
+            $map['files'] = [ $file = $file_arr ];
+        }
+
+        return $map;
+    }
+
+    /**
+     * Check weather all required modules are available.
      * --
      * @param array $map
      * --
