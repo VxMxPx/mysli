@@ -5,7 +5,7 @@ namespace mysli\dev\test\root\script; class test
     const __use = '
         .{ test -> lib.test, diff }
         mysli.toolkit.cli.{ prog, param, ui, output, util }
-        mysli.toolkit.{ fs.fs -> fs, fs.dir, fs.file, pkg, type.arr -> arr }
+        mysli.toolkit.{ fs.fs -> fs, fs.dir, fs.file, fs.observer, pkg, type.arr -> arr }
     ';
 
     /**
@@ -20,7 +20,7 @@ namespace mysli\dev\test\root\script; class test
         /*
         Set params.
          */
-        $prog = new prog('Mysli Testing Utility', 'mysli.dev.test.test');
+        $prog = new prog('Mysli Testing Utility', __CLASS__);
 
         $prog->set_help(true);
         $prog->set_version('mysli.dev.test', true);
@@ -208,18 +208,19 @@ namespace mysli\dev\test\root\script; class test
         if (false !== ($k = array_search('--watch', $arguments)))
             unset($arguments[$k]);
 
-        // Wait for changes
-        fs\file::observe(fs::binpath($package), function ($changes) use ($pid, $diff, $arguments)
-        {
-            // Re-run tests...
-            // static::test($pid, $diff);
+        // Setup observer
+        $observer = new fs\observer(fs::binpath($package));
+        $observer->set_filter("*.php|{$filter}");
+        $observer->set_interval(2);
 
+        // Wait for changes
+        $observer->observe(function ($changes) use ($pid, $diff, $arguments)
+        {
             // Call self over and over again
             // This is done in such way, so that changes in PHP files are
             // registered. Each run is fresh...
             system(implode(" ", $arguments));
-
-        }, "*.php|{$filter}", true, 2, true);
+        });
     }
 
     /**

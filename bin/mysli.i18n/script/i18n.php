@@ -21,7 +21,7 @@ namespace mysli\i18n\root\script; class i18n
         /*
         Set params.
          */
-        $prog = new prog('Mysli I18n', 'mysli.i18n.i18n');
+        $prog = new prog('Mysli I18n', __CLASS__);
 
         $prog->set_help(true);
         $prog->set_version('mysli.i18n', true);
@@ -76,8 +76,13 @@ namespace mysli\i18n\root\script; class i18n
         if (!fs\dir::exists("{$path}/dist~"))
             fs\dir::create("{$path}/dist~");
 
+        // Setup observer
+        $observer = new fs\observer($path);
+        $observer->set_filter('*.lng');
+        $observer->set_interval(2);
+
         // Wait for changes
-        return fs\file::observe($path, function ($changes) use ($path, $watch)
+        return $observer->observe(function ($changes) use ($path, $watch)
         {
             // Watch only for specific changes
             foreach ($changes as $file => $change)
@@ -127,9 +132,10 @@ namespace mysli\i18n\root\script; class i18n
 
             // Creak, e.g run only once...
             if (!$watch)
+            {
                 return true;
-
-        }, "*.lng", true, 2, true);
+            }
+        });
     }
 
     /**

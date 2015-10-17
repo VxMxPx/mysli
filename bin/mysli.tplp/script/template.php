@@ -5,7 +5,7 @@ namespace mysli\tplp\root\script; class template
     const __use = '
         .{ parser, tplp }
         mysli.toolkit.cli.{ prog, param, ui, output, util, input }
-        mysli.toolkit.{ pkg, fs.fs -> fs, fs.file, fs.dir, type.arr -> arr }
+        mysli.toolkit.{ pkg, fs.fs -> fs, fs.file, fs.dir, fs.observer, type.arr -> arr }
     ';
 
     /**
@@ -20,7 +20,7 @@ namespace mysli\tplp\root\script; class template
         /*
         Set params.
          */
-        $prog = new prog('Mysli Template Tplp', 'mysli.tplp.template');
+        $prog = new prog('Mysli Template Tplp', __CLASS__);
 
         $prog->set_help(true);
         $prog->set_version('mysli.tplp', true);
@@ -146,10 +146,14 @@ namespace mysli\tplp\root\script; class template
 
         $parser = new parser($path);
 
-        // Wait for changes
-        return fs\file::observe($path, function ($changes)
-            use ($parser, $static, $path, $watch)
-        {
+        // Setup observer
+        $observer = new fs\observer($path);
+        $observer->set_filter('*.tpl.html');
+        $observer->set_interval(2);
+
+        return $observer->observe(
+        function ($changes) use ($parser, $static, $path, $watch) {
+
             // Watch only for specific changes
             foreach ($changes as $file => $change)
             {
@@ -221,9 +225,10 @@ namespace mysli\tplp\root\script; class template
 
             // Creak, e.g run only once...
             if (!$watch)
+            {
                 return true;
-
-        }, "*.tpl.html", true, 2, true);
+            }
+        });
     }
 
     /**
