@@ -665,7 +665,7 @@ function log_debug($message)
 {
     if (MYSLI_ROOT_DEBUG)
     {
-        echo "\n{$message}";
+        echo "\nMYSLI(debug): {$message}";
     }
 }
 
