@@ -68,6 +68,13 @@ namespace mysli\toolkit\fs; class observer
     protected $diff = [];
 
     /**
+     * Limit number of runs.
+     * --
+     * @var integer
+     */
+    protected $limit = 0;
+
+    /**
      * Instance.
      * --
      * @param  string $root Root folder to observe.
@@ -171,6 +178,26 @@ namespace mysli\toolkit\fs; class observer
     function get_ignore()
     {
         return $this->ignore;
+    }
+
+    /**
+     * Limit number of runs when observing.
+     * --
+     * @param integer $limit
+     */
+    function set_limit($limit)
+    {
+        $this->limit = (int) $limit;
+    }
+
+    /**
+     * Get current limit.
+     * --
+     * @return integer
+     */
+    function get_limit()
+    {
+        return $this->limit;
     }
 
     /**
@@ -419,6 +446,8 @@ namespace mysli\toolkit\fs; class observer
      */
     function observe($callback, $for_each_file=false)
     {
+        $i = 0;
+
         // Go for it...
         do
         {
@@ -441,6 +470,11 @@ namespace mysli\toolkit\fs; class observer
             }
 
             if ($r !== null)
+                return $r;
+
+            $i++;
+
+            if ($this->limit > 0 && $this->limit >= $i)
                 return $r;
 
             // Take a nap...
