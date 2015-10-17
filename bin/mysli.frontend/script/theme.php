@@ -20,7 +20,7 @@ namespace mysli\frontend\root\script; class theme
         /*
         Set parameters.
          */
-        $prog = new prog('Mysli Frontend Theme', 'mysli.frontend.theme');
+        $prog = new prog('Mysli Frontend Theme', __CLASS__);
 
         $prog->set_help(true);
         $prog->set_version('mysli.frontend', true);

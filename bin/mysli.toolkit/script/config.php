@@ -28,7 +28,7 @@ namespace mysli\toolkit\root\script; class config
         /*
         Set params.
          */
-        $prog = new prog('Mysli Config', 'mysli.toolkit.config');
+        $prog = new prog('Mysli Config', __CLASS__);
 
         $prog->set_help(true);
         $prog->set_version('mysli.toolkit', true);

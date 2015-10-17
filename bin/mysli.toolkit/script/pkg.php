@@ -16,7 +16,7 @@ namespace mysli\toolkit\root\script; class pkg
         /*
         Set parameters.
          */
-        $prog = new prog('Mysli Pkg', 'mysli.toolkit.pkg');
+        $prog = new prog('Mysli Pkg', __CLASS__);
 
         $prog->set_help(true);
         $prog->set_version('mysli.toolkit', true);

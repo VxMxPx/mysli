@@ -27,7 +27,7 @@ namespace mysli\dev\pack\root\script; class pack
      */
     static function __run(array $args)
     {
-        $prog = new prog('Mysli Pack', 'mysli.dev.pack.pack');
+        $prog = new prog('Mysli Pack', __CLASS__);
 
         $prog->set_description('Command line utility for producing PHAR packages.');
         $prog->set_help(true);
