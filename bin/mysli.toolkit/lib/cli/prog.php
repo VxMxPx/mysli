@@ -4,7 +4,7 @@ namespace mysli\toolkit\cli; class prog
 {
     const __use = '
         .cli.{ util, ui }
-        .pkg
+        .{ pkg, type.arr -> arr }
     ';
 
     /**
@@ -89,10 +89,27 @@ namespace mysli\toolkit\cli; class prog
     /**
      * Set program's command (command being executed).
      * --
-     * @param string $command In format: vendor.package.script
+     * @param string $command In format: vendor.package.script or __CLASS__
      */
     function set_command($command)
     {
+        // Resolve class.
+        // From: vendor\class?\package\-root\-script\command
+        // To:   vendor.class?.package.command
+        if (strpos($command, '\\') !== false)
+        {
+            $namespace = explode('\\', $command);
+            $command = array_splice($namespace, -1, 1)[0];
+            $namespace = array_splice($namespace, 0, -2);
+
+            // If command name is different than package name,
+            // then add it to the namespace.
+            if ($command !== $namespace[count($namespace)-1])
+                $namespace[] = $command;
+
+            $command = implode('.', $namespace);
+        }
+
         $this->meta['command'] = (string) $command;
     }
 
@@ -265,7 +282,7 @@ namespace mysli\toolkit\cli; class prog
         $positional = 1;
 
         // Match parameter name (including parameter with values e.g. --foo=bar)
-        $vp_name = '/^((?:--[a-z]+[a-z0-9]+)|(?:-[a-z]))(?:\=(.*?))?$/i';
+        $vp_name = '/^((?:--[a-z]+[a-z0-9]+)|(?:-[a-z]+))(?:\=(.*?))?$/i';
 
         /*
         Go through list of arguments.
@@ -274,6 +291,16 @@ namespace mysli\toolkit\cli; class prog
         {
             // Set current parameter
             $current = $this->arguments[$i];
+
+            // If short + multiple together (e.g. -wps) then extract them
+            if (strlen($current) > 2 && substr($current, 0, 1) === '-')
+            {
+                $current = str_split(substr($current, 1));
+                foreach ($current as &$c) $c = "-{$c}";
+                $cargs += count($current)-1;
+                array_splice($this->arguments, $i, 1, $current);
+                $current = arr::first($current);
+            }
 
             if (preg_match($vp_name, $current, $match))
             {
