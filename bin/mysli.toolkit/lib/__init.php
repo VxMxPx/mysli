@@ -160,44 +160,40 @@ namespace mysli\toolkit; class __init
          */
         if (!$script || $script === '-h' || $script === '--help')
         {
-            cli\ui::t($help, ['list' => array_keys($scripts)]);
+            cli\ui::t($help, ['list' => array_column($scripts, 'script')]);
             toolkit::shutdown();
         }
 
-        // Check weather script exists in its short form.
-        if (isset($scripts[$script]))
+        /*
+        Falsify script class to check later weather it was found.
+         */
+        $script_class = false;
+
+        /*
+        Check all scripts for current
+         */
+        foreach ($scripts as $id => $meta)
         {
-            // Set full absolute script name
-            $script = $scripts[$script];
-        }
-        else
-        {
-            // If it's in array, that means full absolute name was provided.
-            // In such case, nothing else needs to be done at this point.
-            // If not however, that means requested script doesn't exists.
-            if (!in_array($script, $scripts))
+            if ($id === $script || $meta['script'] === $script)
             {
-                cli\ui::nl();
-                cli\ui::warning(
-                    "Invalid command! Use `-h` to see list available commands."
-                );
-                cli\ui::nl();
-                toolkit::shutdown(1);
+                $script_class = $meta['class'];
+                break;
             }
-
         }
 
-        // Resolve script's name
-        $scriptr = $script;
-
-        // Script is called as vendor.package.script, hence, `root.script` part
-        // needs to be inserted, so that we get full class name:
-        // vendor\package\root\script\script
-        $scriptr = substr_replace($scriptr, '.root.script', strrpos($scriptr, '.'), 0);
-        $scriptr = str_replace('.', '\\', $scriptr);
+        // Check weather script class was found.
+        if (!$script_class)
+        {
+            cli\ui::nl();
+            cli\ui::warning(
+                "Invalid command! Use `-h` to see list available commands."
+            );
+            cli\ui::nl();
+            toolkit::shutdown(1);
+        }
 
         // Try to autoload class...
-        if (!class_exists($scriptr))
+        if (!class_exists($script_class))
         {
             cli\ui::nl();
             cli\ui::error("Couldn't find class for: `{$script}`.");
@@ -207,7 +203,7 @@ namespace mysli\toolkit; class __init
 
         // If script's __run method is missing, nothing but error can be done.
         // All scripts needs __run method as an entry point.
-        if (!method_exists($scriptr, '__run'))
+        if (!method_exists($script_class, '__run'))
         {
             cli\ui::nl();
             cli\ui::error("Script has no __run method: `{$script}`.");
@@ -219,7 +215,7 @@ namespace mysli\toolkit; class __init
         try
         {
             cli\ui::nl();
-            $r = call_user_func([$scriptr, '__run'], $arguments);
+            $r = call_user_func([$script_class, '__run'], $arguments);
             cli\ui::nl();
             // Grab result and shutdown system with it.
             // If result was false, that mean there was a problem,
@@ -228,18 +224,18 @@ namespace mysli\toolkit; class __init
         }
         catch (\Exception $e)
         {
-            if ($e->getCode() > -99)
-            {
-                cli\ui::nl();
-                cli\ui::error(
-                    "Error when trying to run a script `{$script}`!\n".
-                    $e->getMessage()
-                );
-                cli\ui::nl();
-                toolkit::shutdown(3);
-            }
-            else
-                throw $e;
+            cli\ui::nl();
+            cli\ui::error(
+                "Error when trying to run a script `{$script}`!\n".
+                $e->getMessage()
+            );
+            cli\ui::nl();
+
+            // Debug mode?
+            if (MYSLI_ROOT_DEBUG)
+                cli\ui::line($e->getTraceAsString());
+
+            toolkit::shutdown(3);
         }
     }
 }
