@@ -119,6 +119,12 @@ namespace mysli\toolkit; class log
             $sender = $context;
         }
 
+        if (defined('TOOLKIT_MODE') && TOOLKIT_MODE === 'cli')
+        {
+            if (MYSLI_ROOT_DEBUG)
+                echo "LOG({$type}): {$message} [{$sender}]\n";
+        }
+
         static::$messages[] = [
             'type'      => $type,
             'from'      => $sender,
