@@ -6,7 +6,7 @@ namespace mysli\assets\root\script; class assets
         .{ assets -> lib.assets }
         mysli.toolkit.{ log, pkg }
         mysli.toolkit.cli.{ prog, param, ui }
-        mysli.toolkit.fs.{ fs, file, dir }
+        mysli.toolkit.fs.{ observer, fs, file, dir }
     ';
 
 
@@ -22,7 +22,7 @@ namespace mysli\assets\root\script; class assets
         /*
         Set params.
          */
-        $prog = new prog('Mysli Assets', 'mysli.assets.assets');
+        $prog = new prog('Mysli Assets', __CLASS__);
 
         $prog->set_help(true);
         $prog->set_version('mysli.assets', true);
@@ -39,9 +39,10 @@ namespace mysli\assets\root\script; class assets
             'help' => 'Watch directory and re-parse when changes occurs.'
         ])
         ->create_parameter('--dev/-d', [
-            'type' => 'boolean',
-            'def'  => true,
-            'help' => 'This will not compress nor merge assets, resulting in faster processing.'
+            'type'   => 'boolean',
+            'def'    => true,
+            'invert' => true,
+            'help'   => 'This will not compress nor merge assets, resulting in faster processing.'
         ])
         ->create_parameter('--publish/-p', [
             'type' => 'boolean',
@@ -83,7 +84,15 @@ namespace mysli\assets\root\script; class assets
             return false;
         }
 
-        return static::process($map, $path, $publish, $dev, $file, $watch);
+        return static::process(
+            $map,
+            $path,
+            $package,
+            $publish,
+            $dev,
+            $file,
+            $watch
+        );
     }
 
     /*
@@ -98,6 +107,9 @@ namespace mysli\assets\root\script; class assets
      *
      * @param string $path
      *        A full absolute path to the assets root.
+     *
+     * @param string $package
+     *        Package ID.
      *
      * @param boolean $publish
      *        Weather assets shold be published on build.
@@ -115,7 +127,8 @@ namespace mysli\assets\root\script; class assets
      * --
      * @return boolean
      */
-    protected static function process(array $map, $path, $publish, $dev, $id, $watch)
+    protected static function process(
+        array $map, $path, $package, $publish, $dev, $id, $watch)
     {
         // If id provided, select it.
         if ($id)
@@ -147,6 +160,9 @@ namespace mysli\assets\root\script; class assets
         // Discover includes
         $incd = lib\assets::get_dev_list($path, $map, $id);
 
+        // List of IDs we're observing
+        $ids  = array_keys($incd);
+
         // Make flat includes list of quick access --- get rid of IDs
         // e.g. from ID => [ file, file, file ], ID => [], ...
         //        to file => [..., ID], file => [..., ID], file => [ID], ...
@@ -160,72 +176,160 @@ namespace mysli\assets\root\script; class assets
             }
         }
 
+        // Setup observer
+        $observer = new observer($path);
+        $observer->set_interval(3);
+
         // Start observing FS for changes
-        file::observe($path, function ($changes) use ($path, $map, $includes, $incd)
+        // added|removed|modified|renamed|moved
+        $observer->observe(
+        function ($changes)
+        use ($map, $path, $package, $publish, $dev, &$includes, $ids)
         {
+            // List of IDs to fully rebuild!
+            $rebuild = [];
+
             foreach ($changes as $file => $mod)
             {
-                if ($mod['action'] === 'removed')
+                if (strpos($file, 'dist~') !== false)
+                    continue;
+
+                // Removed (Alos covers: moved, renamed (which will have `to` set))
+                if ($mod['action'] === 'removed' || isset($mod['to']))
                 {
                     if (!isset($includes[$file])) continue;
+
+                    ui::warning(
+                        '(Del '.date('H:i:s').')',
+                        "{$includes[$file]['rel_path']}/{$includes[$file]['rel_file']}"
+                    );
 
                     // Remove file(s) from dist folder
-                    dump_e("Removed: $file");
-                }
-                else if ($mod['action'] === 'moved' || $mod['action'] === 'renamed')
-                {
-                    // Moved and renamed always set two entries.
-                    // New entry with key 'from' and old entry with a key 'to'.
-                    // The old entry can be ignored.
-                    if (isset($mod['to']))
-                        continue;
+                    $remove = [
+                        // dist~/processed
+                        fs::ds($path, $includes[$file]['processed']),
+                        // dist~/compressed
+                        fs::ds($path, $includes[$file]['compressed']),
+                        // public/processed
+                        fs::ds(lib\assets::pubpath($package), $includes[$file]['processed']),
+                        // public/compressed
+                        fs::ds(lib\assets::pubpath($package), $includes[$file]['compressed']),
+                    ];
 
+                    // Remove files from dist
+                    foreach ($remove as $rfile)
+                    {
+                        if (file::exists($rfile))
+                            file::remove($rfile);
+                    }
+
+                    // Remove file from list
+                    $id = $includes[$file]['id'];
+                    unset($includes[$file]);
+
+                    // Not dev? Then rebuild
+                    if (!$dev)
+                        $rebuild[] = $id;
+                }
+                else if ($mod['action'] === 'added' || isset($mod['from'])) // added|moved|renamed
+                {
+                    if (!isset($includes[$file]))
+                    {
+                        // Anyone cares about this file?
+                        if ( ! ($id = lib\assets::id_from_file($file, $path, $map)))
+                            continue;
+
+                        // Care only about target ID
+                        if (!in_array($id, $ids))
+                            continue;
+
+                        // Resolve file paths and append it
+                        $filemeta = lib\assets::get_dev_file(
+                            $file,
+                            $path,
+                            lib\assets::get_processors(
+                                file::name($file),
+                                $map['files'][$id]['process'],
+                                $map['process']
+                            )
+                        );
+                        $filemeta['id'] = $id;
+                        $includes[$file] = $filemeta;
+                    }
+                    else
+                    {
+                        $id = $includes[$file]['id'];
+                    }
+
+                    ui::success(
+                        '(Add '.date('H:i:s').')',
+                        "{$includes[$file]['rel_path']}/{$includes[$file]['rel_file']}"
+                    );
+
+                    // Now rebuild
+                    // TODO: Implement triggers (e.g. `!` to rebuild whole stack)
+                    if (!in_array($id, $rebuild))
+                    {
+                        if (!$dev)
+                        {
+                            $rebuild[] = $id;
+                        }
+                        else
+                        {
+                            static::rebuild($map, $id, $file, $publish);
+                        }
+                    }
+                }
+                else // modified
+                {
                     if (!isset($includes[$file])) continue;
 
-                    dump_e("Moved: $file");
+                    ui::info(
+                        '(Mod '.date('H:i:s').')',
+                        "{$includes[$file]['rel_path']}/{$includes[$file]['rel_file']}"
+                    );
+
+                    $id = $includes[$file]['id'];
+
+                    // Now rebuild
+                    // TODO: Implement triggers (e.g. `!` to rebuild whole stack)
+                    if (!in_array($id, $rebuild))
+                    {
+                        if (!$dev)
+                        {
+                            $rebuild[] = $id;
+                        }
+                        else
+                        {
+                            static::rebuild($map, $id, $file, $publish);
+                        }
+                    }
                 }
-                else if ($mod['action'] === 'added')
-                {
-                    // Anyone cares about this file?
-                    if ( ! ($a_id = lib\assets::id_from_file($file, $path, $map)))
-                        continue;
-
-                    // Care only about target ID
-                    if (!isset($incd[$a_id]))
-                        continue;
-
-                    dump_e("Added: $file");
-                }
-                else // action === modified
-                {
-                    if (!isset($includes[$file])) continue;
-
-                    dump_e("Modified: $file");
-                }
-
-                // if remove file
-                //      remove file from dist
-                //      if dev
-                //          remove file from public
-                //      else
-                //          rebuild all
-                //          merge
-                //          master copy to public
-                // else if moved or renamed
-                //      move file in dist
-                //      if dev
-                //          move file in public
-                // else // if added or modified
-                //      process file
-                //      if dev
-                //          copy to public
-                //      else
-                //          merge
-                //          master copy to public
-                //
-                //
             }
-        }, null, true, 3, true);
+
+            // Rebuild entire IDs
+            $rebuild = array_unique($rebuild);
+            foreach ($rebuild as $rid)
+            {
+                static::rebuild($map, $rid, null, $publish);
+            }
+        });
+    }
+
+    /**
+     * Rebuild file(s) for particulad map.
+     * --
+     * @param array   $map
+     * @param string  $id
+     * @param string  $file     Null to rebuld all files under ID.
+     * @param boolean $publish  Weather to publish files.
+     * --
+     * @return null
+     */
+    protected static function rebuild(array $map, $id, $file, $publish)
+    {
+        ui::nl();
+        ui::line('Rebuilding '.($file ? "file {$id}/".file::name($file) : "all files in {$id}"));
     }
 
     /**
