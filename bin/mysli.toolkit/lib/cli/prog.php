@@ -293,7 +293,8 @@ namespace mysli\toolkit\cli; class prog
             $current = $this->arguments[$i];
 
             // If short + multiple together (e.g. -wps) then extract them
-            if (strlen($current) > 2 && substr($current, 0, 1) === '-')
+            if (strlen($current) > 2 && substr($current, 0, 1) === '-' &&
+                substr($current, 0, 2) !== '--')
             {
                 $current = str_split(substr($current, 1));
                 foreach ($current as &$c) $c = "-{$c}";
@@ -301,6 +302,7 @@ namespace mysli\toolkit\cli; class prog
                 array_splice($this->arguments, $i, 1, $current);
                 $current = arr::first($current);
             }
+
 
             if (preg_match($vp_name, $current, $match))
             {
@@ -327,7 +329,7 @@ namespace mysli\toolkit\cli; class prog
                     {
                         // Increase value of $i by one, this will skip over
                         // value in next loop.
-                        $i++;
+                        $i = $i + 1;
 
                         // Value is required if not boolean
                         if (!isset($this->arguments[$i]))
@@ -358,7 +360,9 @@ namespace mysli\toolkit\cli; class prog
                 // Couldn't find positional parameter
                 if (!$parameter)
                 {
-                    $this->invalidate("No value expected at: `:{$positional}`.");
+                    $this->invalidate(
+                        "No value expected at: `:{$positional} ({$current})`."
+                    );
                     return false;
                 }
 
