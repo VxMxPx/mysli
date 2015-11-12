@@ -554,8 +554,38 @@ namespace mysli\toolkit; class ym
         }
         else
         {
-            return trim($value, '"');
+            return static::unquote($value);
         }
+    }
+
+    /**
+     * Unquoate value in a smart way (if value starts and ends in same '' or "")
+     * then remove first and last character.
+     * --
+     * @param string $value
+     * -`-
+     * @return string
+     */
+    protected static function unquote($value)
+    {
+        if (!$value)
+        {
+            return;
+        }
+
+        $start = substr($value, 0, 1);
+
+        if (!in_array($start, ['"', "'"]))
+        {
+            return $value;
+        }
+
+        if ($start !== substr($value, -1))
+        {
+            return $value;
+        }
+
+        return substr($value, 1, -1);
     }
 
     /**
