@@ -297,3 +297,26 @@ return assert::equals(
         ]
     ]
 );
+
+#: Test Mixed Associative Arrays
+$decoded = ym::decode('
+intro: This is Intro!
+- Zero
+- One
+- Two
+key: This is another Key!
+- Three
+- Four
+');
+return assert::equals(
+    $decoded,
+    [
+        'intro' => 'This is Intro!',
+        0       => 'Zero',
+        1       => 'One',
+        2       => 'Two',
+        'key'   => 'This is another Key!',
+        3       => 'Three',
+        4       => 'Four'
+    ]
+);
