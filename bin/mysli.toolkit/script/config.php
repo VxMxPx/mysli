@@ -4,14 +4,15 @@ namespace mysli\toolkit\root\script; class config
 {
     const __use = '
         .{
-            pkg,
-            type.str   -> str,
-            config     -> lib\config,
-            fs,
-            fs.*       -> *,
-            cli.prog   -> prog,
-            cli.param  -> param,
-            cli.ui     -> ui,
+            pkg
+            type.arr   -> arr
+            type.str   -> str
+            config     -> lib\config
+            fs
+            fs.*       -> *
+            cli.prog   -> prog
+            cli.param  -> param
+            cli.ui     -> ui
             cli.output -> output
         }
     ';
