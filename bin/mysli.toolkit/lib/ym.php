@@ -138,13 +138,14 @@ namespace mysli\toolkit; class ym
                     }
                     else
                     {
-                        $stack[$level][] = $value;
+                        $stack[$level][] = static::valufy($value);
                     }
 
                     continue;
                 }
 
                 list($key, $value) = static::proc_line($line, false);
+
                 // Multiline?
                 if (($value === '>' || $value === '|') ||
                     substr($value, 0, 1) === '"' && substr($value, -1) !== '"')

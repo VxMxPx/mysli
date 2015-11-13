@@ -320,3 +320,20 @@ return assert::equals(
         4       => 'Four'
     ]
 );
+
+#: Test Quoted List
+$decoded = ym::decode('
+- Zero
+- "Quoted"
+- \'Different Quote\'
+- Finally "Segment Quoted"
+');
+return assert::equals(
+    $decoded,
+    [
+        'Zero',
+        'Quoted',
+        'Different Quote',
+        'Finally "Segment Quoted"'
+    ]
+);
