@@ -19,9 +19,6 @@ namespace mysli\assets\root\script; class assets
      */
     static function __run(array $args)
     {
-        /*
-        Set params.
-         */
         $prog = new prog('Mysli Assets', __CLASS__);
 
         $prog->set_help(true);
@@ -45,22 +42,24 @@ namespace mysli\assets\root\script; class assets
                         'Processed files will be published.'
         ])
         ->create_parameter('--id/-i', [
-            'help' => 'Observe only specific ID (defined in map.ym).'
+            'type' => 'array',
+            'def'  => [],
+            'help' => 'Observe only specific ID(s) (defined in map.ym).'.
+                      'You can specify more than one using comma.'
         ]);
 
         if (null !== ($r = prog::validate_and_print($prog, $args)))
             return $r;
 
-        list($package, $dev, $id, $watch) = $prog->get_values('package', '-d', '-i', '-w');
+        list($package, $dev, $ids, $watch) = $prog->get_values('package', '-d', '-i', '-w');
 
         if (!preg_match('/^[a-z0-9\.]+$/', $package))
         {
-            // Relative path
             $path = realpath(getcwd()."/{$package}");
             $package = pkg::by_path($path);
         }
 
-        return static::process($package, $dev, $id, $watch);
+        return static::process($package, $dev, $ids, $watch);
     }
 
     /*
@@ -73,49 +72,50 @@ namespace mysli\assets\root\script; class assets
      * @param string $package
      *        Package ID.
      *
-     * @param boolean $development
+     * @param boolean $dev
      *        Weather this is a development mode.
-     *        This will not compress nor merge assets.
+     *        True, will not compress nor merge assets, but will publish them.
+     *        False, will compress and merge, but not publish.
      *
-     * @param string $id
-     *        Target only one specific id, as defined in map file.
+     * @param string $ids
+     *        Target only one specific id(s) defined in map file.
      *
      * @param boolean $watch
      *        Watch files for changes and rebuild when changes occurs.
      * --
      * @return boolean
      */
-    protected static function process($package, $dev, $id, $watch)
+    protected static function process($package, $dev, array $ids, $watch)
     {
-        // Get assets path
-        $path = lib\assets::path($package);
+        $root = lib\assets::path($package);
 
-        if (!dir::exists($path))
+        if (!dir::exists($root))
         {
-            ui::warning("Couldn't resolve: `{$package}`, no such path: `{$path}`.");
+            ui::warning("Couldn't resolve: `{$package}` path.");
             return false;
         }
 
-        // Define defaults
-        $map = $includes = [];
+        $map = [];
 
-        // Setup observer
-        $observer = new observer($path);
+        $observer = new observer($root);
         $observer->set_interval(3);
         $observer->set_limit($watch ? 0 : 1);
 
-        // Start observing FS for changes
-        $observer->observe(function ($changes)
-            use (&$map, &$includes, $path, $package, $dev, $id)
+        $observer->observe(function ($changes) use (&$map, $root, $package, $dev, $ids)
         {
-            if (empty($map) || isset($changes[fs::ds($path, 'map.ym')]))
+            // Defaults
+            $rebuild = [];
+            $pubpath = lib\assets::pubpath($package);
+
+            // Map Reload
+            if (empty($map) || isset($changes[fs::ds($root, 'map.ym')]))
             {
                 ui::line("(Re)load `map.ym`.");
 
-                // Get map and includes
                 try
                 {
-                    $map = static::reload_map($package, $id);
+                    $map = lib\assets::map($package);
+                    lib\assets::resolve_map($map, $root);
                 }
                 catch (\Exception $e)
                 {
@@ -123,8 +123,7 @@ namespace mysli\assets\root\script; class assets
                     return false;
                 }
 
-                // Check for requirements
-                if (!static::requirements($map))
+                if (!static::requirements($map, $ids))
                 {
                     ui::error(
                         'Error',
@@ -134,25 +133,22 @@ namespace mysli\assets\root\script; class assets
                     return false;
                 }
 
-                $includes = lib\assets::get_dev_list($path, $map, $id);
-                $rebuild = array_keys($includes);
+                $rebuild = $ids ? $ids : array_keys($map['includes']);
                 $changes = [];
             }
-            else
-            {
-                // List of IDs to fully rebuild!
-                $rebuild = [];
-            }
 
+            // Run through changes
             foreach ($changes as $file => $mod)
             {
-                // Find file in includes
-                foreach ($includes as $incid => $incfiles)
+                $relative_file = ltrim(substr($file, strlen($root)), '/\\');
+
+                // Try to find file in map
+                foreach ($map['includes'] as $fid => $incopt)
                 {
-                    if (isset($incfiles[$file]))
+                    if (isset($incopt['resolved'][$relative_file]))
                     {
-                        $file = $incfiles[$file];
-                        $file['id'] = $incid;
+                        $file = $incopt['resolved'][$relative_file];
+                        break 1;
                     }
                 }
 
@@ -165,117 +161,90 @@ namespace mysli\assets\root\script; class assets
                 {
                     if (!is_array($file)) continue;
 
-                    ui::warning(
-                        $ohead,
-                        "{$file['rel_path']}/{$file['rel_file']}"
-                    );
+                    ui::warning($ohead, $file['source']);
 
-                    // Remove file(s) from dist folder
                     $remove = [
-                        // dist~/processed
-                        fs::ds($path, $file['processed']),
-                        // dist~/compressed
-                        fs::ds($path, $file['compressed']),
-                        // public/processed
-                        fs::ds(lib\assets::pubpath($package), $file['processed']),
-                        // public/compressed
-                        fs::ds(lib\assets::pubpath($package), $file['compressed']),
+                        fs::ds($root, 'dist~', $file['resolved']),
+                        fs::ds($root, 'dist~', $file['compressed']),
+                        fs::ds($pubpath, $file['resolved']),
+                        fs::ds($pubpath, $file['compressed']),
                     ];
 
-                    // Remove files from dist
                     foreach ($remove as $rfile)
                     {
                         if (file::exists($rfile))
+                        {
                             file::remove($rfile);
+                        }
                     }
 
-                    // Remove file from list
-                    $id = $file['id'];
-                    unset($includes[$id][$file['abs_path']]);
+                    unset($map['includes'][$file['id']]['resolved'][$file['source']]);
 
-                    // Not dev? Then rebuild
-                    if (!$dev)
-                        $rebuild[] = $id;
+                    if (!$dev || in_array('rebuild', $file['flags']))
+                    {
+                        $rebuild[] = $file['id'];
+                    }
+
+                    continue;
                 }
                 else if ($mod['action'] === 'added' || isset($mod['from'])) // added|moved|renamed
                 {
+                    // File NOT was discovered earlier
                     if (!is_array($file))
                     {
                         // Anyone cares about this file?
-                        if ( ! ($id = lib\assets::id_from_file($file, $path, $map)))
+                        if ( ! ($id = lib\assets::id_from_file($file, $root, $map)))
+                        {
                             continue;
+                        }
 
                         // Care only about target ID
-                        if (!isset($includes[$id]))
+                        if (!isset($ids[$id]))
+                        {
                             continue;
-
-                        // Resolve file paths and append it
-                        $filemeta = lib\assets::get_dev_file(
-                            $file,
-                            $path,
-                            lib\assets::get_processors(
-                                file::name($file),
-                                $map['files'][$id]['process'],
-                                $map['process']
-                            )
-                        );
-                        $filemeta['id'] = $id;
-                        $includes[$id][$file] = $filemeta;
-                        $file = $filemeta;
-                    }
-
-                    ui::success(
-                        $ohead,
-                        "{$file['rel_path']}/{$file['rel_file']}"
-                    );
-
-                    // Now rebuild
-                    // TODO: Implement triggers (e.g. `!` to rebuild whole stack)
-                    if (!in_array($file['id'], $rebuild))
-                    {
-                        if (!$dev)
-                        {
-                            $rebuild[] = $file['id'];
                         }
-                        else
-                        {
-                            static::rebuild([ $file ], $package, $dev);
-                        }
+
+                        // Copy map & find newly added file.
+                        // Some optimization is possible at this point.
+                        $cp_map = $map;
+                        lib\assets::resolve_map($cp_map, $root);
+
+                        $file = $cp_map['includes'][$id]['resolved'][$relative_file];
                     }
                 }
-                else // modified
+
+                if (!is_array($file)) continue;
+                ui::info($ohead, $file['source']);
+
+                // Rebuild single file or whole stack
+                if (!in_array($file['id'], $rebuild))
                 {
-                    if (!is_array($file)) continue;
-
-                    ui::info(
-                        $ohead,
-                        "{$file['rel_path']}/{$file['rel_file']}"
-                    );
-
-                    // Now rebuild
-                    // TODO: Implement triggers (e.g. `!` to rebuild whole stack)
-                    if (!in_array($file['id'], $rebuild))
+                    if (!$dev || in_array('rebuild', $file['flags']))
                     {
-                        if (!$dev)
-                        {
-                            $rebuild[] = $file['id'];
-                        }
-                        else
-                        {
-                            static::rebuild([ $file ], $package, $dev);
-                        }
+                        $rebuild[] = $file['id'];
+                    }
+                    else
+                    {
+                        $single_rebuild = $map['includes'][$file['id']];
+                        $single_rebuild['resolved'] = [ $file['source'] => $file ];
+                        static::rebuild($single_rebuild, $root, true, $pubpath);
                     }
                 }
             }
 
-            // Rebuild entire IDs
-            $rebuild = array_unique($rebuild);
-            foreach ($rebuild as $rid)
+            // IDs to be entierly rebuild if any...
+            foreach (array_unique($rebuild) as $rid)
             {
+                if (!isset($map['includes'][$rid]['resolved']))
+                {
+                    continue;
+                }
+
                 ui::nl();
                 ui::line("Rebuild all files in {$rid}");
-                static::rebuild($includes[$rid], $package, $dev);
+                static::rebuild($map['includes'][$rid], $root, $dev, $pubpath);
             }
+
         });
 
         return true;
@@ -284,96 +253,164 @@ namespace mysli\assets\root\script; class assets
     /**
      * Rebuild file(s) for particular map.
      * --
-     * @param array   $files    (Resolved) Files to process.
-     * @param string  $package
-     * @param boolean $dev
+     * @param array   $section (Resolved) Section of includes to process.
+     * @param string  $root    Absolute assets path (root)
+     * @param boolean $dev     true: publish, false: build+merge
+     * @param string  $pubpath Public path (to publish modified file)
      */
-    protected static function rebuild(array $files, $package, $dev)
+    protected static function rebuild(array $section, $root, $dev, $pubpath)
+    // array $files, $root, $dev, $pubpath, $merged)
     {
-        foreach ($files as $file)
+        $buffer = '';
+
+        if (isset($section['process']) && !$section['process'])
         {
-
-        }
-    }
-
-    /**
-     * Reload map and grab required ID.
-     * --
-     * @param  string $package
-     * @param  string $id
-     * --
-     * @throws mysli\assets\exception\assets 10 Couldn't find `map.ym`.
-     * @throws mysli\assets\exception\assets 20 ID not defined in `map.ym`.
-     * --
-     * @return array
-     */
-    protected static function reload_map($package, $id)
-    {
-        // Get map array
-        $map = lib\assets::map($package);
-
-        // Discover includes
-
-        if (!$map)
-            throw new exception\assets(
-                "Couldn't find `map.ym` for: `{$package}`.", 10
-            );
-
-        // If id provided, select it.
-        if ($id)
-        {
-            $file_arr = isset($map['files'][$id]) ? $map['files'][$id] : false;
-
-            if (!$file_arr)
-                throw new exception\assets(
-                    "No such file defined in `map.ym`: `{$id}`.", 20
-                );
-
-            $map['files'] = [ $file = $file_arr ];
+            if (!isset($section['publish']) || $section['publish'])
+            {
+                ui::info('Publish', $section['id']);
+                dir::copy(fs::ds($root, $section['id']), fs::ds($pubpath, $section['id']));
+            }
+            return true;
         }
 
-        return $map;
-    }
-
-    /**
-     * Check weather all required modules are available.
-     * --
-     * @param array $map
-     * --
-     * @return boolean
-     */
-    protected static function requirements(array $map)
-    {
-        $requirements = [];
-
-        // Grab all requirements defined in this map
-        foreach ($map['files'] as $fid => $file)
+        foreach ($section['resolved'] as $file => $fileopt)
         {
-            if (!is_array($file['process']))
+            if (!isset($fileopt['module']))
             {
                 continue;
             }
 
-            foreach ($file['process'] as $processor)
+            $in_dir  = fs::ds($root, $fileopt['id']);
+            $in_file = fs::ds($root, $file);
+            $out_dir = fs::ds($root, 'dist~', $fileopt['id']);
+            $out_file = fs::ds($root, 'dist~', $fileopt['resolved']);
+
+            if (!dir::exists($out_dir))
             {
-                if (isset($map['process'][$processor]) &&
-                    isset($map['process'][$processor]['require']))
+                dir::create($out_dir);
+            }
+
+            // Process
+            ui::info('Process', $fileopt['source']);
+            $command = $fileopt['module']['process'];
+            $command = str_replace(
+                [ '{in/file}', '{out/file}', '{in/}', '{out/}' ],
+                [ "'{$in_file}'", "'{$out_file}'", "'{$in_dir}'", "'{$out_dir}'" ],
+                $command
+            );
+            exec($command);
+
+            if ($dev)
+            {
+                // Publish processed file
+                // Append buffer
+                if (file::exists($out_file) &&
+                    (!isset($section['publish']) || $section['publish']))
                 {
-                    if (is_array($map['process'][$processor]['require']))
+                    if (!dir::exists(fs::ds($pubpath, $fileopt['id'])))
                     {
-                        $requirements = array_merge(
-                            $requirements,
-                            $map['process'][$processor]['require']
-                        );
+                        dir::create(fs::ds($pubpath, $fileopt['id']));
                     }
+                    ui::info('Publish', $file);
+                    file::copy($out_file, fs::ds($pubpath, $fileopt['resolved']));
+                    file::remove($out_file);
+                }
+            }
+            elseif (file::exists($out_file))
+            {
+                // Build, reset variables
+                $in_file  = $out_file;
+                $in_dir   = $out_dir;
+                $out_file = fs::ds($root, 'dist~', $fileopt['compressed']);
+
+                ui::info('Build', $fileopt['resolved']);
+                $command = $fileopt['module']['build'];
+                $command = str_replace(
+                    [ '{in/file}', '{out/file}', '{in/}', '{out/}' ],
+                    [ "'{$in_file}'", "'{$out_file}'", "'{$in_dir}'", "'{$out_dir}'" ],
+                    $command
+                );
+                exec($command);
+
+                // Append buffer (Merge)
+                if (file::exists($out_file))
+                {
+                    $contents = file::read($out_file);
+                    if (trim($contents))
+                    {
+                        $buffer .= "\n{$contents}";
+                    }
+                    file::remove($in_file);
+                    file::remove($out_file);
                 }
             }
         }
 
-        // Only keep unique values not to do duplicated tests
-        $requirements = array_unique($requirements);
+        if (!$dev && isset($section['merge']))
+        {
+            ui::info('Write merge', $section['merge']);
+            // Save buffer
+            file::write(fs::ds($out_dir, $section['merge']), $buffer);
+        }
+    }
+
+    /**
+     * Check weather all required modules are available.
+     * This will need resolved map.
+     * --
+     * @param array  $rmap
+     * @param string $ids   Target specific ID(s)
+     * --
+     * @return boolean
+     */
+    protected static function requirements(array $rmap, $ids=null)
+    {
+        $requirements = [];
+
+        if (!$ids)
+        {
+            $ids = array_keys( $rmap['includes'] );
+        }
+        elseif (!is_array($ids))
+        {
+            $ids = [ $ids ];
+        }
+
+        foreach ($ids as $mid)
+        {
+            if (!isset($rmap['includes'][$mid]))
+            {
+                continue;
+            }
+            else
+            {
+                $current = $rmap['includes'][$mid];
+            }
+
+            if (!isset($current['use-modules']) ||
+                !is_array($current['use-modules']))
+            {
+                continue;
+            }
+
+            foreach ($current['use-modules'] as $module)
+            {
+                if (isset($current['modules'][$module]))
+                {
+                    if (isset($current['modules'][$module]['require']))
+                    {
+                        $requirements[] = $current['modules'][$module]['require'];
+                    }
+                }
+                elseif (isset($rmap['modules'][$module]) && isset($rmap['modules'][$module]['require']))
+                {
+                    $requirements[] = $rmap['modules'][$module]['require'];
+                }
+            }
+        }
 
         $return = true;
+        $requirements = array_unique($requirements, SORT_STRING);
 
         // Check requirements
         foreach ($requirements as $requirement)

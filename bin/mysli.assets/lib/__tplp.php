@@ -7,34 +7,33 @@ namespace mysli\assets; class __tplp
     ';
 
     /**
-     * {'mysli.cms.blog/js/main.js'|assets/tags}
-     * @param  string $id
+     * Get tag(s) for particular ID
+     * @example
+     *     {'dir/id'|assets.tag:'vendor.package'}
+     * --
+     * @param string $id
+     * @param string $package
+     * --
      * @return string
      */
-    static function tags($id, $type=null)
+    static function tag($id, $package)
     {
-        list($package, $file) = self::resolve_id($id);
-        return implode("\n", assets::get_tags($package, $file, $type));
-    }
-    /**
-     * {'mysli.cms.blog/js/main.js'|assets/links}
-     * @param  string $id
-     * @return array
-     */
-    static function links($id, $type=null)
-    {
-        list($package, $file) = self::resolve_id($id);
-        return assets::get_links($package, $file, $type);
+        return implode("\n", assets::get_tags($id, $package));
     }
 
     /**
-     * Resolve id, e.g.: vendor.package/path/file => [vendor.package, path/file]
-     * @param  string $id
-     * @return string
+     * Get only urls for particular package.
+     * --
+     * @example
+     *     {'mysli.cms.blog/js/main.js'|assets/links}
+     * --
+     * @param string $id
+     * @param string $package
+     * --
+     * @return array
      */
-    private static function resolve_id($id)
+    static function url($id, $package)
     {
-        $seg = explode('/', $id, 2);
-        return [$seg[0], isset($seg[1]) ? $seg[1] : null];
+        return assets::get_links($id, $package);
     }
 }

@@ -9,75 +9,44 @@ tags:
         match: [ jpg, png, gif ]
         tag: '<img src="{link}" />'
 
-process:
-    merge:
-        match: *.*
-        merge:
-            - cat {src/file} >> {merge/}
+modules:
+    # CSS
     styl:
-        match: *.styl
-        require:
-            - stylus --version | grep ^0.*$
-        process:
-            - stylus {src/file} -o {dest/file.css}
-            - {dest/file.css}
-        compress: &css.compress
-        merge: &css.merge
+        produce: css
+        require: stylus --version | grep ^0.*$
+        process: stylus {in/file} -o {out/file}
+        build:   $css.build
     css:
-        match: *.css
-        require:
-            - cleancss --version | grep ^3.*$
-        process:
-            - cp {src/file} {dest/file}
-            - {dest/file}
-        compress:
-            - cleancss {dest/file.css} -o {dest/file.min.css}
-            - {dest/file.min.css}
-        merge: &merge.merge
+        produce: css
+        require: cleancss --version | grep ^3.*$
+        process: cp {in/file} {out/file}
+        build:   cleancss {in/file} -o {out/file}
+    # JavaScript
     js:
-        match: *.js
-        require:
-            - uglifyjs --version | grep "^uglifyjs 2.*$"
-        process:
-            - cp {src/file} {dest/file}
-            - {dest/file}
-        compress:
-            - uglifyjs -c -o {dest/file.min.js} {dest/file} --screw-ie8
-            - {dest/file.min.js}
-        merge: &merge.merge
-    tplp:
-        match: *.tplp.html
-        require:
-            - mysli --self version | grep "^Mysli .*$"
-            - mysli template --version | grep "^Mysli .*$"
-        process:
-            - myli tplp -f {src/file} {dest/}
-            - {dest/file.php}
-        merge: No
-    i18n:
-        match: *.lng
-        require:
-            - mysli --self version | grep "^Mysli .*$"
-            - mysli i18n --version | grep "^Mysli .*$"
-        process:
-            - mysli i18n -f {src/file} {dest/}
-            - {dest/file.json}
-        merge: No
-    copy:
-        match: *.*
-        require:
-            - cp --version | grep "^cp .*$"
-        process:
-            - cp -r {src/file} {dest/file}
-            - {dest/file}
-        merge: No
+        produce: js
+        require: uglifyjs --version | grep '^uglifyjs 2.*$'
+        process: cp {in/file} {out/file}
+        build:   uglifyjs -c -o {out/file} {in/file} --screw-ie8
+    ts:
+        produce: js
+        require: tsc --version | grep 'Version 1.*$'
+        process: tsc --outDir {out/} {in/file} --target ES5 -d
+        build:   $js.build
+    # Templating
+    tplp.html:
+        produce: php
+        require: mysli template --version | grep '^Mysli .*$'
+        process: myli tplp -f {in/file} {out/}
+    # I18n
+    lng:
+        produce: json
+        require: mysli i18n --version | grep '^Mysli .*$'
+        process: mysli i18n -f {in/file} {out/}
 
-files:
-    tplp:
-        process: [ tplp ]
+includes:
+    tplp/:
         publish: No
-        include: *.tplp
-    i18n:
-        process: [ i18n ]
+        files: "*.tplp"
+    i18n/:
         publish: No
-        include: *.lng
+        files: "*.lng"
