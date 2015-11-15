@@ -495,16 +495,46 @@ namespace mysli\toolkit\type; class str
     static function limit_length($string, $limit, $ending=null)
     {
         validate::need_int($limit);
+
         $string = (string) $string;
         $string_initial_length = static::length($string);
-        $string = static::slice($string, 0, $limit);
 
-        if ($ending && static::length($string) !== $string_initial_length)
+        //if ($ending && static::length($string) !== $string_initial_length)
+        if ($string_initial_length > $limit)
         {
+            $string = static::slice($string, 0, $limit-(strlen($ending)));
             $string = $string . $ending;
         }
 
         return $string;
+    }
+
+    /**
+     * String to fixed length. If too long then cut, if too short pad.
+     * --
+     * @param string  $string
+     * @param integer $length
+     * @param string  $cut_add If string is cut append to the end.
+     * @param string  $pad_add If string is pad fill with this character(s).
+     * --
+     * @return string
+     */
+    static function cut_pad($string, $length, $cut_add='...', $pad_add=' ')
+    {
+        $str_length = mb_strlen($string);
+
+        if ($str_length > $length)
+        {
+            return static::limit_length($string, $length, $cut_add);
+        }
+        else if ($str_length < $length)
+        {
+            return str_pad($string, $length, $pad_add, STR_PAD_RIGHT);
+        }
+        else
+        {
+            return $string;
+        }
     }
 
     /**
