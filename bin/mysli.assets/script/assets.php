@@ -4,8 +4,8 @@ namespace mysli\assets\root\script; class assets
 {
     const __use = '
         .{ assets -> lib.assets, exception.assets }
-        mysli.toolkit.{ log, pkg }
-        mysli.toolkit.cli.{ prog, param, ui }
+        mysli.toolkit.{ log, pkg, type.str -> str }
+        mysli.toolkit.cli.{ prog, param, ui, output }
         mysli.toolkit.fs.{ observer, fs, file, dir }
     ';
 
@@ -110,7 +110,7 @@ namespace mysli\assets\root\script; class assets
             // Map Reload
             if (empty($map) || isset($changes[fs::ds($root, 'map.ym')]))
             {
-                ui::line("(Re)load `map.ym`.");
+                ui::info('RELOAD', 'map.ym');
 
                 try
                 {
@@ -153,16 +153,16 @@ namespace mysli\assets\root\script; class assets
                 }
 
                 // Output head & action
-                $oact  = substr(ucfirst($mod['action']), 0, 3);
-                $ohead = "({$oact} ".date('H:i:s').')';
+                output::line(str::cut_pad($relative_file, 30, '...', '.'), false);
+                $oact  = ucfirst($mod['action']);
+                $ohead = "{$oact} ".date('H:i:s');
+                ui::info($ohead);
 
                 // Removed (Also covers: moved, renamed (which will have `to` set))
                 if ($mod['action'] === 'removed' || isset($mod['to']))
                 {
                     if (!is_array($file)) continue;
-
-                    ui::warning($ohead, $file['source']);
-
+                    // ui::warning($ohead, $file['source']);
                     $remove = [
                         fs::ds($root, 'dist~', $file['resolved']),
                         fs::ds($root, 'dist~', $file['compressed']),
@@ -214,7 +214,7 @@ namespace mysli\assets\root\script; class assets
                 }
 
                 if (!is_array($file)) continue;
-                ui::info($ohead, $file['source']);
+                // ui::info($ohead, $file['source']);
 
                 // Rebuild single file or whole stack
                 if (!in_array($file['id'], $rebuild))
@@ -241,7 +241,7 @@ namespace mysli\assets\root\script; class assets
                 }
 
                 ui::nl();
-                ui::line("Rebuild all files in {$rid}");
+                ui::info('DIRECTORY', $rid);
                 static::rebuild($map['includes'][$rid], $root, $dev, $pubpath);
             }
 
@@ -263,14 +263,31 @@ namespace mysli\assets\root\script; class assets
     {
         $buffer = '';
 
-        if (isset($section['process']) && !$section['process'])
+        // No need to process anything
+        if (!$section['process'])
         {
-            if (!isset($section['publish']) || $section['publish'])
+            output::line(str::cut_pad($section['id'], 30, '...', '.'), false);
+
+            // Perhaps needs to be published
+            if ($section['publish'])
             {
-                ui::info('Publish', $section['id']);
-                dir::copy(fs::ds($root, $section['id']), fs::ds($pubpath, $section['id']));
+
+                if (dir::copy(fs::ds($root, $section['id']), fs::ds($pubpath, $section['id'])))
+                {
+                    ui::success('Published');
+                    return true;
+                }
+                else
+                {
+                    ui::error('Failed to Publish');
+                    return false;
+                }
             }
-            return true;
+            else
+            {
+                ui::info('Skipped');
+                return true;
+            }
         }
 
         foreach ($section['resolved'] as $file => $fileopt)
@@ -287,11 +304,19 @@ namespace mysli\assets\root\script; class assets
 
             if (!dir::exists($out_dir))
             {
-                dir::create($out_dir);
+                output::line(str::$out_dir, false);
+                dir::create($out_dir)
+                    ? ui::success('Created')
+                    : ui::error('Failed');
             }
 
+            output::line(
+                str::cut_pad(file::name($fileopt['source']), 30, '...', '.'),
+                false
+            );
+
             // Process
-            ui::info('Process', $fileopt['source']);
+            output::blue('Process ', false);
             $command = $fileopt['module']['process'];
             $command = str_replace(
                 [ '{in/file}', '{out/file}', '{in/}', '{out/}' ],
@@ -304,15 +329,15 @@ namespace mysli\assets\root\script; class assets
             {
                 // Publish processed file
                 // Append buffer
-                if (file::exists($out_file) &&
-                    (!isset($section['publish']) || $section['publish']))
+                if (file::exists($out_file) && $section['publish'])
                 {
                     if (!dir::exists(fs::ds($pubpath, $fileopt['id'])))
                     {
                         dir::create(fs::ds($pubpath, $fileopt['id']));
                     }
-                    ui::info('Publish', $file);
-                    file::copy($out_file, fs::ds($pubpath, $fileopt['resolved']));
+                    output::green('Publish ', false);
+                    file::copy($out_file, fs::ds($pubpath, $fileopt['resolved']))
+                        or output::red('Failed ', false);
                     file::remove($out_file);
                 }
             }
@@ -323,7 +348,7 @@ namespace mysli\assets\root\script; class assets
                 $in_dir   = $out_dir;
                 $out_file = fs::ds($root, 'dist~', $fileopt['compressed']);
 
-                ui::info('Build', $fileopt['resolved']);
+                output::blue('Build ', false);
                 $command = $fileopt['module']['build'];
                 $command = str_replace(
                     [ '{in/file}', '{out/file}', '{in/}', '{out/}' ],
@@ -344,14 +369,22 @@ namespace mysli\assets\root\script; class assets
                     file::remove($out_file);
                 }
             }
+            ui::nl();
         }
 
         if (!$dev && isset($section['merge']))
         {
-            ui::info('Write merge', $section['merge']);
+            output::line(
+                str::cut_pad($section['merge'], 30, '...', '.'),
+                false
+            );
             // Save buffer
-            file::write(fs::ds($out_dir, $section['merge']), $buffer);
+            file::write(fs::ds($out_dir, $section['merge']), $buffer) !== false
+                ? ui::success('Merged')
+                : ui::error('Failed to Merge');
         }
+
+        ui::nl();
     }
 
     /**
@@ -365,6 +398,9 @@ namespace mysli\assets\root\script; class assets
      */
     protected static function requirements(array $rmap, $ids=null)
     {
+        ui::nl();
+        ui::line('Checking modules');
+
         $requirements = [];
 
         if (!$ids)
