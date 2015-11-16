@@ -4,7 +4,7 @@ namespace mysli\toolkit\cli; class prog
 {
     const __use = '
         .cli.{ util, ui }
-        .{ pkg, type.arr -> arr }
+        .{ pkg, type.arr -> arr, type.str -> str }
     ';
 
     /**
@@ -451,9 +451,9 @@ namespace mysli\toolkit\cli; class prog
         $description = $this->meta['description'];
         $description_long = $this->meta['description_long'];
 
-        $sargs   = $this->format_param_simple();
-        $pargs   = $this->format_param_detailed('positional');
-        $dargs   = $this->format_param_detailed();
+        $sargs = $this->format_param_simple();
+        $pargs = $this->format_param_detailed('positional');
+        $dargs = $this->format_param_detailed();
 
         $terminal_width = util::terminal_width() ?: 75;
         $dargs_title = 'Options:';
@@ -819,17 +819,18 @@ namespace mysli\toolkit\cli; class prog
             {
                 if (is_bool($default))
                 {
-                    if (!$default)
-                        $params[$pid]['default'] = '[false]';
-                    else
-                        $params[$pid]['default'] = '[true]';
+                    $params[$pid]['default'] = $default ? '[true]' : '[false]';
+                }
+                elseif (is_array($default))
+                {
+                    $odef = implode(',', $default);
+                    $odef = str::limit_length($odef, 13);
+                    $params[$pid]['default'] = "[{$odef}]";
                 }
                 else
                 {
-                    if (strlen((string) $default) > 15)
-                        $params[$pid]['default'] = substr($default, 0, 13) . '...';
-                    else
-                        $params[$pid]['default'] = "[{$default}]";
+                    $odef = str::limit_length($default, 13);
+                    $params[$pid]['default'] = "[{$odef}]";
                 }
             }
             else
