@@ -206,7 +206,7 @@ namespace mysli\assets; class assets
     }
 
     /**
-     * Get full absolute path to the package's assets.
+     * Get full absolute path to the package's assets (in package).
      * --
      * @param string $package
      * --
@@ -228,6 +228,18 @@ namespace mysli\assets; class assets
         }
 
         return fs::ds($path, $assets);
+    }
+
+    /**
+     * Get full absolute public path to the package's assets.
+     * --
+     * @param string $package
+     * --
+     * @return string
+     */
+    static function pubpath($package)
+    {
+        return fs::pubpath("assets", $package);
     }
 
     /**
@@ -283,22 +295,117 @@ namespace mysli\assets; class assets
     }
 
     /**
-     * Get full absolute public path to the package's assets.
+     * Get URL to the specific resource.
      * --
-     * @param string $package
+     * @param string $...
      * --
      * @return string
      */
-    static function pubpath($package)
+    static function url()
     {
-        return fs::pubpath("assets", $package);
+        return preg_replace(
+            '/[\/\\\\]+/',
+            '/',
+            '/assets/'.implode('/', func_get_args())
+        );
     }
 
+    /**
+     * Get HTML tags.
+     * --
+     * @param  string $id
+     * @param  string $package
+     * --
+     * @return array
+     */
     static function get_tags($id, $package)
-    {}
+    {
+        $links = static::get_links($id, $package);
+        $map = static::map($package);
+        $tags = $map['tags'];
 
+        foreach ($links as $id => &$link)
+        {
+            $ext = substr(file::extension($link), 1);
+            foreach ($tags as $tag)
+            {
+                if (in_array($ext, $tag['match']))
+                {
+                    $link = str_replace('{link}', $link, $tag['tag']);
+                    continue 2;
+                }
+            }
+
+            unset($links[$id]);
+        }
+
+        return $links;
+    }
+
+    /**
+     * Get links.
+     * --
+     * @param  string $id
+     * @param  string $package
+     * --
+     * @throws mysli\assets\exception\assets 10 No such ID.
+     * --
+     * @return array
+     */
     static function get_links($id, $package)
-    {}
+    {
+        $type = pkg::exists_as($package);
+        $map = static::map($package);
+        $path = static::pubpath($package);
+
+        if (!isset($map['includes'][$id]))
+            throw new exception\assets("No such ID: `{$id}`", 10);
+
+        if ($type === pkg::phar && isset($map['includes'][$id]['merge']))
+        {
+            return [ static::url($package, $id, $map['includes'][$id]['merge']) ];
+        }
+
+        $links = [];
+        $modules = isset($map['modules']) ? $map['modules'] : [];
+        if (isset($map['includes'][$id]['modules']))
+        {
+            $modules = array_merge($modules, $map['includes'][$id]['modules']);
+        }
+
+        foreach ($map['includes'][$id]['files'] as $file)
+        {
+            if (strpos($file, ' !') !== false)
+            {
+                $file = explode(' !', $file, 2)[0];
+            }
+
+            list($file, $_, $_) = static::resolve_file_module($file, $modules);
+
+            if (strpos($file, '*') !== false)
+            {
+                $rsearch = file::find(fs::ds($path, $id), $file);
+            }
+            else
+            {
+                $rsearch[$file] = fs::ds($path, $id, $file);
+            }
+
+            foreach ($rsearch as $rfile => $afile)
+            {
+                if (file::exists($afile))
+                {
+                    $url = static::url($package, $id, $rfile);
+                    if (!in_array($url, $links))
+                    {
+                        $links[] = $url;
+                    }
+                }
+            }
+        }
+
+        return $links;
+    }
 
     /*
     --- Protected --------------------------------------------------------------
