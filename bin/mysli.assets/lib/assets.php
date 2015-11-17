@@ -153,6 +153,11 @@ namespace mysli\assets; class assets
                 // Get modules & resolve file
                 foreach ($rsearch as $sfile => $_)
                 {
+                    if (isset($opt['resolved'][ fs::ds($dir, $sfile) ]))
+                    {
+                        continue;
+                    }
+
                     list($kfile, $cfile, $module) =
                         static::resolve_file_module($sfile, $modules);
 
@@ -288,6 +293,12 @@ namespace mysli\assets; class assets
     {
         return fs::pubpath("assets", $package);
     }
+
+    static function get_tags($id, $package)
+    {}
+
+    static function get_links($id, $package)
+    {}
 
     /*
     --- Protected --------------------------------------------------------------
