@@ -180,7 +180,7 @@ namespace mysli\assets\root\script; class assets
 
                     unset($map['includes'][$file['id']]['resolved'][$file['source']]);
 
-                    if (!$dev || in_array('rebuild', $file['flags']))
+                    if (!$dev || in_array('reload', $file['flags']))
                     {
                         $rebuild[] = $file['id'];
                     }
@@ -219,7 +219,7 @@ namespace mysli\assets\root\script; class assets
                 // Rebuild single file or whole stack
                 if (!in_array($file['id'], $rebuild))
                 {
-                    if (!$dev || in_array('rebuild', $file['flags']))
+                    if (!$dev || in_array('reload', $file['flags']))
                     {
                         $rebuild[] = $file['id'];
                     }
@@ -274,18 +274,18 @@ namespace mysli\assets\root\script; class assets
 
                 if (dir::copy(fs::ds($root, $section['id']), fs::ds($pubpath, $section['id'])))
                 {
-                    ui::success('Published');
+                    ui::success("Published\n");
                     return true;
                 }
                 else
                 {
-                    ui::error('Failed to Publish');
+                    ui::error("Failed to Publish\n");
                     return false;
                 }
             }
             else
             {
-                ui::info('Skipped');
+                ui::info("Skipped\n");
                 return true;
             }
         }
@@ -304,7 +304,7 @@ namespace mysli\assets\root\script; class assets
 
             if (!dir::exists($out_dir))
             {
-                output::line(str::$out_dir, false);
+                output::line(str::cut_pad(file::name($out_dir), 30, '...', '.'), false);
                 dir::create($out_dir)
                     ? ui::success('Created')
                     : ui::error('Failed');
@@ -316,7 +316,7 @@ namespace mysli\assets\root\script; class assets
             );
 
             // Process
-            output::blue('Process ', false);
+            output::blue('Processed ', false);
             $command = $fileopt['module']['process'];
             $command = str_replace(
                 [ '{in/file}', '{out/file}', '{in/}', '{out/}' ],
@@ -335,7 +335,7 @@ namespace mysli\assets\root\script; class assets
                     {
                         dir::create(fs::ds($pubpath, $fileopt['id']));
                     }
-                    output::green('Publish ', false);
+                    output::green('Published ', false);
                     file::copy($out_file, fs::ds($pubpath, $fileopt['resolved']))
                         or output::red('Failed ', false);
                     file::remove($out_file);
