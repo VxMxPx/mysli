@@ -8,15 +8,16 @@ namespace mysli\assets; class __tplp
 
     /**
      * Get tag(s) for particular ID
+     * --
      * @example
-     *     {'dir/id'|assets.tag:'vendor.package'}
+     *     { 'dir/id' | assets.tags : 'vendor.package' }
      * --
      * @param string $id
      * @param string $package
      * --
      * @return string
      */
-    static function tag($id, $package)
+    static function tags($id, $package)
     {
         return implode("\n", assets::get_tags($id, $package));
     }
@@ -25,14 +26,14 @@ namespace mysli\assets; class __tplp
      * Get only urls for particular package.
      * --
      * @example
-     *     {'mysli.cms.blog/js/main.js'|assets/links}
+     *     { 'js/' | assets.urls : 'vendor.package' }
      * --
      * @param string $id
      * @param string $package
      * --
      * @return array
      */
-    static function url($id, $package)
+    static function urls($id, $package)
     {
         return assets::get_links($id, $package);
     }
