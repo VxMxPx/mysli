@@ -1,10 +1,10 @@
---TEST--
---DESCRIPTION--
---FILE--
 <?php
-use mysli\util\markdown;
 
-echo markdown::process(<<<EOF
+#: Before
+use mysli\markdown;
+
+#: Test List Mixed Nested
+$markdown = <<<MARKDOWN
 - One
     1. A
     2. B
@@ -15,11 +15,10 @@ echo markdown::process(<<<EOF
     3. C
 - Two
 - Three
-EOF
-);
-?>
---EXPECT--
-<ul>
+MARKDOWN;
+
+return assert::equals(markdown::process($markdown),
+'<ul>
     <li>One
         <ol>
             <li>A</li>
@@ -39,4 +38,4 @@ EOF
     </li>
     <li>Two</li>
     <li>Three</li>
-</ul>
+</ul>');

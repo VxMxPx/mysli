@@ -1,10 +1,10 @@
---TEST--
---DESCRIPTION--
---FILE--
 <?php
-use mysli\util\markdown;
 
-echo markdown::process(<<<EOF
+#: Before
+use mysli\markdown;
+
+#: Test List Ordered Nested
+$markdown = <<<MARKDOWN
 1. One
     1. Sub 1
     2. Sub 2
@@ -16,11 +16,10 @@ echo markdown::process(<<<EOF
                     1. Sub 5
 3. Three
 4. Four
-EOF
-);
-?>
---EXPECT--
-<ol>
+MARKDOWN;
+
+return assert::equals(markdown::process($markdown),
+'<ol>
     <li>One
         <ol>
             <li>Sub 1</li>
@@ -50,4 +49,4 @@ EOF
     </li>
     <li>Three</li>
     <li>Four</li>
-</ol>
+</ol>');

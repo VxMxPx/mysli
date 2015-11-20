@@ -1,10 +1,10 @@
---TEST--
---DESCRIPTION--
---FILE--
 <?php
-use mysli\util\markdown;
 
-echo markdown::process(<<<EOF
+#: Before
+use mysli\markdown;
+
+#: Test List Unordered Nested
+$markdown = <<<MARKDOWN
 - Red
 - Green
 - Blue
@@ -18,12 +18,10 @@ echo markdown::process(<<<EOF
     - Light
         - Saturated
     - Dark
-EOF
-);
+MARKDOWN;
 
-?>
---EXPECT--
-<ul>
+return assert::equals(markdown::process($markdown),
+'<ul>
     <li>Red</li>
     <li>Green</li>
     <li>Blue
@@ -52,4 +50,4 @@ EOF
             <li>Dark</li>
         </ul>
     </li>
-</ul>
+</ul>');

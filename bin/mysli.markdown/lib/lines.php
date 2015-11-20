@@ -1,16 +1,15 @@
 <?php
 
-namespace mysli\util\markdown;
-
-__use(__namespace__, '
-    mysli.framework.type/arr
-');
-
 /**
  * Helper, manage lines when processing Markdown.
  */
-class lines
+namespace mysli\markdown; class lines
 {
+    const __use = '
+        .{ exception.parser }
+        mysli.toolkit.type.{ arr }
+    ';
+
     /**
      * Inputed lines.
      * --
@@ -51,13 +50,10 @@ class lines
     /**
      * Get line's tag(s) at particular position.
      * --
-     * @param  integer $at
+     * @param integer $at
      * --
-     * @return array [
-     *         array $open_tags,
-     *         string $line,
-     *         array $close_tags,
-     *         array $attributes]
+     * @return array
+     *         [ array $open_tags, string $line, array $close_tags, array $attributes ]
      */
     function get_raw($at)
     {
@@ -89,8 +85,7 @@ class lines
                 // Close tags
                 [],
                 // Attributes
-                [
-                ]
+                []
             ];
         }
     }
@@ -109,11 +104,19 @@ class lines
      * Set line at particular position.
      * This allows you to set line's content and tag(s).
      * --
-     * @param integer $at   Positon where to set.
-     * @param string  $line Line's content
-     * @param mixed   $tags Either:
-     *                      array [string $open, string $close]
-     *                      string Both tags
+     * @param integer $at
+     *        Positon where to set.
+     *
+     * @param string $line
+     *        Line's content.
+     *
+     * @param mixed $tags
+     *        Either:
+     *        array  [string $open, string $close]
+     *        string Both tags
+     * --
+     * @throws mysli\markdown\exception\parser
+     *         10 Trying to set a non-existent line.
      */
     function set($at, $line, $tags=null)
     {
@@ -130,7 +133,7 @@ class lines
         else
         {
             throw new exception\parser(
-                "Trying to set a non-existent line: `{$at}` to: `{$line}`"
+                "Trying to set a non-existent line: `{$at}` to: `{$line}`", 10
             );
         }
     }
@@ -140,7 +143,7 @@ class lines
      * This will return only line without tags. See $this->get_raw() to get
      * full array (with attributes, etc...) for a line.
      * --
-     * @param  integer $at
+     * @param integer $at
      * --
      * @return sting
      */
@@ -159,7 +162,7 @@ class lines
     /**
      * Does line exists at particulat position.
      * --
-     * @param  integer $at
+     * @param integer $at
      * --
      * @return boolean
      */
@@ -194,9 +197,9 @@ class lines
     /**
      * Get line's attribute.
      * --
-     * @param  string $at
-     * @param  string $attr
-     * @param  mixed  $default
+     * @param string $at
+     * @param string $attr
+     * @param mixed  $default
      * --
      * @return mixed
      */
@@ -216,8 +219,11 @@ class lines
      * Set attribute for a line.
      * --
      * @param integer $at
-     * @param mixed   $attr string one value | array multiple
+     * @param mixed   $attr  string one value | array multiple
      * @param mixed   $value
+     * --
+     * @throws mysli\markdown\exception\parser
+     *         10 Setting attribute for non-existent line.
      */
     function set_attr($at, $attr, $value=null)
     {
@@ -238,7 +244,7 @@ class lines
         else
         {
             throw new exception\parser(
-                "Setting attribute for non-existent line: `{$attr}` at `{$at}`"
+                "Setting attribute for non-existent line: `{$attr}` at `{$at}`", 10
             );
         }
     }
@@ -248,6 +254,9 @@ class lines
      * --
      * @param integer $at
      * @param mixed   $tags `array [string $open, string $close]` | `string both`
+     * --
+     * @throws mysli\markdown\exception\parser
+     *         10 Trying to set tag on non-existent line.
      */
     function set_tag($at, $tags=null)
     {
@@ -278,8 +287,8 @@ class lines
         {
             throw new exception\parser(
                 "Trying to set tag on non-existent line: `".
-                print_r($tags, true).
-                "` at `{$at}`."
+                print_r($tags, true)."` at `{$at}`.",
+                10
             );
         }
     }
@@ -287,10 +296,15 @@ class lines
     /**
      * Get one tag at particular line, at particular position.
      * --
-     * @param  integer $at   Tag at which Line.
-     * @param  integer $from Position, which can be negative, for example:
-     *                       -1 to get last tag in the list.
-     * @param  string  $type Either null (open tag) or '/' to query close tag.
+     * @param integer $at
+     *        Tag at which Line.
+     *
+     * @param integer $from
+     *        Position, which can be negative, for example:
+     *        -1 to get last tag in the list.
+     *
+     * @param string $type
+     *        Either null (open tag) or '/' to query close tag.
      * --
      * @return string
      */
@@ -306,7 +320,7 @@ class lines
     /**
      * Get tag(s) for particular line.
      * --
-     * @param  integer  $at
+     * @param integer $at
      * --
      * @return array [ array open, array close ]
      */
@@ -319,9 +333,11 @@ class lines
     /**
      * See if open (or close) tag exists at particular line.
      * --
-     * @param  integer $at
-     * @param  string  $tag `null` to see if there's any tag, or `/tag` to see if
-     *                      close tag exists.
+     * @param integer $at
+     *
+     * @param string $tag
+     *        `null` to see if there's any tag,
+     *        or `/tag` to see if close tag exists.
      * --
      * @return boolean
      */
@@ -337,9 +353,9 @@ class lines
     /**
      * Erase particular tag(s).
      * --
-     * @param  integer $at
-     * @param  string  $tag   Tag name, use /tag to target close tags.
-     * @param  integer $count How many to erase.
+     * @param integer $at
+     * @param string  $tag   Tag name, use /tag to target close tags.
+     * @param integer $count How many to erase.
      */
     function erase_tag($at, $tag, $count)
     {
@@ -368,9 +384,11 @@ class lines
     /**
      * Get number of open and closed tags at position.
      * --
-     * @param  integer $at
-     * @param  string  $tag If you don't provide a tag, it will return sum
-     *                      count of all tags at this line.
+     * @param integer $at
+     *
+     * @param string $tag
+     *        If you don't provide a tag,
+     *        it will return sum count of all tags at this line.
      * --
      * @return array `[integer $open, integer $close]`
      */

@@ -1,10 +1,10 @@
---TEST--
---DESCRIPTION--
---FILE--
 <?php
-use mysli\util\markdown;
 
-echo markdown::process(<<<EOF
+#: Before
+use mysli\markdown;
+
+#: Test Blockquote Nested
+$markdown = <<<MARKDOWN
 > This is the first level of quoting.
 >
 > > This is nested blockquote.
@@ -15,11 +15,10 @@ echo markdown::process(<<<EOF
 >
 >
 >
-EOF
-);
-?>
---EXPECT--
-<blockquote>
+MARKDOWN;
+
+return assert::equals(markdown::process($markdown),
+'<blockquote>
     <p>This is the first level of quoting.</p>
     <blockquote>
         <p>This is nested blockquote.</p>
@@ -31,4 +30,4 @@ EOF
         </blockquote>
     </blockquote>
     <p>Back to the first level.</p>
-</blockquote>
+</blockquote>');

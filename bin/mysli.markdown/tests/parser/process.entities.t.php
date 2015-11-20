@@ -1,10 +1,10 @@
---TEST--
---DESCRIPTION--
---FILE--
 <?php
-use mysli\util\markdown;
 
-echo markdown::process(<<<EOF
+#: Before
+use mysli\markdown;
+
+#: Test Entities
+$markdown = <<<MARKDOWN
 &copy;
 
 ME&YOU
@@ -32,11 +32,10 @@ less < more and more > less
 <img src="" />
 
 "Please, enter your name!"
-EOF
-);
-?>
---EXPECT--
-<p>&copy;</p>
+MARKDOWN;
+
+return assert::equals(markdown::process($markdown),
+'<p>&copy;</p>
 <p>ME&amp;YOU</p>
 <p>4 &lt; 5</p>
 <p>4&lt;5</p>
@@ -49,4 +48,4 @@ EOF
 <p>less &lt; more and more &gt; less</p>
 <p></p>
 <p><img src="" /></p>
-<p>"Please, enter your name!"</p>
+<p>"Please, enter your name!"</p>');

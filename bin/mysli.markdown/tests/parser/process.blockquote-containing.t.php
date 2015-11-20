@@ -1,10 +1,10 @@
---TEST--
---DESCRIPTION--
---FILE--
 <?php
-use mysli\util\markdown;
 
-echo markdown::process(<<<EOF
+#: Before
+use mysli\markdown;
+
+#: Test Blockquote Containing
+$markdown = <<<MARKDOWN
 > ## This is a header.
 >
 > 1. This is the first list item.
@@ -14,10 +14,9 @@ echo markdown::process(<<<EOF
 > 2. This is the second list item.
 >
 >
-> Here's some example code:
+> Here\'s some example code:
 >
 >     return shell_exec("echo \$input | \$markdown_script");
-EOF
-);
-?>
---EXPECT--
+MARKDOWN;
+
+return assert::equals(markdown::process($markdown), '');

@@ -1,10 +1,10 @@
---TEST--
---DESCRIPTION--
---FILE--
 <?php
-use mysli\util\markdown;
 
-echo markdown::process(<<<EOF
+#: Before
+use mysli\markdown;
+
+#: Test List Ordered
+$markdown = <<<MARKDOWN
 1. One
 2. Two
 3. Three
@@ -22,11 +22,10 @@ echo markdown::process(<<<EOF
 300000. Three
 400000. Four
 500000. Five
-EOF
-);
-?>
---EXPECT--
-<ol>
+MARKDOWN;
+
+return assert::equals(markdown::process($markdown),
+'<ol>
     <li>One</li>
     <li>Two</li>
     <li>Three</li>
@@ -42,4 +41,4 @@ EOF
     <li>Three</li>
     <li>Four</li>
     <li>Five</li>
-</ol>
+</ol>');

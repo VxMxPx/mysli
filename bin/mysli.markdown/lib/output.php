@@ -1,16 +1,15 @@
 <?php
 
-namespace mysli\util\markdown;
-
-__use(__namespace__, '
-    ./lines
-');
-
 /**
  * Allows you to output processed Markdown.
  */
-class output
+namespace mysli\markdown; class output
 {
+    const __use = '
+        .{ lines, exception.parser }
+        mysli.toolkit.type.{ arr }
+    ';
+
     const compressed = 1;
     const readable = 2;
     const flat = 3;
@@ -30,10 +29,13 @@ class output
      * --
      * @var array
      * --
-     * @opt string  indent_type When outputting as output::readable, what type of
-     *                          indentation should be used (usually space or \t)
-     * @opt string  indent_size Size of indention when outputting as output::readable
-     *                          this will basically be `indenation_type` multiplier.
+     * @opt string indent_type
+     *      When outputting as output::readable what type of indentation
+     *      should be used (usually space or \t)
+     *
+     * @opt string indent_size
+     *      Size of indention when outputting as output::readable
+     *      this will basically be `indenation_type` multiplier.
      */
     protected $options = [
         'indent_type' => ' ',
@@ -43,17 +45,17 @@ class output
     /**
      * Instance of lines.
      * --
-     * @var \mysli\util\markdown\lines
+     * @var \mysli\markdown\lines
      */
     private $lines;
 
     /**
      * Instance of Output.
      * --
-     * @param \mysli\util\markdown\lines $lines (see: self::$lines)
-     * @param array $options (see: self::$options)
+     * @param \mysli\util\markdown\lines $lines (see: static::$lines)
+     * @param array                      $options (see: static::$options)
      */
-    function __construct(\mysli\util\markdown\lines $lines, array $options=[])
+    function __construct(\mysli\markdown\lines $lines, array $options=[])
     {
         $this->lines = $lines;
         $this->set_options($options);
@@ -64,7 +66,7 @@ class output
      * --
      * @example $output->set_options(['indent_size' => 2]);
      * --
-     * @param array $options (see: self::$options)
+     * @param array $options (see: static::$options)
      */
     function set_options(array $options)
     {
@@ -74,10 +76,11 @@ class output
     /**
      * Return output as string.
      * --
-     * @param integer $f Format options are:
-     *                   output::compressed all elements in one line.
-     *                   output::readable nicely formated and indented elements.
-     *                   output::flat each element in its own line, but no indentation.
+     * @param integer $f
+     *        Format options are:
+     *        output::compressed all elements in one line.
+     *        output::readable nicely formated and indented elements.
+     *        output::flat each element in its own line, but no indentation.
      * --
      * @return string
      */
@@ -139,7 +142,7 @@ class output
                     }
 
                     // Check if last tag was to be inline...
-                    if (($line || $tag) && !in_array($tag, self::$inline))
+                    if (($line || $tag) && !in_array($tag, static::$inline))
                     {
                         $output .=
                             "\n".
@@ -158,7 +161,7 @@ class output
                         $level--;
 
                         // First close tag
-                        if ($l !== 0 || !in_array($tag, self::$inline))
+                        if ($l !== 0 || !in_array($tag, static::$inline))
                         {
                             $output .= "\n".str_repeat($indent, $level);
                         }

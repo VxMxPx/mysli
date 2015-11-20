@@ -1,20 +1,19 @@
---TEST--
---DESCRIPTION--
---FILE--
 <?php
-use mysli\util\markdown;
 
-echo markdown::process(<<<EOF
+#: Before
+use mysli\markdown;
+
+#: Test List Unordered Simple Nested
+$markdown = <<<MARKDOWN
 - One
     - Two
         - Two B
     - Three
 - Four
-EOF
-);
-?>
---EXPECT--
-<ul>
+MARKDOWN;
+
+return assert::equals(markdown::process($markdown),
+'<ul>
     <li>One
         <ul>
             <li>Two
@@ -26,4 +25,4 @@ EOF
         </ul>
     </li>
     <li>Four</li>
-</ul>
+</ul>');

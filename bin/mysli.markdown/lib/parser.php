@@ -1,20 +1,17 @@
 <?php
 
-namespace mysli\util\markdown;
-
-__use(__namespace__, '
-    ./lines
-    mysli.framework.type/str,arr
-    mysli.framework.exception/* -> framework\exception\*
-');
-
 /**
  * Parse Markdown string.
- * Note: There's \mysli\util\markdown\markdown available, for static access to
- * this class's methods.
+ * Note: There's \mysli\markdown\markdown available,
+ * for static access to an instance of this class.
  */
-class parser
+namespace mysli\markdown; class parser
 {
+    const __use = '
+        .{ lines, output, exception.parser }
+        mysli.toolkit.type.{ str, arr }
+    ';
+
     // Where
     const flow_after   = 'after';
     const flow_before  = 'before';
@@ -60,7 +57,7 @@ class parser
     /**
      * Markdown source in lines.
      * --
-     * @var \mysli\util\markdown\lines
+     * @var \mysli\markdown\lines
      */
     protected $lines;
 
@@ -69,7 +66,7 @@ class parser
      * --
      * @var array
      * --
-     * @opt boolean allow_html  Weather HTML is allowed when processing Markdown.
+     * @opt boolean allow_html Weather HTML is allowed when processing Markdown.
      */
     protected $options = [
         'allow_html'  => true
@@ -79,7 +76,7 @@ class parser
      * Construct parser.
      * --
      * @param string $markdown
-     * @param array  $options (see: self::$options)
+     * @param array  $options  (see: static::$options)
      */
     function __construct($markdown, array $options=[])
     {
@@ -92,7 +89,7 @@ class parser
      * --
      * @example $output->set_options(['allow_html' => false]);
      * --
-     * @param array $options (see: self::$options)
+     * @param array $options (see: static::$options)
      */
     function set_options(array $options)
     {
@@ -102,7 +99,7 @@ class parser
     /**
      * Run process and return output.
      * --
-     * @return mysli\util\markdown\output
+     * @return mysli\markdown\output
      */
     function process()
     {
@@ -120,6 +117,8 @@ class parser
      * --
      * @param integer $start_at
      * @param integer $limit
+     * --
+     * @throws mysli\markdown\exception\parser ... ...
      */
     protected function loop($start_at, $limit)
     {
@@ -129,13 +128,13 @@ class parser
             {
                 try
                 {
-                    if (!self::flow($this->flow, $i, $type)) { continue; }
+                    if (!static::flow($this->flow, $i, $type)) { continue; }
                 }
                 catch (\Exception $e)
                 {
-                    throw new exception\parser(self::f_error(
-                        $this->markdown, $i, $e->getMessage(), null
-                    ));
+                    throw new exception\parser(
+                        f_error($this->markdown, $i, $e->getMessage(), null)
+                    );
                 }
             }
         }
@@ -155,44 +154,55 @@ class parser
      *     // - ... the `do_header` tag.
      * }, parser::flow_loop, parser::flow_before, '&do_header');
      * --
-     * @param mixed  $call     Method (or function) to be called; two parameters
-     *                         will be send:
-     *                         integer $at current position in lines
-     *                         \mysli\util\markdown\lines $lines all lines
-     *                         Expected return value is either:
-     *                         numeric which will break loop,
-     *                         and jump to particular position. Jump will be
-     *                         relative to return value, e.g. if return is 1,
-     *                         it will jump to +1 line.
-     *                         Any other @retrun will be ignored and loop will
-     *                         continue normally.
-     * @param string $where    Where to put the method:
-     *                         parser::flow_before before main loop will start
-     *                         parser::flow_loop in main loop
-     *                         parser::flow_after after main loop will ended
-     * @param string $position Position to which call should be inserted:
-     *                         parser::flow_before - at the beginning of list or
-     *                         before particular tag (if $tag provided).
-     *                         parser::flow_after - at the end of list or
-     *                         after particular tag (if $tag provided).
-     *                         parser::flow_replace - replace tag, in this case
-     *                         $tag is required
-     * @param string $tag      Tag is currently set method, (see: self::$flow)
-     *                         if used, costume method will be inserted before,
-     *                         after or it will replace internal. An example
-     *                         of tag would be: &do_header
+     * @param mixed $call
+     *        Method (or function) to be called; two parameters will be send:
+     *        integer               $at    current position in lines
+     *        \mysli\markdown\lines $lines all lines
+     *
+     *        Expected return value is either:
+     *        numeric which will break loop, and jump to particular position.
+     *        Jump will be relative to return value, e.g. if return is 1,
+     *        it will jump to +1 line.
+     *
+     *        Any other @retrun will be ignored and loop will continue normally.
+     *
+     * @param string $where
+     *        Where to put the method:
+     *        parser::flow_before before main loop will start
+     *        parser::flow_loop   in main loop
+     *        parser::flow_after  after main loop will ended
+     *
+     * @param string $position
+     *        Position to which call should be inserted:
+     *        parser::flow_before  at the beginning of list or before
+     *                             particular tag (if $tag provided).
+     *        parser::flow_after   at the end of list or after
+     *                             particular tag (if $tag provided).
+     *        parser::flow_replace replace tag, in this case $tag is required
+     *
+     * @param string $tag
+     *        Tag is currently set method, (see: static::$flow) if used,
+     *        costume method will be inserted before, after or it will
+     *        replace internal. An example of tag would be: &do_header
      * --
-     * @return void
+     * @throws mysli\markdown\exception\parser
+     *         10 Invalid argument's value.
+     *
+     * @throws mysli\markdown\exception\parser
+     *         20 Tag is not set.
+     *
+     * @throws mysli\markdown\exception\parser
+     *         30 Cannot replace when no $tag is provided.
+     *
+     * @throws mysli\markdown\exception\parser
+     *         40 Invalid argument's value.
      */
     function set_flow(
-        $call,
-        $where=parser::flow_loop,
-        $position=parser::flow_after,
-        $tag=null)
+        $call, $where=parser::flow_loop, $position=parser::flow_after, $tag=null)
     {
         if (!isset($this->flow[$where]))
         {
-            throw new framework\exception\argument(
+            throw new exception\parser(
                 "Invalid argument's value: \$where: `{$where}`. Expected const: ".
                 "parser::flow_after|parser::flow_before|parser::flow_loop", 10
             );
@@ -202,7 +212,7 @@ class parser
 
         if ($tag && !isset($target[$tag]))
         {
-            throw new framework\exception\argument(
+            throw new exception\parser(
                 "Tag is not set: `{$tag}` in `{$where}`.", 20
             );
         }
@@ -240,14 +250,14 @@ class parser
                 }
                 else
                 {
-                    throw new framework\exception\argument(
+                    throw new exception\parser(
                         "Cannot replace, when no `\$tag` is provided.", 30
                     );
                 }
                 break;
 
             default:
-                throw new framework\exception\argument(
+                throw new exception\parser(
                     "Invalid argument's value: \$position: `{$position}`. ".
                     "Expected const: parser::flow_after|parser::flow_before|".
                     "parser::flow_replace", 40
@@ -261,11 +271,16 @@ class parser
      * loop will continue).
      * This is internal method, which is tightly connected to $this->loop()
      * --
-     * @param array $flows  List of methods to be executed in particular order;
-     *                      those can be internal methods (&method) or
-     *                      external (\vendor\package\class::method).
-     * @param integer $i    Current position in lines.
-     * @param string  $type flow type to be executed
+     * @param array $flows
+     *        List of methods to be executed in particular order;
+     *        those can be internal methods (&method) or
+     *        external (\vendor\package\class::method).
+     *
+     * @param integer $i
+     *        Current position in lines.
+     *
+     * @param string $type
+     *        Flow type to be executed.
      * --
      * @return boolean
      */
@@ -312,12 +327,12 @@ class parser
      * Header 2
      * --------
      * --
-     * @param integer $at
-     * @param \mysli\util\markdown\lines $lines
+     * @param integer               $at
+     * @param \mysli\markdown\lines $lines
      * --
      * @return integer
      */
-    protected function do_header($at, \mysli\util\markdown\lines $lines)
+    protected function do_header($at, \mysli\markdown\lines $lines)
     {
         $line = $lines->get($at);
 
@@ -352,10 +367,10 @@ class parser
      * Find entities at particular line.
      * Convert & to &amp; etc...
      * --
-     * @param integer $at
-     * @param \mysli\util\markdown\lines $lines
+     * @param integer               $at
+     * @param \mysli\markdown\lines $lines
      */
-    protected function do_entities($at, \mysli\util\markdown\lines $lines)
+    protected function do_entities($at, \mysli\markdown\lines $lines)
     {
         // Get line
         $line = $lines->get($at);
@@ -399,10 +414,10 @@ class parser
      * @example
      *     > This is a blockquote text to be replaced.
      * --
-     * @param integer $at
-     * @param \mysli\util\markdown\lines $lines
+     * @param integer               $at
+     * @param \mysli\markdown\lines $lines
      */
-    protected function do_blockquote($at, \mysli\util\markdown\lines $lines)
+    protected function do_blockquote($at, \mysli\markdown\lines $lines)
     {
         $found = false;
 
@@ -465,10 +480,10 @@ class parser
      *     - List Item
      *     - ...
      * --
-     * @param integer $at
-     * @param \mysli\util\markdown\lines $lines
+     * @param integer               $at
+     * @param \mysli\markdown\lines $lines
      */
-    protected function do_list($at, \mysli\util\markdown\lines $lines)
+    protected function do_list($at, \mysli\markdown\lines $lines)
     {
         $indent = 0;
         $found = false;
@@ -646,16 +661,24 @@ class parser
     /**
      * Do paragraphs.
      * --
-     * @param  integer                    $at
-     * @param  \mysli\util\markdown\lines $lines
+     * @param  integer               $at
+     * @param  \mysli\markdown\lines $lines
      * --
      * @return integer
      */
     function do_paragraph($at, $lines)
     {
-        // OPENING
 
+        // OPENING
         if (!trim($lines->get($at)))
+        {
+            return;
+        }
+
+        if ($lines->get_attr($at, 'in-do_paragrap'))
+        {
+            return;
+        }
 
         // *1. Complete absence of tags should open if not already opened,
         // if line is not for skip, and if line has any content
@@ -663,19 +686,24 @@ class parser
         {
             $lines->set_tag($at, ['p', 0]);
             $lines->set_attr($at, 'in-do_paragrap', true);
+            return;
         }
-        // *1. Unclosed li, when next line has not tags should open
+
+        // *2. Unclosed li, when next line has not tags should open
         if ($lines->get_tag($at, -1) === 'li' && !$lines->has_tag($at, '/li') &&
             !trim($lines->get($at+1)))
         {
             $lines->set_tag($at, ['p', 0]);
             $lines->set_attr($at, 'in-do_paragrap', true);
+            return;
         }
+
         // *3. blockquote should always open, if no other tags follows
         if ($lines->get_tag($at, '-1') === 'blockquote')
         {
             $lines->set_tag($at, ['p', 0]);
             $lines->set_attr($at, 'in-do_paragrap', true);
+            return;
         }
 
         // CLOSING
@@ -687,57 +715,5 @@ class parser
         // Specific rules:
         // 2. Close li should close if opened
         // 4. /blockquote should close if opened
-    }
-
-
-    // Error Handling ----------------------------------------------------------
-
-    /**
-     * Format generic exception message.
-     * @param  array   $lines
-     * @param  integer $current
-     * @param  string  $message
-     * @param  string  $file
-     * @return string
-     */
-    protected static function f_error(array $lines, $current, $message, $file=null)
-    {
-        return $message . "\n" . self::err_lines($lines, $current, 3) .
-            ($file ? "File: `{$file}`\n" : "\n");
-    }
-    /**
-     * Return -$padding, $current, +$padding lines for exceptions, e.g.:
-     *   11. ::if true
-     * >>12.     {username|non_existant_function}
-     *   13. ::/if
-     * @param  array   $lines
-     * @param  integer $current
-     * @param  integer $padding
-     * @return string
-     */
-    protected static function err_lines(array $lines, $current, $padding=3)
-    {
-        $start    = $current - $padding;
-        $end      = $current + $padding;
-        $result   = '';
-
-        for ($position = $start; $position <= $end; $position++)
-        {
-            if (isset($lines[$position]))
-            {
-                if ($position === $current)
-                {
-                    $result .= ">>";
-                }
-                else
-                {
-                    $result .= "  ";
-                }
-
-                $result .= ($position+1).". {$lines[$position]}\n";
-            }
-        }
-
-        return $result;
     }
 }

@@ -1,10 +1,10 @@
---TEST--
---DESCRIPTION--
---FILE--
 <?php
-use mysli\util\markdown;
 
-echo markdown::process(<<<EOF
+#: Before
+use mysli\markdown;
+
+#: Test Paragraph
+$markdown = <<<MARKDOWN
 Hello World!
  # And Moon!
 
@@ -18,11 +18,10 @@ quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
 consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
 cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
 proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-EOF
-);
-?>
---EXPECT--
-<p>Hello World!
+MARKDOWN;
+
+return assert::equals(markdown::process($markdown),
+'<p>Hello World!
     # And Moon!</p>
 <p>Line 1</p>
 <p>Line 2</p>
@@ -31,4 +30,4 @@ EOF
     quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
     consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
     cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-    proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+    proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>');

@@ -1,13 +1,11 @@
 <?php
 
-namespace mysli\util\markdown;
-
-__use(__namespace__, '
-    ./parser,output
-');
-
-class markdown
+namespace mysli\markdown; class markdown
 {
+    const __use = '
+        .{ parser, output }
+    ';
+
     /**
      * Process a Markdown file and return HTML.
      * --
