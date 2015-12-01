@@ -1,7 +1,8 @@
-package:     mysli.web.token
+package:     mysli.token
 version:     1
-description: A simple token library.
+description: A token library.
 license:     GPL-3.0
 authors:
     - Marko Gajšt (Developer) <m@gaj.st>
-require: No
+require:
+    mysli.toolkit: 1
