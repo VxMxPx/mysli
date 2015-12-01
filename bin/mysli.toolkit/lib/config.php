@@ -3,15 +3,8 @@
 namespace mysli\toolkit; class config
 {
     const __use = '
-        .{
-            pkg,
-            json,
-            fs.fs   -> fs,
-            fs.file -> file,
-            log,
-            type.arr -> arr,
-            exception.config
-        }
+        .{ pkg, json, log, type.arr -> arr, exception.config }
+        .fs.{ fs, dir, file }
     ';
 
     /**
