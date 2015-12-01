@@ -3,12 +3,8 @@
 namespace mysli\front\page; class __setup
 {
     const __use = '
-        mysli.toolkit.{
-            router,
-            fs.fs -> fs,
-            fs.dir -> dir,
-            fs.file -> file
-        }
+        mysli.toolkit.{ router }
+        mysli.toolkit.fs.{ fs, dir, file }
     ';
 
     static function enable()
