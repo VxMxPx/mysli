@@ -1,21 +1,27 @@
 <?php
 
-namespace mysli\web\users;
-
-__use(__namespace__, '
-    mysli.framework.exception/* -> framework\exception\*
-    mysli.framework.json
-    mysli.framework.fs/fs,file
-    mysli.util.config
-    mysli.web.html
-');
-
-class user
+namespace mysli\users; class user
 {
-    // When the email is changed, ID and filename must be changed with it.
-    // This variable be set to true until ->save() is called.
-    private $modified_email = false;
-    private $properties = [
+    const __use = '
+        .{ users, exception.user }
+        mysli.toolkit.{ json, config, html }
+        mysli.toolkit.fs.{ fs, dir, file }
+    ';
+
+    /**
+     * When the email is changed, ID and filename must be changed with it.
+     * This variable be set to true until ->save() is called.
+     * --
+     * @var boolean
+     */
+    protected $modified_email = false;
+
+    /**
+     * Actual user's properties.
+     * --
+     * @var array
+     */
+    protected $properties = [
         'id'           => null,
         'email'        => null,
         'password'     => null,
@@ -26,11 +32,17 @@ class user
         'deleted_on'   => null,
         'is_active'    => null,
     ];
-    // config object
-    private $config;
+
+    /**
+     * User's config.
+     * --
+     * @var mysli\toolkit\config
+     */
+    protected $config;
 
     /**
      * Create new User object, ...
+     * --
      * @param array   $record   See properties above for possible elements.
      * @param boolean $validate Set data by calling methods.
      */
@@ -56,10 +68,13 @@ class user
             $this->set_config($record['config']);
         }
 
-        $this->config = config::select('mysli/web/users/uid_'.$this->id);
+        $this->config = config::select('mysli.users.uid_'.$this->id);
     }
+
     /**
-     * @param  string $property
+     * Properties getter.
+     * --
+     * @param string $property
      */
     function __get($property)
     {
@@ -74,9 +89,14 @@ class user
             return $this->config->as_array();
         }
     }
+
     /**
+     * Properties setter.
+     * --
      * @param string $property
      * @param mixed  $value
+     * --
+     * @throws mysli\users\xception\user 10 Config accept only array.
      */
     function __set($property, $value)
     {
@@ -94,41 +114,54 @@ class user
             }
             else
             {
-                throw new framework\exception\argument(
+                throw new exception\user(
                     "Config accept only array. ".
                     "Use `set_config(string key, mixed value)` ".
-                    "to set particular config key."
+                    "to set particular config key.", 10
                 );
             }
         }
     }
+
     /**
      * Return user's ID.
+     * --
      * @return string
      */
     function get_id()
     {
         return $this->properties['id'];
     }
+
     /**
      * Throw exception if trying to set id.
+     * --
+     * @throws mysli\users\exception\user 10 Cannot change ID.
      */
-    private function set_id()
+    protected function set_id()
     {
-        throw new framework\exception\argument(
-            "Cannot change ID, it's automatically generated from email.");
+        throw new exception\user(
+            "Cannot change ID, it's automatically generated from email.", 10
+        );
     }
+
     /**
      * Get e-mail addres.
+     * --
      * @return string
      */
     function get_email()
     {
         return $this->properties['email'];
     }
+
     /**
      * Set e-mail addres.
-     * @param  string $email
+     * --
+     * @param string $email
+     * --
+     * @throws mysli\users\exception\user 10 Invalid e-mail address.
+     * @throws mysli\users\exception\user 20 User already exists.
      */
     function set_email($email)
     {
@@ -141,23 +174,26 @@ class user
 
         if (mb_strlen($email) < 3 || !strpos($email, '@'))
         {
-            throw new framework\exception\argument(
-                "Invalid e-mail address: `{$email}`", 1
+            throw new exception\user(
+                "Invalid e-mail address: `{$email}`", 10
             );
         }
 
         if (users::exists(users::get_id_from_uname($email)))
         {
-            throw new framework\exception\argument(
-                "User already exists: `{$email}`", 2
+            throw new exception\user(
+                "User already exists: `{$email}`", 20
             );
         }
 
         $this->modified_email = $email;
     }
+
     /**
      * Check if password (plain) match saved hash.
-     * @param  string $password
+     * --
+     * @param string $password
+     * --
      * @return boolean
      */
     function auth_password($password)
@@ -171,17 +207,22 @@ class user
             return crypt($password, $this->password) === $this->password;
         }
     }
+
     /**
      * Get new password.
+     * --
      * @return string
      */
     function get_password()
     {
         return $this->properties['password'];
     }
+
     /**
      * Set new password.
-     * @param  string $value
+     * --
+     * @param string $value
+     * --
      * @return string
      */
     function set_password($password)
@@ -197,96 +238,120 @@ class user
             $this->properties['password'] = crypt($password);
         }
     }
+
     /**
-     * Get user's real name
+     * Get user's real name.
+     * --
      * @return string
      */
     function get_name()
     {
         return $this->properties['name'];
     }
+
     /**
-     * Set user's real name
+     * Set user's real name.
+     * --
      * @param string $name
      */
     function set_name($name)
     {
         $this->properties['name'] = html::strip_tags($name);
     }
+
     /**
-     * Get last seen on
+     * Get last seen on.
+     * --
      * @return integer
      */
     function get_last_seen_on()
     {
         return $this->properties['last_seen_on'];
     }
+
     /**
-     * Set last seen on. In format YmdHis
+     * Set last seen on. In format YmdHis.
+     * --
      * @param integer $date
      */
     function set_last_seen_on($date)
     {
         $this->properties['last_seen_on'] = (int) $date;
     }
+
     /**
-     * Get updated
+     * Get updated.
+     * --
      * @return integer
      */
     function get_updated_on()
     {
         return $this->properties['updated_on'];
     }
+
     /**
-     * Set updated. In format YmdHis
+     * Set updated. In format YmdHis.
+     * --
      * @param integer $date
      */
     function set_updated_on($date)
     {
         $this->properties['updated_on'] = (int) $date;
     }
+
     /**
-     * Get created
+     * Get created.
+     * --
      * @return integer
      */
     function get_created_on()
     {
         return $this->properties['created_on'];
     }
+
     /**
-     * Set created. In format YmdHis
+     * Set created. In format YmdHis.
+     * --
      * @param integer $date
      */
     function set_created_on($date)
     {
         $this->properties['created_on'] = (int) $date;
     }
+
     /**
-     * Get deleted on date. In format YmdHis
+     * Get deleted on date. In format YmdHis.
+     * --
      * @return integer null if not deleted
      */
     function get_deleted_on()
     {
         return $this->properties['deleted_on'];
     }
+
     /**
      * Delete current user.
+     * --
      * @return boolean
      */
     function delete()
     {
         $this->properties['deleted_on'] = gmdate('YmdHis');
     }
+
     /**
-     * Return current user's delete state
+     * Return current user's delete state.
+     * --
      * @return boolean
      */
     function is_deleted()
     {
         return !!$this->properties['deleted_on'];
     }
+
     /**
      * This will hard-delete user, - e.g. delete user's record permanently.
+     * --
      * @return boolean
      */
     function destroy()
@@ -300,25 +365,31 @@ class user
 
         return file::remove(users::path_by_id($id)) && $this->config->destroy();
     }
+
     /**
      * Weather user is active.
+     * --
      * @return boolean
      */
     function get_is_active()
     {
         return $this->properties['is_active'];
     }
+
     /**
-     * Set if active state
+     * Set if active state.
+     * --
      * @param boolean $state
      */
     function set_is_active($state)
     {
         $this->properties['is_active'] = !!$state;
     }
+
     /**
-     * Set configuration item
-     * @param mixed $key   string to set one config key, array to set multiple
+     * Set configuration item.
+     * --
+     * @param mixed $key   String to set one config key, array to set multiple.
      * @param mixed $value
      */
     function set_config($key, $value=null)
@@ -332,16 +403,20 @@ class user
             $this->config->set($key, $value);
         }
     }
+
     /**
-     * Get configuration item
+     * Get configuration item.
+     * --
      * @return mixed
      */
     function get_config($key)
     {
         return $this->config->get($key);
     }
+
     /**
      * Save changes made in this user object.
+     * --
      * @return boolean
      */
     function save()
