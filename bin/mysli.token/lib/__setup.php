@@ -1,6 +1,6 @@
 <?php
 
-namespace mysli\token; class __init
+namespace mysli\token; class __setup
 {
     const __use = '
         mysli.toolkit.fs.{ fs, dir, file }

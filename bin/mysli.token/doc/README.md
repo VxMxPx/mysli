@@ -1,12 +1,12 @@
-# Mysli Web Token
+# Mysli Token
 
 ## Introduction
 
-Token library. Will keep tokens in JSON files.
+Token library, keep tokens in JSON files.
 
 ## License
 
-The Mysli Web Token is licensed under the GPL-3.0 or later.
+The Mysli Token is licensed under the GPL-3.0 or later.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
