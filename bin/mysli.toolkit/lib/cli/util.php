@@ -17,13 +17,13 @@ namespace mysli\toolkit\cli; class util
         }
         elseif (!static::is_win())
         {
-            return static::execute('tput cols');
+            return (int) static::execute('tput cols');
         }
         else
         {
             $result = static::popen('mode');
             preg_match('/^ *Columns\: *([0-9]+)$/m', $result, $matches);
-            return $matches[1];
+            return (int) $matches[1];
         }
     }
 
