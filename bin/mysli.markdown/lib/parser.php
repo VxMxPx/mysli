@@ -24,7 +24,7 @@ namespace mysli\markdown; class parser
      * @var array
      */
     protected static $p_allow = [
-        'img', 'em', 'bold', 'i', 'b'
+        'img', 'em', 'strong', 'i', 'b', 'sup', 'sub', 'del', 'ins'
     ];
 
     /**
@@ -521,7 +521,18 @@ namespace mysli\markdown; class parser
                     // Close previous, if not already closed
                     if (!$lines->get_attr($at, 'is-sub-list'))
                     {
-                        $lines->set_tag($at-1, [false, 'li']);
+                        // Put closing tag into the last line with content
+                        $cn = 1;
+                        do
+                        {
+                            if (trim($lines->get($at-$cn)))
+                            {
+                                $lines->set_tag($at-$cn, [false, 'li']);
+                                break;
+                            }
+                            else $cn++;
+
+                        } while ($lines->has($at-$cn));
                     }
 
                     // We have shorter indent
@@ -582,8 +593,7 @@ namespace mysli\markdown; class parser
                     {
                         // Not spaced? || Was previous line empty?
                         if (!$lines->get($at-1) ||
-                            $lines->get_attr($at, 'in-list-item')
-                            )
+                            $lines->get_attr($at, 'in-list-item'))
                         {
                             break;
                         }
@@ -668,52 +678,115 @@ namespace mysli\markdown; class parser
      */
     function do_paragraph($at, $lines)
     {
+        // *1. complete absence of tags should open if not already opened,
+        //     if line is not for skip, and if line has any content
+        // *2. unclosed li, when next line has no tags should open
+        // *3. blockquote should always open, if no other tags follows
+
+        $opened = false;
 
         // OPENING
-        if (!trim($lines->get($at)))
+        do
         {
-            return;
+            if (!$opened)
+            {
+                // 0. Tag as a string
+                if (substr(trim($lines->get($at)), 0, 1) === '<')
+                {
+                    $allow = implode('|', static::$p_allow);
+                    $regex = "/^\\<({$allow})(\\ +|\\>).*$/i";
+
+                    if (preg_match($regex, $lines->get($at)))
+                    {
+                        $lines->set_tag($at, [ 'p', false ]);
+                        $lines->set_attr($at, 'in-do_paragrap', true);
+                        $opened = true;
+                    }
+                }
+                //
+                // 1. Complete absence of tags should open if not already opened.
+                //    If line is not for skip, and if line has any content.
+                //
+                else if (!$lines->has_tag($at) && trim($lines->get($at)))
+                {
+                    $lines->set_tag($at, [ 'p', false ]);
+                    $lines->set_attr($at, 'in-do_paragrap', true);
+                    $opened = true;
+                }
+                //
+                // 2. Unclosed li, when next line has no (open) tags should open.
+                //
+                else if
+                    (
+                        (
+                            $lines->get_tag($at, -1) === 'li'
+                            && !$lines->has_tag($at, '/li')
+                        )
+                        && !$lines->has_tag($at+1, 'li')
+                        // && trim($lines->get($at+1))
+                    )
+                {
+                    $lines->set_tag($at, [ 'p', false ]);
+                    $lines->set_attr($at, 'in-do_paragrap', true);
+                    $opened = true;
+                }
+                //
+                // 3. Blockquote should always open, if no other tags follows.
+                //
+                else if ($lines->get_tag($at, -1) === 'blockquote')
+                {
+                    $lines->set_tag($at, [ 'p', false ]);
+                    $lines->set_attr($at, 'in-do_paragrap', true);
+                    $opened = true;
+                }
+            }
+            else
+            {
+                //
+                // 1. ANY open tag, should close if opened
+                //
+                if ($lines->has_tag($at))
+                {
+                    $lines->set_tag($at-1, [ false, 'p' ]);
+                    $at--;
+                    $opened = false;
+                }
+                //
+                // 2. Empty line should close, if opened
+                //
+                else if (!trim($lines->get($at)))
+                {
+                    $lines->set_tag($at-1, [ false, 'p' ]);
+                    $at--;
+                    $opened = false;
+                }
+                //
+                // 2. Close li should close
+                // 4. /blockquote should close
+                //
+                else if
+                    (
+                        $lines->has_tag($at, -1, '/') === 'li'
+                        || $lines->has_tag($at, -1, '/') === 'blockquote'
+                    )
+                {
+                    $lines->set_tag($at, [ false, 'p' ]);
+                    $opened = false;
+                }
+            }
+
+            $at++;
+
+        } while ($lines->has($at));
+
+        //
+        // 4. EOF should close if opened.
+        //
+        if ($opened)
+        {
+            $lines->set_tag($at-1, [ false, 'p' ]);
         }
 
-        if ($lines->get_attr($at, 'in-do_paragrap'))
-        {
-            return;
-        }
-
-        // *1. Complete absence of tags should open if not already opened,
-        // if line is not for skip, and if line has any content
-        if (!$lines->has_tag($at) && !$lines->get_attr($at, 'in-do_paragrap'))
-        {
-            $lines->set_tag($at, ['p', 0]);
-            $lines->set_attr($at, 'in-do_paragrap', true);
-            return;
-        }
-
-        // *2. Unclosed li, when next line has not tags should open
-        if ($lines->get_tag($at, -1) === 'li' && !$lines->has_tag($at, '/li') &&
-            !trim($lines->get($at+1)))
-        {
-            $lines->set_tag($at, ['p', 0]);
-            $lines->set_attr($at, 'in-do_paragrap', true);
-            return;
-        }
-
-        // *3. blockquote should always open, if no other tags follows
-        if ($lines->get_tag($at, '-1') === 'blockquote')
-        {
-            $lines->set_tag($at, ['p', 0]);
-            $lines->set_attr($at, 'in-do_paragrap', true);
-            return;
-        }
-
-        // CLOSING
-
-        // General rules:
-        // 2. ANY open tag, should close if opened
-        // 3. Empty line should close, if opened
-        // 4. EOF should close if opened
-        // Specific rules:
-        // 2. Close li should close if opened
-        // 4. /blockquote should close if opened
+        return $at;
     }
 }
