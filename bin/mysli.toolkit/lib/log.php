@@ -2,12 +2,13 @@
 
 namespace mysli\toolkit; class log
 {
-    const debug   = 'debug';
-    const info    = 'info';
-    const notice  = 'notice';
-    const warning = 'warning';
-    const error   = 'error';
-    const panic   = 'panic';
+    const debug    = 'debug';
+    const info     = 'info';
+    const notice   = 'notice';
+    const warning  = 'warning';
+    const security = 'security';
+    const error    = 'error';
+    const panic    = 'panic';
 
     /**
      * All messages added to the log.
@@ -15,6 +16,13 @@ namespace mysli\toolkit; class log
      * @var array
      */
     static private $messages = [];
+
+    /**
+     * Dummy.
+     * --
+     * @return boolean
+     */
+    static function __init() { return true; }
 
     /**
      * Debug information.
@@ -58,6 +66,17 @@ namespace mysli\toolkit; class log
     static function warning($message, $context=null)
     {
         static::add(self::warning, $message, $context);
+    }
+
+    /**
+     * Security related logs!
+     * --
+     * @param string $message
+     * @param mixed  $context
+     */
+    static function security($message, $context=null)
+    {
+        static::add(self::security, $message, $context);
     }
 
     /**
