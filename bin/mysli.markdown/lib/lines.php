@@ -311,7 +311,7 @@ namespace mysli\markdown; class lines
     function get_tag($at, $from, $type=null)
     {
         list($o, $c) = $this->get_tags($at);
-        $pool = $type ? $o : $c;
+        $pool = $type ? $c : $o;
         $pool = array_slice($pool, $from, 1);
 
         return isset($pool[0]) ? $pool[0] : null;
@@ -326,7 +326,7 @@ namespace mysli\markdown; class lines
      */
     function get_tags($at)
     {
-        list($o, $_, $c) = $this->get_raw($at);
+        list($o, $_, $c, $_) = $this->get_raw($at);
         return [$o, $c];
     }
 
@@ -336,8 +336,10 @@ namespace mysli\markdown; class lines
      * @param integer $at
      *
      * @param string $tag
-     *        `null` to see if there's any tag,
-     *        or `/tag` to see if close tag exists.
+     *        `null` opened tags
+     *        `tag`  particular opened tag,
+     *        `/`    closed tags
+     *        `/tag` particular close tag
      * --
      * @return boolean
      */
