@@ -33,6 +33,17 @@ namespace mysli\toolkit; class __init
         define('MYSLI_CNTPATH', MYSLI_APPPATH.'/content');
 
         /*
+        Weather to display errors.
+         */
+        ini_set('display_errors', TOOLKIT_DISPLAY_ERRORS);
+
+        /*
+        See if we need to change the default timezone.
+         */
+        if (TOOLKIT_DEFAULT_TIMEZONE)
+            date_default_timezone_set(TOOLKIT_DEFAULT_TIMEZONE);
+
+        /*
         This might be called from PHAR, so adjust root DIR accordingly.
          */
         if (substr(__FILE__, -5) === '.phar')
@@ -56,23 +67,28 @@ namespace mysli\toolkit; class __init
         }
 
         // Toolkit logger
-        include __RDIR__."/log.php";
+        $logger = toolkit_core_loader(TOOLKIT_LOG, MYSLI_BINPATH);
+        class_alias($logger, 'log');
+        log::__init();
         log::info('Toolkit init, log loaded!', __CLASS__);
 
         // Load pkg, basic packages manager
-        include __RDIR__."/pkg.php";
+        $pkg = toolkit_core_loader(TOOLKIT_PKG, MYSLI_BINPATH);
+        class_alias($pkg, 'pkg');
         pkg::__init();
+
         log::debug(
-            "Got following packages: ".implode(', ', pkg::list_all()),
-            __CLASS__
+            "Got following packages: ".implode(', ', pkg::list_all()), __CLASS__
         );
 
         // Load autoloader
-        include __RDIR__."/autoloader.php";
-        spl_autoload_register('\mysli\toolkit\autoloader::load', true, true);
+        $autoloader = toolkit_core_loader(TOOLKIT_AUTOLOAD, MYSLI_BINPATH);
+        class_alias($autoloader, 'autoloader');
+        spl_autoload_register("{$autoloader}::load", true, true);
 
         // Toolkit core class
-        include __RDIR__."/toolkit.php";
+        $toolkit = toolkit_core_loader(TOOLKIT_CORE, MYSLI_BINPATH);
+        class_alias($toolkit, 'toolkit');
 
         /*
         Trigger main event - system __init
