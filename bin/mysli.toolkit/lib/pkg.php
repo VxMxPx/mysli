@@ -874,9 +874,10 @@ namespace mysli\toolkit; class pkg
             if (!strpos($line, ' '))
                 continue;
 
-            list($name, $version) = explode(' ', $line, 2);
+            // name, version, hash
+            list($name, $version, $_) = explode(' ', $line, 3);
 
-            if (($name = trim($name)) && ($version = (int) $version))
+            if (($name = trim($name)) && ($version = $version))
             {
                 static::$enabled[$name] = $version;
             }
@@ -893,7 +894,7 @@ namespace mysli\toolkit; class pkg
         $list = '';
 
         foreach (static::$enabled as $name => $version)
-            $list .= "{$name} {$version}\n";
+            $list .= "{$name} {$version} 0\n";
 
         return !!file_put_contents(static::$list_file, $list);
     }
