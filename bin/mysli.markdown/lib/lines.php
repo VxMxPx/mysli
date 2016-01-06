@@ -147,7 +147,7 @@ namespace mysli\markdown; class lines
      * --
      * @return sting
      */
-    function get($at)
+    function get($at, $trim=false)
     {
         if (isset($this->lines[$at]))
         {
@@ -157,6 +157,20 @@ namespace mysli\markdown; class lines
         {
             return null;
         }
+    }
+
+    /**
+     * There's no content on this line.
+     * --
+     * @param integer $at
+     * @param boolean $trim Weather to trim line before checking.
+     * --
+     * @return boolean
+     */
+    function is_empty($at, $trim=false)
+    {
+        $line = $this->get($at);
+        return !($trim ? trim($line) : $line);
     }
 
     /**
@@ -401,5 +415,22 @@ namespace mysli\markdown; class lines
             $tag ? arr::count_values_of($open, $tag) : count($open),
             $tag ? arr::count_values_of($close, $tag) : count($close)
         ];
+    }
+
+    /**
+     * Output lines for debuging, flat array format.
+     * --
+     * @return array
+     */
+    function debug_flat_array()
+    {
+        $array = [];
+
+        foreach ($this->get_all() as $line)
+        {
+            $array[] = implode(',', $line[0])  . ' ' .$line[1] . ' ' . implode(',', $line[2]);
+        }
+
+        return $array;
     }
 }
