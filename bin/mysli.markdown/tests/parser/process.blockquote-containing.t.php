@@ -12,9 +12,10 @@ $markdown = <<<MARKDOWN
 >       - Two
 >       - Three
 > 2. This is the second list item.
+> 3. Third item.
 >
 >
-> Here\'s some example code:
+> Here's some example code:
 >
 >     return shell_exec("echo \$input | \$markdown_script");
 MARKDOWN;
@@ -23,8 +24,7 @@ return assert::equals(markdown::process($markdown),
 '<blockquote>
     <h2>This is a header.</h2>
     <ol>
-        <li>
-            <p>This is the first list item.</p>
+        <li>This is the first list item.
             <ul>
                 <li>One</li>
                 <li>Two</li>
@@ -32,7 +32,8 @@ return assert::equals(markdown::process($markdown),
             </ul>
         </li>
         <li>This is the second list item.</li>
+        <li>Third item.</li>
     </ol>
     <p>Here\'s some example code:</p>
-    <code>return shell_exec("echo $input | $markdown_script");</code>
- </blockquote>');
+    <pre><code>return shell_exec("echo $input | $markdown_script");</code></pre>
+</blockquote>');

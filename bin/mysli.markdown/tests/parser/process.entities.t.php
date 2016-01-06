@@ -27,8 +27,6 @@ less<more and more>less
 
 less < more and more > less
 
-<p></p>
-
 <img src="" />
 
 "Please, enter your name!"
@@ -46,6 +44,5 @@ return assert::equals(markdown::process($markdown),
 <p>http://my-link/?q=1&amp;b=2&amp;c=3</p>
 <p>less<more and more>less</p>
 <p>less &lt; more and more &gt; less</p>
-<p></p>
 <p><img src="" /></p>
 <p>"Please, enter your name!"</p>');
