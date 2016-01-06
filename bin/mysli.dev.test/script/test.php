@@ -5,7 +5,7 @@ namespace mysli\dev\test\root\script; class test
     const __use = '
         .{ test -> lib.test, diff }
         mysli.toolkit.cli.{ prog, param, ui, output, util }
-        mysli.toolkit.{ fs.fs -> fs, fs.dir, fs.file, fs.observer, pkg, type.arr -> arr }
+        mysli.toolkit.{ fs.fs -> fs, fs.dir, fs.file, fs.observer, pkg, type.arr -> arr, type.str -> str }
     ';
 
     /**
@@ -256,6 +256,7 @@ namespace mysli\dev\test\root\script; class test
      */
     private static function ppf($pid)
     {
+        $pid = str::clean($pid, '<[^a-z0-9_\.\-\:\ ]+>i');
         // Get Method/Filter
         $pids = explode('::', $pid, 2);
         $pidroot = $pids[0];
