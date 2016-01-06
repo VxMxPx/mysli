@@ -37,13 +37,14 @@ namespace mysli\markdown; class parser
     protected $flow = [
         'before' => [],
         'loop'   => [
-            '&do_blockquote',
-            '&do_list',
-            '&do_entities',
-            '&do_header',
+            'self::do_blockquote',
+            'self::do_list',
+            'self::do_code',
+            'self::do_entities',
+            'self::do_header',
         ],
         'after'  => [
-            '&do_paragraph'
+            'self::do_paragraph'
         ]
     ];
 
@@ -152,7 +153,7 @@ namespace mysli\markdown; class parser
      *     // - add it to the main loop,
      *     // - add it before ...
      *     // - ... the `do_header` tag.
-     * }, parser::flow_loop, parser::flow_before, '&do_header');
+     * }, parser::flow_loop, parser::flow_before, 'self::do_header');
      * --
      * @param mixed $call
      *        Method (or function) to be called; two parameters will be send:
@@ -183,7 +184,7 @@ namespace mysli\markdown; class parser
      * @param string $tag
      *        Tag is currently set method, (see: static::$flow) if used,
      *        costume method will be inserted before, after or it will
-     *        replace internal. An example of tag would be: &do_header
+     *        replace internal. An example of tag would be: self::do_header
      * --
      * @throws mysli\markdown\exception\parser
      *         10 Invalid argument's value.
@@ -273,7 +274,7 @@ namespace mysli\markdown; class parser
      * --
      * @param array $flows
      *        List of methods to be executed in particular order;
-     *        those can be internal methods (&method) or
+     *        those can be internal methods (self::method) or
      *        external (\vendor\package\class::method).
      *
      * @param integer $i
@@ -289,9 +290,9 @@ namespace mysli\markdown; class parser
         // Main loop
         foreach ($flows[$type] as $flow)
         {
-            if (substr($flow, 0, 1) === '&')
+            if (substr($flow, 0, 6) === 'self::')
             {
-                $method = substr($flow, 1);
+                $method = substr($flow, 6);
                 $r = $this->{$method}($i, $this->lines);
             }
             else
@@ -379,7 +380,8 @@ namespace mysli\markdown; class parser
         $line = preg_replace('/&(?![a-z]{2,11};)/', '&amp;', $line);
 
         // Convert < >, if allow HTML
-        if ($this->options['allow_html'])
+        if ($this->options['allow_html'] &&
+            !$lines->get_attr($at, 'convert-tags'))
         {
             $line = preg_replace('/<(?![\/a-z]{1,}(.*)>)/', '&lt;', $line);
 
@@ -419,39 +421,32 @@ namespace mysli\markdown; class parser
      */
     protected function do_blockquote($at, \mysli\markdown\lines $lines)
     {
-        $found = false;
+        $opened = false;
 
         do
         {
             $line = $lines->get($at);
 
-            if (preg_match('/^(>\ {0,4})(>?.*?)$/', $line, $match))
+            if (preg_match('/^(>\ {0,1})(\ {0,4}>?.*?)$/', $line, $match))
             {
                 $line = $match[2];
 
                 // Trim line if not more than 2 spaces ( safe to assume nothing is nested )
-                if (substr($line, 0, 2) !== '  ')
+                if (substr($line, 0, 2) !== '  ' && substr($line, 0, 1) !== "\t")
                 {
                     $line = trim($line);
                 }
 
-                $lines->set(
-                    $at,
-                    $line,
-                    [
-                        (!$found ? 'blockquote' : false),
-                        false
-                    ]
-                );
+                $lines->set($at, $line, [(!$opened ? 'blockquote' : false), false]);
                 $lines->set_attr($at, 'in-blockquote', true);
 
-                $found = true;
+                $opened = true;
             }
             else
             {
                 // If it wasn't open, and we do have a new (non-empty) line,
                 // then break out of loop.
-                if ((!$found && trim($line)) ||
+                if ((!$opened && trim($line)) ||
                     $lines->get_attr($at, 'in-blockquote'))
                 {
                     break;
@@ -464,7 +459,7 @@ namespace mysli\markdown; class parser
         } while($lines->has($at));
 
         // If we had anything, close it
-        if ($found)
+        if ($opened)
         {
             $lines->set_tag($at-1, [false, 'blockquote']);
         }
@@ -486,22 +481,23 @@ namespace mysli\markdown; class parser
     protected function do_list($at, \mysli\markdown\lines $lines)
     {
         $indent = 0;
-        $found = false;
+        $opened = false;
+
+        $list_item_regex = '/^([\ |\t]*)([\*|\+|\-]|[0-9]+\.)([^\-|\*|\+].+)$/';
 
         do
         {
             $line = $lines->get($at);
 
-            if (preg_match(
-                '/^([\ |\t]*)([\*|\+|\-]|[0-9]+\.)([^\-|\*|\+].+)$/', $line, $match))
+            if (preg_match($list_item_regex, $line, $match))
             {
                 $line = $match[3];
-                $indent_now = $match[1];
+                $indent_now = $this->indent_to_int($match[1]);
 
-                if (!$found)
+                if (!$opened) // New list being opened
                 {
                     $indent = $indent_now;
-                    $found = true;
+                    $opened = true;
 
                     $type = in_array($match[2], ['*', '-', '+']) ? 'ul' : 'ol';
 
@@ -516,7 +512,7 @@ namespace mysli\markdown; class parser
                         $lines->set_attr($at, 'is-sub-list', false);
                     }
                 }
-                else
+                else // This is an existent list
                 {
                     // Close previous, if not already closed
                     if (!$lines->get_attr($at, 'is-sub-list'))
@@ -525,7 +521,7 @@ namespace mysli\markdown; class parser
                         $cn = 1;
                         do
                         {
-                            if (trim($lines->get($at-$cn)))
+                            if (!$lines->is_empty($at-$cn, true))
                             {
                                 $lines->set_tag($at-$cn, [false, 'li']);
                                 break;
@@ -536,15 +532,15 @@ namespace mysli\markdown; class parser
                     }
 
                     // We have shorter indent
-                    if (strlen($indent_now) < strlen($indent))
+                    if ($indent_now < $indent)
                     {
                         break;
                     }
-                    elseif (strlen($indent_now) > strlen($indent))
+                    elseif ($indent_now > $indent)
                     {
                         // Insert some of indent back in
                         $line =
-                            substr($indent_now, strlen($indent)) .
+                            substr($match[1], $indent) .
                             $match[2] .
                             $line;
 
@@ -571,48 +567,45 @@ namespace mysli\markdown; class parser
                 }
                 $lines->set_attr($at, 'list-type', $type);
             }
-            else
+            else // !preg_match
             {
                 // Not found, and still no match invalid line, get out!
-                if (!$found)
+                if (!$opened)
                 {
-                    break;
+                    // break; //!?
+                    return;
                 }
 
                 if (!trim($line))
                 {
                     // Empty line, tell it to stay in list, and continue...
-                    $lines->set_attr($at, [
-                        'in-list-item' => true
-                    ]);
+                    $lines->set_attr($at, ['in-list-item' => true]);
+                    $lines->set($at, trim($line));
                 }
                 else if (preg_match('/^([\ |\t]+)(.*?)$/', $line, $match))
                 {
                     // Space less than current indent, that means we're breaking
-                    if (strlen($match[1]) < strlen($indent))
+                    if (strlen($match[1]) < $indent)
                     {
                         // Not spaced? || Was previous line empty?
-                        if (!$lines->get($at-1) ||
+                        if ($lines->is_empty($at-1, true) ||
                             $lines->get_attr($at, 'in-list-item'))
                         {
                             break;
                         }
                         else
                         {
-                            $lines->set_attr($at, [
-                                'in-list-item' => true
-                            ]);
+                            $lines->set_attr($at, ['in-list-item' => true]);
+                            $lines->set($at, trim($line));
                         }
                     }
-                    else if (strlen($match[1]) > strlen($indent))
+                    else if (strlen($match[1]) > $indent)
                     {
-                        $lines->set_attr($at, [
-                            'in-list-item' => true
-                        ]);
+                        $lines->set_attr($at, ['in-list-item' => true]);
+
                         $lines->set(
-                            $at,
-                            substr($match[1], strlen($indent)).$match[2],
-                            false
+                            // $at, substr($match[1], $indent).$match[2], false
+                            $at, trim($match[2]), false
                         );
                     }
                     else
@@ -645,26 +638,131 @@ namespace mysli\markdown; class parser
         } while($lines->has($at));
 
         // Close ...
-        if ($found)
+        if ($opened)
         {
-            $lines->set_tag(
-                $at-1,
-                [
-                    false, $type
-                ]
-            );
-
-            if ($lines->get_attr($at-1, 'is-sub-list'))
+            // Put closing tag into the last line with content
+            $cn = 1;
+            do
             {
-                $lines->set_tag($at-1, [false, 'li']);
-            }
+                if (!$lines->is_empty($at-$cn, true))
+                {
+                    $lines->set_tag($at-$cn, [false, $type]);
+                    break;
+                }
+                else $cn++;
 
-            if ($lines->get_attr($at-1, 'in-list-item'))
+            } while ($lines->has($at-$cn));
+            // --- OR
+            // $lines->set_tag($at-1, [false, $type]);
+
+            // Put closing tag into the last line with content
+            $cn = 1;
+            do
             {
-                $lines->set_tag($at-1, [false, 'li']);
-            }
+                if (!$lines->is_empty($at-$cn, true))
+                {
+                    if ($lines->get_attr($at-$cn, 'is-sub-list'))
+                        $lines->set_tag($at-$cn, [false, 'li']);
+
+                    break;
+                }
+                else $cn++;
+
+            } while ($lines->has($at-$cn));
+            // --- OR
+            // if ($lines->get_attr($at-1, 'is-sub-list'))
+            // {
+            //     $lines->set_tag($at-1, [false, 'li']);
+            // }
+
+            // Put closing tag into the last line with content
+            $cn = 1;
+            do
+            {
+                if (!$lines->is_empty($at-$cn, true))
+                {
+                    if ($lines->get_attr($at-$cn, 'in-list-item'))
+                        $lines->set_tag($at-$cn, [false, 'li']);
+
+                    break;
+                }
+                else $cn++;
+
+            } while ($lines->has($at-$cn));
+            // --- OR
+            // if ($lines->get_attr($at-1, 'in-list-item'))
+            // {
+            //     $lines->set_tag($at-1, [false, 'li']);
+            // }
         }
 
+        return;
+    }
+
+    /**
+     * Find code block.
+     * --
+     * @example
+     *     This is a code block to be replaced.
+     * --
+     * @param integer               $at
+     * @param \mysli\markdown\lines $lines
+     */
+    protected function do_code($at, \mysli\markdown\lines $lines)
+    {
+        $opened = false;
+        $start_at = $at;
+
+        do
+        {
+            $line = $lines->get($at);
+
+            if (preg_match('/^(\t|\ {4})(.*?)$/', $line, $match))
+            {
+                $line = $match[2];
+                $lines->set($at, $line);
+                $lines->set_attr($at, [
+                    'in-code'      => true,
+                    'lock-nl'      => true,
+                    'lock-trim'    => true,
+                    'no-indent'    => true,
+                    'convert-tags' => true,
+                    'no-process'   => true,
+                ]);
+
+                if (!$opened)
+                {
+                    $lines->set_tag($at, ['pre', false]);
+                    $lines->set_tag($at, ['code', false]);
+                }
+
+                $opened = true;
+            }
+            else
+            {
+                // If it wasn't open, and we do have a new (non-empty) line,
+                // then break out of loop.
+                if ((!$opened && trim($line)) ||
+                    $lines->get_attr($at, 'in-code'))
+                {
+                    break;
+                }
+            }
+
+            $at++;
+
+        // Until there's next line...
+        } while($lines->has($at));
+
+        // If we had anything, close it
+        if ($opened)
+        {
+            $lines->set_tag($at-1, [false, 'pre']);
+            $lines->set_tag($at-1, [false, 'code']);
+            return $at - $start_at;
+        }
+
+        // Skip over checked lines
         return;
     }
 
@@ -676,36 +774,51 @@ namespace mysli\markdown; class parser
      * --
      * @return integer
      */
-    function do_paragraph($at, $lines)
+    function do_paragraph($at, \mysli\markdown\lines $lines)
     {
         // *1. complete absence of tags should open if not already opened,
         //     if line is not for skip, and if line has any content
         // *2. unclosed li, when next line has no tags should open
         // *3. blockquote should always open, if no other tags follows
-
+        // dump($lines->debug_flat_array());
         $opened = false;
 
         // OPENING
         do
         {
+            // Tag as a string
+            if (substr(trim($lines->get($at)), 0, 1) === '<')
+            {
+                $allow = implode('|', static::$p_allow);
+                $regex = "/^\\<({$allow})(\\ +|\\>).*$/i";
+
+                if (preg_match($regex, $lines->get($at)))
+                {
+                    $lines->set_tag($at, [ 'p', false ]);
+                    $lines->set_attr($at, 'in-do_paragrap', true);
+                    $opened = true;
+                }
+                else if ($opened)
+                {
+                    $lines->set_tag($at-1, [ false, 'p' ]);
+                    $opened = false;
+                    $at--;
+                }
+
+                $at++;
+                continue;
+            }
+
             if (!$opened)
             {
-                // 0. Tag as a string
-                if (substr(trim($lines->get($at)), 0, 1) === '<')
+                if ($lines->get_attr($at, 'no-process'))
                 {
-                    $allow = implode('|', static::$p_allow);
-                    $regex = "/^\\<({$allow})(\\ +|\\>).*$/i";
-
-                    if (preg_match($regex, $lines->get($at)))
-                    {
-                        $lines->set_tag($at, [ 'p', false ]);
-                        $lines->set_attr($at, 'in-do_paragrap', true);
-                        $opened = true;
-                    }
+                    $at++;
+                    continue;
                 }
                 //
-                // 1. Complete absence of tags should open if not already opened.
-                //    If line is not for skip, and if line has any content.
+                // Complete absence of tags should open if not already opened.
+                // If line is not for skip, and if line has any content.
                 //
                 else if (!$lines->has_tag($at) && trim($lines->get($at)))
                 {
@@ -714,16 +827,17 @@ namespace mysli\markdown; class parser
                     $opened = true;
                 }
                 //
-                // 2. Unclosed li, when next line has no (open) tags should open.
+                // Unclosed li, when next line has no (open) tags should open.
                 //
                 else if
                     (
-                        (
+                        // (
                             $lines->get_tag($at, -1) === 'li'
                             && !$lines->has_tag($at, '/li')
-                        )
+                        // )
                         && !$lines->has_tag($at+1, 'li')
-                        // && trim($lines->get($at+1))
+                        // && $lines->count_before_tag($at+1) > 0
+                        // && $lines->count_before_attr($at+1, 'in-list-item') > 0
                     )
                 {
                     $lines->set_tag($at, [ 'p', false ]);
@@ -731,7 +845,7 @@ namespace mysli\markdown; class parser
                     $opened = true;
                 }
                 //
-                // 3. Blockquote should always open, if no other tags follows.
+                // Blockquote should always open, if no other tags follows.
                 //
                 else if ($lines->get_tag($at, -1) === 'blockquote')
                 {
@@ -743,7 +857,7 @@ namespace mysli\markdown; class parser
             else
             {
                 //
-                // 1. ANY open tag, should close if opened
+                // ANY open tag, should close if opened
                 //
                 if ($lines->has_tag($at))
                 {
@@ -752,7 +866,7 @@ namespace mysli\markdown; class parser
                     $opened = false;
                 }
                 //
-                // 2. Empty line should close, if opened
+                // Empty line should close, if opened
                 //
                 else if (!trim($lines->get($at)))
                 {
@@ -761,8 +875,8 @@ namespace mysli\markdown; class parser
                     $opened = false;
                 }
                 //
-                // 2. Close li should close
-                // 4. /blockquote should close
+                // Close li should close
+                // /blockquote should close
                 //
                 else if
                     (
@@ -780,7 +894,7 @@ namespace mysli\markdown; class parser
         } while ($lines->has($at));
 
         //
-        // 4. EOF should close if opened.
+        // EOF should close if opened.
         //
         if ($opened)
         {
@@ -788,5 +902,22 @@ namespace mysli\markdown; class parser
         }
 
         return $at;
+    }
+
+    /*
+    Helper methods
+     */
+
+    /**
+     * Convert <space>|<tab> indent to integer.
+     * --
+     * @param string $indent
+     * --
+     * @return integer
+     */
+    protected function indent_to_int($indent)
+    {
+        $indent = str_replace("\t", '    ', $indent);
+        return strlen($indent);
     }
 }
