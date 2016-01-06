@@ -15,14 +15,11 @@ namespace mysli\markdown; class output
     const flat = 3;
 
     /**
-     * List of elements to be outputted as inline.
+     * List of elements to be outputted as inline, relative to the parent element.
      * --
      * @var array
      */
-    protected static $inline = [
-        'p', 'img', 'i', 'u', 'strong', 'em', 'hr', 'li',
-        'h1', 'h2', 'h3', 'h4', 'h5', 'h6'
-    ];
+    protected static $inline = [ 'code' ];
 
     /**
      * Default options to be extended by user.
@@ -82,97 +79,122 @@ namespace mysli\markdown; class output
      *        output::readable nicely formated and indented elements.
      *        output::flat each element in its own line, but no indentation.
      * --
+     * @throws mysli\markdown\exception\parser 10 Negative level for tag.
+     * @throws mysli\markdown\exception\parser 20 Wrong argument.
+     * --
      * @return string
      */
     function as_string($f=self::compressed)
     {
+        // Current output, set to empty
         $output = '';
+
+        // Current identation level
         $level = 0;
+
+        // One indentation unit (for example \t or ....)
         $indent = str_repeat(
             $this->options['indent_type'], $this->options['indent_size']
         );
 
-        foreach ($this->lines->get_all() as $lineno => $elements)
+        // Last node (either null, tag or txt)
+        $last_node = null;
+        // Previous tag
+        $last_tag  = null;
+
+        // Start outputing at position
+        $at = 0;
+
+        // Easy acess
+        $l = $this->lines;
+
+        while ($l->has($at))
         {
-            list($opent, $line, $closet, $attr) = $elements;
+            // Actual line
+            $txt = $l->get_attr($at, 'lock-trim')
+                ? $l->get($at)
+                : trim($l->get($at));
 
-            // TO-DO: Not if in pre-tag!
-            $line = trim($line);
-
-            if (arr::get($attr, 'skip', false))
-            {
-                continue;
-            }
+            // Open, close tags
+            list($opent, $closet) = $l->get_tags($at);
 
             switch ($f)
             {
-                //
                 // Compressed and flat format:
-                //
                 case self::compressed:
                 case self::flat:
-                    $dv = $f === self::compressed ? '' : "\n";
+                    $dv = $f === self::compressed && !$l->get_attr($at, 'lock-nl')
+                        ? '' : "\n";
+                    foreach ($opent as $tag) $output .= $dv."<{$tag}>";
+                    $output .= $dv.$txt;
+                    foreach ($closet as $tag) $output .= $dv."</{$tag}>";
+                break;
 
-                    foreach ($opent as $tag)
-                    {
-                        $output .= $dv."<{$tag}>";
-                    }
-
-                    $output .= $dv.$line;
-
-                    foreach ($closet as $tag)
-                    {
-                        $output .= $dv."</{$tag}>";
-                    }
-                    break;
-
-                //
                 // Print in readable format, with indentations etc,...
-                //
                 case self::readable:
-
-                    // Reset tag to be sure
-                    $tag = null;
-
-                    // Put open tags...
-                    foreach ($opent as $tag)
+                    // Open tags
+                    foreach ($opent as $tn => $tag)
                     {
-                        $output .= "\n".str_repeat($indent, $level)."<{$tag}>";
+                        if ($last_node && !in_array($tag, static::$inline))
+                        {
+                            $output .= "\n".str_repeat($indent, $level);
+                        }
+                        $output   .= "<{$tag}>";
+                        $last_node = 'tag';
+                        $last_tag  = $tag;
                         $level++;
                     }
 
-                    // Check if last tag was to be inline...
-                    if (($line || $tag) && !in_array($tag, static::$inline))
+                    $last_tag  = null;
+
+                    if ($last_node === 'txt')//|| $last_node === '/tag')
                     {
-                        $output .=
-                            "\n".
-                            ($line ?
-                                str_repeat($indent, $level+($tag ? 1 : 0)) :
-                                ''
-                            );
+                        $output .= "\n";
+
+                        if (!$l->get_attr($at, 'no-indent'))
+                            $output .= str_repeat($indent, $level);
                     }
 
                     // Put element itself
-                    $output .= $line;
+                    if (trim($txt))
+                    {
+                        $output   .= $txt;
+                        $last_node = 'txt';
+                    }
 
                     // Put close tags
-                    foreach ($closet as $l => $tag)
+                    foreach ($closet as $tn => $tag)
                     {
                         $level--;
 
-                        // First close tag
-                        if ($l !== 0 || !in_array($tag, static::$inline))
+                        if ($level < 0)
+                        {
+                            throw new exception\parser(f_error(
+                                $l->debug_flat_array(), $at,
+                                "Negative level for `{$tag}`.", 10
+                            ));
+                        }
+
+                        if (($last_node === 'tag' || $last_node === '/tag')
+                            && !in_array($last_tag, static::$inline))
                         {
                             $output .= "\n".str_repeat($indent, $level);
                         }
 
-                        $output .= "</{$tag}>";
+                        $output   .= "</{$tag}>";
+                        $last_tag  = $tag;
+                        $last_node = '/tag';
                     }
-                    break;
 
+                    $last_tag  = null;
+                break;
+
+                // Invalid argument provided
                 default:
-                    throw new exception\parser("Wrong argument: `{$f}`.");
+                    throw new exception\parser("Wrong argument: `{$f}`.", 20);
             }
+
+            $at++;
         }
 
         return trim($output);
