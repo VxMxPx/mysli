@@ -257,6 +257,7 @@ namespace mysli\markdown; class lines
         }
         else
         {
+            if (is_array($attr)) $attr = implode(',', array_keys($attr));
             throw new exception\parser(
                 "Setting attribute for non-existent line: `{$attr}` at `{$at}`", 10
             );
@@ -267,12 +268,18 @@ namespace mysli\markdown; class lines
      * Set line's tag(s) at particular position.
      * --
      * @param integer $at
-     * @param mixed   $tags `array [string $open, string $close]` | `string both`
+     *
+     * @param mixed $tags
+     *        `array [string $open, string $close]` | `string both`
+     *
+     * @param boolean $close_prepend
+     *        Prepend closed tag, rather than append.
+     *        This will make sense in most cases when setting both tags.
      * --
      * @throws mysli\markdown\exception\parser
      *         10 Trying to set tag on non-existent line.
      */
-    function set_tag($at, $tags=null)
+    function set_tag($at, $tags=null, $close_prepend=true)
     {
         if (isset($this->lines[$at]))
         {
@@ -293,7 +300,14 @@ namespace mysli\markdown; class lines
                 // Close tag
                 if (isset($tags[1]) && $tags[1])
                 {
-                    array_unshift($this->lines[$at][2], $tags[1]);
+                    if ($close_prepend)
+                    {
+                        array_unshift($this->lines[$at][2], $tags[1]);
+                    }
+                    else
+                    {
+                        $this->lines[$at][2][] = $tags[1];
+                    }
                 }
             }
         }
@@ -305,6 +319,32 @@ namespace mysli\markdown; class lines
                 10
             );
         }
+    }
+
+    /**
+     * Move tags from one line to another (this will erase tags in $from and
+     * move them $to). Tags will be appened to $to.
+     * --
+     * @param  integer $from
+     * @param  integer $to
+     * @param  array  $target [ open, close ]
+     * --
+     * @throws mysli\markdown\exception\parser 10 Source not found.
+     * @throws mysli\markdown\exception\parser 20 Target not found.
+     */
+    function move_tags($from, $to, array $target)
+    {
+        if (!$this->has($from))
+            throw new exception\parser("Source not found: `{$from}`.", 10);
+        if (!$this->has($to))
+            throw new exception\parser("Target not found: `{$to}`.", 20);
+
+        $this->lines[$to][2] = array_merge(
+            $this->lines[$to][2],
+            $this->lines[$from][2]
+        );
+
+        $this->lines[$from][2] = [];
     }
 
     /**
