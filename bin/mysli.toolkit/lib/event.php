@@ -3,12 +3,7 @@
 namespace mysli\toolkit; class event
 {
     const __use = '
-        .{
-            fs.file -> file,
-            json,
-            log,
-            exception.event
-        }
+        .{ fs.file -> file, json, log, exception.event }
     ';
 
     const priority_low = 'low';
