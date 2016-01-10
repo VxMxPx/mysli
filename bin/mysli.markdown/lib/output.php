@@ -147,7 +147,8 @@ namespace mysli\markdown; class output
 
                     $last_tag  = null;
 
-                    if ($last_node === 'txt')//|| $last_node === '/tag')
+                    // TODO: This might be buggy!?
+                    if (($last_node === 'txt' || $last_node === '/tag') && trim($txt))
                     {
                         $output .= "\n";
 
