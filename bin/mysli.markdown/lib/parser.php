@@ -12,19 +12,20 @@ namespace mysli\markdown; class parser
         mysli.toolkit.type.{ str, arr }
     ';
 
-    // Where
-    const flow_after   = 'after';
-    const flow_before  = 'before';
-    const flow_loop    = 'loop';
-    const flow_replace = 'replace';
-
     /**
-     * Which elements can be contained inside <p> tag.
+     * Which elements can be contained inside other tags.
+     * Lines with tags not on this list, will be skipped and not processed in
+     * any way, until closing tag is found.
      * --
      * @var array
      */
-    protected static $p_allow = [
-        'img', 'em', 'strong', 'i', 'b', 'sup', 'sub', 'del', 'ins'
+    // protected static $p_allow = [
+    //     'img', 'em', 'strong', 'i', 'b', 'sup', 'sub', 'del', 'ins'
+    // ];
+    protected $contained = [
+        'a', 'abbr', 'address', 'audio', 'b', 'br', 'button', 'caption', 'cite',
+        'code', 'del', 'dfn', 'em', 'figcaption', 'figure', 'h1', 'h2', 'h3',
+        'h4', 'h5', 'h6', 'hr', 'ins', 'img', 'sub', 'sup', 'small', 'time', 'video'
     ];
 
     /**
@@ -35,17 +36,16 @@ namespace mysli\markdown; class parser
      * @var array
      */
     protected $flow = [
-        'before' => [],
-        'loop'   => [
-            'self::do_blockquote',
-            'self::do_list',
-            'self::do_code',
-            'self::do_entities',
-            'self::do_header',
-        ],
-        'after'  => [
-            'self::do_paragraph'
-        ]
+        'self::do_html_tags',
+
+        'self::do_blockquote',
+        'self::do_list',
+        'self::do_code',
+        'self::do_entities',
+        'self::do_header',
+
+        'self::do_paragraph',
+        'self::do_inline',
     ];
 
     /**
@@ -58,7 +58,7 @@ namespace mysli\markdown; class parser
     /**
      * Markdown source in lines.
      * --
-     * @var \mysli\markdown\lines
+     * @var lines
      */
     protected $lines;
 
@@ -108,187 +108,20 @@ namespace mysli\markdown; class parser
         $this->lines = new lines($this->markdown);
 
         // Start main loop
-        $this->loop(0, $this->lines->count());
+        $this->flow();
 
         return new output($this->lines);
     }
 
     /**
-     * Start the main loop.
-     * --
-     * @param integer $start_at
-     * @param integer $limit
-     * --
-     * @throws mysli\markdown\exception\parser ... ...
+     * Loop though internal methods.
      */
-    protected function loop($start_at, $limit)
+    protected function flow()
     {
-        foreach (['before', 'loop', 'after'] as $type)
-        {
-            for ($i=$start_at; $i < $limit; $i++)
-            {
-                try
-                {
-                    if (!static::flow($this->flow, $i, $type)) { continue; }
-                }
-                catch (\Exception $e)
-                {
-                    throw new exception\parser(
-                        f_error($this->markdown, $i, $e->getMessage(), null)
-                    );
-                }
-            }
-        }
-    }
+        $i = 0;
 
-    // Flow --------------------------------------------------------------------
-
-    /**
-     * Allows you to control parser flow. Basically you can replace internal
-     * methods, with your own, or insert your own before or after internals.
-     * --
-     * @example $parser->set_flow(function ($at, $lines) {
-     *     // Step by step:
-     *     // - Add this function to the flow,
-     *     // - add it to the main loop,
-     *     // - add it before ...
-     *     // - ... the `do_header` tag.
-     * }, parser::flow_loop, parser::flow_before, 'self::do_header');
-     * --
-     * @param mixed $call
-     *        Method (or function) to be called; two parameters will be send:
-     *        integer               $at    current position in lines
-     *        \mysli\markdown\lines $lines all lines
-     *
-     *        Expected return value is either:
-     *        numeric which will break loop, and jump to particular position.
-     *        Jump will be relative to return value, e.g. if return is 1,
-     *        it will jump to +1 line.
-     *
-     *        Any other @retrun will be ignored and loop will continue normally.
-     *
-     * @param string $where
-     *        Where to put the method:
-     *        parser::flow_before before main loop will start
-     *        parser::flow_loop   in main loop
-     *        parser::flow_after  after main loop will ended
-     *
-     * @param string $position
-     *        Position to which call should be inserted:
-     *        parser::flow_before  at the beginning of list or before
-     *                             particular tag (if $tag provided).
-     *        parser::flow_after   at the end of list or after
-     *                             particular tag (if $tag provided).
-     *        parser::flow_replace replace tag, in this case $tag is required
-     *
-     * @param string $tag
-     *        Tag is currently set method, (see: static::$flow) if used,
-     *        costume method will be inserted before, after or it will
-     *        replace internal. An example of tag would be: self::do_header
-     * --
-     * @throws mysli\markdown\exception\parser
-     *         10 Invalid argument's value.
-     *
-     * @throws mysli\markdown\exception\parser
-     *         20 Tag is not set.
-     *
-     * @throws mysli\markdown\exception\parser
-     *         30 Cannot replace when no $tag is provided.
-     *
-     * @throws mysli\markdown\exception\parser
-     *         40 Invalid argument's value.
-     */
-    function set_flow(
-        $call, $where=parser::flow_loop, $position=parser::flow_after, $tag=null)
-    {
-        if (!isset($this->flow[$where]))
-        {
-            throw new exception\parser(
-                "Invalid argument's value: \$where: `{$where}`. Expected const: ".
-                "parser::flow_after|parser::flow_before|parser::flow_loop", 10
-            );
-        }
-
-        $target = &$this->flow[$where];
-
-        if ($tag && !isset($target[$tag]))
-        {
-            throw new exception\parser(
-                "Tag is not set: `{$tag}` in `{$where}`.", 20
-            );
-        }
-
-        switch ($position) {
-            case self::flow_after:
-                if ($tag)
-                {
-                    $p = array_search($tag, $target);
-                    arr::insert($target, $call, $p);
-                }
-                else
-                {
-                    $target[] = $call;
-                }
-                break;
-
-            case self::flow_before:
-                if ($tag)
-                {
-                    $p = array_search($tag, $target);
-                    arr::insert($target, $call, $p-1);
-                }
-                else
-                {
-                    array_unshift($target, $call);
-                }
-                break;
-
-            case self::flow_replace:
-                if ($tag)
-                {
-                    $p = array_search($tag, $target);
-                    $target[$p] = $call;
-                }
-                else
-                {
-                    throw new exception\parser(
-                        "Cannot replace, when no `\$tag` is provided.", 30
-                    );
-                }
-                break;
-
-            default:
-                throw new exception\parser(
-                    "Invalid argument's value: \$position: `{$position}`. ".
-                    "Expected const: parser::flow_after|parser::flow_before|".
-                    "parser::flow_replace", 40
-                );
-        }
-    }
-
-    /**
-     * Start the flow. This will control main loop, it will set position in list
-     * (current line), and continue if needed (i.e. if return is false, main
-     * loop will continue).
-     * This is internal method, which is tightly connected to $this->loop()
-     * --
-     * @param array $flows
-     *        List of methods to be executed in particular order;
-     *        those can be internal methods (self::method) or
-     *        external (\vendor\package\class::method).
-     *
-     * @param integer $i
-     *        Current position in lines.
-     *
-     * @param string $type
-     *        Flow type to be executed.
-     * --
-     * @return boolean
-     */
-    private function flow($flows, &$i, $type)
-    {
         // Main loop
-        foreach ($flows[$type] as $flow)
+        foreach ($this->flow as $flow)
         {
             if (substr($flow, 0, 6) === 'self::')
             {
@@ -301,17 +134,198 @@ namespace mysli\markdown; class parser
                 $r = call_user_func_array([$obj, $funct], [$i, $this->lines]);
             }
 
-            if (is_numeric($r))
-            {
-                $i = $i + $r;
-                return false;
-            }
-        }
+            // Skip forward
+            if (is_numeric($r)) $i = $r;
 
-        return true;
+            // Break the loop
+            if ($r === false) return;
+        }
     }
 
-    // Tags --------------------------------------------------------------------
+    // Do Things ---------------------------------------------------------------
+
+    /**
+     * Loop though lines and discover HTML tags. If HTML is not allowed, then
+     * escape tags, otherwise mark some lines to be skipped.
+     * --
+     * @param integer $at
+     * @param lines   $lines
+     * --
+     * @return integer
+     */
+    protected function do_html_tags($at, lines $lines)
+    {
+        $opened = [];
+        $start_at = $at;
+
+        while ($lines->has($at))
+        {
+            $line = $lines->get($at);
+            $here = [
+                'opened' => [],
+            ];
+
+            // Are HTML tags allowed at all?
+            if (!$this->options['allow_html'])
+            {
+                $lines->set($at, str_replace(['<', '>'], ['&lt;', '&gt;'], $line));
+                $at++;
+                continue;
+            }
+
+            // Find (tags on this line)
+            $tags = [];
+            preg_match_all(
+                '#\<(\/?)([a-z]+)[ |\>|\/]{1}#', $line, $tags, PREG_SET_ORDER);
+
+            foreach ($tags as $tag)
+            {
+                list($_, $closed, $tag) = $tag;
+                $closed = !!$closed;
+
+                if ($closed)
+                {
+                    if (in_array($tag, $here['opened']))
+                        unset($here['opened'][array_search($tag, $here['opened'])]);
+
+                    if (in_array($tag, $opened))
+                        unset($opened[array_search($tag, $opened)]);
+
+                    if (empty($here['opened']))
+                        $lines->set_attr($at, 'html-tag-closed', true);
+                }
+                else
+                {
+                    $opened[] = $tag;
+                    $here['opened'][] = $tag;
+
+                    $lines->set_attr($at, 'html-tag-opened', true);
+
+                    if (!in_array($tag, $this->contained))
+                    {
+                        $lines->set_attr($at, 'no-process', true);
+                        $lines->set_attr($at, 'no-process-by-open', true);
+                    }
+                }
+            }
+
+            if (count($opened))
+            {
+                $lines->set_attr($at, 'in-html-tag', true);
+
+                foreach ($opened as $tag)
+                {
+                    if (!in_array($tag, $this->contained))
+                    {
+                        // Need for later cleanup... :>
+                        $lines->set_attr(
+                            $at,
+                            'html-opened-list',
+                            $lines->get_attr($at, 'html-opened').'::'.$tag
+                        );
+
+                        $lines->set_attr($at, [
+                            'no-process' => true,
+                        ]);
+                    }
+                }
+            }
+
+            $at++;
+        }
+
+        // Cleanup, cannot find some opened tags...?
+        if (count($opened))
+        {
+            foreach ($opened as $tag)
+            {
+                $at = $start_at;
+
+                while ($lines->has($at))
+                {
+                    $openedlist = $lines->get_attr($at, 'html-opened-list');
+
+                    if ($openedlist
+                        && !$lines->get_attr($at, 'no-process-by-open'))
+                    {
+                        $p = false;
+
+                        if (false !== ($p = strpos($openedlist, "::{$tag}")))
+                        {
+                            $openedlist =
+                                substr($openedlist, 0, $p).
+                                substr($openedlist, $p+strlen($tag)+2);
+
+                            if (!trim($openedlist))
+                            {
+                                $lines->set_attr($at, [
+                                    'html-opened-list' => false,
+                                    'no-process'       => false,
+                                ]);
+                            }
+                            else
+                            {
+                                $lines->set_attr($at, 'html-opened-list', $openedlist);
+                            }
+                        }
+                    }
+
+                    $at++;
+                }
+            }
+        }
+    }
+
+    /**
+     * Discover inline tags, like:
+     * __bold__, **bold**, _italic_, *italic*, ![](/path/to/image.jpg),
+     * [Link](http://domain.tld), `code`
+     * --
+     * @param integer $at
+     * @param lines   $lines
+     * --
+     * @return integer
+     */
+    protected function do_inline($at, lines $lines)
+    {
+        $regbag = [
+            // Match **bold**
+            '/(?<=[^a-zA-Z0-9\\*\\\\])\\*\\*(.*?)\\*\\*(?=[^a-zA-Z0-9\\*\\\\]|$)/'
+            => '<strong>$1</strong>',
+            // Match __bold__
+            '/(?<=[^a-zA-Z0-9_\\\\])__(.*?)__(?=[^a-zA-Z0-9_\\\\]|$)/'
+            => '<strong>$1</strong>',
+            // Match *italic*
+            '/(?<=[^a-zA-Z0-9\\*\\\\])\\*(.*?)\\*(?=[^a-zA-Z0-9\\*\\\\]|$)/'
+            => '<em>$1</em>',
+            // Match _italic_
+            '/(?<=[^a-zA-Z0-9_\\\\])_(.*?)_(?=[^a-zA-Z0-9_\\\\]|$)/'
+            => '<em>$1</em>',
+            // Match code
+            '/(?<=[^a-zA-Z0-9`\\\\])`(.*?)`(?=[^a-zA-Z0-9`\\\\]|$)/'
+            => '<code>$1</code>',
+        ];
+
+        while ($lines->has($at))
+        {
+            if ($lines->get_attr($at, 'no-process'))
+            {
+                $at++;
+                continue;
+            }
+
+            $line = $lines->get($at);
+
+            foreach ($regbag as $regex => $replace)
+            {
+                $line = preg_replace($regex, $replace, $line);
+            }
+
+            $lines->set($at, $line);
+
+            $at++;
+        }
+    }
 
     /**
      * Find header tags.
@@ -328,39 +342,45 @@ namespace mysli\markdown; class parser
      * Header 2
      * --------
      * --
-     * @param integer               $at
-     * @param \mysli\markdown\lines $lines
+     * @param integer $at
+     * @param lines   $lines
      * --
      * @return integer
      */
-    protected function do_header($at, \mysli\markdown\lines $lines)
+    protected function do_header($at, lines $lines)
     {
-        $line = $lines->get($at);
-
-        // Regular style headers...
-        if (preg_match('/^(\#{1,6}) (.*?)(?: [#]+)?$/', $line, $match))
+        while ($lines->has($at))
         {
-            $hl = strlen($match[1]);
+            $line = $lines->get($at);
 
-            // Set lines...
-            $lines->set($at, $match[2], "h{$hl}");
+            // Regular style headers...
+            if (preg_match('/^(\#{1,6}) (.*?)(?: [#]+)?$/', $line, $match))
+            {
+                $hl = strlen($match[1]);
 
-            return;
-        }
+                // Set lines...
+                $lines->set($at, $match[2], "h{$hl}");
 
-        // Setext headers
-        $line = $lines->get($at+1);
-        if (preg_match('/^[\-|\=]+$/', $line, $match))
-        {
-            $hl = substr($match[0], 0, 1) === '=' ? '1' : '2';
-            $title = $lines->get($at);
+                $at++;
+                continue;
+            }
 
-            // Set lines...
-            $lines->set($at, $title, "h{$hl}");
-            $lines->erase($at+1, true, true);
-            $lines->set_attr($at+1, 'skip', true);
+            // Setext headers
+            $line = $lines->get($at+1);
+            if (preg_match('/^[\-|\=]+$/', $line, $match))
+            {
+                $hl = substr($match[0], 0, 1) === '=' ? '1' : '2';
+                $title = $lines->get($at);
 
-            return +2;
+                // Set lines...
+                $lines->set($at, $title, "h{$hl}");
+                $lines->erase($at+1, true, true);
+                $lines->set_attr($at+1, 'skip', true);
+
+                $at+2;
+            }
+
+            $at++;
         }
     }
 
@@ -368,46 +388,33 @@ namespace mysli\markdown; class parser
      * Find entities at particular line.
      * Convert & to &amp; etc...
      * --
-     * @param integer               $at
-     * @param \mysli\markdown\lines $lines
+     * @param integer $at
+     * @param lines   $lines
      */
-    protected function do_entities($at, \mysli\markdown\lines $lines)
+    protected function do_entities($at, lines $lines)
     {
-        // Get line
-        $line = $lines->get($at);
-
-        // Convert &, but leave &copy; ...
-        $line = preg_replace('/&(?![a-z]{2,11};)/', '&amp;', $line);
-
-        // Convert < >, if allow HTML
-        if ($this->options['allow_html'] &&
-            !$lines->get_attr($at, 'convert-tags'))
+        while ($lines->has($at))
         {
-            $line = preg_replace('/<(?![\/a-z]{1,}(.*)>)/', '&lt;', $line);
+            // Get line
+            $line = $lines->get($at);
 
-            $line = preg_replace_callback(
-                '/(\<[a-z]{1,}.*)?(>)/',
-                function ($match) {
-                    if ($match[1])
-                    {
-                        return $match[0];
-                    }
-                    else
-                    {
-                        return '&gt;';
-                    }
-                },
-                $line
-            );
+            // Convert &, but leave &copy; ...
+            $line = preg_replace('/&(?![a-z]{2,11};)/', '&amp;', $line);
+
+            if (!$lines->get_attr($at, 'html-tag-opened')
+                && !$lines->get_attr($at, 'html-tag-closed'))
+            {
+                $line = str_replace(['<', '>'], ['&lt;', '&gt;'], $line);
+            }
+            else
+            {
+                $line = preg_replace('/(\<(?![a-z]|\/[a-z]))/', '&lt;', $line);
+            }
+
+            $lines->set($at, $line);
+
+            $at++;
         }
-        else
-        {
-            $line = str_replace(['<', '>'], ['&lt;', '&gt;'], $line);
-        }
-
-        $lines->set($at, $line);
-
-        return;
     }
 
     /**
@@ -416,55 +423,96 @@ namespace mysli\markdown; class parser
      * @example
      *     > This is a blockquote text to be replaced.
      * --
-     * @param integer               $at
-     * @param \mysli\markdown\lines $lines
+     * @param integer $at
+     * @param lines   $lines
      */
-    protected function do_blockquote($at, \mysli\markdown\lines $lines)
+    protected function do_blockquote($at, lines $lines)
     {
-        $opened = false;
+        $indent = 0;
+        $last_at = false;
+        $last_empty = false;
 
-        do
+        while($lines->has($at))
         {
+            if ($lines->get_attr($at, 'no-process')
+                || $lines->get_attr($at, 'in-html-tag'))
+            {
+                $at++;
+                continue;
+            }
+
             $line = $lines->get($at);
 
-            if (preg_match('/^(>\ {0,1})(\ {0,4}>?.*?)$/', $line, $match))
+            if (preg_match('/^[ \\t]*((>[ \\t]*)+)(.*?)$/', $line, $match))
             {
-                $line = $match[2];
+                list($_, $levels, $last, $line) = $match;
+                $indent_now = substr_count($levels, '>');
 
-                // Trim line if not more than 2 spaces ( safe to assume nothing is nested )
-                if (substr($line, 0, 2) !== '  ' && substr($line, 0, 1) !== "\t")
+                // Add front space if it would indicate code block...
+                if (substr($last, 2, 4) === '    ' || substr($last, 2, 1) === "\t")
                 {
-                    $line = trim($line);
+                    $line = substr($last, 2).$line;
                 }
 
-                $lines->set($at, $line, [(!$opened ? 'blockquote' : false), false]);
-                $lines->set_attr($at, 'in-blockquote', true);
+                $lines->set($at, $line);
 
-                $opened = true;
-            }
-            else
-            {
-                // If it wasn't open, and we do have a new (non-empty) line,
-                // then break out of loop.
-                if ((!$opened && trim($line)) ||
-                    $lines->get_attr($at, 'in-blockquote'))
+                if ($indent_now > $indent)
                 {
-                    break;
+                    while ($indent_now > $indent)
+                    {
+                        $lines->set_tag($at, ['blockquote', false]);
+                        $indent++;
+                    }
+                }
+                elseif ($indent_now < $indent)
+                {
+                    while ($indent_now < $indent)
+                    {
+                        $lines->set_tag($at, [false, 'blockquote'], false);
+                        $indent--;
+                    }
+                }
+
+                $lines->set_attr($at, 'in-blockquote', true);
+                $indent = $indent_now;
+                $last_empty = false;
+                $last_at = $at;
+            }
+            elseif ($indent) // preg_match
+            {
+                if (!trim($line))
+                {
+                    $last_empty = true;
+                }
+                else
+                {
+                    if (!$last_empty && $last_at !== false)
+                    {
+                        $lines->set_attr($at, 'in-blockquote', true);
+                        $lines->move_tags($last_at, $at, [false, true]);
+                        $last_at = $at;
+                    }
+                    else
+                    {
+                        while ($indent)
+                        {
+                            $lines->set_tag($last_at, [false, 'blockquote'], false);
+                            $indent--;
+                        }
+                        $last_at = false;
+                    }
                 }
             }
 
             $at++;
-
-        // Until there's next line...
-        } while($lines->has($at));
-
-        // If we had anything, close it
-        if ($opened)
-        {
-            $lines->set_tag($at-1, [false, 'blockquote']);
         }
 
-        return;
+        // If we had anything, close it
+        while ($indent)
+        {
+            $lines->set_tag($last_at, [false, 'blockquote'], false);
+            $indent--;
+        }
     }
 
     /**
@@ -475,228 +523,143 @@ namespace mysli\markdown; class parser
      *     - List Item
      *     - ...
      * --
-     * @param integer               $at
-     * @param \mysli\markdown\lines $lines
+     * @param integer $at
+     * @param lines   $lines
      */
-    protected function do_list($at, \mysli\markdown\lines $lines)
+    protected function do_list($at, lines $lines)
     {
-        $indent = 0;
-        $opened = false;
-
+        $opened = [];
         $list_item_regex = '/^([\ |\t]*)([\*|\+|\-]|[0-9]+\.)([^\-|\*|\+].+)$/';
+        $indent_now = $indent = 0;
+        $last_li = false;
+        $last_empty = false;
 
-        do
+        while ($lines->has($at))
         {
+            // Skip if no process
+            if ($lines->get_attr($at, 'no-process')
+                || $lines->get_attr($at, 'in-html-tag'))
+            {
+                $at++;
+                continue;
+            }
+
             $line = $lines->get($at);
 
             if (preg_match($list_item_regex, $line, $match))
             {
-                $line = $match[3];
+                $line = trim($match[3]);
+                $lines->set($at, $line);
                 $indent_now = $this->indent_to_int($match[1]);
+                $type = in_array($match[2], ['*', '-', '+']) ? 'ul' : 'ol';
+                $last_li = $at;
+                $last_empty = false;
 
-                if (!$opened) // New list being opened
+                // The list is not opened, should we open new list?
+                if (empty($opened))
                 {
+                    $opened[] = [ $type, ($indent_now-$indent) ];
                     $indent = $indent_now;
-                    $opened = true;
-
-                    $type = in_array($match[2], ['*', '-', '+']) ? 'ul' : 'ol';
-
                     // Open list
                     $lines->set_tag($at, [$type, false]);
-
-                    // Sub list?
-                    if ($lines->get_attr($at, 'is-sub-list'))
+                    $lines->set_tag($at, ['li', 'li']);
+                }
+                else
+                {
+                    // The list is not opened
+                    if ($indent === $indent_now)
+                    {
+                        $lines->set_tag($at, ['li', 'li']);
+                    }
+                    else if ($indent_now > $indent)
                     {
                         $lines->erase_tag($at-1, '/li', 1);
-                        // Not anymore
-                        $lines->set_attr($at, 'is-sub-list', false);
+                        $lines->set_tag($at, [ $type, false ]);
+                        $lines->set_tag($at, [ 'li', 'li' ]);
+                        $opened[] = [ $type, ($indent_now-$indent) ];
+                        $indent = $indent_now;
                     }
-                }
-                else // This is an existent list
-                {
-                    // Close previous, if not already closed
-                    if (!$lines->get_attr($at, 'is-sub-list'))
+                    else if ($indent_now < $indent)
                     {
-                        // Put closing tag into the last line with content
-                        $cn = 1;
-                        do
+                        $lines->set_tag($at, ['li', 'li']);
+
+                        while($indent_now < $indent)
                         {
-                            if (!$lines->is_empty($at-$cn, true))
-                            {
-                                $lines->set_tag($at-$cn, [false, 'li']);
-                                break;
-                            }
-                            else $cn++;
+                            list($cltag, $clindent) = array_pop($opened);
+                            // dump_s("Indent: {$indent}, Clindent: {$clindent}");
+                            $lines->set_tag($at-1, [false, $cltag], false);
+                            $lines->set_tag($at-1, [false, 'li'], false);
+                            $indent = $indent - $clindent;
+                        }
+                        if (empty($opened))
+                            $last_li = false;
 
-                        } while ($lines->has($at-$cn));
-                    }
-
-                    // We have shorter indent
-                    if ($indent_now < $indent)
-                    {
-                        break;
-                    }
-                    elseif ($indent_now > $indent)
-                    {
-                        // Insert some of indent back in
-                        $line =
-                            substr($match[1], $indent) .
-                            $match[2] .
-                            $line;
-
-                        // This will be sub-list
-                        $lines->set_attr($at, 'is-sub-list', true);
-                    }
-                    else
-                    {
-                        // If it was sub-list, it's not anymore
-                        $lines->set_attr($at, 'is-sub-list', false);
+                        $indent = $indent_now;
                     }
                 }
-
-                // Open li... if not already opened!
-                if (!$lines->get_attr($at, 'is-sub-list'))
-                {
-                    // All those tags already exists if it's sub-list
-                    $lines->set($at, $line, ['li', false]);
-                    $lines->set_attr($at, 'in-list-item', true);
-                }
-                else
-                {
-                    $lines->set($at, $line, false);
-                }
-                $lines->set_attr($at, 'list-type', $type);
             }
-            else // !preg_match
+            else if (!empty($opened)) // NOT preg_match
             {
-                // Not found, and still no match invalid line, get out!
-                if (!$opened)
+                if (empty($line))
                 {
-                    // break; //!?
-                    return;
+                    $last_empty = true;
                 }
-
-                if (!trim($line))
+                else if ($last_li !== false)
                 {
-                    // Empty line, tell it to stay in list, and continue...
-                    $lines->set_attr($at, ['in-list-item' => true]);
-                    $lines->set($at, trim($line));
-                }
-                else if (preg_match('/^([\ |\t]+)(.*?)$/', $line, $match))
-                {
-                    // Space less than current indent, that means we're breaking
-                    if (strlen($match[1]) < $indent)
-                    {
-                        // Not spaced? || Was previous line empty?
-                        if ($lines->is_empty($at-1, true) ||
-                            $lines->get_attr($at, 'in-list-item'))
-                        {
-                            break;
-                        }
-                        else
-                        {
-                            $lines->set_attr($at, ['in-list-item' => true]);
-                            $lines->set($at, trim($line));
-                        }
-                    }
-                    else if (strlen($match[1]) > $indent)
-                    {
-                        $lines->set_attr($at, ['in-list-item' => true]);
+                    $local_indent = in_array(substr($line, 0, 1), [' ', "\t"]);
 
-                        $lines->set(
-                            // $at, substr($match[1], $indent).$match[2], false
-                            $at, trim($match[2]), false
-                        );
+                    if ($last_empty && !$local_indent)
+                    {
+                        $opened = array_reverse($opened);
+                        $openedc = count($opened)-1;
+
+                        foreach ($opened as $c => $close)
+                        {
+                            $lines->set_tag($last_li, [false, $close[0]], false);
+
+                            if ($c < $openedc)
+                            {
+                                $lines->set_tag($last_li, [false, 'li'], false);
+                            }
+                        }
+
+                        $opened  = [];
+                        $indent_now = $indent = 0;
+                        $last_li = false;
+                        $last_empty = false;
                     }
                     else
                     {
-                        $lines->set($at, $match[2], false);
-                        $lines->set_attr($at, [
-                            'in-list-item' => true
-                        ]);
+                        $lines->set($at, trim($line));
+                        $lines->move_tags($last_li, $at, [ false, true ]);
+                        $last_li = $at;
+                        $last_empty = false;
                     }
                 }
                 else
                 {
-                    // Not spaced? Was previous line empty?
-                    if (!$lines->get($at-1))
-                    {
-                        break;
-                    }
-                    else
-                    {
-                        $lines->set_attr($at, [
-                            'in-list-item' => true
-                        ]);
-                    }
+                    $last_empty = false;
                 }
             }
 
             $at++;
-
-        // Until there's next line...
-        } while($lines->has($at));
-
-        // Close ...
-        if ($opened)
-        {
-            // Put closing tag into the last line with content
-            $cn = 1;
-            do
-            {
-                if (!$lines->is_empty($at-$cn, true))
-                {
-                    $lines->set_tag($at-$cn, [false, $type]);
-                    break;
-                }
-                else $cn++;
-
-            } while ($lines->has($at-$cn));
-            // --- OR
-            // $lines->set_tag($at-1, [false, $type]);
-
-            // Put closing tag into the last line with content
-            $cn = 1;
-            do
-            {
-                if (!$lines->is_empty($at-$cn, true))
-                {
-                    if ($lines->get_attr($at-$cn, 'is-sub-list'))
-                        $lines->set_tag($at-$cn, [false, 'li']);
-
-                    break;
-                }
-                else $cn++;
-
-            } while ($lines->has($at-$cn));
-            // --- OR
-            // if ($lines->get_attr($at-1, 'is-sub-list'))
-            // {
-            //     $lines->set_tag($at-1, [false, 'li']);
-            // }
-
-            // Put closing tag into the last line with content
-            $cn = 1;
-            do
-            {
-                if (!$lines->is_empty($at-$cn, true))
-                {
-                    if ($lines->get_attr($at-$cn, 'in-list-item'))
-                        $lines->set_tag($at-$cn, [false, 'li']);
-
-                    break;
-                }
-                else $cn++;
-
-            } while ($lines->has($at-$cn));
-            // --- OR
-            // if ($lines->get_attr($at-1, 'in-list-item'))
-            // {
-            //     $lines->set_tag($at-1, [false, 'li']);
-            // }
         }
 
-        return;
+        if (count($opened) && $last_li)
+        {
+            $opened = array_reverse($opened);
+            $openedc = count($opened)-1;
+
+            foreach ($opened as $c => $close)
+            {
+                $lines->set_tag($last_li, [false, $close[0]], false);
+
+                if ($c < $openedc)
+                {
+                    $lines->set_tag($last_li, [false, 'li'], false);
+                }
+            }
+        }
     }
 
     /**
@@ -705,20 +668,27 @@ namespace mysli\markdown; class parser
      * @example
      *     This is a code block to be replaced.
      * --
-     * @param integer               $at
-     * @param \mysli\markdown\lines $lines
+     * @param integer $at
+     * @param lines   $lines
      */
-    protected function do_code($at, \mysli\markdown\lines $lines)
+    protected function do_code($at, lines $lines)
     {
         $opened = false;
-        $start_at = $at;
+        $last_at = false;
 
-        do
+        while($lines->has($at))
         {
             $line = $lines->get($at);
 
             if (preg_match('/^(\t|\ {4})(.*?)$/', $line, $match))
             {
+                // Can't open while inside HTML tag
+                if ($lines->get_attr($at, 'in-html-tag'))
+                {
+                    $at++;
+                    continue;
+                }
+
                 $line = $match[2];
                 $lines->set($at, $line);
                 $lines->set_attr($at, [
@@ -737,171 +707,88 @@ namespace mysli\markdown; class parser
                 }
 
                 $opened = true;
+                $last_at = $at;
             }
             else
             {
-                // If it wasn't open, and we do have a new (non-empty) line,
-                // then break out of loop.
-                if ((!$opened && trim($line)) ||
-                    $lines->get_attr($at, 'in-code'))
+                if ($opened && trim($line))
                 {
-                    break;
+                    $lines->set_tag($last_at, [ false, 'pre' ]);
+                    $lines->set_tag($last_at, [ false, 'code' ]);
                 }
+                $opened = false;
             }
 
             $at++;
-
-        // Until there's next line...
-        } while($lines->has($at));
-
-        // If we had anything, close it
-        if ($opened)
-        {
-            $lines->set_tag($at-1, [false, 'pre']);
-            $lines->set_tag($at-1, [false, 'code']);
-            return $at - $start_at;
         }
 
-        // Skip over checked lines
-        return;
+        if ($opened)
+        {
+            $lines->set_tag($last_at, [ false, 'pre' ]);
+            $lines->set_tag($last_at, [ false, 'code' ]);
+        }
     }
 
     /**
      * Do paragraphs.
      * --
-     * @param  integer               $at
-     * @param  \mysli\markdown\lines $lines
+     * @param  integer $at
+     * @param  lines   $lines
      * --
      * @return integer
      */
-    function do_paragraph($at, \mysli\markdown\lines $lines)
+    function do_paragraph($at, lines $lines)
     {
-        // *1. complete absence of tags should open if not already opened,
-        //     if line is not for skip, and if line has any content
-        // *2. unclosed li, when next line has no tags should open
-        // *3. blockquote should always open, if no other tags follows
-        // dump($lines->debug_flat_array());
-        $opened = false;
+        $last_at = false;
 
-        // OPENING
-        do
+        while ($lines->has($at))
         {
-            // Tag as a string
-            if (substr(trim($lines->get($at)), 0, 1) === '<')
+            if ($last_at === false)
             {
-                $allow = implode('|', static::$p_allow);
-                $regex = "/^\\<({$allow})(\\ +|\\>).*$/i";
-
-                if (preg_match($regex, $lines->get($at)))
-                {
-                    $lines->set_tag($at, [ 'p', false ]);
-                    $lines->set_attr($at, 'in-do_paragrap', true);
-                    $opened = true;
-                }
-                else if ($opened)
-                {
-                    $lines->set_tag($at-1, [ false, 'p' ]);
-                    $opened = false;
-                    $at--;
-                }
-
-                $at++;
-                continue;
-            }
-
-            if (!$opened)
-            {
-                if ($lines->get_attr($at, 'no-process'))
+                if (
+                    $lines->get_attr($at, 'no-process')
+                    || (!$lines->get_attr($at, 'html-tag-opened')
+                        && $lines->get_attr($at, 'html-tag-closed'))
+                    || ($lines->has_tag($at)
+                        && !in_array($lines->get_tag($at, -1), ['li', 'blockquote']))
+                    || $lines->is_empty($at, true)
+                    || $lines->has_tag($at, '/li')
+                    || $lines->has_tag($at+1, 'li')
+                )
                 {
                     $at++;
                     continue;
                 }
-                //
-                // Complete absence of tags should open if not already opened.
-                // If line is not for skip, and if line has any content.
-                //
-                else if (!$lines->has_tag($at) && trim($lines->get($at)))
-                {
-                    $lines->set_tag($at, [ 'p', false ]);
-                    $lines->set_attr($at, 'in-do_paragrap', true);
-                    $opened = true;
-                }
-                //
-                // Unclosed li, when next line has no (open) tags should open.
-                //
-                else if
-                    (
-                        // (
-                            $lines->get_tag($at, -1) === 'li'
-                            && !$lines->has_tag($at, '/li')
-                        // )
-                        && !$lines->has_tag($at+1, 'li')
-                        // && $lines->count_before_tag($at+1) > 0
-                        // && $lines->count_before_attr($at+1, 'in-list-item') > 0
-                    )
-                {
-                    $lines->set_tag($at, [ 'p', false ]);
-                    $lines->set_attr($at, 'in-do_paragrap', true);
-                    $opened = true;
-                }
-                //
-                // Blockquote should always open, if no other tags follows.
-                //
-                else if ($lines->get_tag($at, -1) === 'blockquote')
-                {
-                    $lines->set_tag($at, [ 'p', false ]);
-                    $lines->set_attr($at, 'in-do_paragrap', true);
-                    $opened = true;
-                }
+
+                $lines->set_tag($at, [ 'p', false ]);
+                $last_at = $at;
             }
             else
             {
-                //
-                // ANY open tag, should close if opened
-                //
-                if ($lines->has_tag($at))
+                if ($lines->has_tag($at) || $lines->is_empty($at, true))
                 {
-                    $lines->set_tag($at-1, [ false, 'p' ]);
+                    $lines->set_tag($last_at, [ false, 'p' ]);
+                    $last_at = false;
                     $at--;
-                    $opened = false;
                 }
-                //
-                // Empty line should close, if opened
-                //
-                else if (!trim($lines->get($at)))
-                {
-                    $lines->set_tag($at-1, [ false, 'p' ]);
-                    $at--;
-                    $opened = false;
-                }
-                //
-                // Close li should close
-                // /blockquote should close
-                //
-                else if
-                    (
-                        $lines->has_tag($at, -1, '/') === 'li'
-                        || $lines->has_tag($at, -1, '/') === 'blockquote'
-                    )
+                else if (in_array($lines->get_tag($at, -1, '/'), ['li', 'blockquote']))
                 {
                     $lines->set_tag($at, [ false, 'p' ]);
-                    $opened = false;
+                    $last_at = false;
+                }
+                else
+                {
+                    $last_at = $at;
                 }
             }
 
             $at++;
-
-        } while ($lines->has($at));
-
-        //
-        // EOF should close if opened.
-        //
-        if ($opened)
-        {
-            $lines->set_tag($at-1, [ false, 'p' ]);
         }
 
-        return $at;
+        if ($last_at)
+        {
+            $lines->set_tag($last_at, [ false, 'p' ]);
+        }
     }
 
     /*
