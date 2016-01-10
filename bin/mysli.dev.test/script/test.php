@@ -256,7 +256,7 @@ namespace mysli\dev\test\root\script; class test
      */
     private static function ppf($pid)
     {
-        $pid = str::clean($pid, '<[^a-z0-9_\.\-\:\ ]+>i');
+        $pid = str::clean($pid, '<[^a-z0-9_\.\-\:\ \*]+>i');
         // Get Method/Filter
         $pids = explode('::', $pid, 2);
         $pidroot = $pids[0];
