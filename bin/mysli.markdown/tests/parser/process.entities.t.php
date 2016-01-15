@@ -48,4 +48,4 @@ less<more and more>less
 <div>Hello</div>
 <p>less &lt; more and more &gt; less</p>
 <p><img src="" /></p>
-<p>"Please, enter your name!"</p>');
+<p>&ldquo;Please, enter your name!&rdquo;</p>');

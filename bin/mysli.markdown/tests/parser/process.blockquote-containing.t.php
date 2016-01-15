@@ -34,6 +34,6 @@ return assert::equals(markdown::process($markdown),
         <li>This is the second list item.</li>
         <li>Third item.</li>
     </ol>
-    <p>Here\'s some example code:</p>
+    <p>Here&rsquo;s some example code:</p>
     <pre><code>return shell_exec("echo $input | $markdown_script");</code></pre>
 </blockquote>');

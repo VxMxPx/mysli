@@ -45,3 +45,33 @@ return assert::equals(markdown::process($markdown),
     - three
     - four
     </small></p>');
+
+
+#: Test Process Unclosed, Follow
+$markdown = <<<MARKDOWN
+<div>
+
+<img src="foo"/>
+
+<hr/>
+MARKDOWN;
+
+return assert::equals(markdown::process($markdown),
+'<div>
+<p><img src="foo"/></p>
+<p><hr/></p>');
+
+#: Test Closed, Follow
+$markdown = <<<MARKDOWN
+<div>
+    <img src="foo"/>
+    <hr/>
+</div>
+MARKDOWN;
+
+return assert::equals(markdown::process($markdown),
+'<div>
+<img src="foo"/>
+<hr/>
+</div>');
+

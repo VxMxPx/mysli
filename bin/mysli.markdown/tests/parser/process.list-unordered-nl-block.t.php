@@ -18,7 +18,7 @@ return assert::equals(markdown::process($markdown),
 '<ul>
     <li>
         <p>This is a list item with two paragraphs.</p>
-        <p>This is the second paragraph in the list item. You\'re
+        <p>This is the second paragraph in the list item. You&rsquo;re
             only required to indent the first line. Lorem ipsum dolor
             sit amet, consectetuer adipiscing elit.</p>
     </li>
