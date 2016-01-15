@@ -8,7 +8,7 @@
 namespace mysli\markdown; class parser
 {
     const __use = '
-        .{ lines, output, exception.parser }
+        .{ lines, exception.parser }
         mysli.toolkit.type.{ str, arr }
     ';
 
@@ -19,9 +19,6 @@ namespace mysli\markdown; class parser
      * --
      * @var array
      */
-    // protected static $p_allow = [
-    //     'img', 'em', 'strong', 'i', 'b', 'sup', 'sub', 'del', 'ins'
-    // ];
     protected $contained = [
         'a', 'abbr', 'address', 'audio', 'b', 'br', 'button', 'caption', 'cite',
         'code', 'del', 'dfn', 'em', 'figcaption', 'figure', 'h1', 'h2', 'h3',
@@ -30,22 +27,23 @@ namespace mysli\markdown; class parser
 
     /**
      * How lines should be processed, this allows plugging costume parser(s).
-     * Please note, that `before` and `after` will be run once, before and
-     * after the main loop.
      * --
      * @var array
      */
-    protected $flow = [
-        'self::do_html_tags',
-
-        'self::do_blockquote',
-        'self::do_list',
-        'self::do_code',
-        'self::do_entities',
-        'self::do_header',
-
-        'self::do_paragraph',
-        'self::do_inline',
+    protected $process = [
+        'self::proc_html_tags',
+        'self::proc_blockquote',
+        'self::proc_list',
+        'self::proc_code_backtick',
+        'self::proc_code_indent',
+        'self::proc_entities',
+        'self::proc_header',
+        'self::proc_paragraph',
+        'self::proc_core_elements',
+        'self::proc_links',
+        'self::proc_urls',
+        'self::proc_typography',
+        'self::proc_footnotes',
     ];
 
     /**
@@ -63,38 +61,23 @@ namespace mysli\markdown; class parser
     protected $lines;
 
     /**
-     * Default options to be extended by user.
-     * --
-     * @var array
-     * --
-     * @opt boolean allow_html Weather HTML is allowed when processing Markdown.
-     */
-    protected $options = [
-        'allow_html'  => true
-    ];
-
-    /**
      * Construct parser.
      * --
      * @param string $markdown
-     * @param array  $options  (see: static::$options)
      */
-    function __construct($markdown, array $options=[])
+    function __construct($markdown)
     {
         $this->markdown = explode("\n", str::to_unix_line_endings($markdown));
-        $this->set_options($options);
     }
 
     /**
-     * Set option(s).
+     * Return lines.
      * --
-     * @example $output->set_options(['allow_html' => false]);
-     * --
-     * @param array $options (see: static::$options)
+     * @return lines
      */
-    function set_options(array $options)
+    function get_lines()
     {
-        $this->options = array_merge($this->options, $options);
+        return $this->lines;
     }
 
     /**
@@ -107,30 +90,19 @@ namespace mysli\markdown; class parser
         // (Re)Set lines
         $this->lines = new lines($this->markdown);
 
-        // Start main loop
-        $this->flow();
-
-        return new output($this->lines);
-    }
-
-    /**
-     * Loop though internal methods.
-     */
-    protected function flow()
-    {
         $i = 0;
 
-        // Main loop
-        foreach ($this->flow as $flow)
+        // Blocks
+        foreach ($this->process as $block)
         {
-            if (substr($flow, 0, 6) === 'self::')
+            if (substr($block, 0, 6) === 'self::')
             {
-                $method = substr($flow, 6);
+                $method = substr($block, 6);
                 $r = $this->{$method}($i, $this->lines);
             }
             else
             {
-                list($obj, $funct) = explode(':', $flow, 2);
+                list($obj, $funct) = explode(':', $block, 2);
                 $r = call_user_func_array([$obj, $funct], [$i, $this->lines]);
             }
 
@@ -140,9 +112,162 @@ namespace mysli\markdown; class parser
             // Break the loop
             if ($r === false) return;
         }
+
+        return $this->lines;
     }
 
-    // Do Things ---------------------------------------------------------------
+    // Inline ------------------------------------------------------------------
+
+    /**
+     * Discover inline tags, like: __bold__, **bold**, _italic_, *italic*
+     */
+    protected function proc_core_elements($at, lines $lines)
+    {
+        $regbag = [
+            // Match Escaped
+            '/\\\\([^\\\\])/'
+            => function ($match)
+            {
+                return '<<BASE64:'.base64_encode(trim($match[1])).'>>';
+            },
+
+            // Match code
+            '/(?<!`)(`+)(?!`)(.+?)(?<!`)\1(?!`)/'
+            => function ($match)
+            {
+                return '<code><<BASE64:'.base64_encode(trim($match[2])).'>></code>';
+            },
+
+            // Match **bold**
+            '/\*\*(?! |\t)(\**.*?\**)(?<! |\t)\*\*/'
+            => '<strong>$1</strong>',
+
+            // Match __bold__
+            '/(?<![a-zA-Z0-9])__(?! |\\t)(_*.*?_*)(?<! |\\t)__(?![a-zA-Z0-9])/'
+            => '<strong>$1</strong>',
+
+            // Match *italic*
+            '/\*(?! |\t)(\**.*?\**)(?<! |\t)\*/'
+            => '<em>$1</em>',
+
+            // Match _italic_
+            '/(?<![a-zA-Z0-9])_(?! |\\t)(_*.*?_*)(?<! |\\t)_(?![a-zA-Z0-9])/'
+            => '<em>$1</em>',
+
+            // Match ~~strikethrough~~
+            '/(?<!~)~~(?! |\t|~)(.*?)(?<! |\t|~)~~(?!~)/'
+            => '<s>$1</s>',
+
+            // Match ~sub~
+            '/(?<!~)~(?! |\t|~)(.*?)(?<! |\t|~)~(?!~)/'
+            => '<sub>$1</sub>',
+
+            // Match ^sup^
+            '/(?<!\^)\^(?! |\t|\^)(.*?)(?<! |\t|\^)\^(?!\^)/'
+            => '<sup>$1</sup>',
+
+            // Match ++inserted++
+            '/(?<!\+)\+\+(?! |\t|\+)(.*?)(?<! |\t|\+)\+\+(?!\+)/'
+            => '<ins>$1</ins>',
+
+            // Match ==marked==
+            '/(?<!=)==(?! |\t|=)(.*?)(?<! |\t|=)==(?!=)/'
+            => '<mark>$1</mark>',
+
+            // Restore Escaped
+            '/<<BASE64:(.*?)>>/'
+            => function ($match)
+            {
+                return base64_decode($match[1]);
+            }
+        ];
+
+        $this->process_inline($regbag, $at, $lines);
+    }
+
+    /**
+     * Make typographic corrections, like (c) (r) and quotes
+     */
+    protected function proc_typography($at, lines $lines)
+    {
+        $regbag = [
+            '/(\(c\))/i'  => '&copy;',   // ©
+            '/(\(r\))/i'  => '&reg;',    // ®
+            '/(\(tm\))/i' => '&trade;',  // ™
+            '/(\(p\))/i'  => '&sect;',   // §
+            '/(\+\-)/'    => '&plusmn;', // ±
+            '/(\.{2,})/'  => '&hellip;', // …
+            '/(\-{3})/'   => '&mdash;',  // —
+            '/(\-{2})/'   => '&ndash;',  // –
+
+            '/(\!{3,})/' => '!!!',
+            '/(\?{3,})/' => '???',
+        ];
+
+        $regbag_multi = [
+            "/(?<=\s|^)(')([^\s].*?)(')(?<![\s$])/m" => '&lsquo;$2&rsquo;', // ‘...’
+            "/(?<!\s|^)(')/m"                        => '&rsquo;',          // ...’.
+            '/(?<=\s|^)(")([^\s].*?)(")(?<![\s$])/m' => '&ldquo;$2&rdquo;', // “...”
+            '"'                                      => '&quot;',           // "...
+        ];
+
+        $this->process_inline($regbag, $at, $lines);
+        $this->process_inline_multi($regbag_multi, $at, $lines);
+    }
+
+    /**
+     * Discover inline links, like:
+     * ![](/path/to/image.jpg), [Link](http://domain.tld "Title")
+     */
+    protected function proc_links($at, lines $lines)
+    {
+        $regbag = [
+            '/(!)?\[(.*?)\]\((.*?)(?: *"(.*?)")?\)/' => function ($match)
+            {
+                $title = isset($match[4]) ? " title=\"{$match[4]}\"" : '';
+
+                list($_, $_, $txt, $url) = $match;
+                $url = str_replace('"', '%22', $url);
+
+                if ($match[1] === '!')
+                {
+                    return "<img src=\"{$url}\" alt=\"{$txt}\"{$title} />";
+                }
+                else
+                {
+                    return "<a href=\"{$url}\"{$title}>{$txt}</a>";
+                }
+            },
+        ];
+
+        $this->process_inline($regbag, $at, $lines, [
+            'html-tag-opened' => true,
+            'html-tag-closed' => true
+        ]);
+    }
+
+    /**
+     * Convert URLs (http://domain.tld/...) to tags.
+     * --
+     */
+    protected function proc_urls($at, lines $lines)
+    {
+        $regbag = [
+            // URL
+            '/([a-z0-9]+:\/\/.*?\.[a-z]+.*?)([.,;:]?(?>[\s"()\'\\{\\}\\[\\]]|$))/'
+            => '<a href="$1">$1</a>$2',
+            // Mail
+            '/([a-z0-9._%+-]+@[a-z0-9][a-z0-9-]{1,61}[a-z0-9]\.[a-z]{2,})/'
+            => '<a href="mailto:$1">$1</a>',
+        ];
+
+        $this->process_inline($regbag, $at, $lines, [
+            'html-tag-opened' => true,
+            'html-tag-closed' => true
+        ]);
+    }
+
+    // Blocks ------------------------------------------------------------------
 
     /**
      * Loop though lines and discover HTML tags. If HTML is not allowed, then
@@ -153,25 +278,23 @@ namespace mysli\markdown; class parser
      * --
      * @return integer
      */
-    protected function do_html_tags($at, lines $lines)
+    protected function proc_html_tags($at, lines $lines)
     {
         $opened = [];
         $start_at = $at;
 
         while ($lines->has($at))
         {
+            if ($lines->get_attr($at, 'no-process'))
+            {
+                $at++;
+                continue;
+            }
+
             $line = $lines->get($at);
             $here = [
                 'opened' => [],
             ];
-
-            // Are HTML tags allowed at all?
-            if (!$this->options['allow_html'])
-            {
-                $lines->set($at, str_replace(['<', '>'], ['&lt;', '&gt;'], $line));
-                $at++;
-                continue;
-            }
 
             // Find (tags on this line)
             $tags = [];
@@ -203,8 +326,13 @@ namespace mysli\markdown; class parser
 
                     if (!in_array($tag, $this->contained))
                     {
-                        $lines->set_attr($at, 'no-process', true);
-                        $lines->set_attr($at, 'no-process-by-open', true);
+                        $lines->set_attr($at, [
+                            'no-process'         => true,
+                            'no-process-by-open' => true,
+                            // 'lock-trim'          => true,
+                            // 'no-indent'          => true,
+                            // 'lock-nl'            => true,
+                        ]);
                     }
                 }
             }
@@ -259,8 +387,12 @@ namespace mysli\markdown; class parser
                             if (!trim($openedlist))
                             {
                                 $lines->set_attr($at, [
-                                    'html-opened-list' => false,
-                                    'no-process'       => false,
+                                    'html-opened-list'   => false,
+                                    'no-process'         => false,
+                                    'in-html-tag'        => false,
+                                    // 'lock-trim'          => false,
+                                    // 'no-indent'          => false,
+                                    // 'lock-nl'            => false
                                 ]);
                             }
                             else
@@ -273,57 +405,6 @@ namespace mysli\markdown; class parser
                     $at++;
                 }
             }
-        }
-    }
-
-    /**
-     * Discover inline tags, like:
-     * __bold__, **bold**, _italic_, *italic*, ![](/path/to/image.jpg),
-     * [Link](http://domain.tld), `code`
-     * --
-     * @param integer $at
-     * @param lines   $lines
-     * --
-     * @return integer
-     */
-    protected function do_inline($at, lines $lines)
-    {
-        $regbag = [
-            // Match **bold**
-            '/(?<=[^a-zA-Z0-9\\*\\\\])\\*\\*(.*?)\\*\\*(?=[^a-zA-Z0-9\\*\\\\]|$)/'
-            => '<strong>$1</strong>',
-            // Match __bold__
-            '/(?<=[^a-zA-Z0-9_\\\\])__(.*?)__(?=[^a-zA-Z0-9_\\\\]|$)/'
-            => '<strong>$1</strong>',
-            // Match *italic*
-            '/(?<=[^a-zA-Z0-9\\*\\\\])\\*(.*?)\\*(?=[^a-zA-Z0-9\\*\\\\]|$)/'
-            => '<em>$1</em>',
-            // Match _italic_
-            '/(?<=[^a-zA-Z0-9_\\\\])_(.*?)_(?=[^a-zA-Z0-9_\\\\]|$)/'
-            => '<em>$1</em>',
-            // Match code
-            '/(?<=[^a-zA-Z0-9`\\\\])`(.*?)`(?=[^a-zA-Z0-9`\\\\]|$)/'
-            => '<code>$1</code>',
-        ];
-
-        while ($lines->has($at))
-        {
-            if ($lines->get_attr($at, 'no-process'))
-            {
-                $at++;
-                continue;
-            }
-
-            $line = $lines->get($at);
-
-            foreach ($regbag as $regex => $replace)
-            {
-                $line = preg_replace($regex, $replace, $line);
-            }
-
-            $lines->set($at, $line);
-
-            $at++;
         }
     }
 
@@ -344,13 +425,17 @@ namespace mysli\markdown; class parser
      * --
      * @param integer $at
      * @param lines   $lines
-     * --
-     * @return integer
      */
-    protected function do_header($at, lines $lines)
+    protected function proc_header($at, lines $lines)
     {
         while ($lines->has($at))
         {
+            if ($lines->get_attr($at, 'no-process'))
+            {
+                $at++;
+                continue;
+            }
+
             $line = $lines->get($at);
 
             // Regular style headers...
@@ -391,7 +476,7 @@ namespace mysli\markdown; class parser
      * @param integer $at
      * @param lines   $lines
      */
-    protected function do_entities($at, lines $lines)
+    protected function proc_entities($at, lines $lines)
     {
         while ($lines->has($at))
         {
@@ -401,8 +486,10 @@ namespace mysli\markdown; class parser
             // Convert &, but leave &copy; ...
             $line = preg_replace('/&(?![a-z]{2,11};)/', '&amp;', $line);
 
-            if (!$lines->get_attr($at, 'html-tag-opened')
-                && !$lines->get_attr($at, 'html-tag-closed'))
+            if ($lines->get_attr($at, 'convert-tags')
+                || (!$lines->get_attr($at, 'in-html-tag')
+                    && !$lines->get_attr($at, 'html-tag-opened')
+                    && !$lines->get_attr($at, 'html-tag-closed')))
             {
                 $line = str_replace(['<', '>'], ['&lt;', '&gt;'], $line);
             }
@@ -426,7 +513,7 @@ namespace mysli\markdown; class parser
      * @param integer $at
      * @param lines   $lines
      */
-    protected function do_blockquote($at, lines $lines)
+    protected function proc_blockquote($at, lines $lines)
     {
         $indent = 0;
         $last_at = false;
@@ -526,10 +613,10 @@ namespace mysli\markdown; class parser
      * @param integer $at
      * @param lines   $lines
      */
-    protected function do_list($at, lines $lines)
+    protected function proc_list($at, lines $lines)
     {
         $opened = [];
-        $list_item_regex = '/^([\ |\t]*)([\*|\+|\-]|[0-9]+\.)([^\-|\*|\+].+)$/';
+        $list_item_regex = '/^([\ |\t]*)([\*|\+|\-]|[0-9]+\.) +(.*?)$/';
         $indent_now = $indent = 0;
         $last_li = false;
         $last_empty = false;
@@ -586,7 +673,6 @@ namespace mysli\markdown; class parser
                         while($indent_now < $indent)
                         {
                             list($cltag, $clindent) = array_pop($opened);
-                            // dump_s("Indent: {$indent}, Clindent: {$clindent}");
                             $lines->set_tag($at-1, [false, $cltag], false);
                             $lines->set_tag($at-1, [false, 'li'], false);
                             $indent = $indent - $clindent;
@@ -671,7 +757,7 @@ namespace mysli\markdown; class parser
      * @param integer $at
      * @param lines   $lines
      */
-    protected function do_code($at, lines $lines)
+    protected function proc_code_indent($at, lines $lines)
     {
         $opened = false;
         $last_at = false;
@@ -683,7 +769,8 @@ namespace mysli\markdown; class parser
             if (preg_match('/^(\t|\ {4})(.*?)$/', $line, $match))
             {
                 // Can't open while inside HTML tag
-                if ($lines->get_attr($at, 'in-html-tag'))
+                if ($lines->get_attr($at, 'in-html-tag')
+                    || $lines->get_attr($at, 'in-code'))
                 {
                     $at++;
                     continue;
@@ -730,14 +817,99 @@ namespace mysli\markdown; class parser
     }
 
     /**
+     * Find code block.
+     * --
+     * @example
+     * ``` php
+     *     This is a code block to be replaced.
+     * ```
+     * --
+     * @param integer $at
+     * @param lines   $lines
+     */
+    protected function proc_code_backtick($at, lines $lines)
+    {
+        $opened = false;
+        $count = null; // Count of open ticks
+
+        while($lines->has($at))
+        {
+            $line = $lines->get($at);
+
+            if (!$opened)
+            {
+                // Can't open while inside HTML tag
+                if ($lines->get_attr($at, 'in-html-tag'))
+                {
+                    $at++;
+                    continue;
+                }
+
+                if (preg_match('/^(`{3,}) ?([a-z]*)$/', $line, $match))
+                {
+                    $count = strlen($match[1]);
+
+                    $lines->set_attr($at, [
+                        'in-code'      => true,
+                        'lock-nl'      => true,
+                        'lock-trim'    => true,
+                        'no-indent'    => true,
+                        'convert-tags' => true,
+                        'no-process'   => true,
+                    ]);
+
+                    if ($match[2])
+                    {
+                        $lines->set_attr($at, [
+                            'html-attributes' => [
+                                'code' => [ 'class="language-'.trim($match[2]).'"' ],
+                            ]
+                        ]);
+                    }
+
+                    $lines->set($at, '');
+                    $lines->set_tag($at, ['pre', false]);
+                    $lines->set_tag($at, ['code', false]);
+
+                    $opened = true;
+                }
+            }
+            else
+            {
+                if (preg_match('/^`{'.$count.'}$/', $line, $match))
+                {
+                    $lines->set($at, '');
+                    $lines->set_tag($at, [ false, 'pre' ]);
+                    $lines->set_tag($at, [ false, 'code' ]);
+                    $lines->set_attr($at, [
+                        'no-process' => true,
+                    ]);
+                    $opened = false;
+                }
+                else
+                {
+                    $lines->set_attr($at, [
+                        'in-code'      => true,
+                        'lock-nl'      => true,
+                        'lock-trim'    => true,
+                        'no-indent'    => true,
+                        'convert-tags' => true,
+                        'no-process'   => true,
+                    ]);
+                }
+            }
+
+            $at++;
+        }
+    }
+
+    /**
      * Do paragraphs.
      * --
-     * @param  integer $at
-     * @param  lines   $lines
-     * --
-     * @return integer
+     * @param integer $at
+     * @param lines   $lines
      */
-    function do_paragraph($at, lines $lines)
+    protected function proc_paragraph($at, lines $lines)
     {
         $last_at = false;
 
@@ -785,15 +957,26 @@ namespace mysli\markdown; class parser
             $at++;
         }
 
-        if ($last_at)
+        if ($last_at !== false)
         {
             $lines->set_tag($last_at, [ false, 'p' ]);
         }
     }
 
-    /*
-    Helper methods
+    /**
+     * Do footnotes.
+     * --
+     * @param integer $at
+     * @param lines   $lines
      */
+    protected function proc_footnotes($at, lines $lines)
+    {
+        // Find definitions first!
+
+        // Replace definitions
+    }
+
+    // Helper methods ----------------------------------------------------------
 
     /**
      * Convert <space>|<tab> indent to integer.
@@ -806,5 +989,126 @@ namespace mysli\markdown; class parser
     {
         $indent = str_replace("\t", '    ', $indent);
         return strlen($indent);
+    }
+
+    /**
+     * Generic process inline elements.
+     * --
+     * @param array   $regbag
+     * @param integer $at
+     * @param lines   $lines
+     * @param array   $attr Set line attributes if modified.
+     */
+    protected function process_inline(
+        array $regbag, $at, lines $lines, array $attr=[])
+    {
+        while ($lines->has($at))
+        {
+            if ($lines->get_attr($at, 'no-process')
+                || $lines->get_attr($at, 'html-tag-opened'))
+            {
+                $at++;
+                continue;
+            }
+
+            $line = $lines->get($at);
+            $lineprev = $line;
+
+            foreach ($regbag as $regex => $replace)
+            {
+                $line = $this->replace_inline($line, $regex, $replace);
+            }
+
+            if ($lineprev !== $line)
+            {
+                $lines->set($at, $line);
+                $lines->set_attr($at, $attr);
+            }
+
+            $at++;
+        }
+    }
+
+    /**
+     * Generic process inline elements. This will check multiple lines.
+     * --
+     * @param array   $regbag
+     * @param integer $at
+     * @param lines   $lines
+     */
+    protected function process_inline_multi(array $regbag, $at, lines $lines)
+    {
+        $buffer = [];
+
+        while (true)
+        {
+            if (!$lines->has($at) || $lines->get_attr($at, 'no-process')
+                || $lines->get_attr($at, 'html-tag-opened')
+                || $lines->is_empty($at, true))
+            {
+                // Any buffer
+                if (count($buffer))
+                {
+                    $buffmrg = implode("\n", $buffer);
+                    $linesno  = array_keys($buffer);
+
+                    foreach ($regbag as $find => $replace)
+                    {
+                        $buffmrg = $this->replace_inline($buffmrg, $find, $replace);
+                    }
+
+                    // Put modified lines
+                    foreach (explode("\n", $buffmrg) as $pos => $buffline)
+                    {
+                        $lines->set($linesno[$pos], $buffline);
+                    }
+
+                    $buffer = [];
+                }
+
+                if (!$lines->has($at))
+                {
+                    return;
+                }
+            }
+            else
+            {
+                $buffer[$at] = $lines->get($at);
+            }
+
+            $at++;
+        }
+    }
+
+    /**
+     * Flexible replacement.
+     * --
+     * @param string $line
+     * @param mixed  $find
+     * @param mixed  $replace
+     * --
+     * @return string
+     */
+    protected function replace_inline($line, $find, $replace=null)
+    {
+        if (is_callable($find))
+        {
+            return $find($line);
+        }
+        else if (is_array($find) || !in_array(substr($find, 0, 1), ['/', '#']))
+        {
+            return str_replace($find, $replace, $line);
+        }
+        else
+        {
+            if (is_callable($replace))
+            {
+                return preg_replace_callback($find, $replace, $line);
+            }
+            else
+            {
+                return preg_replace($find, $replace, $line);
+            }
+        }
     }
 }
