@@ -123,11 +123,21 @@ namespace mysli\markdown; class output
                 // Compressed and flat format:
                 case self::compressed:
                 case self::flat:
+
                     $dv = $f === self::compressed && !$l->get_attr($at, 'lock-nl')
                         ? '' : "\n";
-                    foreach ($opent as $tag) $output .= $dv."<{$tag}>";
+
+                    foreach ($opent as $tag)
+                    {
+                        $output .= $dv.$this->make_tag($tag, $l->get_attr($at, 'html-attributes'));
+                    }
+
                     $output .= $dv.$txt;
-                    foreach ($closet as $tag) $output .= $dv."</{$tag}>";
+
+                    foreach ($closet as $tag)
+                    {
+                        $output .= $dv."</{$tag}>";
+                    }
                 break;
 
                 // Print in readable format, with indentations etc,...
@@ -139,9 +149,9 @@ namespace mysli\markdown; class output
                         {
                             $output .= "\n".str_repeat($indent, $level);
                         }
-                        $output   .= "<{$tag}>";
+                        $output .= $this->make_tag($tag, $l->get_attr($at, 'html-attributes'));
                         $last_node = 'tag';
-                        $last_tag  = $tag;
+                        $last_tag = $tag;
                         $level++;
                     }
 
@@ -210,5 +220,30 @@ namespace mysli\markdown; class output
     function as_array()
     {
         return $this->lines->get_all();
+    }
+
+    /**
+     * Make HTML tag.
+     * --
+     * @param  string $tag
+     * @param  array  $attributes
+     * --
+     * @return string
+     */
+    protected function make_tag($tag, $attributes)
+    {
+        if (!is_array($attributes) || !isset($attributes[$tag]))
+        {
+            return "<{$tag}>";
+        }
+
+        $tagc = "<{$tag} ";
+
+        foreach ($attributes[$tag] as $attr)
+        {
+            $tagc .= $attr.' ';
+        }
+
+        return trim($tagc).'>';
     }
 }
