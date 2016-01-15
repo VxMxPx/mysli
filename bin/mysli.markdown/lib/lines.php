@@ -24,7 +24,6 @@ namespace mysli\markdown; class lines
      */
     protected $lines = [];
 
-
     /**
      * Instance of lines.
      * --
