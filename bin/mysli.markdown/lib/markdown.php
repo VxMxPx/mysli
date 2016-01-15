@@ -8,18 +8,20 @@ namespace mysli\markdown; class markdown
 
     /**
      * Process a Markdown file and return HTML.
+     * If you need more control, construct your own parser (and output).
      * --
      * @param string $markdown
-     * @param array  $options (see: ./parser::$options) (see: ./output::$options)
      * --
      * @return string
      */
-    static function process($markdown, array $options=[])
+    static function process($markdown)
     {
-        $parser = new parser($markdown, $options);
+        // Create default parser
+        $parser = new parser($markdown);
+        $lines = $parser->process();
 
-        return $parser->process()->as_string(
-            isset($options['output']) ? $options['output'] : output::readable
-        );
+        // Create default output
+        $output = new output($lines);
+        return $output->as_string(output::readable);
     }
 }
