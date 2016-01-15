@@ -44,15 +44,18 @@ namespace mysli\markdown; class output
      * --
      * @var \mysli\markdown\lines
      */
-    private $lines;
+    protected $lines;
 
     /**
      * Instance of Output.
      * --
-     * @param \mysli\util\markdown\lines $lines (see: static::$lines)
-     * @param array                      $options (see: static::$options)
+     * @param lines $lines
+     *        (see: static::$lines)
+     *
+     * @param array options
+     *        (see: static::$options)
      */
-    function __construct(\mysli\markdown\lines $lines, array $options=[])
+    function __construct(lines $lines, array $options=[])
     {
         $this->lines = $lines;
         $this->set_options($options);
