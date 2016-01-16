@@ -19,10 +19,10 @@ namespace mysli\markdown\module; class typography extends std_module
         ];
 
         $regbag_multi = [
-            "/(?<=\s|^)(')([^\s].*?)(')(?<![\s$])/m" => '&lsquo;$2&rsquo;', // ‘...’
-            "/(?<!\s|^)(')/m"                        => '&rsquo;',          // ...’.
-            '/(?<=\s|^)(")([^\s].*?)(")(?<![\s$])/m' => '&ldquo;$2&rdquo;', // “...”
-            '"'                                      => '&quot;',           // "...
+            "/(?<=\s|^)(')([^\s].*?)(')(?<![\s$])/sm" => '&lsquo;$2&rsquo;', // ‘...’
+            "/(?<!\s|^)(')/m"                         => '&rsquo;',          // ...’.
+            '/(?<=\s|^)(")([^\s].*?)(")(?<![\s$])/sm' => '&ldquo;$2&rdquo;', // “...”
+            '"'                                       => '&quot;',           // "...
         ];
 
         $this->process_inline($regbag, $at);
