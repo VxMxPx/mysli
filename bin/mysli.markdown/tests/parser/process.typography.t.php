@@ -3,7 +3,7 @@
 #: Before
 use mysli\markdown;
 
-#: Test Typography, Basic
+#: Test Basic
 $markdown = <<<MARKDOWN
 Characters: (c), (r), (tm), (p), +-
 
@@ -32,7 +32,7 @@ return assert::equals(markdown::process($markdown),
 <p>That&rsquo;s a nice &ldquo;quote right here&rdquo;.</p>
 <p>&quot;Hi there!</p>');
 
-#: Test Typography, Consider Tags
+#: Test Consider Tags
 $markdown = <<<MARKDOWN
 <div class="main" style="color:red;">
     "Hello World!"
@@ -46,3 +46,18 @@ return assert::equals(markdown::process($markdown),
 "Hello World!"
 </div>
 <p><img src="/path/to/image.jpg" alt="" /></p>');
+
+#: Test Multiline
+$markdown = <<<MARKDOWN
+Lorem: "Ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
+tempor incididunt ut".
+
+Labore: 'Et dolore magna aliqua. Ut enim's ad minim veniam,
+quis nostrud's exercitation ullamco' laboris nisi's ut aliquip.
+MARKDOWN;
+
+return assert::equals(markdown::process($markdown),
+'<p>Lorem: &ldquo;Ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
+    tempor incididunt ut&rdquo;.</p>
+<p>Labore: &lsquo;Et dolore magna aliqua. Ut enim&rsquo;s ad minim veniam,
+    quis nostrud&rsquo;s exercitation ullamco&rsquo; laboris nisi&rsquo;s ut aliquip.</p>');
