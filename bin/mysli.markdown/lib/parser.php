@@ -18,18 +18,21 @@ namespace mysli\markdown; class parser
      * @var array
      */
     protected $processors = [
-        'mysli.markdown.module.html'       => null,
-        'mysli.markdown.module.blockquote' => null,
-        'mysli.markdown.module.listf'      => null,
-        'mysli.markdown.module.code'       => null,
-        'mysli.markdown.module.entity'     => null,
-        'mysli.markdown.module.header'     => null,
-        'mysli.markdown.module.paragraph'  => null,
-        'mysli.markdown.module.inline'     => null,
-        'mysli.markdown.module.link'       => null,
-        'mysli.markdown.module.url'        => null,
-        'mysli.markdown.module.typography' => null,
-        'mysli.markdown.module.footnote'   => null,
+        'mysli.markdown.module.container'    => null,
+        'mysli.markdown.module.html'         => null,
+        'mysli.markdown.module.blockquote'   => null,
+        'mysli.markdown.module.listf'        => null,
+        'mysli.markdown.module.code'         => null,
+        'mysli.markdown.module.entity'       => null,
+        'mysli.markdown.module.header'       => null,
+        'mysli.markdown.module.rule'         => null,
+        'mysli.markdown.module.paragraph'    => null,
+        'mysli.markdown.module.inline'       => null,
+        'mysli.markdown.module.link'         => null,
+        'mysli.markdown.module.url'          => null,
+        'mysli.markdown.module.typography'   => null,
+        'mysli.markdown.module.footnote'     => null,
+        'mysli.markdown.module.abbreviation' => null,
     ];
 
     /**
@@ -67,13 +70,36 @@ namespace mysli\markdown; class parser
     }
 
     /**
-     * Return processor(s).
+     * Return all processor(s).
      * --
      * @return lines
      */
     function get_processors()
     {
         return $this->processors;
+    }
+
+    /**
+     * Return particular processor by ID. This will instantiate object if not there.
+     * --
+     * @param string $id
+     * --
+     * @throws mysli\markdown\exception\parser 10 Invalid processor ID.
+     * --
+     * @return object
+     */
+    function get_processor($id)
+    {
+        if (!array_key_exists($id, $this->processors))
+            throw new exception\parser("Invalid processor id: `{$id}`", 10);
+
+        if (!$this->processors[$id])
+        {
+            $class = str_replace('.', '\\', $id);
+            $this->processors[$id] = new $class($this->lines);
+        }
+
+        return $this->processors[$id];
     }
 
     /**
@@ -89,12 +115,11 @@ namespace mysli\markdown; class parser
         $at = 0;
 
         // Blocks
-        foreach ($this->processors as $processor => &$instance)
+        foreach ($this->processors as $processor => $instance)
         {
             if (!$instance)
             {
-                $processor_class = str_replace('.', '\\', $processor);
-                $instance = new $processor_class($this->lines);
+                $instance = $this->get_processor($processor);
             }
 
             $r = $instance->process($at);
