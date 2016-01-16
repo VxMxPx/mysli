@@ -30,15 +30,19 @@ namespace mysli\markdown\module; class header extends std_module
 
             // Setext headers
             $line = $lines->get($at+1);
-            if (preg_match('/^[\-|\=]+$/', $line, $match))
+            if (!$lines->is_empty($at)
+                && preg_match('/^[\-|\=]+$/', $line, $match))
             {
                 $hl = substr($match[0], 0, 1) === '=' ? '1' : '2';
                 $title = $lines->get($at);
 
                 // Set lines...
                 $lines->set($at, $title, "h{$hl}");
-                $lines->erase($at+1, true, true);
-                $lines->set_attr($at+1, 'skip', true);
+                $lines->erase($at+1, true);
+                $lines->set_attr($at+1, [
+                    'no-process' => true,
+                    'skip'       => true,
+                ]);
 
                 $at+2;
             }
