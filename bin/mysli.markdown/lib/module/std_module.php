@@ -9,12 +9,12 @@ namespace mysli\markdown\module; class std_module
 
     // --- Output ---
 
-    function output_as_array()
+    function as_array()
     {
         return [];
     }
 
-    function output_as_string()
+    function as_string()
     {
         return '';
     }
