@@ -1,5 +1,20 @@
 <?php
 
+/**
+ * # Code Module
+ *
+ * Match code blocks in following formats:
+ *
+ *     Code Block!
+ *
+ * ```
+ * Code Block!
+ * ```
+ *
+ * ``` php
+ * Code Block!
+ * ```
+ */
 namespace mysli\markdown\module; class code extends std_module
 {
     function process($at)
@@ -8,6 +23,13 @@ namespace mysli\markdown\module; class code extends std_module
         $this->indented($at);
     }
 
+    /**
+     * Match indented code blocks.
+     * --
+     * @param integer $at
+     * --
+     * @return void
+     */
     protected function indented($at)
     {
         $lines = $this->lines;
@@ -20,9 +42,13 @@ namespace mysli\markdown\module; class code extends std_module
 
             if (preg_match('/^(\t|\ {4})(.*?)$/', $line, $match))
             {
-                // Can't open while inside HTML tag
+                // Do not open if inside of HTML tag
                 if ($lines->get_attr($at, 'in-html-tag')
-                    || $lines->get_attr($at, 'in-code'))
+                    // Do not open if inside code block already!
+                    || $lines->get_attr($at, 'in-code')
+                    // Do not opened if previous line is not empty!
+                    || (!$opened && $lines->has($at-1)
+                        && !$lines->is_empty($at-1) && !$lines->has_tag($at-1)))
                 {
                     $at++;
                     continue;
@@ -68,6 +94,13 @@ namespace mysli\markdown\module; class code extends std_module
         }
     }
 
+    /**
+     * Match backticked code block.
+     * --
+     * @param integer $at
+     * --
+     * @return void
+     */
     protected function backticked($at)
     {
         $lines = $this->lines;
