@@ -68,25 +68,41 @@ namespace mysli\markdown; class lines
 
     /**
      * Reset processed lines (to be the same as when object was constructed).
+     * If $at provided, reset only particular line.
+     * --
+     * @param integer $at
      */
-    function reset()
+    function reset($at=null)
     {
-        $this->lines = [];
-
-        // Reset live & empty output
-        foreach ($this->in as $lineno => $line)
+        if ($at !== null)
         {
-            $this->lines[$lineno] = [
-                // Open tags
-                [],
-                // Current line
-                $line,
-                // Close tags
-                [],
-                // Attributes
-                []
-            ];
+            if ($this->has($at))
+            {
+                $this->lines[$at] = [
+                    [], $this->in[$at], [], []
+                ];
+            }
         }
+        else
+        {
+            $this->lines = [];
+
+            // Reset live & empty output
+            foreach ($this->in as $lineno => $line)
+            {
+                $this->lines[$lineno] = [
+                    // Open tags
+                    [],
+                    // Current line
+                    $line,
+                    // Close tags
+                    [],
+                    // Attributes
+                    []
+                ];
+            }
+        }
+
     }
 
     /**
