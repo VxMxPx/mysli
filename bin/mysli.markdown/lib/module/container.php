@@ -1,5 +1,17 @@
 <?php
 
+/**
+ * Resolve Containers
+ *
+ * @example
+ * ::: class
+ * I'm in container!
+ * :::
+ *
+ * Produces:
+ *
+ * <div class="class">I'm in container!</div>
+ */
 namespace mysli\markdown\module; class container extends std_module
 {
     function process($at)
@@ -44,6 +56,7 @@ namespace mysli\markdown\module; class container extends std_module
                     $opened = [$at, $match[1]];
                 }
             }
+
             $at++;
         }
     }
