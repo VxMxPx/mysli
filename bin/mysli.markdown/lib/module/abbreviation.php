@@ -70,15 +70,11 @@ namespace mysli\markdown\module; class abbreviation extends std_module
                     return $match[0];
                 }
 
-                $this->lines->set_attr($at, [
-                    'html-tag-opened' => true,
-                    'html-tag-closed' => true
-                ]);
-
-                return
-                '<abbr title="'.$this->abbreviations[$id].'">'.
-                    $match[0].
-                '</abbr>';
+                return $this->seal(
+                    $at,
+                    '<abbr title="'.$this->abbreviations[$id].'">'.
+                        $match[0].
+                    '</abbr>');
 
             }, $line);
 

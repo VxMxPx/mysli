@@ -80,19 +80,19 @@ namespace mysli\markdown\module; class footnote extends std_module
             '/\[\^([a-z0-9_-]+)\]/i' => function ($match)
             {
                 $id = $match[1];
-                return $this->process_inline_ref($id);
+                return $this->process_inline_ref($this->at, $id);
             },
             '/\^\[(.*?)\]/' => function ($match)
             {
                 $fid = 'auto-fn-'.count($this->footnotes_inline);
                 $this->footnotes[$fid]['body'] = $match[1];
-                return $this->process_inline_ref($fid);
+                return $this->process_inline_ref($this->at, $fid);
             }
         ];
 
         $this->process_inline($regbag, $at_init, [
-            'html-tag-opened' => true,
-            'html-tag-closed' => true
+            // 'html-tag-opened' => true,
+            // 'html-tag-closed' => true
         ]);
     }
 
@@ -101,7 +101,7 @@ namespace mysli\markdown\module; class footnote extends std_module
         return $this->footnotes;
     }
 
-    protected function process_inline_ref($id)
+    protected function process_inline_ref($at, $id)
     {
         if (!isset($this->footnotes_inline[$id]))
         {
@@ -126,8 +126,12 @@ namespace mysli\markdown\module; class footnote extends std_module
 
         $this->footnotes[$id]['back'][] = $fnref;
 
-        return "<sup class=\"footnote-ref\">".
-            "<a href=\"#{$fn}\" id=\"{$fnref}\">[{$fposition}]</a>".
-            "</sup>";
+        return
+        $this->seal(
+            $at,
+            "<sup class=\"footnote-ref\">".
+                "<a href=\"#{$fn}\" id=\"{$fnref}\">[{$fposition}]</a>".
+            "</sup>"
+        );
     }
 }

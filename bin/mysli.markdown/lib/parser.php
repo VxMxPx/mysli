@@ -18,21 +18,23 @@ namespace mysli\markdown; class parser
      * @var array
      */
     protected $processors = [
-        'mysli.markdown.module.container'    => null,
-        'mysli.markdown.module.html'         => null,
-        'mysli.markdown.module.blockquote'   => null,
-        'mysli.markdown.module.listf'        => null,
-        'mysli.markdown.module.code'         => null,
-        'mysli.markdown.module.entity'       => null,
-        'mysli.markdown.module.header'       => null,
-        'mysli.markdown.module.rule'         => null,
-        'mysli.markdown.module.paragraph'    => null,
-        'mysli.markdown.module.inline'       => null,
-        'mysli.markdown.module.link'         => null,
-        'mysli.markdown.module.url'          => null,
-        'mysli.markdown.module.typography'   => null,
-        'mysli.markdown.module.footnote'     => null,
-        'mysli.markdown.module.abbreviation' => null,
+        'mysli.markdown.module.code_backtick' => null,
+        'mysli.markdown.module.html'          => null,
+        'mysli.markdown.module.blockquote'    => null,
+        'mysli.markdown.module.listf'         => null,
+        'mysli.markdown.module.code_indent'   => null,
+        'mysli.markdown.module.entity'        => null,
+        'mysli.markdown.module.header'        => null,
+        'mysli.markdown.module.rule'          => null,
+        'mysli.markdown.module.container'     => null,
+        'mysli.markdown.module.paragraph'     => null,
+        'mysli.markdown.module.inline'        => null,
+        'mysli.markdown.module.link'          => null,
+        'mysli.markdown.module.url'           => null,
+        'mysli.markdown.module.typography'    => null,
+        'mysli.markdown.module.footnote'      => null,
+        'mysli.markdown.module.abbreviation'  => null,
+        'mysli.markdown.module.unseal'        => null,
     ];
 
     /**

@@ -43,7 +43,7 @@ MARKDOWN;
 
 return assert::equals(markdown::process($markdown),
 '<div class="main" style="color:red;">
-"Hello World!"
+&ldquo;Hello World!&rdquo;
 </div>
 <p><img src="/path/to/image.jpg" alt="" /></p>');
 

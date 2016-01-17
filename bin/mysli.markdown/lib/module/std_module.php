@@ -2,6 +2,9 @@
 
 namespace mysli\markdown\module; class std_module
 {
+    protected $lines;
+    protected $at;
+
     function __construct(\mysli\markdown\lines $lines)
     {
         $this->lines = $lines;
@@ -20,6 +23,46 @@ namespace mysli\markdown\module; class std_module
     }
 
     // --- Protected ---
+
+    protected function seal($at, $string)
+    {
+        $sealed = $this->lines->get_attr($at, 'sealed');
+        $sealed = is_array($sealed) ? $sealed : [];
+        $id = 'S{/'.(count($sealed)+1).'/}';
+        $sealed[$id] = $string;
+        $this->lines->set_attr($at, 'sealed', $sealed);
+
+        return $id;
+    }
+
+    protected function unseal($at)
+    {
+        $sealed = $this->lines->get_attr($at, 'sealed');
+        $line = $this->lines->get($at);
+
+        if (!is_array($sealed))
+        {
+            return $line;
+        }
+
+        $i = 0;
+
+        while (count($sealed) && $i < 10)
+        {
+            foreach ($sealed as $skey => $contents)
+            {
+                if (strpos($line, $skey) !== false)
+                {
+                    $line = str_replace($skey, $contents, $line);
+                    unset($sealed[$skey]);
+                }
+            }
+
+            $i++;
+        }
+
+        return $line;
+    }
 
     /**
      * Convert <space>|<tab> indent to integer.
@@ -44,17 +87,18 @@ namespace mysli\markdown\module; class std_module
     protected function process_inline(array $regbag, $at, array $attr=[])
     {
         $lines = $this->lines;
+        $this->at = $at;
 
-        while ($lines->has($at))
+        while ($lines->has($this->at))
         {
-            if ($lines->get_attr($at, 'no-process')
-                || $lines->get_attr($at, 'html-tag-opened'))
+            if ($lines->get_attr($this->at, 'no-process')
+                || $lines->get_attr($this->at, 'html-tag-opened'))
             {
-                $at++;
+                $this->at++;
                 continue;
             }
 
-            $line = $lines->get($at);
+            $line = $lines->get($this->at);
             $lineprev = $line;
 
             foreach ($regbag as $regex => $replace)
@@ -64,11 +108,11 @@ namespace mysli\markdown\module; class std_module
 
             if ($lineprev !== $line)
             {
-                $lines->set($at, $line);
-                $lines->set_attr($at, $attr);
+                $lines->set($this->at, $line);
+                $lines->set_attr($this->at, $attr);
             }
 
-            $at++;
+            $this->at++;
         }
     }
 
@@ -82,12 +126,13 @@ namespace mysli\markdown\module; class std_module
     {
         $buffer = [];
         $lines = $this->lines;
+        $this->at = $at;
 
         while (true)
         {
-            if (!$lines->has($at) || $lines->get_attr($at, 'no-process')
-                || $lines->get_attr($at, 'html-tag-opened')
-                || $lines->is_empty($at, true))
+            if (!$lines->has($this->at) || $lines->get_attr($this->at, 'no-process')
+                || $lines->get_attr($this->at, 'html-tag-opened')
+                || $lines->is_empty($this->at, true))
             {
                 // Any buffer
                 if (count($buffer))
@@ -109,17 +154,17 @@ namespace mysli\markdown\module; class std_module
                     $buffer = [];
                 }
 
-                if (!$lines->has($at))
+                if (!$lines->has($this->at))
                 {
                     return;
                 }
             }
             else
             {
-                $buffer[$at] = $lines->get($at);
+                $buffer[$this->at] = $lines->get($this->at);
             }
 
-            $at++;
+            $this->at++;
         }
     }
 

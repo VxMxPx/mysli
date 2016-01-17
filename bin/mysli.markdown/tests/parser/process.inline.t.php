@@ -54,3 +54,11 @@ return assert::equals(markdown::process($markdown),
     _ <em>italic</em> _
     <code>*code*</code>
     <strong>bold*</strong></p>');
+
+#: Test Inline Code
+$markdown = <<<MARKDOWN
+`Inline 'code', "code", <code>, **code**, ^code^, ~code~, code!!!!!, (tm), (c)...`
+MARKDOWN;
+
+return assert::equals(markdown::process($markdown),
+'<p><code>Inline \'code\', "code", <code>, **code**, ^code^, ~code~, code!!!!!, (tm), (c)...</code></p>');

@@ -12,14 +12,17 @@ namespace mysli\markdown\module; class inline extends std_module
             '/\\\\([^\\\\])/'
             => function ($match)
             {
-                return '<<BASE64:'.base64_encode(trim($match[1])).'>>';
+                return $this->seal($this->at, trim($match[1]));
             },
 
             // Match code
             '/(?<!`)(`+)(?!`)(.+?)(?<!`)\1(?!`)/'
             => function ($match)
             {
-                return '<code><<BASE64:'.base64_encode(trim($match[2])).'>></code>';
+                return $this->seal(
+                    $this->at,
+                    '<code>'.trim($match[2]).'</code>'
+                );
             },
 
             // Match **bold**
@@ -57,13 +60,6 @@ namespace mysli\markdown\module; class inline extends std_module
             // Match ==marked==
             '/(?<!=)==(?! |\t|=)(.*?)(?<! |\t|=)==(?!=)/'
             => '<mark>$1</mark>',
-
-            // Restore Escaped
-            '/<<BASE64:(.*?)>>/'
-            => function ($match)
-            {
-                return base64_decode($match[1]);
-            }
         ];
 
         $this->process_inline($regbag, $at);

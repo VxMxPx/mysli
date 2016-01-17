@@ -16,18 +16,23 @@ namespace mysli\markdown\module; class link extends std_module
 
                 if ($match[1] === '!')
                 {
-                    return "<img src=\"{$url}\" alt=\"{$txt}\"{$title} />";
+                    return
+                        $this->seal(
+                            $this->at,
+                            "<img src=\"{$url}\" alt=\"{$txt}\"{$title} />");
                 }
                 else
                 {
-                    return "<a href=\"{$url}\"{$title}>{$txt}</a>";
+                    return
+                        $this->seal($this->at, "<a href=\"{$url}\"{$title}>").
+                        "{$txt}</a>";
                 }
             },
         ];
 
         $this->process_inline($regbag, $at, [
-            'html-tag-opened' => true,
-            'html-tag-closed' => true
+            // 'html-tag-opened' => true,
+            // 'html-tag-closed' => true
         ]);
     }
 }

@@ -101,3 +101,75 @@ return assert::equals(markdown::process($markdown),
     tell application &ldquo;Foo&rdquo;
     beep
     end tell</p>');
+
+#: Test Junk in Code
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$markdown = <<<MARKDOWN
+```
+Code! "Hello" `World` <div></div>
+
+That's a new line!
+
+---
+
+===
+
+***
+
+::: Foo
+Ee
+:::
+
+<div>
+</div>
+
+The End!
+```
+MARKDOWN;
+
+return assert::equals(markdown::process($markdown),
+'<pre><code>Code! "Hello" `World` &lt;div&gt;&lt;/div&gt;
+
+That\'s a new line!
+
+---
+
+===
+
+***
+
+::: Foo
+Ee
+:::
+
+&lt;div&gt;
+&lt;/div&gt;
+
+The End!</code></pre>');
+
+#: Test Complex Blocks Arrangement
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$markdown = <<<MARKDOWN
+```
+> Code
+> Code
+> Code
+```
+
+    > Hello World
+    > Hello World
+
+>     Hello
+>     World
+MARKDOWN;
+
+return assert::equals(markdown::process($markdown),
+'<pre><code>&gt; Code
+&gt; Code
+&gt; Code</code></pre>
+<pre><code>&gt; Hello World
+&gt; Hello World</code></pre>
+<blockquote>
+    <pre><code>Hello
+World</code></pre>
+</blockquote>');

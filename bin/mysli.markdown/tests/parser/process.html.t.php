@@ -12,7 +12,7 @@ $markdown = <<<MARKDOWN
 <div>This is a div.</div>
 
 <div>
-There are some _inline_ tags here too, which will be skipped.
+There are some _inline_ tags here too, which will not be skipped.
 </div>
 
 <a href="#top">Top</a>
@@ -24,7 +24,7 @@ return assert::equals(markdown::process($markdown),
     </small></p>
 <div>This is a div.</div>
 <div>
-There are some _inline_ tags here too, which will be skipped.
+There are some <em>inline</em> tags here too, which will not be skipped.
 </div>
 <p><a href="#top">Top</a></p>');
 
@@ -57,7 +57,7 @@ $markdown = <<<MARKDOWN
 MARKDOWN;
 
 return assert::equals(markdown::process($markdown),
-'<div>
+'<p><div></p>
 <p><img src="foo"/></p>
 <p><hr/></p>');
 

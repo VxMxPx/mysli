@@ -18,8 +18,7 @@ namespace mysli\markdown\module; class html extends std_module
     function process($at)
     {
         $lines = $this->lines;
-        $opened = [];
-        $in_at = $at;
+        $marked = [];
 
         while ($lines->has($at))
         {
@@ -30,123 +29,70 @@ namespace mysli\markdown\module; class html extends std_module
             }
 
             $line = $lines->get($at);
-            $here = [
-                'opened' => [],
-            ];
 
-            // Find (tags on this line)
-            $tags = [];
-            preg_match_all(
-                '#\<(\/?)([a-z]+)[ |\>|\/]{1}#', $line, $tags, PREG_SET_ORDER);
-
-            foreach ($tags as $tag)
+            $line = preg_replace_callback(
+            '#\<(\/?)([a-zA-Z]+)(.*?)(\/?)\>#sm',
+            function ($match) use ($at, &$marked)
             {
-                list($_, $closed, $tag) = $tag;
-                $closed = !!$closed;
+                list($full, $close, $tag, $args, $self_close) = $match;
 
-                if ($closed)
+                $close = !empty($close);
+                $self_close = !empty($self_close);
+
+                if (!$self_close)
                 {
-                    if (in_array($tag, $here['opened']))
-                        unset($here['opened'][array_search($tag, $here['opened'])]);
-
-                    if (in_array($tag, $opened))
-                        unset($opened[array_search($tag, $opened)]);
-
-                    if (empty($here['opened']))
-                        $lines->set_attr($at, 'html-tag-closed', true);
-                }
-                else
-                {
-                    $opened[] = $tag;
-                    $here['opened'][] = $tag;
-
-                    $lines->set_attr($at, 'html-tag-opened', true);
-
-                    if (!in_array($tag, $this->contained))
+                    if (!$close)
                     {
-                        $lines->set_attr($at, [
-                            'no-process'         => true,
-                            'no-process-by-open' => true,
-                            // 'lock-trim'          => true,
-                            // 'no-indent'          => true,
-                            // 'lock-nl'            => true,
-                        ]);
-                    }
-                }
-            }
-
-            if (count($opened))
-            {
-                $lines->set_attr($at, 'in-html-tag', true);
-
-                foreach ($opened as $tag)
-                {
-                    if (!in_array($tag, $this->contained))
-                    {
-                        // Need for later cleanup... :>
-                        $lines->set_attr(
-                            $at,
-                            'html-opened-list',
-                            $lines->get_attr($at, 'html-opened').'::'.$tag
-                        );
-
-                        $lines->set_attr($at, [
-                            'no-process' => true,
-                        ]);
-                    }
-                }
-            }
-
-            $at++;
-        }
-
-        // Cleanup, cannot find some opened tags...?
-        if (count($opened))
-        {
-            foreach ($opened as $tag)
-            {
-                $this->cleanup($in_at, $tag);
-            }
-        }
-    }
-
-    protected function cleanup($at, $tag)
-    {
-        $lines = $this->lines;
-
-        while ($lines->has($at))
-        {
-            $openedlist = $lines->get_attr($at, 'html-opened-list');
-
-            if ($openedlist && !$lines->get_attr($at, 'no-process-by-open'))
-            {
-                $p = false;
-
-                if (false !== ($p = strpos($openedlist, "::{$tag}")))
-                {
-                    $openedlist =
-                        substr($openedlist, 0, $p).
-                        substr($openedlist, $p+strlen($tag)+2);
-
-                    if (!trim($openedlist))
-                    {
-                        $lines->set_attr($at, [
-                            'html-opened-list'   => false,
-                            'no-process'         => false,
-                            'in-html-tag'        => false,
-                            // 'lock-trim'          => false,
-                            // 'no-indent'          => false,
-                            // 'lock-nl'            => false
-                        ]);
+                        $marked[] = [ $tag, $at ];
                     }
                     else
                     {
-                        $lines->set_attr($at, 'html-opened-list', $openedlist);
+                        $marked = $this->set_closed( $tag, $at, $marked );
                     }
                 }
-            }
+
+                return $this->seal($at, $full);
+
+            }, $line);
+
+            $lines->set($at, $line);
 
             $at++;
+        }
+
+        $this->mark_lines($marked);
+    }
+
+    protected function set_closed($tag, $at, $marked)
+    {
+        for ($i = count($marked)-1; $i>=0; $i--)
+        {
+            if ($marked[$i][0] === $tag && count($marked[$i] === 2))
+            {
+                $marked[$i][] = $at;
+                break;
+            }
+        }
+
+        return $marked;
+    }
+
+    protected function mark_lines($marked)
+    {
+        foreach ($marked as $marker)
+        {
+            if (count($marker) !== 3)
+            {
+                continue;
+            }
+
+            for ($i = $marker[1]; $i<=$marker[2]; $i++)
+            {
+                $this->lines->set_attr($i, [
+                    'in-html-tag' => true,
+                    'is-block'    => !in_array($marker[0], $this->contained),
+                ]);
+            }
         }
     }
 }

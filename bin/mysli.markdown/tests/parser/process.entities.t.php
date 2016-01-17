@@ -44,7 +44,7 @@ return assert::equals(markdown::process($markdown),
 <p>4 &lt; 5</p>
 <p>5 &gt; 4</p>
 <p>http://my-link/?q=1&amp;b=2&amp;c=3</p>
-less<more and more>less
+<p>less<more and more>less</p>
 <div>Hello</div>
 <p>less &lt; more and more &gt; less</p>
 <p><img src="" /></p>

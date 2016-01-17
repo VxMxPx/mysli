@@ -36,7 +36,7 @@ namespace mysli\markdown\module; class container extends std_module
                 $lines->erase($pat, true);
                 $lines->set_tag($pat, ['div', false]);
                 $lines->set_attr($pat, [
-                    'no-process' => true,
+                    // 'no-process' => true,
                     'html-attributes' => [
                         'div' => [ 'class="'.str_replace('.', ' ', $classes).'"' ]
                     ]
@@ -45,7 +45,7 @@ namespace mysli\markdown\module; class container extends std_module
                 // Close tag...
                 $lines->erase($at, true);
                 $lines->set_tag($at, [false, 'div']);
-                $lines->set_attr($at, 'no-process', true);
+                // $lines->set_attr($at, 'no-process', true);
 
                 $opened = null;
             }

@@ -57,11 +57,16 @@ namespace mysli\markdown\module; class paragraph extends std_module
             return false;
         }
 
-        if (!$l->get_attr($at, 'html-tag-opened')
-            && $l->get_attr($at, 'html-tag-closed'))
+        if ($l->get_attr($at, 'is-block'))
         {
             return false;
         }
+
+        // if (!$l->get_attr($at, 'html-tag-opened')
+        //     && $l->get_attr($at, 'html-tag-closed'))
+        // {
+        //     return false;
+        // }
 
         if ($l->has_tag($at)
             && !in_array($l->get_tag($at, -1), ['li', 'blockquote']))
