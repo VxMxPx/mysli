@@ -77,9 +77,9 @@ LOW:
 return assert::equals(
     $decoded,
     [
-        [ '0' => 'toolkit::web', '1' => 'mysli.front.service::start', 'priority' => 'high' ],
-        [ '0' => 'toolkit::web', '1' => 'mysli.dash.service::first',  'priority' => 'medium' ],
-        [ '0' => 'toolkit::web', '1' => 'mysli.dash.service::last',   'priority' => 'medium' ],
+        [ 'toolkit::web', 'mysli.front.service::start', 'priority' => 'high' ],
+        [ 'toolkit::web', 'mysli.dash.service::first',  'priority' => 'medium' ],
+        [ 'toolkit::web', 'mysli.dash.service::last',   'priority' => 'medium' ],
     ]
 );
 
@@ -96,11 +96,11 @@ return assert::equals(
     $decoded,
     [
         'high' => [
-            [ '0' => 'toolkit::web', '1' => 'mysli.front.service::start' ],
+            [ 'toolkit::web', 'mysli.front.service::start' ],
         ],
         'medium' => [
-            [ '0' => 'toolkit::web', '1' => 'mysli.dash.service::first' ],
-            [ '0' => 'toolkit::web', '1' => 'mysli.dash.service::last' ],
+            [ 'toolkit::web', 'mysli.dash.service::first' ],
+            [ 'toolkit::web', 'mysli.dash.service::last' ],
         ]
     ]
 );
@@ -118,10 +118,10 @@ return assert::equals(
     $decoded,
     [
         'high' => [
-            'toolkit::web' => [ '0' => 'toolkit::web', '1' => 'mysli.front.service::start' ],
+            'toolkit::web' => [ 'toolkit::web', 'mysli.front.service::start' ],
         ],
         'medium' => [
-            'toolkit::web' => [ '0' => 'toolkit::web', '1' => 'mysli.dash.service::last' ],
+            'toolkit::web' => [ 'toolkit::web', 'mysli.dash.service::last' ],
         ]
     ]
 );
@@ -135,23 +135,23 @@ toolkit::web  mysli.dash.service::first
 toolkit::web  mysli.dash.service::last
 LOW:
 ', [
-    'id' => '0',
-    'unique' => false,
+    'id'          => '0',
+    'unique'      => false,
     'category_to' => '{ID}',
-    'categories' => [  'high', 'medium', 'low' ]
+    'categories'  => [  'high', 'medium', 'low' ]
 ]);
 return assert::equals(
     $decoded,
     [
         'high' => [
             'toolkit::web' => [
-                ['0' => 'toolkit::web', '1' => 'mysli.front.service::start' ]
+                [ 'toolkit::web', 'mysli.front.service::start' ]
             ],
         ],
         'medium' => [
             'toolkit::web' => [
-                [ '0' => 'toolkit::web', '1' => 'mysli.dash.service::first' ],
-                [ '0' => 'toolkit::web', '1' => 'mysli.dash.service::last' ],
+                [ 'toolkit::web', 'mysli.dash.service::first' ],
+                [ 'toolkit::web', 'mysli.dash.service::last' ],
             ]
         ]
     ]
@@ -166,11 +166,11 @@ toolkit::web  mysli.dash.service::first
 toolkit::web  mysli.dash.service::last
 LOW:
 ', [
-    'id' => 'event',
-    'map' => ['event', 'call'],
-    'unique' => false,
+    'id'          => 'event',
+    'map'         => ['event', 'call'],
+    'unique'      => false,
     'category_to' => 'priority',
-    'categories' => [  'high', 'medium', 'low' ]
+    'categories'  => [  'high', 'medium', 'low' ]
 ]);
 return assert::equals(
     $decoded,
