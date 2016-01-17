@@ -20,7 +20,7 @@ namespace mysli\markdown\module; class blockquote extends std_module
 
             $line = $lines->get($at);
 
-            if (preg_match('/^[ \\t]*((>[ \\t]*)+)(.*?)$/', $line, $match))
+            if (preg_match('/^ {0,3}((>[ \\t]*)+)(.*?)$/', $line, $match))
             {
                 list($_, $levels, $last, $line) = $match;
                 $indent_now = substr_count($levels, '>');
