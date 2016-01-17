@@ -161,7 +161,8 @@ namespace mysli\markdown; class output
                     $last_tag  = null;
 
                     // TODO: This might be buggy!?
-                    if (($last_node === 'txt' || $last_node === '/tag') && trim($txt))
+                    if (($last_node === 'txt' || $last_node === '/tag')
+                        && (trim($txt) || $l->get_attr($at, 'lock-nl')))
                     {
                         $output .= "\n";
 
