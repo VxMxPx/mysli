@@ -2,7 +2,7 @@
 
 namespace mysli\toolkit; class datetime
 {
-    const __use = '.log';
+    const __use = '.{ log }';
 
     const timestamp = 'U';
     const time      = 'H:i:s';
@@ -46,16 +46,17 @@ namespace mysli\toolkit; class datetime
     {
         // Get default timezone if not set.
         if (is_null($timezone))
+        {
             $timezone = static::get_default_timezone();
+        }
 
         // Grab current UTC datetime if not provided.
         if (!$datetime)
+        {
             $datetime = gmdate('c');
+        }
 
-        $this->datetime = new \DateTime(
-            $datetime,
-            new \DateTimeZone($timezone)
-        );
+        $this->datetime = new \DateTime($datetime, new \DateTimeZone($timezone));
     }
 
     /**
