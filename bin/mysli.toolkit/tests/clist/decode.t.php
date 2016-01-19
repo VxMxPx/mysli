@@ -105,6 +105,17 @@ return assert::equals(
     ]
 );
 
+#: Test Category ID Missing
+#: Expect Exception mysli\toolkit\exception\clist 10
+clist::decode('
+HIGHT:
+toolkit::web  mysli.front.service::start
+MEDIUM:
+toolkit::web  mysli.dash.service::first
+toolkit::web  mysli.dash.service::last
+LOW:
+', [ 'category_to' => '{ID}', 'categories' => [  'high', 'medium', 'low' ] ]);
+
 #: Test Local ID Unique
 $decoded = clist::decode('
 HIGH:

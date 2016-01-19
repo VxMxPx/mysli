@@ -24,6 +24,10 @@
  */
 namespace mysli\toolkit; class clist
 {
+    const __use = '
+        .{ exception.clist }
+    ';
+
     /**
      * These are the default encode/decode options.
      * --
@@ -43,6 +47,16 @@ namespace mysli\toolkit; class clist
         'categories'  => false,
     ];
 
+    /**
+     * Decode clist (string) to array.
+     * --
+     * @param string $list
+     * @param array  $options
+     * --
+     * @throws mysli\toolkit\exception\clist 10 Unknown category.
+     * --
+     * @return array
+     */
     static function decode($list, $options=[])
     {
         $options = array_merge( static::$default_options, $options );
@@ -62,6 +76,15 @@ namespace mysli\toolkit; class clist
             if (preg_match('#^([A-Z0-9]+)\:$#', $line, $m))
             {
                 $category = trim(strtolower($m[1]));
+
+                // Valid category?
+                if (!in_array($category, $options['categories']))
+                {
+                    throw new exception\clist(
+                        "Unknown category: `{$category}`", 10
+                    );
+                }
+
                 continue;
             }
 
@@ -125,11 +148,27 @@ namespace mysli\toolkit; class clist
         return $items;
     }
 
+    /**
+     * Decode a clist file.
+     * --
+     * @param string $filename
+     * @param array  $options
+     * --
+     * @return array
+     */
     static function decode_file($filename, $options=[])
     {
         return static::decode(file::read($filename), $options);
     }
 
+    /**
+     * Encode an array to clist.
+     * --
+     * @param array $list
+     * @param array $options
+     * --
+     * @return string
+     */
     static function encode(array $list, $options=[])
     {
         $output = '';
@@ -180,6 +219,15 @@ namespace mysli\toolkit; class clist
         return $output;
     }
 
+    /**
+     * Encode an array to clist file.
+     * --
+     * @param string $filename
+     * @param array  $list
+     * @param array  $options
+     * --
+     * @return boolean
+     */
     static function encode_file($filename, array $list, $options=[])
     {
         return !!file::write($filename, static::encode($list, $options));
@@ -249,8 +297,8 @@ namespace mysli\toolkit; class clist
     /**
      * Get the depth of an array.
      * --
-     * @param  array   $array
-     * @param  integer $max
+     * @param array   $array
+     * @param integer $max
      * --
      * @return integer
      */
