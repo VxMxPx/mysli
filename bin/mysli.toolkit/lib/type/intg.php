@@ -1,6 +1,6 @@
 <?php
 
-namespace mysli\toolkit\type; class int
+namespace mysli\toolkit\type; class intg
 {
     /**
      * Random, using mt_rand or openssl if available, and if $better is true

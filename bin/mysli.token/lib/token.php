@@ -4,7 +4,7 @@ namespace mysli\token; class token
 {
     const __use = '
         mysli.toolkit.fs.{ fs, dir, file }
-        mysli.toolkit.{ json, type.int -> int, request }
+        mysli.toolkit.{ json, type.intg -> intg, request }
     ';
 
     /**
@@ -173,7 +173,7 @@ namespace mysli\token; class token
     {
         return sha1(
             sha1(md5(time())) .
-            int::random(10000, 99999) .
+            intg::random(10000, 99999) .
             sha1(md5($salt))
         );
     }

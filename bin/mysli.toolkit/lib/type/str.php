@@ -2,7 +2,7 @@
 
 namespace mysli\toolkit\type; class str
 {
-    const __use = '.{ log, exception.str }, .type.{ validate, int }';
+    const __use = '.{ log, exception.str }, .type.{ validate, intg }';
 
     /**
      * Set the default encoding, which can be changed later.
@@ -221,7 +221,7 @@ namespace mysli\toolkit\type; class str
 
         while ($i <= $length)
         {
-            $result .= $chars{int::random(0, strlen($chars)-1)};
+            $result .= $chars{intg::random(0, strlen($chars)-1)};
             $i++;
         }
 
