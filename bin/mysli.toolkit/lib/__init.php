@@ -117,7 +117,7 @@ namespace mysli\toolkit; class __init
         /*
         Resolve route(s)
          */
-        router::resolve();
+        route::execute( implode('/', request::segments()) );
 
         /*
         Apply header and send output.
