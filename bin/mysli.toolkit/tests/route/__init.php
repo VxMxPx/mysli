@@ -26,6 +26,16 @@ class route extends original_route
         return is_array(static::$r);
     }
 
+    static function t__resolve_route($route)
+    {
+        return static::resolve_route($route);
+    }
+
+    static function t__extract_segments($route)
+    {
+        return static::extract_segments($route);
+    }
+
     // Null read/write
 
     static function reload()
@@ -34,6 +44,19 @@ class route extends original_route
     }
 
     static function write()
+    {
+        return true;
+    }
+}
+
+class dummy_exec
+{
+    static function no_param()
+    {
+        return true;
+    }
+
+    static function param($param)
     {
         return true;
     }

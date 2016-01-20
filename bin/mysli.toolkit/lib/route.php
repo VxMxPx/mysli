@@ -29,7 +29,7 @@ namespace mysli\toolkit; class route
         'digit' => '[0-9]+',
         'alpha' => '[a-z]+',
         'alnum' => '[a-z0-9]+',
-        'slug'  => '[a-z0-9_\+\-]',
+        'slug'  => '[a-z0-9_\+\-]+',
         'path'  => '[a-z0-9_+-\/]+',
     ];
 
@@ -89,6 +89,12 @@ namespace mysli\toolkit; class route
         {
             foreach ($routes as $rid => $route)
             {
+                // Resolve if not
+                if (!isset($route['resolved']))
+                {
+                    $route['resolved'] = static::resolve_route($route['route']);
+                }
+
                 // Special case
                 if ($route['resolved'] === '*')
                 {
@@ -96,15 +102,15 @@ namespace mysli\toolkit; class route
                 }
 
                 // Resolve request
-                if (!is_array($route['request']))
+                if (!is_array($route['method']))
                 {
-                    if ($route['request'] === 'ANY')
+                    if ($route['method'] === 'ANY')
                     {
-                        $route['request'] = [ 'GET', 'POST', 'PUT', 'DELETE' ];
+                        $route['method'] = [ 'GET', 'POST', 'PUT', 'DELETE' ];
                     }
                     else
                     {
-                        $route['request'] = explode(',', $route['request']);
+                        $route['method'] = explode(',', $route['method']);
                     }
                 }
 
@@ -114,7 +120,7 @@ namespace mysli\toolkit; class route
                     continue;
                 }
 
-                if (preg_match($route['resolved'], $url, $m))
+                if (preg_match("#^{$route['resolved']}$#", $url, $m))
                 {
                     unset($m[0]);
                     $call = str_replace('.', '\\', $route['call']);
@@ -126,6 +132,8 @@ namespace mysli\toolkit; class route
                 }
             }
         }
+
+        return false;
     }
 
     /**
@@ -173,13 +181,13 @@ namespace mysli\toolkit; class route
     {
         if (!in_array($priority, static::$r_options['categories']))
         {
-            throw new exception\route("Invalid category: `{$category}`", 10);
+            throw new exception\route("Invalid priority: `{$priority}`", 10);
         }
 
         $a_route = [
-            'route'    => $route,
             'call'     => $call,
-            'priority' => $priority
+            'method'   => $method,
+            'route'    => $route
         ];
 
         if ($top)
@@ -243,7 +251,7 @@ namespace mysli\toolkit; class route
             return false;
         }
 
-        if ($options['priority'] !== $priority)
+        if (isset($options['priority']) && $options['priority'] !== $priority)
         {
             $options = array_merge($route, $options);
 
@@ -263,7 +271,7 @@ namespace mysli\toolkit; class route
                 $options['method'],
                 $options['route'],
                 $options['priority'],
-                $options['top']
+                $top
             );
         }
         else
@@ -334,11 +342,11 @@ namespace mysli\toolkit; class route
         list($sroute, $segments) = static::extract_segments($route['route']);
 
         $final = [];
-        $sroute = preg_split('/(?<!\\)\//', $sroute);
+        $sroute = preg_split('/(?<!\\\\)\//', $sroute);
 
         foreach ($sroute as $rseg)
         {
-            if (preg_match('/___"SEGMENT\:([a-z0-9_]+)"___/', $rseg, $m))
+            if (preg_match('/"SEG_([a-z0-9_]+)"/', $rseg, $m))
             {
                 $segid = $m[1];
 
@@ -361,7 +369,7 @@ namespace mysli\toolkit; class route
                     }
                 }
 
-                if (!preg_match($segments[$segid][1], strval($parameters[$segid])))
+                if (!preg_match("#{$segments[$segid][1]}#", strval($parameters[$segid])))
                 {
                     throw new exception\route(
                         "Parameter value is invalid: `{$parameters[$segid]}`, ".
@@ -371,7 +379,7 @@ namespace mysli\toolkit; class route
                 }
 
                 $rseg = str_replace(
-                    "___\"SEGMENT\:{$segid}\"___", $parameters[$segid], $rseg
+                    "\"SEG_{$segid}\"", $parameters[$segid], $rseg
                 );
             }
 
@@ -427,14 +435,14 @@ namespace mysli\toolkit; class route
 
         list($sroute, $segments) = static::extract_segments($route);
 
-        $sroute = preg_split('/(?<!\\)\//', $sroute);
+        $sroute = preg_split('/(?<!\\\\)\//', $sroute);
         $g_optional = false;
 
         foreach ($sroute as $rseg)
         {
             $rseg = preg_quote($rseg, '#');
 
-            if (preg_match('/___"SEGMENT\:([a-z0-9_]+)"___/', $rseg, $m))
+            if (preg_match('/"SEG_([a-z0-9_]+)"/', $rseg, $m))
             {
                 $segid = $m[1];
 
@@ -445,7 +453,7 @@ namespace mysli\toolkit; class route
                 }
 
                 $rseg = str_replace(
-                    "___\"SEGMENT\:{$segid}\"___",
+                    "\"SEG_{$segid}\"",
                     "(?'{$segid}'{$segments[$segid][1]})",
                     $rseg
                 );
@@ -490,7 +498,7 @@ namespace mysli\toolkit; class route
         $segments = [];
 
         $route = preg_replace_callback(
-        '/\<([a-z0-9_]+)(\??)\:(.*?)(?<!\\)\>/',
+        '/\<([a-z0-9_]+)(\??)\:(.*?)(?<!\\\\)\>/',
         function ($m) use (&$segments)
         {
             list($_, $segid, $is_optional, $regex) = $m;
@@ -510,9 +518,9 @@ namespace mysli\toolkit; class route
                 );
             }
 
-            $segments[$segid] = [$is_optional, $regex];
+            $segments[$segid] = [ !!$is_optional, $regex ];
 
-            return '___"SEGMENT/'.$segid.'"___';
+            return '"SEG_'.$segid.'"';
         }, $route);
 
 
