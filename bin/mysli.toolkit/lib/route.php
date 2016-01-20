@@ -77,6 +77,68 @@ namespace mysli\toolkit; class route
     }
 
     /**
+     * Execute index (*index) route.
+     * --
+     * @return boolean
+     */
+    static function index()
+    {
+        foreach (static::$r as $priority => $routes)
+        {
+            foreach ($routes as $rid => $route)
+            {
+                if ($route['route'] === '*index')
+                {
+                    // Method found?
+                    if ($route['method'] !== 'ANY'
+                        && strpos($route['method'], request::method()) === false)
+                    {
+                        continue;
+                    }
+
+                    $call = str_replace('.', '\\', $route['call']);
+
+                    if (call_user_func($call))
+                    {
+                        return true;
+                    }
+                }
+
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Execute error route.
+     * --
+     * @param integer $n Error number (e.g. 404)
+     * --
+     * @return boolean
+     */
+    static function error($n)
+    {
+        foreach (static::$r as $priority => $routes)
+        {
+            foreach ($routes as $rid => $route)
+            {
+                if ($route['route'] === '*error')
+                {
+                    $call = str_replace('.', '\\', $route['call']);
+
+                    if (call_user_func_array($call, [ $n ]))
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Execute particular route. If matched, call the specified method.
      * --
      * @param string $url
@@ -101,21 +163,9 @@ namespace mysli\toolkit; class route
                     continue;
                 }
 
-                // Resolve request
-                if (!is_array($route['method']))
-                {
-                    if ($route['method'] === 'ANY')
-                    {
-                        $route['method'] = [ 'GET', 'POST', 'PUT', 'DELETE' ];
-                    }
-                    else
-                    {
-                        $route['method'] = explode(',', $route['method']);
-                    }
-                }
-
-                // Not proper request method
-                if (!in_array(request::method(), $route['method']))
+                // Method found?
+                if ($route['method'] !== 'ANY'
+                    && strpos($route['method'], request::method()) === false)
                 {
                     continue;
                 }
