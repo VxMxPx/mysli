@@ -117,7 +117,19 @@ namespace mysli\toolkit; class __init
         /*
         Resolve route(s)
          */
-        route::execute( implode('/', request::segments()) );
+        $route = '/'.implode('/', request::segments());
+        $r = ($route === '/')
+            ? route::index()
+            : route::execute($route);
+
+        if (!$r)
+        {
+            if (!route::error(404))
+            {
+                response::set_status(response::status_404_not_found);
+                event::trigger('toolkit::web.route_error');
+            }
+        }
 
         /*
         Apply header and send output.
@@ -126,7 +138,7 @@ namespace mysli\toolkit; class __init
         response::apply_headers();
         $output = output::as_html();
 
-        event::trigger("toolkit::web.output", [$output]);
+        event::trigger("toolkit::web.output", [ $output ]);
         echo $output;
 
         /*
