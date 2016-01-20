@@ -532,7 +532,7 @@ namespace mysli\dev\test; class test
                 return ['output', trim($value)];
 
             default:
-                throw new exception\file("Invalid type: `{$type}`", 10);
+                throw new exception\test("Invalid type: `{$type}`", 10);
         }
     }
 
