@@ -3,12 +3,7 @@
 namespace mysli\toolkit; class response
 {
     const __use = '
-        .{
-            request,
-            event,
-            log,
-            exception.response
-        }
+        .{ request, event, log, exception.response }
     ';
 
     /*
@@ -189,7 +184,7 @@ namespace mysli\toolkit; class response
      * Set particular status by code.
      * Some statuses need location.
      * --
-     * @param integer $status
+     * @param integer $status    (@see static::$statuses)
      * @param string  $location
      * --
      * @throws mysli\toolkit\exception\response 10 Not a valid status.
