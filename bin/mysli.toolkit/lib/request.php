@@ -303,6 +303,12 @@ namespace mysli\toolkit; class request
      */
     static function method($can_fake=false)
     {
+        // No request method
+        if (!isset($_SERVER['REQUEST_METHOD']))
+        {
+            return null;
+        }
+
         // Is it put?
         if ($_SERVER['REQUEST_METHOD'] === 'PUT')
         {
