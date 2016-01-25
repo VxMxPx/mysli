@@ -2,154 +2,61 @@
 
 namespace mysli\tplp; class parser
 {
-    const __use = '
-        mysli.toolkit.{
-            fs.fs    -> fs,
-            fs.dir   -> dir,
-            fs.file  -> file,
-            type.str -> str
-        }
+    const __use = <<<fin
         .{ exception.parser }
-    ';
+        mysli.toolkit.type.{ str }
+fin;
 
     /**
-     * Construct parser.
+     * Costume functions.
      * --
-     * @param string $root Template root directory.
-     * --
-     * @throws mysli\tplp\exception\parser 10 No such directory.
+     * @var array
      */
-    function __construct($root)
-    {
-        if (!dir::exists($root))
-            throw new exception\parser("No such directory: `{$root}`.", 10);
-
-        $this->root = $root;
-    }
-
-    /*
-    --- Entry Process ----------------------------------------------------------
-     */
+    protected $user_functions = [];
 
     /**
-     * Process a particular template file.
+     * Build in default functions.
      * --
-     * @param string $file
-     *        Action will be determent from file extension.
-     *        If extension is `.tpl.php` extend will be called.
-     *        If extension is `.tpl.html` template will be called.
-     *        In any other case, exception.
-     *
-     * --
-     * @throws mysli\tplp\exception\parser  9 Invalid file extension.
-     * @throws mysli\tplp\exception\parser 10 Template file not found.
-     * --
-     * @return string
+     * @var array
      */
-    function file($file)
-    {
-        // Check file extension
-        if (substr($file, -9) === '.tpl.html')
-        {
-            $action = 'template';
-            $filenoext = strtolower(substr($file, 0, -9)); // .tpl.html
-        }
-        elseif (substr($file, -8) === '.tpl.php')
-        {
-            $action = 'extend';
-            $filenoext = strtolower(substr($file, 0, -8)); // .tpl.php
-        }
-        else
-            throw new exception\parser(
-                "Invalid template extension: `{$file}`. ".
-                "Allowed: `.tpl.html` or `.tpl.php`.", 9
-            );
-
-        // Set full absolute path
-        $fullpath = fs::ds($this->root, $file);
-
-        // Either file can be loaded from replaced or it must exists in FS...
-        if (!file::exists($fullpath) && !isset($this->replace[$file]))
-        {
-            throw new exception\parser(
-                "Template file not found: `{$fullpath}`", 10
-            );
-        }
-
-        // Overrides?
-        if (isset($this->replace[$file]) && !is_array($this->replace[$file]))
-        {
-            $template = $this->replace[$file];
-        }
-        else
-        {
-            if (isset($this->replace[$file]) && is_array($this->replace[$file]))
-                $fullpath = implode('/', $replace[$file]);
-
-            $template = file::read($fullpath);
-        }
-
-        // Create namespace...
-        if ($action === 'extend')
-        {
-            $namespace = str::clean($filenoext, '<[^a-z0-9\/]+>');
-            $namespace = str_replace('/', '\\', $namespace);
-            $namespace = "tplp\\template\\{$namespace}";
-        }
-        else
-            $namespace = null;
-
-        return $this->{$action}($template, $namespace);
-    }
-
-    /**
-     * Resolve all includes for particular template. This can be a regular `tpl`
-     * template, or pre-processed PHP file (result of `$static=false`).
-     * --
-     * @param string $template
-     * --
-     * @return string
-     */
-    function extend($template, $namespace=null)
-    {
-        $parsed = $this->parse_extend($template);
-        $header = $this->make_header($namespace, []);
-        return $header.$parsed;
-    }
-
-    /**
-     * Process a particular template string. This will not read file from disk.
-     * --
-     * @param string $template
-     * @param string $namespace Define costume namespace.
-     * --
-     * @return string
-     */
-    function template($template, $namespace=null)
-    {
-        list($uses, $parsed) = $this->parse($template);
-        $header = $this->make_header($namespace, $uses);
-        return $header.$parsed;
-    }
-
-    /*
-    --- Other ------------------------------------------------------------------
-     */
-
-    /**
-     * Replace a particular template with another (override) or set a template
-     * that doesn't exists in a file system.
-     * --
-     * @param string $file File name to be replaced (with extension!)
-     * @param mixed  $with
-     *        What to replace file with:
-     *            array  [ string $root, string $file ] File will be loaded.
-     *            string $template To be used as an replacement.
-     */
-    function replace($file, $with)
-    {
-        $this->replace[$file] = $with;
-    }
+    protected static $default_functions = [
+        "abs"           => "abs(%seg)",
+        "ucfirst"       => "ucfirst(%seg)",
+        "ucwords"       => "ucwords(%seg)",
+        "lower"         => "strtolower(%seg)",
+        "upper"         => "strtoupper(%seg)",
+        "date"          => "date(%1, strtotime(%seg))",
+        "join"          => "implode(%1, %seg)",
+        "isset"         => "isset(%seg)",
+        "split"         => "explode(%1, %seg, ...)",
+        "length"        => "strlen(%seg)",
+        "word_count"    => "str_word_count(%seg)",
+        "count"         => "count(%seg)",
+        "nl2br"         => "nl2br(%seg)",
+        "number_format" => "number_format(%seg, ...)",
+        "replace"       => "sprintf(%seg, ...)",
+        "round"         => "round(%seg, ...)",
+        "floor"         => "floor(%seg)",
+        "ceil"          => "ceil(%seg)",
+        "strip_tags"    => "strip_tags(%seg, ...)",
+        "show_tags"     => "htmlspecialchars(%seg)",
+        "trim"          => "trim(%seg, ...)",
+        "slice"         => "( is_array(%seg) ? array_slice(%seg, ...) ".
+                                            ": substr(%seg, ...) )",
+        "word_wrap"     => "wordwrap(%seg, %1, '<br/>')",
+        "max"           => "max(%seg, ...)",
+        "min"           => "min(%seg, ...)",
+        "column"        => "array_column(%seg, %1, ...)",
+        "reverse"       => "( is_array(%seg) ? array_reverse(%seg) ".
+                                            ": strrev(%seg) )",
+        "contains"      => "( (is_array(%seg) ? in_array(%1, %seg) ".
+                                            ": strpos(%seg, %1)) !== false )",
+        "key_exists"    => "array_key_exists(%1, %seg)",
+        "sum"           => "array_sum(%seg)",
+        "unique"        => "array_unique(%seg)",
+        "range"         => "range(%1, %2, ...)",
+        "random"        => "rand(%1, %2)"
+    ];
 
     /**
      * Set new build-in function.
@@ -191,266 +98,6 @@ namespace mysli\tplp; class parser
         $this->user_functions[$name] = $replace;
     }
 
-    /*
-    --- Protected --------------------------------------------------------------
-     */
-
-    /**
-     * Resolve extend statements.
-     * --
-     * @param string $template
-     * --
-     * @return string
-     */
-    protected function parse_extend($template)
-    {
-        /*
-        ::import [module] from [do ... ::/import]
-         */
-        $template = preg_replace_callback(
-            '/^[ \t]*?'.
-            '::import (?<id>[a-z0-9\-_\.\/]+)'.
-            '(?: from (?<from>[a-z0-9\-_\.\/]+))?'.
-            '(?: do(?<do>.*?)::\/import)?$/ms',
-            function ($match)
-            {
-                if (isset($match['from']))
-                {
-                    $module = $match['id'];
-                    $file = $match['from'];
-                }
-                else
-                {
-                    $module = null;
-                    $file = $match['id'];
-                }
-
-                // Extract set...
-                if (isset($match['do']))
-                    $set = $this->extract_set($match['do']);
-                else
-                    $set = [];
-
-                // Load file
-                list($type, $template) = $this->load_file($file);
-
-                // Extract module
-                if ($module)
-                    $template = $this->extract_module($template, $module);
-
-                // Process
-                if ($type === 'html')
-                    $template = $this->template($template);
-                else
-                    $template = $this->parse_extend($template);
-
-                // Resolve prints and return
-                if (!empty($set))
-                    return $this->resolve_print($template, $set);
-                else
-                    return $template;
-            },
-            $template
-        );
-
-        /*
-        ::extend file set region [do ... ::/extend]
-         */
-        $extends = [];
-        $template = preg_replace_callback(
-            '/^[ \t]*?'.
-            '::extend (?<file>[a-z0-9\-_\.\/]+)'.
-            '(?: set (?<set>[a-z0-9\-_]+))'.
-            '(?: do(?<do>.*?)::\/extend)?$/ms',
-            function ($match) use (&$extends)
-            {
-                $extends[] = $match;
-                return '';
-            },
-            $template
-        );
-
-        // If no matches, return right now...
-        if (empty($extends))
-        {
-
-            // Kill namespaces
-            $template = $this->remove_namespace($template);
-            return $template;
-        }
-
-        // Proceed
-        foreach ($extends as $extend)
-        {
-            // Set file
-            $file = $extend['file'];
-
-            // Initialize set
-            $set = [
-                $extend['set'] => trim(rtrim($template), "\n")
-            ];
-
-            // Extract sets...
-            if (isset($extend['do']))
-                $set = array_merge($this->extract_set($extend['do']), $set);
-
-            // Load master file...
-            list($type, $master) = $this->load_file($file);
-
-            // Process
-            if ($type === 'html')
-                $master = $this->template($master);
-            else
-                $master = $this->parse_extend($master);
-
-            // Resolve print and return
-            $template = $this->resolve_print($master, $set);
-        }
-
-
-        // Kill namespaces
-        $template = $this->remove_namespace($template);
-        return $template;
-    }
-
-    /**
-     * Remove previously set namespaces.
-     * --
-     * @param string $template
-     * --
-     * @return string
-     */
-    protected function remove_namespace($template)
-    {
-        return preg_replace(
-            '/\<\?php\R\/\/ NAMESPACE\:\Rnamespace [a-zA-Z0-9_\\\\]+;\R\?\>/ms',
-            '',
-            $template
-        );
-    }
-
-    /**
-     * Extract set chunks.
-     * --
-     * @param  string $template
-     * --
-     * @return array
-     */
-    protected function extract_set($template)
-    {
-        $set = [];
-        $r = preg_match_all(
-            '/^[ \t]*?::set (?<name>[a-z0-9\-_]+)(?<contents>.*?)::\/set$/ms',
-            $template,
-            $matches,
-            PREG_SET_ORDER
-        );
-
-        if ($r)
-        {
-            foreach ($matches as $match)
-                $set[$match['name']] = trim(rtrim($match['contents']), "\n");
-        }
-
-        return $set;
-    }
-
-    /**
-     * Resolve print regions...
-     * --
-     * @param  string $template
-     * @param  array  $set
-     * --
-     * @return string
-     */
-    protected function resolve_print($template, array $set)
-    {
-        return
-        preg_replace_callback(
-            '/^[ \t]*?::print ([a-z0-9\-_]+)$/m',
-            function ($match) use ($set)
-            {
-                if (isset($set[$match[1]]))
-                    return $set[$match[1]];
-            },
-            $template
-        );
-    }
-
-    /**
-     * Load a file from root, or find it in overwrites.
-     * This will look for: `.tpl.php`, then `.tpl.html`.
-     * --
-     * @param string $file With no extension.
-     * --
-     * @throws mysli\tplp\exception\parser 10 File not found.
-     * --
-     * @return array
-     *         [ string $type, string $contents ]
-     *         ... where `$type` can be `php` or `html`.
-     *
-     */
-    protected function load_file($file)
-    {
-        // See if should be replaced as php...
-        if (isset($this->replace["{$file}.tpl.php"]))
-        {
-            $type = 'php';
-            $replace = $this->replace["{$file}.tpl.php"];
-            if (is_array($replace))
-                $contents = file::read(implode('/', $replace));
-            else
-                $contents = $replace;
-        }
-        elseif (isset($this->replace["{$file}.tpl.html"]))
-        {
-            $type = 'html';
-            $replace = $this->replace["{$file}.tpl.html"];
-            if (is_array($replace))
-                $contents = file::read(implode('/', $replace));
-            else
-                $contents = $replace;
-        }
-        elseif (file::exists("{$this->root}/{$file}.tpl.php"))
-        {
-            $type = 'php';
-            $contents = file::read("{$this->root}/{$file}.tpl.php");
-        }
-        elseif (file::exists("{$this->root}/{$file}.tpl.php"))
-        {
-            $type = 'html';
-            $contents = file::read("{$this->root}/{$file}.tpl.html");
-        }
-        else
-            throw new exception\parser("File not found: `{$file}`.", 10);
-
-        return [ $type, $contents ];
-    }
-
-    /**
-     * Find module in a template.
-     * --
-     * @param  string $template
-     * @param  string $module
-     * --
-     * @throws mysli\tplp\exception\parser Module not found.
-     * --
-     * @return string
-     */
-    protected function extract_module($template, $module)
-    {
-        $search = preg_match(
-            '/^::module '.preg_quote($module, '/').'$\s(.*?)\s^::\/module$/ms',
-            $template,
-            $match
-        );
-
-        if ($search)
-            return $match[1];
-        else
-            throw new exception\parser("Module `{$module}` not found.", 10);
-    }
-
     /**
      * Process template.
      * --
@@ -481,12 +128,11 @@ namespace mysli\tplp; class parser
      * @throws mysli\tplp\exception\parser
      *         84 Unclosed region.
      * --
-     * @return array [ array $uses, string $output ]
+     * @return string
      */
-    protected function parse($template, $module=null)
+    function process($template, $module=null)
     {
         $template = str::to_unix_line_endings($template);
-        $uses = [];
 
         if ($module)
         {
@@ -504,11 +150,7 @@ namespace mysli\tplp; class parser
 
         $lines = explode("\n", $template);
 
-        // Parsed template lines (output),
-        // uses (::use)
-        // extends (::extend)
-        // imports (::import)
-        // let (::let)
+        // Parsed template lines (output)
         $output  = [];
         $let     = false;
 
@@ -624,15 +266,6 @@ namespace mysli\tplp; class parser
                     continue;
                 }
 
-                // Find ::use statements
-                if (($id = $this->find_use($line, $uses)))
-                {
-                    $uses[$id]['debug'][] = [
-                        'lines' => err_lines($lines, $lineno)
-                    ];
-                    continue;
-                }
-
                 // Find inline if {var if var else 'No-var'}
                 $line = $this->find_inline_if($line);
 
@@ -733,50 +366,12 @@ namespace mysli\tplp; class parser
         // Implode output
         $output = implode("\n", $output);
 
-        return [ $uses, $output ];
+        return $output;
     }
 
-    /**
-     * Make file header (add namespace and use statements).
-     * --
-     * @param  string $namespace
-     * @param  array  $uses
-     * --
-     * @return string
+    /*
+    --- Protected --------------------------------------------------------------
      */
-    protected function make_header($namespace, array $uses)
-    {
-        // Process uses
-        $use = [];
-        foreach ($uses as $usear)
-            $use[] = $usear['statement'];
-
-        // Define header
-        $header = [];
-
-        // Add NAMESPACE
-        if ($namespace)
-        {
-            $header[] = "<?php";
-            $header[] = "// NAMESPACE:";
-            $header[] = "namespace {$namespace};";
-            $header[] = "?>";
-        }
-
-        // Add USE\
-        if (!empty($use))
-        {
-            $header[] = "<?php";
-            $header = array_merge($header, $use);
-            $header[] = "?>";
-        }
-
-        if (!empty($header))
-            return implode("\n", $header);
-        else
-            return '';
-    }
-
 
     /**
      * Find `::let`.
@@ -953,52 +548,6 @@ namespace mysli\tplp; class parser
     protected function find_close_let($line)
     {
         return preg_match('/^[ \t]*?::\\/let?$/', $line);
-    }
-
-
-    /**
-     * Find `::use` statements.
-     * --
-     * @param string $line
-     * @param array  $uses
-     * --
-     * @throws mysli\tplp\exception\parser 10 Name is already previously declared.
-     * --
-     * @return string Id if found, null otherwise.
-     */
-    protected function find_use($line, array &$uses)
-    {
-        // Find ::use vendor.package( -> name)?
-        if (preg_match(
-            '/^[ \t]*?::use ([a-z0-9\_\.]+)(?: \-\> ([a-z0-9_]+))?$/',
-            $line, $match))
-        {
-            $use = $match[1];
-
-            if (!isset($match[2]))
-                $as = substr($use, strrpos($use, '.')+1);
-            else
-                $as = $match[2];
-
-            if (isset($uses[$as]))
-            {
-                if ($uses[$as]['use'] !== $use)
-                {
-                    throw new exception\parser(
-                        $this->f_error_use($use, $as, $uses[$as]['debug']), 10
-                    );
-                }
-            }
-            else
-            {
-                $uses[$as] = [
-                    'statement' => "use ".str_replace('.', '\\', $use)."\\__tplp as {$as};",
-                    'use'       => $use
-                ];
-            }
-
-            return $as;
-        }
     }
 
     /**
@@ -1830,155 +1379,4 @@ namespace mysli\tplp; class parser
             return $function . '(%seg, ' . implode(', ', $segments) . ')';
         }
     }
-
-    /**
-     * Handle file import.
-     * --
-     * @param  string $file    Filename that needs to be imported.
-     * @param  array  $uses
-     * @param  array  $set
-     * @param  string $module
-     * @param  string $dir
-     * @param  array  $replace
-     * --
-     * @return string
-     */
-    protected function handle_import(
-        $file, array $uses, $set, $module, $dir, $replace)
-    {
-        if (isset($replace[$file]))
-        {
-            if (is_array($replace[$file]))
-                $path = implode('/', $replace[$file]);
-            else
-                $path = "{$dir}/{$file}.tpl.html";
-        }
-        else
-            $path = $this->resolve_relative_path($file, $dir);
-
-
-        return $this->parse(
-            $path, $uses, $set, $module, $replace
-        );
-    }
-
-    /**
-     * Resolve relative filename for inclusions.
-     * --
-     * @param string $relative
-     * @param string $dir
-     * --
-     * @throws mysli\tplp\exception\tplp 10 File not found...
-     * --
-     * @return string
-     */
-    protected function resolve_relative_path($relative, $dir)
-    {
-        $path = realpath(fs::ds($dir, $relative.'.tpl.html'));
-
-        if (!file::exists($path))
-            throw new exception\parser("File not found: `{$path}`", 10);
-
-        return $path;
-    }
-
-    /**
-     * Format generic use exception message.
-     * --
-     * @param string $use
-     * @param string $as
-     * @param array  $previous_debug
-     * --
-     * @return string
-     */
-    protected function f_error_use($use, $as, array $previous_debug)
-    {
-        $return = "Cannot use `{$use}` as `{$as}` because the name ".
-        "is already previously declared in following location(s):\n";
-
-        foreach ($previous_debug as $previous)
-        {
-            $return .= $previous['lines']."\n\n";
-        }
-
-        $return .= "ERROR:";
-
-        return $return;
-    }
-
-    /*
-    --- Properties -------------------------------------------------------------
-     */
-
-    /**
-     * Template's root directory.
-     * --
-     * @var string
-     */
-    protected $root;
-
-    /**
-     * Replaced files.
-     * --
-     * @var array
-     */
-    protected $replace = [];
-
-    /**
-     * Processed templates cache.
-     * --
-     * @var array
-     */
-
-    protected $cache = [];
-    /**
-     * Costume functions.
-     * --
-     * @var array
-     */
-    protected $user_functions = [];
-
-    /**
-     * Build in default functions.
-     * --
-     * @var array
-     */
-    protected static $default_functions = [
-        "abs"           => "abs(%seg)",
-        "ucfirst"       => "ucfirst(%seg)",
-        "ucwords"       => "ucwords(%seg)",
-        "lower"         => "strtolower(%seg)",
-        "upper"         => "strtoupper(%seg)",
-        "date"          => "date(%1, strtotime(%seg))",
-        "join"          => "implode(%1, %seg)",
-        "isset"         => "isset(%seg)",
-        "split"         => "explode(%1, %seg, ...)",
-        "length"        => "strlen(%seg)",
-        "word_count"    => "str_word_count(%seg)",
-        "count"         => "count(%seg)",
-        "nl2br"         => "nl2br(%seg)",
-        "number_format" => "number_format(%seg, ...)",
-        "replace"       => "sprintf(%seg, ...)",
-        "round"         => "round(%seg, ...)",
-        "floor"         => "floor(%seg)",
-        "ceil"          => "ceil(%seg)",
-        "strip_tags"    => "strip_tags(%seg, ...)",
-        "show_tags"     => "htmlspecialchars(%seg)",
-        "trim"          => "trim(%seg, ...)",
-        "slice"         => "( is_array(%seg) ? array_slice(%seg, ...) ".
-                                            ": substr(%seg, ...) )",
-        "word_wrap"     => "wordwrap(%seg, %1, '<br/>')",
-        "max"           => "max(%seg, ...)",
-        "min"           => "min(%seg, ...)",
-        "column"        => "array_column(%seg, %1, ...)",
-        "reverse"       => "( is_array(%seg) ? array_reverse(%seg) ".
-                                            ": strrev(%seg) )",
-        "contains"      => "( (is_array(%seg) ? in_array(%1, %seg) ".
-                                            ": strpos(%seg, %1)) !== false )",
-        "key_exists"    => "array_key_exists(%1, %seg)",
-        "sum"           => "array_sum(%seg)",
-        "unique"        => "array_unique(%seg)",
-        "range"         => "range(%1, %2, ...)",
-        "random"        => "rand(%1, %2)"
-    ];
 }

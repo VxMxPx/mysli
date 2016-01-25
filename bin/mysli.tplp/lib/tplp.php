@@ -2,15 +2,10 @@
 
 namespace mysli\tplp; class tplp
 {
-    const __use = '
+    const __use = <<<fin
         .{ exception.tplp }
-        mysli.toolkit.{
-            pkg,
-            fs.fs  -> fs,
-            fs.dir -> dir,
-            type.arr_path -> arrp
-        }
-    ';
+        mysli.toolkit.fs.{ fs, dir }
+fin;
 
     /**
      * Cache template objects.
@@ -42,10 +37,9 @@ namespace mysli\tplp; class tplp
     static function select($p, $file=null, array $variables=[])
     {
         // If package, resolve it to path.
-        if (preg_match('/^[a-z_\.]+$/', $p))
-            $path = static::get_path($p);
-        else
-            $path = $p;
+        $path = (preg_match('/^[a-z0-9_\.]+$/', $p))
+            ? static::get_pkg_path($p)
+            : $p;
 
         // Valid path?
         if (!$path || !dir::exists($path))
@@ -67,44 +61,17 @@ namespace mysli\tplp; class tplp
     }
 
     /**
-     * Get full absolute path to the root of templates, from package name.
-     * This will inspect mysli.pkg.ym if costume path is set.
-     *
-     * If package not found, null will be returned.
-     * --
-     * @param string  $package
-     * --
-     * @throws mysli\tplp\exception\tplp 10 No such package.
-     * --
-     * @return string
-     */
-    static function get_path($package)
-    {
-        if (!pkg::exists($package))
-            throw new exception\tplp("No such package: `{$package}`.", 10);
-
-        $meta = pkg::get_meta($package);
-        $path = arrp::get($meta, 'tplp.path', 'assets/tplp');
-
-        return fs::pkgreal($path);
-    }
-
-    /**
-     * Get a full filename for temporary file, from a path+filename.
-     *
-     * Result example, for a file named: `blog/post`
-     * cb647a447c6841d5e5840b44194ed0a4-blog-d-post.php
+     * Generate temp file(name).
      * --
      * @param string $file
      * @param string $root
      * --
      * @return string
      */
-    static function tmpname($file, $root)
+    static function tmp_filename($file, $root)
     {
-        return
-            md5("{$root}{$file}.php").
-            '-'.
-            str_replace('/', '-d-', $file).'.php';
+        $tfile = md5("{$root}{$file}")
+            .'-'.str_replace('/', '-d-', $file.'.tpl.php');
+        return fs::tmppath('tplp', $tfile);
     }
 }

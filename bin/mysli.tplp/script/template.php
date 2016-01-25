@@ -243,7 +243,7 @@ namespace mysli\tplp\root\script; class template
         // Package
         if (preg_match('/^[a-z0-9\.]+$/', $path))
         {
-            $path = pkg::get_path($path);
+            $path = tplp::get_path($path);
         }
         // Or relative path
         else

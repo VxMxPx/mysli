@@ -2,46 +2,38 @@
 
 namespace mysli\tplp; class template
 {
-    const __use = '
-        .{
-            tplp
-            parser
-            exception.template
-        }
-        mysli.toolkit.{
-            fs.fs   -> fs
-            fs.dir  -> dir
-            fs.file -> file
-        }
-    ';
+    const __use = <<<fin
+        .{ tplp, parser, exception.template }
+        mysli.toolkit.fs.{ fs, dir, file }
+fin;
 
     /**
      * Full absolute path to the templates root, for this instance.
      * --
      * @var string
      */
-    protected$root;
+    protected $root;
 
     /**
      * Translator instance.
      * --
      * @var mixed
      */
-    protected$translator;
+    protected $translator;
 
     /**
      * Variables set for this instance.
      * --
      * @var array
      */
-    protected$variables = [];
+    protected $variables = [];
 
     /**
      * Replaced files.
      * --
      * @var array
      */
-    protected$replace = [];
+    protected $replace = [];
 
     /**
      * Instance of parser.
@@ -58,11 +50,8 @@ namespace mysli\tplp; class template
     function __construct($root)
     {
         $this->root = $root;
-
-        if (dir::exists(fs::ds($root, 'dist~')))
-            $root = "{$root}/dist~";
-
-        $this->parser = new parser($root);
+        $this->parser = new parser();
+        $this->extender = new extender($root);
     }
 
     /**
@@ -141,49 +130,31 @@ namespace mysli\tplp; class template
     }
 
     /**
-     * Replace a local file with an external one, or set file which
-     * internally doesn't exists.
-     *
-     * The behavior of this method is exactly the same, as if you'd copy an
-     * external file to the current root. The difference is, this method will not
-     * actually copy a file.
-     *
-     * If source file will have any includes,
-     * those will be made from the current root.
-     * --
-     * @param string $file
-     *        A file which is bring replaced (with extension!!).
-     *
-     * @param mixed $with
-     *        Array:
-     *            Provide an array in following format:
-     *            [ string $root, string $filename ]
-     *
-     *            $root: A root directory from which file is being loaded.
-     *            $filename: Actual filename of file being included.
-     *
-     *        String:
-     *            Provide actual template, rather than file. This will not seek
-     *            for file, but rather just use the provided template.
-     */
-    function replace($file, $with)
-    {
-        $this->parser->replace($file, $with);
-        $this->replace[$file] = $with;
-    }
-
-    /**
      * Render template.
      * --
-     * @param string $file
+     * @param mixed  $file
+     *        String: filename to render, e.g.: `default_template`.
+     *        Array:  [vendor.package, filename] to render partial from another
+     *        template (while using includes from current root).
      * @param array  $variables
      * --
      * @return string
      */
     function render($file, array $variables=[])
     {
-        // Find cached file / extend / parse file...
-        list($loaded, $file) = $this->get_file($file);
+        if (is_array($file))
+        {
+            list($package, $file) = $file;
+            $root = tplp::get_pkg_path($package);
+        }
+        else
+        {
+            $root = $this->root;
+        }
+
+        $template = $this->extender->process($file, $root);
+        $filename = tplp::tmp_filename($file, $root);
+        file::write($filename, $template);
 
         // Assign variables...
         $variables = array_merge($this->variables, $variables);
@@ -194,142 +165,10 @@ namespace mysli\tplp; class template
         }
 
         ob_start();
-        if ($loaded)
-            eval($file);
-        else
-            include($file);
+        include($filename);
         $result = ob_get_contents();
         ob_end_clean();
 
         return $result;
-    }
-
-    /**
-     * Check weather particular template SOURCE file exists.
-     * This will omit temporary folder, dist~
-     * and replaced files (@see static::replace()).
-     * --
-     * @param string $file
-     * --
-     * @return boolean
-     */
-    function has($file)
-    {
-        return
-        file::exists("{$this->root}/{$file}.php") ||
-        file::exists("{$this->root}/{$file}.tpl.php") ||
-        file::exists("{$this->root}/{$file}.tpl.html");
-    }
-
-    /*
-    --- Protected --------------------------------------------------------------
-     */
-
-    /**
-     * Acquire file, or create it if it doesn't exists.
-     * --
-     * @param string $file
-     * --
-     * @throws mysli\tplp\exception\template 10 No such file...
-     * @throws mysli\tplp\exception\template 20 Parsing failed...
-     * --
-     * @return array [ boolean $loaded, string $file ]
-     */
-    protected function get_file($file)
-    {
-        if (false !== ($mfile = $this->locate_file($file, 'php')))
-        {
-            return $mfile;
-        }
-        else
-        {
-            foreach (['tpl.php', 'tpl.html'] as $type)
-            {
-                if (false === ($mfile = $this->locate_file($file, $type)))
-                    continue;
-
-                list($loaded, $template) = $mfile;
-
-                if ($loaded)
-                {
-                    if ($type === 'tpl.php')
-                        $action = 'extend';
-                    else
-                        $action = 'template';
-                }
-                else
-                {
-                    $template = basename($template);
-                    $action = 'file';
-                }
-
-                // Parse // extend...
-                try
-                {
-                    $processed = $this->parser->{$action}($template);
-                }
-                catch (\Exception $e)
-                {
-                    throw new exception\template(
-                        "Parsing of file `{$file}` failed with message: ".
-                        $e->getMessage(), 20
-                    );
-                }
-
-                // Save file to temporary folder
-                $tempfilename = tplp::tmpname($file, $this->root);
-                file::write(fs::tmppath('tplp', $tempfilename), $processed);
-                return [ false, fs::tmppath('tplp', $tempfilename) ];
-            }
-        }
-
-        // No file found, oops...
-        throw new exception\template("No such file: `{$file}`.", 10);
-    }
-
-    /**
-     * Locate particular file, and return a full-file path.
-     * Primary query target will be replaced files (@see static::replace()).
-     * --
-     * @param string $file
-     * @param string $type php|tpl.php|tpl.html
-     * @param string $root If not provided `$this->root` will be used.
-     * --
-     * @return mixed
-     *         array [ boolean $loaded, string $file ]
-     *         boolean false If not found
-     */
-    protected function locate_file($file, $type, $root=null)
-    {
-        // Define root if not send in
-        if (!$root)
-            $root = $this->root;
-
-        // Insert replace to be checked
-        if (isset($this->replace["{$file}.{$type}"]))
-        {
-            $template = $this->replace["{$file}.{$type}"];
-            if (is_string($template))
-                return [ true, $template ];
-            else
-                return [ false, implode('/', $template) ];
-        }
-
-        // Temporary only when looking for PHP
-        if ($type === 'php')
-            $temporariy = fs::tmppath('tplp', tplp::tmpname($file, $root));
-
-        $dist = "{$root}/dist~/{$file}.{$type}";
-        $source = "{$root}/{$file}.{$type}";
-
-        // Check paths
-        if ($type === 'php' && file::exists($temporariy))
-            return [ false, $temporariy ];
-        elseif (file::exists($dist))
-            return [ false, $dist ];
-        elseif (file::exists($source))
-            return [ false, $source ];
-        else
-            return false;
     }
 }
