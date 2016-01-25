@@ -6,7 +6,7 @@ namespace mysli\frontend; class __setup
         .{ theme }
         mysli.toolkit.{
             config
-            router
+            route
             fs.fs   -> fs
             fs.dir  -> dir
             fs.file -> file
@@ -18,11 +18,17 @@ namespace mysli\frontend; class __setup
         $c = config::select('mysli.frontend');
         $c->init(
             [
-                'locale.from'    => [ 'string', null ],
+                // Where locales can be found:
+                // subdomain - http://si.domain.tld/
+                // segment   - http://domain.tld/si/
+                // get       - http://domain.tld/?loc=si
+                'locale.at'      => [ 'string', null ],
+                // Default locale's ID
                 'locale.default' => [ 'string', 'us' ],
+                // Locale's URL ID to I18n File Code
                 'locale.accept'  => [ 'array',  [ 'us' => 'en-us' ] ],
-
-                'theme.active'   => [ 'string', 'default' ]
+                // Currently selected theme
+                'theme.active'   => [ 'string', 'mysli.frontend' ]
             ]
         );
 
@@ -31,31 +37,15 @@ namespace mysli\frontend; class __setup
          */
         return
 
-        // Create Directory With Default Tehemes
-        dir::create(fs::cntpath('themes/default'))
-
-        and
-
-        // Write Default Theme
-        file::write(
-            fs::cntpath('themes/default/theme.ym'),
-            'source: [ mysli.frontend, assets/theme ]'
-        )
-
-        and
-
         // Add Route Which Will Handle 404
-        router::add(
-            'mysli.frontend.frontend',
-            'error404',
-            router::route_special
-        )
+        route::add('mysli.frontend.route::error', 'ANY', '*error', 'low') and
+        route::write()
 
         and
 
         !! dir::copy(
-            fs::pkgreal('mysli.frontend', 'assets/theme/public'),
-            fs::pubpath('themes/default')
+            fs::pkgreal('mysli.frontend', 'assets/public'),
+            fs::pubpath('themes/mysli.frontend')
         )
 
         and
@@ -69,11 +59,12 @@ namespace mysli\frontend; class __setup
 
     static function disable()
     {
-        // Remove default theme
-        dir::remove(fs::cntpath('themes/default'));
-
         // Unregister route
-        router::remove('*@mysli.frontend.frontend');
+        route::remove('mysli.frontend.*');
+        route::write();
+
+        // Remove published theme
+        dir::remove(fs::pubpath('themes/mysli.frontend'));
 
         // Drop Config
         config::select('mysli.frontend')->destroy();

@@ -1,6 +1,6 @@
 package:     mysli.frontend
 version:     1
-description: "Mysli Frontend Bring Content, Template and I18n together."
+description: "Frontend package: handle routes, language, and templates."
 license:     GPL-3.0
 authors:
     - Marko Gajšt (Developer) <m@gaj.st>
@@ -8,3 +8,9 @@ require:
     mysli.toolkit: 1
     mysli.tplp:    1
     mysli.i18n:    1
+
+frontend:
+    type: theme
+    name: Default Frontend Theme
+    # Optional assets path (relative to the root)
+    # assets: assets

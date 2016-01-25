@@ -4,11 +4,9 @@ namespace mysli\frontend\root\script; class theme
 {
     const __use = '
         .{ theme -> lib.theme }
-        mysli.toolkit.cli.{
-            prog, ui
-        }
+        mysli.toolkit.{ pkg }
+        mysli.toolkit.cli.{ prog, ui }
     ';
-
 
     /**
      * Run theme cli.
@@ -104,11 +102,13 @@ namespace mysli\frontend\root\script; class theme
      */
     protected static function meta($theme)
     {
-        $meta = lib\theme::get_meta($theme);
+        $meta = pkg::get_meta($theme);
+
         ui::t(
             "<title>Meta for {$theme}</title>\n\n<al>{meta}</al>",
             ['meta' => $meta]
         );
+
         return true;
     }
 
@@ -126,9 +126,9 @@ namespace mysli\frontend\root\script; class theme
         foreach ($all as $id => $meta)
         {
             if ($active === $id)
-                $list[$id] = ui::strong('*'.$meta['theme'], true);
+                $list[$id] = ui::strong('[*] '.$meta['frontend']['name'], true);
             else
-                $list[$id] = $meta['theme'];
+                $list[$id] = $meta['frontend']['name'];
         }
 
         ui::t(
@@ -138,6 +138,7 @@ namespace mysli\frontend\root\script; class theme
                 'list' => $list
             ]
         );
+
         return true;
     }
 
