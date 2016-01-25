@@ -87,7 +87,7 @@ namespace mysli\i18n; class i18n
         $meta = pkg::get_meta($package);
         $path = arrp::get($meta, 'i18n.path', 'assets/i18n');
 
-        return fs::pkgreal($path);
+        return fs::pkgreal($package, $path);
     }
 
     /**

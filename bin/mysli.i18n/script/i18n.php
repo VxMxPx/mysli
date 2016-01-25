@@ -4,9 +4,9 @@ namespace mysli\i18n\root\script; class i18n
 {
 
     const __use = '
-        .{ parser, i18n }
+        .{ parser, i18n -> lib.i18n }
         mysli.toolkit.cli.{ prog, param, ui, output, util }
-        mysli.toolkit.{ pkg, fs.fs -> fs, fs.file, fs.dir }
+        mysli.toolkit.{ json, pkg, fs.fs -> fs, fs.file, fs.dir, fs.observer }
     ';
 
     /**
@@ -115,10 +115,10 @@ namespace mysli\i18n\root\script; class i18n
                 {
                     // Process
                     $language = substr(basename($file), 0, -4);
-                    $contents = parser::process($lng, $language);
+                    $contents = parser::process(fs\file::read($file), $language);
 
                     fs\file::create_recursive($dspath, true);
-                    if (fs\file::write($dspath, $contents))
+                    if (json::encode_file($dspath, $contents))
                         ui::success('Saved', $rpfile);
                     else
                         ui::error('Failed saving', $rpfile);
@@ -150,7 +150,7 @@ namespace mysli\i18n\root\script; class i18n
         // Package
         if (preg_match('/^[a-z0-9\.]+$/', $path))
         {
-            $path = pkg::get_path($path);
+            $path = lib\i18n::get_path($path);
         }
         // Or relative path
         else
