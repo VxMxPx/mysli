@@ -117,7 +117,7 @@ namespace mysli\toolkit; class __init
         /*
         Resolve route(s)
          */
-        $route = '/'.implode('/', request::segments());
+        $route = '/'.implode('/', request::segment());
         $r = ($route === '/')
             ? route::index()
             : route::execute($route);
@@ -126,6 +126,9 @@ namespace mysli\toolkit; class __init
         {
             if (!route::error(404))
             {
+                log::debug(
+                    "Page not found for: `{$route}`, additionally, ".
+                    "no *error route is available.", __CLASS__);
                 response::set_status(response::status_404_not_found);
                 event::trigger('toolkit::web.route_error');
             }
