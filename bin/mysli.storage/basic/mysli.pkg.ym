@@ -1,8 +1,0 @@
-package:     mysli.storage.basic
-version:     1
-description: Basic storage package.
-license:     GPL-3.0
-authors:
-    - Marko Gajšt (Developer) <m@gaj.st>
-require:
-    mysli.framework.fs:    1
