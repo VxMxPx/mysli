@@ -3,10 +3,10 @@
 #: Before
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 use mysli\tplp\parser;
-use mysli\toolkit\fs\fs;
 
-#: Define File
-$file = <<<'FILE'
+#: Test Function Namespaced
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$template = <<<'TEMPLATE'
 <html>
 <body>
     ::use mysli.assets
@@ -14,19 +14,14 @@ $file = <<<'FILE'
     {|assets.tags:variable.property}
 </body>
 </html>
-FILE;
-
-#: Test Function Namespaced
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#: Use File
-$parser = new parser(fs::tmppath('dev.test'));
+TEMPLATE;
+$parser = new parser();
 return assert::equals(
-    $parser->template($file),
+    $parser->process($template),
     <<<'EXPECT'
-<?php
-use mysli\assets\__tplp as assets;
-?><html>
+<html>
 <body>
+    ::use mysli.assets
     <?php echo assets::tags('css/main.css', 'template:default'); ?>
     <?php echo assets::tags($variable->property); ?>
 </body>

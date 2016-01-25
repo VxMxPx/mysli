@@ -2,22 +2,19 @@
 
 #: Before
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-use mysli\tplp\parser;
+use mysli\tplp\extender;
 use mysli\toolkit\fs\fs;
+use mysli\toolkit\fs\file;
 
-#: Define File
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-$file = <<<'FILE'
+file::write(fs::tmppath('dev.test/base.tpl.html'), <<<'FILE'
 ::use mysli.cm.blog -> blog
 ::use mysli.cm.page -> page
 <div>
     {variable}
 </div>
-FILE;
-
-#: Define Error
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-$file = <<<'FILE'
+FILE
+);
+file::write(fs::tmppath('dev.test/error.tpl.html'), <<<'FILE'
 ::use mysli.cms.blog
 ::use mysli.cms.blog
 <div>
@@ -27,16 +24,24 @@ $file = <<<'FILE'
 <div>
     {variable[2]}
 </div>
-FILE;
+FILE
+);
 
-#: Test Use
+#: After
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#: Use File
-$parser = new parser(fs::tmppath('dev.test'));
+file::remove(fs::tmppath('dev.test/base.tpl.html'));
+file::remove(fs::tmppath('dev.test/error.tpl.html'));
+
+#: Test Extend Set
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$extender = new extender(fs::tmppath('dev.test'));
+$template = $extender->process('base');
+
 return assert::equals(
-    $parser->template($file),
+    $template,
     <<<'EXPECT'
 <?php
+namespace tplp\template\base;
 use mysli\cm\blog\__tplp as blog;
 use mysli\cm\page\__tplp as page;
 ?><div>
@@ -45,10 +50,9 @@ use mysli\cm\page\__tplp as page;
 EXPECT
 );
 
-
 #: Test Use Exception
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #: Use Error
-#: Expect Exception mysli\tplp\exception\parser 10
-$parser = new parser(fs::tmppath('dev.test'));
-$parser->template($file);
+#: Expect Exception mysli\tplp\exception\extender 10
+$extender = new extender(fs::tmppath('dev.test'));
+$extender->process('error');

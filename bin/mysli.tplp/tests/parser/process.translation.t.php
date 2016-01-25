@@ -3,10 +3,10 @@
 #: Before
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 use mysli\tplp\parser;
-use mysli\toolkit\fs\fs;
 
-#: Define File
-$file = <<<'FILE'
+#: Test Translation
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$template = <<<'TEMPLATE'
 <html>
 <body>
     {@HELLO}
@@ -17,14 +17,10 @@ $file = <<<'FILE'
     {@HELLO_USER user1, user2, false, 'string!'}
 </body>
 </html>
-FILE;
-
-#: Test Translation
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#: Use File
-$parser = new parser(fs::tmppath('dev.test'));
+TEMPLATE;
+$parser = new parser();
 return assert::equals(
-    $parser->template($file),
+    $parser->process($template),
     <<<'EXPECT'
 <html>
 <body>

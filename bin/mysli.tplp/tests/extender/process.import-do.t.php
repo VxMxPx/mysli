@@ -2,11 +2,11 @@
 
 #: Before
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-use mysli\tplp\parser;
+use mysli\tplp\extender;
 use mysli\toolkit\fs\fs;
+use mysli\toolkit\fs\file;
 
-#: Define File
-$base = <<<'TEST'
+file::write(fs::tmppath('dev.test/base.tpl.html'), <<<'TEST'
 <!DOCTYPE html>
 <html>
 <head>
@@ -23,9 +23,10 @@ $base = <<<'TEST'
     ::/import
 </body>
 </html>
-TEST;
+TEST
+);
 
-$_modules = <<<'_MODULES'
+file::write(fs::tmppath('dev.test/_modules.tpl.html'), <<<'_MODULES'
 ::module sidebar
 <div class="sidebar">
     ::print before
@@ -33,19 +34,25 @@ $_modules = <<<'_MODULES'
     ::print after
 </div>
 ::/module
-_MODULES;
+_MODULES
+);
 
+#: After
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+file::remove(fs::tmppath('dev.test/base.tpl.html'));
+file::remove(fs::tmppath('dev.test/_modules.tpl.html'));
 
 #: Test Import Do
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#: Use File
-$parser = new parser(fs::tmppath('dev.test'));
-$parser->replace('_modules.tpl.php', $parser->template($_modules));
-$parsed = $parser->template($base);
+$extender = new extender(fs::tmppath('dev.test'));
+$template = $extender->process('base');
+
 return assert::equals(
-    $parser->extend($parsed),
+    $template,
     <<<'EXPECT'
-<!DOCTYPE html>
+<?php
+namespace tplp\template\base;
+?><!DOCTYPE html>
 <html>
 <head>
     <title><?php echo $title; ?></title>

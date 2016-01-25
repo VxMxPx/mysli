@@ -3,11 +3,10 @@
 #: Before
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 use mysli\tplp\parser;
-use mysli\toolkit\fs\fs;
 
-#: Define Basic
+#: Test If Basic
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-$file = <<<'FILE'
+$template = <<<'TEMPLATE'
 <html>
 <body>
     ::if variable > 0
@@ -34,44 +33,10 @@ $file = <<<'FILE'
     ::/if
 </body>
 </html>
-FILE;
-
-#: Define Conditions
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-$file = <<<'FILE'
-::if not posts|count and not comments|count
-::/if
-
-::if one and (two or (three and four or (five and six))) and seven
-::/if
-
-::if one and ( two or ( three and four or ( five and six ) ) ) and seven
-::/if
-
-::if one and (two or (three and four or (five and six))) and not seven
-::/if
-
-::if !one and !(two or (!three and !four or !(five and six)))
-::/if
-
-::if ! one and ! (two or (! three and ! four or ! (five and six)))
-::/if
-
-
-::if ! one and ! ( two or ( ! three and ! four or ! ( five and six ) ) )
-::/if
-
-::if not one and not (two or (not three and not four or not (five and six)))
-::/if
-FILE;
-
-
-#: Test If Basic
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#: Use Basic
-$parser = new parser(fs::tmppath('dev.test'));
+TEMPLATE;
+$parser = new parser();
 return assert::equals(
-    $parser->template($file),
+    $parser->process($template),
     <<<'EXPECT'
 <html>
 <body>
@@ -100,10 +65,35 @@ EXPECT
 
 #: Test If Multiple Conditions
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#: Use Conditions
-$parser = new parser(fs::tmppath('dev.test'));
+$template = <<<'TEMPLATE'
+::if not posts|count and not comments|count
+::/if
+
+::if one and (two or (three and four or (five and six))) and seven
+::/if
+
+::if one and ( two or ( three and four or ( five and six ) ) ) and seven
+::/if
+
+::if one and (two or (three and four or (five and six))) and not seven
+::/if
+
+::if !one and !(two or (!three and !four or !(five and six)))
+::/if
+
+::if ! one and ! (two or (! three and ! four or ! (five and six)))
+::/if
+
+
+::if ! one and ! ( two or ( ! three and ! four or ! ( five and six ) ) )
+::/if
+
+::if not one and not (two or (not three and not four or not (five and six)))
+::/if
+TEMPLATE;
+$parser = new parser();
 return assert::equals(
-    $parser->template($file),
+    $parser->process($template),
     <<<'EXPECT'
 <?php if (!count($posts) and !count($comments)): ?>
 <?php endif; ?>

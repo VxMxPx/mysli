@@ -2,11 +2,11 @@
 
 #: Before
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-use mysli\tplp\parser;
+use mysli\tplp\extender;
 use mysli\toolkit\fs\fs;
+use mysli\toolkit\fs\file;
 
-#: Define File
-$base = <<<'TEST'
+file::write(fs::tmppath('dev.test/base.tpl.html'), <<<'TEST'
 ::extend _layout set content do
     ::set styles
     <link rel="stylesheet" type="text/css" href="main.css">
@@ -16,9 +16,10 @@ $base = <<<'TEST'
 <div>
     Some content here...
 </div>
-TEST;
+TEST
+);
 
-$_layout = <<<'_LAYOUT'
+file::write(fs::tmppath('dev.test/_layout.tpl.html'), <<<'_LAYOUT'
 <!DOCTYPE html>
 <html>
 <head>
@@ -29,18 +30,25 @@ $_layout = <<<'_LAYOUT'
     ::print content
 </body>
 </html>
-_LAYOUT;
+_LAYOUT
+);
+
+#: After
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+file::remove(fs::tmppath('dev.test/base.tpl.html'));
+file::remove(fs::tmppath('dev.test/_layout.tpl.html'));
 
 #: Test Extend Do
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#: Use File
-$parser = new parser(fs::tmppath('dev.test'));
-$parser->replace('_layout.tpl.php', $parser->template($_layout));
-$parsed = $parser->template($base);
+$extender = new extender(fs::tmppath('dev.test'));
+$template = $extender->process('base');
+
 return assert::equals(
-    $parser->extend($parsed),
+    $template,
     <<<'EXPECT'
-<!DOCTYPE html>
+<?php
+namespace tplp\template\base;
+?><!DOCTYPE html>
 <html>
 <head>
     <title><?php echo $title; ?></title>

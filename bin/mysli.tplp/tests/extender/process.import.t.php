@@ -2,12 +2,11 @@
 
 #: Before
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-use mysli\tplp\parser;
+use mysli\tplp\extender;
 use mysli\toolkit\fs\fs;
+use mysli\toolkit\fs\file;
 
-#: Define Import
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-$base = <<<'TEST'
+file::write(fs::tmppath('dev.test/base.tpl.html'),  <<<'TEST'
 <!DOCTYPE html>
 <html>
 <head>
@@ -17,18 +16,17 @@ $base = <<<'TEST'
     ::import _sidebar
 </body>
 </html>
-TEST;
+TEST
+);
 
-$_sidebar = <<<'_SIDEBAR'
+file::write(fs::tmppath('dev.test/_sidebar.tpl.html'), <<<'_SIDEBAR'
 <div class="sidebar">
     <p>Hello world!</p>
 </div>
-_SIDEBAR;
+_SIDEBAR
+);
 
-
-#: Define Error
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-$base = <<<'TEST'
+file::write(fs::tmppath('dev.test/error.tpl.html'), <<<'TEST'
 <!DOCTYPE html>
 <html>
 <head>
@@ -38,21 +36,25 @@ $base = <<<'TEST'
     ::import _non_existant_file
 </body>
 </html>
-TEST;
+TEST
+);
 
+#: After
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+file::remove(fs::tmppath('dev.test/base.tpl.html'));
+file::remove(fs::tmppath('dev.test/_sidebar.tpl.html'));
+file::remove(fs::tmppath('dev.test/error.tpl.html'));
 
 #: Test Import
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#: Use Import
-$parser = new parser(fs::tmppath('dev.test'));
-$parser->replace('_sidebar.tpl.php', $parser->template($_sidebar, 'in\\sidebar'));
-$parsed = $parser->template($base, 'in\\base');
+$extender = new extender(fs::tmppath('dev.test'));
+$template = $extender->process('base');
+
 return assert::equals(
-    $parser->extend($parsed, 'in\\base'),
+    $template,
     <<<'EXPECT'
 <?php
-// NAMESPACE:
-namespace in\base;
+namespace tplp\template\base;
 ?><!DOCTYPE html>
 <html>
 <head>
@@ -67,10 +69,9 @@ namespace in\base;
 EXPECT
 );
 
-
 #: Test Import Exception
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #: Use Error
-#: Expect Exception mysli\tplp\exception\parser 10
-$parser = new parser(fs::tmppath('dev.test'));
-$parser->extend( $parser->template($base) );
+#: Expect Exception mysli\tplp\exception\extender 10
+$extender = new extender(fs::tmppath('dev.test'));
+$extender->process('error');

@@ -2,32 +2,33 @@
 
 #: Before
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-use mysli\tplp\template;
+use mysli\tplp\extender;
 use mysli\toolkit\fs\fs;
 use mysli\toolkit\fs\file;
 
-$file = <<<'FILE'
-<html>
-<body>
-    {hello}
-</body>
-</html>
-FILE;
-file::write(fs::tmppath('dev.test/base.tpl.html'), $file);
+file::write(fs::tmppath('dev.test/base.tpl.html'), <<<'TEST'
+<div>
+    Some content here...
+</div>
+TEST
+);
 
 #: After
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 file::remove(fs::tmppath('dev.test/base.tpl.html'));
 
-#: Test Basic
+#: Test Import
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-$template = new template(fs::tmppath('dev.test'));
+$extender = new extender(fs::tmppath('dev.test'));
+$template = $extender->process('base');
+
 return assert::equals(
-    $template->render('base', [ 'hello' => 'HELLO!!' ]),
+    $template,
     <<<'EXPECT'
-<html>
-<body>
-    HELLO!!</body>
-</html>
+<?php
+namespace tplp\template\base;
+?><div>
+    Some content here...
+</div>
 EXPECT
 );

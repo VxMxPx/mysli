@@ -3,10 +3,10 @@
 #: Before
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 use mysli\tplp\parser;
-use mysli\toolkit\fs\fs;
 
-#: Define File
-$file = <<<'FILE'
+#: Test Comments
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$template = <<<'TEMPLATE'
 <html>
 <body>
     a{* Comment *} b{* Comment *}
@@ -26,14 +26,10 @@ $file = <<<'FILE'
     }}}
 </body>
 </html>
-FILE;
-
-#: Test Comments
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#: Use File
-$parser = new parser(fs::tmppath('dev.test'));
+TEMPLATE;
+$parser = new parser();
 return assert::equals(
-    $parser->template($file),
+    $parser->process($template),
     <<<'EXPECT'
 <html>
 <body>

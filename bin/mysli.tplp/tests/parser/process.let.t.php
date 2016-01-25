@@ -3,10 +3,10 @@
 #: Before
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 use mysli\tplp\parser;
-use mysli\toolkit\fs\fs;
 
-#: Define File
-$file = <<<'FILE'
+#: Test Let
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$template = <<<'TEMPLATE'
 ::let var_name = 'Marko'
 
 ::let var_multiline from
@@ -35,15 +35,10 @@ $file = <<<'FILE'
     Paris : France
     Kyiv : Ukraine
 ::/let
-FILE;
-
-
-#: Test Let
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#: Use File
-$parser = new parser(fs::tmppath('dev.test'));
+TEMPLATE;
+$parser = new parser();
 return assert::equals(
-    $parser->template($file),
+    $parser->process($template),
     <<<'EXPECT'
 <?php $var_name = 'Marko'; ?>
 <?php $var_multiline = 'This will act exactly the same as it would in HTML. This text will be displayed in single line. Tha\'s the thing... That\'s the escaped thing...'; ?>
