@@ -188,4 +188,36 @@ fin;
 
         return $result;
     }
+
+    /**
+     * See if template exists.
+     * --
+     * @param string $file
+     * @param string $root
+     * --
+     * @return boolean
+     */
+    function has($file, $root=null)
+    {
+        $root = !$root ? $this->root : $root;
+
+        $locations = [
+            "{$root}/{$file}.php",
+            "{$root}/dist~/{$file}.php",
+            "{$root}/{$file}.tpl.php",
+            "{$root}/dist~/{$file}.tpl.php",
+            tplp::tmp_filename($file, $root),
+            "{$root}/{$file}.tpl.html",
+        ];
+
+        foreach ($locations as $loc)
+        {
+            if (file::exists($loc))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }
