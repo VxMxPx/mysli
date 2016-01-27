@@ -26,8 +26,6 @@ namespace mysli\toolkit; class autoloader
      */
     static function load($class)
     {
-        log::debug("Load: {$class}", __CLASS__);
-
         if (isset(static::$aliases[$class]))
         {
             if (static::init_class(static::$aliases[$class]))
@@ -330,7 +328,6 @@ namespace mysli\toolkit; class autoloader
             );
         }
 
-        log::debug("Register: `{$from}` => `{$to}`.", __CLASS__);
         static::$aliases[$to] = $from;
     }
 
