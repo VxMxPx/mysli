@@ -4,7 +4,9 @@ namespace mysli\tplp; class tplp
 {
     const __use = <<<fin
         .{ exception.tplp }
+        mysli.toolkit.{ pkg }
         mysli.toolkit.fs.{ fs, dir }
+        mysli.toolkit.type.{ arr_path -> arrp }
 fin;
 
     /**
@@ -38,7 +40,7 @@ fin;
     {
         // If package, resolve it to path.
         $path = (preg_match('/^[a-z0-9_\.]+$/', $p))
-            ? static::get_pkg_path($p)
+            ? static::get_path($p)
             : $p;
 
         // Valid path?
@@ -58,6 +60,30 @@ fin;
         return $file
             ? $template->render($file, $variables)
             : $template;
+    }
+
+    /**
+     * Get full absolute path to the root of templates, from package name.
+     * This will inspect mysli.pkg.ym if costume path is set.
+     *
+     * If package not found, null will be returned.
+     * --
+     * @param string $package
+     * --
+     * @throws mysli\tplp\exception\tplp 10 No such package.
+     * --
+     * @return string
+     */
+    static function get_path($package)
+    {
+        if (!pkg::exists($package))
+        {
+            throw new exception\tplp("No such package: `{$package}`.", 10);
+        }
+
+        $meta = pkg::get_meta($package);
+        $path = arrp::get($meta, 'tplp.path', 'assets/tplp');
+        return fs::pkgreal($package, $path);
     }
 
     /**
