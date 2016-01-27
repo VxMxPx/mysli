@@ -3,9 +3,10 @@
 namespace mysli\tplp\root\script; class template
 {
     const __use = '
-        .{ parser, tplp }
-        mysli.toolkit.cli.{ prog, param, ui, output, util, input }
-        mysli.toolkit.{ pkg, fs.fs -> fs, fs.file, fs.dir, fs.observer, type.arr -> arr }
+        .{ parser, extender, tplp }
+        mysli.toolkit.fs.{ fs, file, dir, observer }
+        mysli.toolkit.cli.{ prog, ui, input }
+        mysli.toolkit.type.{ arr }
     ';
 
     /**
@@ -91,7 +92,7 @@ namespace mysli\tplp\root\script; class template
         ui::line('Type `!exit` to quit.');
 
         $buffer = [];
-        $parser = new parser(fs::tmppath('tplp'));
+        $parser = new parser();
 
         // Now wait for the user input
         return input::line('>> ',
@@ -107,7 +108,7 @@ namespace mysli\tplp\root\script; class template
 
                     try
                     {
-                        ui::line( $parser->template($template) );
+                        ui::line( $parser->process($template) );
                     }
                     catch (\Exception $e)
                     {
@@ -134,94 +135,113 @@ namespace mysli\tplp\root\script; class template
     protected static function parse($path, $static, $watch)
     {
         // Check if package // Dir exists...
-        if (!$path || !fs\dir::exists($path))
+        if (!$path || !dir::exists($path))
         {
             ui::error("Invalid path: `{$path}`.");
             return false;
         }
 
         // Create dist~ folder if not there...
-        if (!fs\dir::exists("{$path}/dist~"))
-            fs\dir::create("{$path}/dist~");
+        if (!dir::exists("{$path}/dist~"))
+        {
+            dir::create("{$path}/dist~");
+        }
 
-        $parser = new parser($path);
+        $parser = new parser();
+        $extender = new extender($path);
 
         // Setup observer
-        $observer = new fs\observer($path);
+        $observer = new observer($path);
         $observer->set_filter('*.tpl.html');
         $observer->set_interval(2);
 
         return $observer->observe(
-        function ($changes) use ($parser, $static, $path, $watch) {
+        function ($changes) use ($parser, $extender, $static, $path, $watch) {
 
             // Watch only for specific changes
             foreach ($changes as $file => $change)
             {
                 // Relative version of file for nice output and parsing
                 $rfile = substr($file, strlen($path)+1);
+                $bfile = substr($rfile, 0, -9); // Cut .tpl.html
 
                 // Dist filename and path
-                $rpfile = substr($rfile, 0, -9).($static?'.php':'.tpl.php'); // Cut .tpl.html
+                $rpfile = $bfile.'.tpl.php';
                 $dspath = "{$path}/dist~/{$rpfile}";
 
                 // Print action and file...
                 ui::info(ucfirst($change['action']), $rfile);
 
-                // Finally process file...
-                if (substr(basename($file), 0, 1) === '_' && $static)
+                // If static, then reload everything on any change
+                if (substr($bfile, 0, 1) === '_' && $static && $watch)
                 {
-                    // Reload all files, layout was changed... but only if we're
-                    // watching, if not, just skip...
-                    if ($watch === true)
+                    static::parse($path, true, false);
+                    break;
+                }
+
+                if ($change['action'] == 'removed' || isset($change['to']))
+                {
+                    if (file::exists($dspath))
                     {
-                        static::parse($path, false);
-                        break;
+                        if (file::remove($dspath))
+                        {
+                            ui::success('Removed', $rpfile);
+                        }
+                        else
+                        {
+                            ui::success('Failed removing', $rpfile);
+                        }
+                    }
+                    if (file::exists($dspath.'.composed'))
+                    {
+                        if (file::remove($dspath.'.composed'))
+                        {
+                            ui::success('Removed', $rpfile);
+                        }
+                        else
+                        {
+                            ui::success('Failed removing', $rpfile);
+                        }
+                    }
+
+                    continue;
+                }
+
+                try
+                {
+                    // Process
+                    if ($static)
+                    {
+                        $template = $extender->process($bfile);
+                        $dspath .= '.composed';
                     }
                     else
-                        continue;
+                    {
+                        $template = $parser->process(file::read($file));
+                    }
+
+                    file::create_recursive($dspath, true);
+
+                    if (file::write($dspath, $template))
+                    {
+                        ui::success('Saved', $rpfile);
+                    }
+                    else
+                    {
+                        ui::error('Failed saving', $rpfile);
+                    }
                 }
-                else
+                catch (\Exception $e)
                 {
-                    if ($change['action'] == 'removed' || isset($change['to']))
-                    {
-                        if (fs\file::exists($dspath))
-                        {
-                            if (fs\file::remove($dspath))
-                                ui::success('Removed', $rpfile);
-                            else
-                                ui::success('Failed removing', $rpfile);
-                        }
-                        continue;
-                    }
-
-                    try
-                    {
-                        // Process
-                        $contents = $parser->file($rfile);
-
-                        if ($static)
-                            $contents = $parser->extend($contents);
-
-                        fs\file::create_recursive($dspath, true);
-                        if (fs\file::write($dspath, $contents))
-                            ui::success('Saved', $rpfile);
-                        else
-                            ui::error('Failed saving', $rpfile);
-                    }
-                    catch (\Exception $e)
-                    {
-                        ui::error($e->getMessage());
-                        continue;
-                    }
+                    ui::error($e->getMessage());
+                    continue;
                 }
             }
 
             ui::nl();
 
             // Drop cache
-            fs\file::remove(
-                fs\file::find(fs::tmppath('tplp'), '*.php')
-            );
+            file::remove(file::find(fs::tmppath('tplp'), '*.php'));
 
             // Creak, e.g run only once...
             if (!$watch)
@@ -241,7 +261,7 @@ namespace mysli\tplp\root\script; class template
     protected static function resolve_path($path)
     {
         // Package
-        if (preg_match('/^[a-z0-9\.]+$/', $path))
+        if (preg_match('/^[a-z0-9_\.]+$/', $path))
         {
             $path = tplp::get_path($path);
         }
