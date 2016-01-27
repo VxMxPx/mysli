@@ -15,7 +15,10 @@ namespace mysli\frontend; class route
         }
 
         response::set_status(response::status_404_not_found);
-        frontend::render([ 'error_404', 'mysli.frontend/error_404' ]);
+        frontend::render([
+            'error_404',
+            ['mysli.frontend', 'error_404']
+        ]);
 
         return true;
     }

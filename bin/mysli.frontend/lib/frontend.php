@@ -35,25 +35,33 @@ namespace mysli\frontend; class frontend
 
         $template = tplp::select($theme);
 
+        // Set Translator
         $translator = i18n::select($theme);
         $translator->load($theme);
-
         $template->set_translator($translator);
 
-        if (!$template->has($tpls[0]))
+        // Find template
+        foreach ($tpls as $tpl)
         {
-            if (!isset($tpls[1]) || strpos($tpls[1], '/') === false)
+            if (is_array($tpl))
             {
-                return false;
+                $file = $tpl[0];
+                $root = $tpl[1];
+            }
+            else
+            {
+                $file = $tpl;
+                $root = null;
             }
 
-            list($pkg, $file) = explode('/', $tpls[1], 2);
-            $pkg = pkg::get_path($pkg);
-            $template->replace($tpls[0].'.tpl.php', [ $pkg, $file.'.tpl.php' ]);
+            if ($template->has($file, $root))
+            {
+                output::set($template->render($tpl, $variables));
+                return true;
+            }
         }
 
-        output::set($template->render($tpls[0], $variables));
-        return true;
+        return false;
     }
 
     /*
