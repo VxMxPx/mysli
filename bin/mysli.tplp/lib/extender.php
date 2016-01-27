@@ -5,7 +5,7 @@ namespace mysli\tplp; class extender
     const __use = <<<fin
         .{ tplp, parser, exception.extender }
         mysli.toolkit.{ pkg }
-        mysli.toolkit.fs.{ fs, file }
+        mysli.toolkit.fs.{ fs, dir, file }
         mysli.toolkit.type.{ str }
 fin;
 
@@ -22,6 +22,14 @@ fin;
      * @var \mysli\tplp\parser
      */
     protected $parser;
+
+    /**
+     * Internal cache, so that particular files are checked (loaded, processed)
+     * only once. Cache can be set manually too.
+     * --
+     * @var array
+     */
+    protected $cache = [];
 
     /**
      * Construct parser.
@@ -67,6 +75,35 @@ fin;
     }
 
     /**
+     * Set internal cache item.
+     * --
+     * @param string $id       Usually full absolute path.
+     * @param string $template
+     */
+    function set_cache($id, $template)
+    {
+        $this->cache[$id] = $template;
+    }
+
+    /**
+     * Remove particular or all cache items.
+     */
+    function clear_cache($id=null)
+    {
+        if ($id)
+        {
+            if (isset($this->cache[$id]))
+            {
+                unset($this->cache[$id]);
+            }
+        }
+        else
+        {
+            $this->cache = [];
+        }
+    }
+
+    /**
      * Load required file from FS.
      * This will process file if not processed already!
      * It will look into following locations:
@@ -88,6 +125,11 @@ fin;
     {
         $root = $root ? $root : $this->root;
 
+        if (isset($this->cache["{$root}/{$file}"]))
+        {
+            return $this->cache["{$root}/{$file}"];
+        }
+
         $locations = [
             "{$root}/{$file}.php",
             "{$root}/dist~/{$file}.php",
@@ -107,9 +149,10 @@ fin;
                 if (substr($path, -9) === '.tpl.html')
                 {
                     $template = $this->parser->process($template);
-                    // file::write(tplp::tmp_filename($file, $root), $template);
+                    file::write(tplp::tmp_filename($file, $root), $template);
                 }
 
+                $this->set_cache("{$root}/{$file}", $template);
                 return $template;
             }
         }
