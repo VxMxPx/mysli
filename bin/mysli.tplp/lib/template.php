@@ -136,11 +136,15 @@ fin;
      *        String: filename to render, e.g.: `default_template`.
      *        Array:  [vendor.package, filename] to render partial from another
      *        template (while using includes from current root).
+     *
      * @param array  $variables
+     *
+     * @param boolean $reload
+     *        Force template re-rendering, even if cached version exists.
      * --
      * @return string
      */
-    function render($file, array $variables=[])
+    function render($file, array $variables=[], $reload=false)
     {
         if (is_array($file))
         {
@@ -152,9 +156,22 @@ fin;
             $root = $this->root;
         }
 
-        $template = $this->extender->process($file, $root);
-        $filename = tplp::tmp_filename($file, $root);
-        file::write($filename, $template);
+        $loc_filename = fs::ds($root, $file.'.composed');
+        $tmp_filename = tplp::tmp_filename($file, $root).'.composed';
+
+        if (file::exists($loc_filename) && !$reload)
+        {
+            $filename = $loc_filename;
+        }
+        else
+        {
+            if (!file::exists($tmp_filename) || $reload)
+            {
+                $template = $this->extender->process($file, $root);
+                file::write($tmp_filename, $template);
+            }
+            $filename = $tmp_filename;
+        }
 
         // Assign variables...
         $variables = array_merge($this->variables, $variables);
