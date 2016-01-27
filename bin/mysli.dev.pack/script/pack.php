@@ -2,11 +2,11 @@
 
 namespace mysli\dev\pack\root\script; class pack
 {
-    const __use = '
+    const __use = <<<fin
         mysli.toolkit.{ ym, pkg, event }
         mysli.toolkit.fs.{ fs, dir, file }
         mysli.toolkit.cli.{ ui, prog, param, input, output }
-    ';
+fin;
 
     /**
      * Run.
@@ -174,6 +174,9 @@ namespace mysli\dev\pack\root\script; class pack
         ui::line("Adding files:");
         $ignore = static::generate_ignore_list($pkg_meta);
 
+        // Local ignore files list
+        $local_ignore = [];
+
         // Anyone is invited to add to the list...
         event::trigger(
             'mysli.dev.pack.root.script.pack::create.ignore_list',
@@ -183,12 +186,39 @@ namespace mysli\dev\pack\root\script; class pack
         fs::map(
             $pkg_root,
             function ($absolute_path, $relative_path, $is_dir)
-            use ($phar_instance, $ignore, $whitespace)
+            use ($phar_instance, $ignore, &$local_ignore, $whitespace)
         {
             if (substr(file::name($relative_path, true), 0, 1) === '.')
             {
                 ui::info("SKIP", "Hidden file {$relative_path}");
                 return fs::map_continue;
+            }
+
+            foreach ($local_ignore as $lignore)
+            {
+                if (substr($absolute_path, 0, strlen($lignore)) === $lignore)
+                {
+                    if (strpos("{$absolute_path}/", '/dist~/'))
+                    {
+                        $relative_path = str_replace('/dist~/', '/', "/{$relative_path}/");
+                        $relative_path = trim($relative_path, '/');
+                        ui::info("UPDATED", "Relative path from dist~ {$relative_path}");
+                    }
+                    else
+                    {
+                        ui::info("SKIP", "Directory is on local ignore list {$relative_path}");
+                        return fs::map_continue;
+                    }
+                }
+            }
+
+            // This directory contains dist~ directory
+            if (dir::exists(fs::ds($absolute_path, 'dist~')))
+            {
+                ui::info("SKIP", "Directory added to local ignore list {$relative_path}");
+                // Skip the whole thing...
+                $local_ignore[] = $absolute_path.'/';
+                return;
             }
 
             if ($is_dir)
@@ -425,7 +455,7 @@ namespace mysli\dev\pack\root\script; class pack
         $ignore = [];
 
         // Big License
-        $ignore[] = 'doc/COPYING';
+        $ignore[] = 'doc/';
         $ignore[] = 'tests/';
         $ignore[] = 'releases~/';
 
