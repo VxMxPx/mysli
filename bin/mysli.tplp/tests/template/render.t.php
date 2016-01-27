@@ -22,8 +22,9 @@ file::remove(fs::tmppath('dev.test/base.tpl.html'));
 #: Test Basic
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 $template = new template(fs::tmppath('dev.test'));
+$rendered = $template->render('base', [ 'hello' => 'HELLO!!' ], true);
 return assert::equals(
-    $template->render('base', [ 'hello' => 'HELLO!!' ]),
+    $rendered,
     <<<'EXPECT'
 <html>
 <body>

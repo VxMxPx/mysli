@@ -1,53 +1,46 @@
 <?php
 
 #: Before
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 use mysli\tplp\extender;
 use mysli\toolkit\fs\fs;
-use mysli\toolkit\fs\file;
 
-file::write(fs::tmppath('dev.test/base.tpl.html'),  <<<'TEST'
+#: Define Files
+    $files = [
+        fs::tmppath('dev.test/base') => <<<'BASE'
 <!DOCTYPE html>
 <html>
 <head>
-    <title>{title}</title>
+    <title>Hello World</title>
 </head>
 <body>
     ::import _sidebar
 </body>
 </html>
-TEST
-);
-
-file::write(fs::tmppath('dev.test/_sidebar.tpl.html'), <<<'_SIDEBAR'
+BASE
+,
+    fs::tmppath('dev.test/_sidebar') => <<<'_SIDEBAR'
 <div class="sidebar">
     <p>Hello world!</p>
 </div>
 _SIDEBAR
-);
-
-file::write(fs::tmppath('dev.test/error.tpl.html'), <<<'TEST'
+,
+    fs::tmppath('dev.test/error') => <<<'ERROR'
 <!DOCTYPE html>
 <html>
 <head>
-    <title>{title}</title>
+    <title>Hello World</title>
 </head>
 <body>
     ::import _non_existant_file
 </body>
 </html>
-TEST
-);
-
-#: After
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-file::remove(fs::tmppath('dev.test/base.tpl.html'));
-file::remove(fs::tmppath('dev.test/_sidebar.tpl.html'));
-file::remove(fs::tmppath('dev.test/error.tpl.html'));
+ERROR
+];
 
 #: Test Import
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#: Use Files
 $extender = new extender(fs::tmppath('dev.test'));
+foreach ($files as $id => $template) $extender->set_cache($id, $template);
 $template = $extender->process('base');
 
 return assert::equals(
@@ -58,7 +51,7 @@ namespace tplp\template\base;
 ?><!DOCTYPE html>
 <html>
 <head>
-    <title><?php echo $title; ?></title>
+    <title>Hello World</title>
 </head>
 <body>
 <div class="sidebar">
@@ -70,8 +63,8 @@ EXPECT
 );
 
 #: Test Import Exception
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#: Use Error
+#: Use Files
 #: Expect Exception mysli\tplp\exception\extender 10
 $extender = new extender(fs::tmppath('dev.test'));
+foreach ($files as $id => $template) $extender->set_cache($id, $template);
 $extender->process('error');

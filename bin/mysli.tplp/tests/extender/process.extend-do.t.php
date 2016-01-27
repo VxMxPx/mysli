@@ -1,12 +1,12 @@
 <?php
 
 #: Before
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 use mysli\tplp\extender;
 use mysli\toolkit\fs\fs;
-use mysli\toolkit\fs\file;
 
-file::write(fs::tmppath('dev.test/base.tpl.html'), <<<'TEST'
+#: Define Files
+$files = [
+    fs::tmppath('dev.test/base') => <<<'BASE'
 ::extend _layout set content do
     ::set styles
     <link rel="stylesheet" type="text/css" href="main.css">
@@ -16,14 +16,13 @@ file::write(fs::tmppath('dev.test/base.tpl.html'), <<<'TEST'
 <div>
     Some content here...
 </div>
-TEST
-);
-
-file::write(fs::tmppath('dev.test/_layout.tpl.html'), <<<'_LAYOUT'
+BASE
+,
+    fs::tmppath('dev.test/_layout') => <<<'_LAYOUT'
 <!DOCTYPE html>
 <html>
 <head>
-    <title>{title}</title>
+    <title>Hello World</title>
     ::print styles
 </head>
 <body>
@@ -31,16 +30,12 @@ file::write(fs::tmppath('dev.test/_layout.tpl.html'), <<<'_LAYOUT'
 </body>
 </html>
 _LAYOUT
-);
-
-#: After
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-file::remove(fs::tmppath('dev.test/base.tpl.html'));
-file::remove(fs::tmppath('dev.test/_layout.tpl.html'));
+];
 
 #: Test Extend Do
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#: Use Files
 $extender = new extender(fs::tmppath('dev.test'));
+foreach ($files as $id => $template) $extender->set_cache($id, $template);
 $template = $extender->process('base');
 
 return assert::equals(
@@ -51,7 +46,7 @@ namespace tplp\template\base;
 ?><!DOCTYPE html>
 <html>
 <head>
-    <title><?php echo $title; ?></title>
+    <title>Hello World</title>
     <link rel="stylesheet" type="text/css" href="main.css">
     <link rel="stylesheet" type="text/css" href="mobile.css">
 </head>

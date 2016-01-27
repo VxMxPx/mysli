@@ -1,25 +1,22 @@
 <?php
 
 #: Before
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 use mysli\tplp\extender;
 use mysli\toolkit\fs\fs;
-use mysli\toolkit\fs\file;
 
-file::write(fs::tmppath('dev.test/base.tpl.html'), <<<'TEST'
+#: Define Files
+$files = [
+    fs::tmppath('dev.test/base') => <<<'BASE'
 <div>
     Some content here...
 </div>
-TEST
-);
-
-#: After
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-file::remove(fs::tmppath('dev.test/base.tpl.html'));
+BASE
+];
 
 #: Test Import
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#: Use Files
 $extender = new extender(fs::tmppath('dev.test'));
+foreach ($files as $id => $template) $extender->set_cache($id, $template);
 $template = $extender->process('base');
 
 return assert::equals(

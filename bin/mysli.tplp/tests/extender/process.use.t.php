@@ -1,40 +1,36 @@
 <?php
 
 #: Before
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 use mysli\tplp\extender;
 use mysli\toolkit\fs\fs;
-use mysli\toolkit\fs\file;
 
-file::write(fs::tmppath('dev.test/base.tpl.html'), <<<'FILE'
+#: Define Files
+$files = [
+    fs::tmppath('dev.test/base') => <<<'BASE'
 ::use mysli.cm.blog -> blog
 ::use mysli.cm.page -> page
 <div>
-    {variable}
+    Hello!
 </div>
-FILE
-);
-file::write(fs::tmppath('dev.test/error.tpl.html'), <<<'FILE'
+BASE
+,
+    fs::tmppath('dev.test/error') => <<<'ERROR'
 ::use mysli.cms.blog
 ::use mysli.cms.blog
 <div>
-    {variable}
+    Hello!
 </div>
 ::use mysli.my.blog
 <div>
-    {variable[2]}
+    Hello!
 </div>
-FILE
-);
-
-#: After
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-file::remove(fs::tmppath('dev.test/base.tpl.html'));
-file::remove(fs::tmppath('dev.test/error.tpl.html'));
+ERROR
+];
 
 #: Test Extend Set
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#: Use Files
 $extender = new extender(fs::tmppath('dev.test'));
+foreach ($files as $id => $template) $extender->set_cache($id, $template);
 $template = $extender->process('base');
 
 return assert::equals(
@@ -45,14 +41,14 @@ namespace tplp\template\base;
 use mysli\cm\blog\__tplp as blog;
 use mysli\cm\page\__tplp as page;
 ?><div>
-    <?php echo $variable; ?>
+    Hello!
 </div>
 EXPECT
 );
 
 #: Test Use Exception
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#: Use Error
+#: Use Files
 #: Expect Exception mysli\tplp\exception\extender 10
 $extender = new extender(fs::tmppath('dev.test'));
+foreach ($files as $id => $template) $extender->set_cache($id, $template);
 $extender->process('error');

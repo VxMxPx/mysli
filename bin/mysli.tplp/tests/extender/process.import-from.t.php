@@ -1,56 +1,48 @@
 <?php
 
 #: Before
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 use mysli\tplp\extender;
 use mysli\toolkit\fs\fs;
-use mysli\toolkit\fs\file;
 
-file::write(fs::tmppath('dev.test/base.tpl.html'),  <<<'TEST'
+#: Define Files
+$files = [
+    fs::tmppath('dev.test/base') => <<<'BASE'
 <!DOCTYPE html>
 <html>
 <head>
-    <title>{title}</title>
+    <title>Hello World</title>
 </head>
 <body>
     ::import sidebar from _modules
 </body>
 </html>
-TEST
-);
-
-file::write(fs::tmppath('dev.test/_modules.tpl.html'),  <<<'_MODULES'
+BASE
+,
+    fs::tmppath('dev.test/_modules') => <<<'_MODULES'
 ::module sidebar
 <div class="sidebar">
     <p>Hello world!</p>
 </div>
 ::/module
 _MODULES
-);
-
-file::write(fs::tmppath('dev.test/error.tpl.html'),  <<<'TEST'
+,
+    fs::tmppath('dev.test/error') => <<<'ERROR'
 <!DOCTYPE html>
 <html>
 <head>
-    <title>{title}</title>
+    <title>Hello World</title>
 </head>
 <body>
     ::import sidebar from non_existant
 </body>
 </html>
-TEST
-);
-
-#: After
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-file::remove(fs::tmppath('dev.test/base.tpl.html'));
-file::remove(fs::tmppath('dev.test/_modules.tpl.html'));
-file::remove(fs::tmppath('dev.test/error.tpl.html'));
-
+ERROR
+];
 
 #: Test Import From
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#: Use Files
 $extender = new extender(fs::tmppath('dev.test'));
+foreach ($files as $id => $template) $extender->set_cache($id, $template);
 $template = $extender->process('base');
 
 return assert::equals(
@@ -61,7 +53,7 @@ namespace tplp\template\base;
 ?><!DOCTYPE html>
 <html>
 <head>
-    <title><?php echo $title; ?></title>
+    <title>Hello World</title>
 </head>
 <body>
 <div class="sidebar">
@@ -73,8 +65,8 @@ EXPECT
 );
 
 #: Test Import From, Exception
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#: Use Error
+#: Use Files
 #: Expect Exception mysli\tplp\exception\extender 10
 $extender = new extender(fs::tmppath('dev.test'));
+foreach ($files as $id => $template) $extender->set_cache($id, $template);
 $template = $extender->process('error');
