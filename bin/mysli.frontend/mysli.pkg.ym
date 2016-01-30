@@ -8,6 +8,7 @@ require:
     mysli.toolkit: 1
     mysli.tplp:    1
     mysli.i18n:    1
+    mysli.assets:  1
 
 frontend:
     type: theme
