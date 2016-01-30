@@ -2,13 +2,12 @@
 
 namespace mysli\assets\root\script; class assets
 {
-    const __use = '
+    const __use = <<<fin
         .{ assets -> lib.assets, exception.assets }
         mysli.toolkit.{ log, pkg, type.str -> str }
         mysli.toolkit.cli.{ prog, param, ui, output }
         mysli.toolkit.fs.{ observer, fs, file, dir }
-    ';
-
+fin;
 
     /**
      * Run Assets CLI.
@@ -164,8 +163,8 @@ namespace mysli\assets\root\script; class assets
                     if (!is_array($file)) continue;
                     // ui::warning($ohead, $file['source']);
                     $remove = [
-                        fs::ds($root, 'dist~', $file['resolved']),
-                        fs::ds($root, 'dist~', $file['compressed']),
+                        fs::ds($root, $file['id'], $file['resolved_dist']),
+                        fs::ds($root, $file['id'], $file['compressed_dist']),
                         fs::ds($pubpath, $file['resolved']),
                         fs::ds($pubpath, $file['compressed']),
                     ];
@@ -299,8 +298,8 @@ namespace mysli\assets\root\script; class assets
 
             $in_dir  = fs::ds($root, $fileopt['id']);
             $in_file = fs::ds($root, $file);
-            $out_dir = fs::ds($root, 'dist~', $fileopt['id']);
-            $out_file = fs::ds($root, 'dist~', $fileopt['resolved']);
+            $out_dir = fs::ds($root, $fileopt['id'], 'dist~');
+            $out_file = fs::ds($root, $fileopt['resolved_dist']);
 
             if (!dir::exists($out_dir))
             {
@@ -316,14 +315,26 @@ namespace mysli\assets\root\script; class assets
             );
 
             // Process
-            output::blue('Processed ', false);
             $command = $fileopt['module']['process'];
             $command = str_replace(
                 [ '{in/file}', '{out/file}', '{in/}', '{out/}' ],
                 [ "'{$in_file}'", "'{$out_file}'", "'{$in_dir}'", "'{$out_dir}'" ],
                 $command
             );
-            exec($command);
+
+            unset($out, $r);
+            exec($command, $out, $r);
+
+            if ($r === 0)
+            {
+                output::green('Processed ', false);
+            }
+            else
+            {
+                output::red('Process Fail', true);
+                output::red('ERROR '.trim(implode("\n", $out)), false);
+                continue;
+            }
 
             if ($dev)
             {
@@ -346,16 +357,34 @@ namespace mysli\assets\root\script; class assets
                 // Build, reset variables
                 $in_file  = $out_file;
                 $in_dir   = $out_dir;
-                $out_file = fs::ds($root, 'dist~', $fileopt['compressed']);
+                $out_file = fs::ds($root, $fileopt['compressed_dist']);
 
-                output::blue('Build ', false);
+                // output::blue('Build ', false);
+
                 $command = $fileopt['module']['build'];
                 $command = str_replace(
                     [ '{in/file}', '{out/file}', '{in/}', '{out/}' ],
                     [ "'{$in_file}'", "'{$out_file}'", "'{$in_dir}'", "'{$out_dir}'" ],
                     $command
                 );
-                exec($command);
+
+                if ($command)
+                {
+                    unset($out, $r);
+                    exec($command, $out, $r);
+
+                    if ($r === 0)
+                    {
+                        output::green('Build ', false);
+                    }
+                    else
+                    {
+                        output::red('Build Fail', true);
+                        output::red('ERROR '.trim(implode("\n", $out)), false);
+                        continue;
+                    }
+                }
+
 
                 // Append buffer (Merge)
                 if (file::exists($out_file))
