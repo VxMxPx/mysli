@@ -168,11 +168,16 @@ namespace mysli\assets; class assets
 
                     $opt['resolved'][ fs::ds($dir, $sfile) ] = [
                         'id'         => $dir,
+                        'module'     => $modules[$module],
+                        'flags'      => $flags,
+                        // File in source directory
                         'compressed' => fs::ds($dir, $cfile),
                         'source'     => fs::ds($dir, $sfile),
                         'resolved'   => fs::ds($dir, $kfile),
-                        'module'     => $modules[$module],
-                        'flags'      => $flags
+                        // File in dist~ directory
+                        'compressed_dist' => fs::ds($dir, 'dist~', $cfile),
+                        'source_dist'     => fs::ds($dir, 'dist~', $sfile),
+                        'resolved_dist'   => fs::ds($dir, 'dist~', $kfile),
                     ];
                 }
             }
@@ -373,6 +378,12 @@ namespace mysli\assets; class assets
             $modules = array_merge($modules, $map['includes'][$id]['modules']);
         }
 
+        // Need to be an array
+        if (!is_array($map['includes'][$id]['files']))
+        {
+            $map['includes'][$id]['files'] = [ $map['includes'][$id]['files'] ];
+        }
+
         foreach ($map['includes'][$id]['files'] as $file)
         {
             if (strpos($file, ' !') !== false)
@@ -439,7 +450,7 @@ namespace mysli\assets; class assets
             {
                 if (!isset($module[$item]))
                 {
-                    $module[$item] = [];
+                    $module[$item] = '';
                     continue;
                 }
 
