@@ -31,7 +31,9 @@ namespace mysli\tplp\root\script; class template
             'help'     => 'Package\'s templates to be parsed, in format: '.
                         '`vendor.package`. '.
                         'Alternatively relative path to the templates root '.
-                        'can be used. Use `./` for current directory.'
+                        'can be used. Use `./` for current directory. '.
+                        'Alternatively if `-f` is used, absolute path to a '.
+                        'specific file to be processed.'
         ])
         ->create_parameter('--interactive/-i', [
             // 'exclude' => ['-s', '-w'],
@@ -50,13 +52,18 @@ namespace mysli\tplp\root\script; class template
             'type' => 'boolean',
             'def'  => false,
             'help' => 'Watch directory and re-parse when changes occurs.'
+        ])
+        ->create_parameter('--file/-f', [
+            'type' => 'boolean',
+            'def'  => false,
+            'help' => 'Specific file to be processed rather than package.'
         ]);
 
         if (null !== ($r = prog::validate_and_print($prog, $args)))
             return $r;
 
-        list($package, $static, $watch, $interactive) =
-            $prog->get_values('package', '-s', '-w', '-i');
+        list($package, $static, $watch, $interactive, $file) =
+            $prog->get_values('package', '-s', '-w', '-i', '-f');
 
         if (!$package && !$interactive)
         {
@@ -69,9 +76,15 @@ namespace mysli\tplp\root\script; class template
         }
         else
         {
+            if ($file)
+            {
+                $file = file::name($package);
+                $package = dirname($package);
+            } else $file = null;
+
             // Package to path...
-            $path = static::resolve_path($package);
-            return static::parse($path, $static, $watch);
+            $path = static::resolve_path($package, ($file?true:false));
+            return static::parse($path, $static, $file, $watch);
         }
 
     }
@@ -128,11 +141,12 @@ namespace mysli\tplp\root\script; class template
      * --
      * @param string  $path
      * @param boolean $static
+     * @param string  $file   Filename of a specific file to be parsed.
      * @param boolean $path
      * --
      * @return boolean
      */
-    protected static function parse($path, $static, $watch)
+    protected static function parse($path, $static, $file, $watch)
     {
         // Check if package // Dir exists...
         if (!$path || !dir::exists($path))
@@ -152,11 +166,14 @@ namespace mysli\tplp\root\script; class template
 
         // Setup observer
         $observer = new observer($path);
-        $observer->set_filter('*.tpl.html');
+        $observer->set_filter($file?$file:'*.tpl.html');
         $observer->set_interval(2);
 
         return $observer->observe(
         function ($changes) use ($parser, $extender, $static, $path, $watch) {
+
+            // Flush tmp folder
+            file::remove(file::find(fs::tmppath('tplp'), '*.*'));
 
             // Watch only for specific changes
             foreach ($changes as $file => $change)
@@ -254,16 +271,21 @@ namespace mysli\tplp\root\script; class template
     /**
      * Get full absolute path from package or relative path.
      * --
-     * @param string $path
+     * @param string  $path
+     * @param boolean $absolute
      * --
      * @return string
      */
-    protected static function resolve_path($path)
+    protected static function resolve_path($path, $absolute=false)
     {
         // Package
         if (preg_match('/^[a-z0-9_\.]+$/', $path))
         {
             $path = tplp::get_path($path);
+        }
+        else if ($absolute)
+        {
+            $path = realpath($path);
         }
         // Or relative path
         else
