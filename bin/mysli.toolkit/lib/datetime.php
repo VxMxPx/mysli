@@ -152,7 +152,7 @@ namespace mysli\toolkit; class datetime
      */
     static function set_default_timezone($timezone)
     {
-        log::debug('Default timezone set to: `{$timezone}`.', __CLASS__);
+        \log::debug('Default timezone set to: `{$timezone}`.', __CLASS__);
         date_default_timezone_set($timezone);
     }
 

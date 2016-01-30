@@ -17,11 +17,11 @@ namespace mysli\toolkit; class toolkit
      */
     static function shutdown($code=0)
     {
-        log::info('System is about to shutdown. Bye! :)', __CLASS__);
+        \log::info('System is about to shutdown. Bye! :)', __CLASS__);
         event::trigger("toolkit::shutdown", [$code]);
 
-        if (!is_cli())
-            echo log_to_html( log::get() );
+        if (TOOLKIT_PRINT_LOG && !is_cli())
+            echo log_to_html( \log::get() );
 
         exit($code);
     }
@@ -34,11 +34,11 @@ namespace mysli\toolkit; class toolkit
      */
     static function panic()
     {
-        log::panic('System will be stopped now. :(', __CLASS__);
+        \log::panic('System will be stopped now. :(', __CLASS__);
         event::trigger("toolkit::panic");
 
-        if (!is_cli())
-            echo log_to_html( log::get() );
+        if (TOOLKIT_PRINT_LOG && !is_cli())
+            echo log_to_html( \log::get() );
 
         exit(11);
     }

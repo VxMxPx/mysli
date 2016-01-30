@@ -28,6 +28,7 @@ namespace mysli\toolkit; class request
         $path = $path ?: static::path();
         $segments = trim($path, '/');
         static::$segments = str::split_trim($segments, '/');
+        \log::debug("Request: `{$path}`.", __CLASS__);
     }
 
     /**

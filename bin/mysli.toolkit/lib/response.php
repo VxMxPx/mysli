@@ -101,8 +101,7 @@ namespace mysli\toolkit; class response
                 $header = $type . ': ' . $header;
             }
 
-            log::info("Sending header: `{$header}`.", __CLASS__);
-
+            \log::info("Header: `{$header}`.", __CLASS__);
             header($header);
         }
     }

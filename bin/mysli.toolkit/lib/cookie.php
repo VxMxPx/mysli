@@ -399,7 +399,7 @@ namespace mysli\toolkit; class cookie
             );
         }
 
-        log::info("Set: `{$cookie->get_name()}`.", __CLASS__);
+        \log::info("Set: `{$cookie->get_name()}`.", __CLASS__);
 
         return setcookie(
             $cookie->get_name(),
@@ -510,7 +510,7 @@ namespace mysli\toolkit; class cookie
     {
         $name = config::select('mysli.toolkit', 'cookie.prefix', '').$name;
 
-        log::info("Remove: `{$name}`.", __CLASS__);
+        \log::info("Remove: `{$name}`.", __CLASS__);
 
         return setcookie(
             $name,

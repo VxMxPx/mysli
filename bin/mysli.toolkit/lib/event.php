@@ -169,7 +169,7 @@ namespace mysli\toolkit; class event
             array_unshift($events[$event], $call);
         }
 
-        log::info("Register: `{$event}` to `{$call}`.", __CLASS__);
+        \log::info("Register: `{$event}` to `{$call}`.", __CLASS__);
 
         static::on($event, $call, $priority);
 
@@ -225,7 +225,7 @@ namespace mysli\toolkit; class event
             }
         }
 
-        log::info("Unregister: `{$event}` for `{$call}`.", __CLASS__);
+        \log::info("Unregister: `{$event}` for `{$call}`.", __CLASS__);
 
         static::off($event, $call);
         return static::write($events);
@@ -239,7 +239,7 @@ namespace mysli\toolkit; class event
      */
     static function trigger($event, array $params=[])
     {
-        log::debug("Trigger: {$event}", __CLASS__);
+        \log::debug("Trigger: {$event}", __CLASS__);
 
         foreach (static::$events as $levent => $calls)
         {

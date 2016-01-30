@@ -19,6 +19,7 @@ namespace mysli\toolkit; class output
      */
     static function set($output, $key='%master')
     {
+        \log::debug("Output set: `{$key}`.", __CLASS__);
         static::$outputs[$key] = $output;
     }
 

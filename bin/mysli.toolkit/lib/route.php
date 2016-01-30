@@ -174,6 +174,7 @@ namespace mysli\toolkit; class route
                 {
                     unset($m[0]);
                     $call = str_replace('.', '\\', $route['call']);
+                    \log::debug("Found: `{$url}`, call: `{$route['call']}`", __CLASS__);
 
                     if (call_user_func_array($call, $m))
                     {

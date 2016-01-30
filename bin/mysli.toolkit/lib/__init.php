@@ -69,15 +69,15 @@ namespace mysli\toolkit; class __init
         // Toolkit logger
         $logger = toolkit_core_loader(TOOLKIT_LOG, MYSLI_BINPATH);
         class_alias($logger, 'log');
-        log::__init();
-        log::info('Toolkit init, log loaded!', __CLASS__);
+        \log::__init();
+        \log::info('Toolkit init, log loaded!', __CLASS__);
 
         // Load pkg, basic packages manager
         $pkg = toolkit_core_loader(TOOLKIT_PKG, MYSLI_BINPATH);
         class_alias($pkg, 'pkg');
         pkg::__init();
 
-        log::debug(
+        \log::debug(
             "Got following packages: ".implode(', ', pkg::list_all()), __CLASS__
         );
 
@@ -85,6 +85,7 @@ namespace mysli\toolkit; class __init
         $autoloader = toolkit_core_loader(TOOLKIT_AUTOLOAD, MYSLI_BINPATH);
         class_alias($autoloader, 'autoloader');
         spl_autoload_register("{$autoloader}::load", true, true);
+        \log::debug("Autoloader was registered: `{$autoloader}::load`.", __CLASS__);
 
         // Toolkit core class
         $toolkit = toolkit_core_loader(TOOLKIT_CORE, MYSLI_BINPATH);
@@ -126,7 +127,7 @@ namespace mysli\toolkit; class __init
         {
             if (!route::error(404))
             {
-                log::debug(
+                \log::debug(
                     "Page not found for: `{$route}`, additionally, ".
                     "no *error route is available.", __CLASS__);
                 response::set_status(response::status_404_not_found);
@@ -137,7 +138,7 @@ namespace mysli\toolkit; class __init
         /*
         Apply header and send output.
          */
-        log::debug("About to apply headers and output!", __CLASS__);
+        \log::debug("About to apply headers and output!", __CLASS__);
         response::apply_headers();
         $output = output::as_html();
 

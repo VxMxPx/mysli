@@ -476,7 +476,7 @@ namespace mysli\toolkit; class autoloader
         if (in_array($package, static::$initialized))
             return;
 
-        log::debug("Initialize: `{$package}`.", __CLASS__);
+        \log::debug("Initialize: `{$package}`.", __CLASS__);
 
         /*
         Add self to the initialized list.

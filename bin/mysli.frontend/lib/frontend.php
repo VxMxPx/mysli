@@ -2,12 +2,12 @@
 
 namespace mysli\frontend; class frontend
 {
-    const __use = '
+    const __use = <<<fin
         .{ theme }
         mysli.tplp
         mysli.i18n
         mysli.toolkit.{ pkg, response, output, config }
-    ';
+fin;
 
     static function __init()
     {
@@ -27,6 +27,7 @@ namespace mysli\frontend; class frontend
     static function render(array $tpls, array $variables=[])
     {
         $theme = theme::get_active();
+        \log::debug("I shall render: `{1}`.", [ __CLASS__, var_export($tpls, true) ]);
 
         if (!pkg::is_enabled($theme))
         {

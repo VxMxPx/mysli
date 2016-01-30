@@ -234,7 +234,7 @@ namespace mysli\toolkit; class config
     {
         $this->package = static::ns_to_pkg($package);
 
-        log::debug("Create for package: `{$package}`.", __CLASS__);
+        \log::debug("Load config for package: `{$package}`.", __CLASS__);
 
         if (!$this->package)
             throw new exception\config("Invalid package name for config.", 10);

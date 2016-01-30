@@ -564,7 +564,7 @@ namespace mysli\toolkit; class pkg
      */
     static function enable($package, $with_setup=true, $inc_dependencies=true)
     {
-        log::info("Will enable package: `{$package}`", __CLASS__);
+        \log::info("Will enable package: `{$package}`", __CLASS__);
 
         if (static::is_enabled($package))
             throw new exception\pkg(
@@ -648,7 +648,7 @@ namespace mysli\toolkit; class pkg
      */
     static function disable($package, $with_setup=true, $inc_dependees=true)
     {
-        log::info("Will disable package: `{$package}`", __CLASS__);
+        \log::info("Will disable package: `{$package}`", __CLASS__);
 
         if (static::is_disabled($package))
             throw new exception\pkg(
@@ -713,6 +713,7 @@ namespace mysli\toolkit; class pkg
             return true;
 
         $class = str_replace('.', '\\', $package).'\\__setup';
+        \log::debug("Setup will be run for: `{$package}` from `{$class}`.", __CLASS__);
 
         autoloader::load($class);
 
@@ -839,7 +840,7 @@ namespace mysli\toolkit; class pkg
 
 
             if (in_array($package, static::$all))
-                log::warning(
+                \log::warning(
                     "Package `{$package}` exists both as a `phar` and a `source`.",
                     __CLASS__
                 );
