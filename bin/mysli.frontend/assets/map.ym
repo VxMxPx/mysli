@@ -1,0 +1,5 @@
+includes:
+    css/:
+        process: [ css ]
+        publish: Yes
+        files: *.css
