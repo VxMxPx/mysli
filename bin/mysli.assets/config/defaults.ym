@@ -33,20 +33,22 @@ modules:
         process: tsc --outDir {out/} {in/file} --target ES5 -d
         build:   $js.build
     # Templating
-    tplp.html:
+    tpl.html:
         produce: php
         require: mysli template --version | grep '^Mysli .*$'
-        process: myli tplp -f {in/file} {out/}
+        process: mysli template -f {in/file}
     # I18n
     lng:
         produce: json
         require: mysli i18n --version | grep '^Mysli .*$'
-        process: mysli i18n -f {in/file} {out/}
+        process: mysli i18n -f {in/file}
 
 includes:
     tplp/:
+        process: [ tpl.html ]
         publish: No
-        files: "*.tplp"
+        files: "*.tpl.html"
     i18n/:
+        process: [ i18n ]
         publish: No
         files: "*.lng"
