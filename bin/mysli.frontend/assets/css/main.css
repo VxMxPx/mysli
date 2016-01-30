@@ -1,0 +1,23 @@
+body {
+    font-family: sans-serif;
+    background-color: #f9f7f3;
+    color: #222;
+}
+
+.page.error {
+    font-size: 16px;
+    font-weight: normal;
+    width: 400px;
+    padding: 20px;
+    background: #f6f4f0;
+    left: 50%;
+    top: 20px;
+    margin-left: -200px;
+    position: relative;
+}
+
+.page.error h1 {
+    font-size: 22px;
+    /*font-family: serif;*/
+    color: #444;
+}
