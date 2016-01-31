@@ -46,15 +46,14 @@ fin;
         {
             if (is_array($tpl))
             {
-                $file = $tpl[0];
-                $root = $tpl[1];
+                $root = tplp::get_path($tpl[0]);
+                $file = $tpl[1];
             }
             else
             {
                 $file = $tpl;
                 $root = null;
             }
-
             if ($template->has($file, $root))
             {
                 output::set($template->render($tpl, $variables));
