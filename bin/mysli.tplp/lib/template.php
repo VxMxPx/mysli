@@ -149,7 +149,7 @@ fin;
         if (is_array($file))
         {
             list($package, $file) = $file;
-            $root = tplp::get_pkg_path($package);
+            $root = tplp::get_path($package);
         }
         else
         {
