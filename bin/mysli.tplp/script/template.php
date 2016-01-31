@@ -86,7 +86,6 @@ namespace mysli\tplp\root\script; class template
             $path = static::resolve_path($package, ($file?true:false));
             return static::parse($path, $static, $file, $watch);
         }
-
     }
 
     /*
@@ -251,7 +250,14 @@ namespace mysli\tplp\root\script; class template
                 catch (\Exception $e)
                 {
                     ui::error($e->getMessage());
-                    continue;
+                    if (!$watch)
+                    {
+                        return false;
+                    }
+                    else
+                    {
+                        continue;
+                    }
                 }
             }
 
