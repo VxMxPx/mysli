@@ -139,8 +139,16 @@ namespace mysli\toolkit; class __init
         Apply header and send output.
          */
         \log::debug("About to apply headers and output!", __CLASS__);
-        response::apply_headers();
         $output = output::as_html();
+        if (!response::get_header('Content-Length'))
+        {
+            response::set_header(mb_strlen($output), 'Content-Length');
+        }
+        if (!response::get_header('Content-Type'))
+        {
+            response::set_header('text/html; charset=utf-8', 'Content-Type');
+        }
+        response::apply_headers();
 
         event::trigger("toolkit::web.output", [ $output ]);
         echo $output;
