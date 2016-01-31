@@ -2,7 +2,7 @@
 
 namespace mysli\frontend; class __setup
 {
-    const __use = '
+    const __use = <<<fin
         .{ theme }
         mysli.assets
         mysli.toolkit.{
@@ -12,7 +12,7 @@ namespace mysli\frontend; class __setup
             fs.dir  -> dir
             fs.file -> file
         }
-    ';
+fin;
 
     static function enable()
     {
@@ -42,14 +42,9 @@ namespace mysli\frontend; class __setup
         route::add('mysli.frontend.route::error', 'ANY', '*error', 'low') and
         route::write()
 
-        // TODO: assets PUBLISH
+        and
 
-        // and
-
-        // !! dir::copy(
-        //     fs::pkgreal('mysli.frontend', 'assets/public'),
-        //     fs::pubpath('themes/mysli.frontend')
-        // )
+        assets::publish('mysli.frontend')
 
         and
 
@@ -66,8 +61,9 @@ namespace mysli\frontend; class __setup
         route::remove('mysli.frontend.*');
         route::write();
 
-        // Remove published theme
-        // dir::remove(fs::pubpath('themes/mysli.frontend'));
+        // Remove published assets
+        assets::unpublish('mysli.frontend');
+
 
         // Drop Config
         config::select('mysli.frontend')->destroy();

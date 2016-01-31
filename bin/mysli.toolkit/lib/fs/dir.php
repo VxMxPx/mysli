@@ -87,6 +87,7 @@ namespace mysli\toolkit\fs; class dir
         foreach ($files as $file)
         {
             $filename = fs::ds($source, $file);
+
             if (static::exists($filename))
             {
                 if ($recursive)

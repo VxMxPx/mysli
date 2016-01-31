@@ -1,5 +1,5 @@
 includes:
     css/:
-        process: [ css ]
+        process: Yes
         publish: Yes
         files: *.css

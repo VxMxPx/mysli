@@ -17,7 +17,5 @@ body {
 }
 
 .page.error h1 {
-    font-size: 22px;
-    /*font-family: serif;*/
     color: #444;
 }

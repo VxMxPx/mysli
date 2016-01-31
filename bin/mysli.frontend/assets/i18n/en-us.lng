@@ -1,4 +1,3 @@
 # 404 Error
-@ERROR_404_TITLE Error 404...
-@ERROR_404_BODY  Page not found. Try to return back to the {1 home page}.
-
+@ERROR_404_TITLE 404: Page Not Found
+@ERROR_404_BODY  Please try to return back to the {1 home page}.
