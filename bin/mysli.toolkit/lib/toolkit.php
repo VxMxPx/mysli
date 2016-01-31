@@ -17,7 +17,10 @@ namespace mysli\toolkit; class toolkit
      */
     static function shutdown($code=0)
     {
-        \log::info('System is about to shutdown. Bye! :)', __CLASS__);
+        \log::info(
+            "System is about to shutdown with code `{$code}`. Bye! :)",
+            __CLASS__);
+
         event::trigger("toolkit::shutdown", [$code]);
 
         if (TOOLKIT_PRINT_LOG && !is_cli())
