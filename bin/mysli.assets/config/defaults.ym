@@ -7,7 +7,7 @@ tags:
         tag: '<script type="text/javascript" src="{link}"></script>'
     img:
         match: [ jpg, png, gif ]
-        tag: '<img src="{link}" />'
+        tag: '<img src="{link}" alt="" />'
 
 modules:
     # CSS
@@ -44,11 +44,9 @@ modules:
         process: mysli i18n -f {in/file}
 
 includes:
-    tplp/:
-        process: [ tpl.html ]
+    tplp:
         publish: No
         files: "*.tpl.html"
-    i18n/:
-        process: [ i18n ]
+    i18n:
         publish: No
         files: "*.lng"
