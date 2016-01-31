@@ -37,13 +37,13 @@ fin;
         ->create_parameter('--dev/-d', [
             'type'   => 'boolean',
             'def'    => false,
-            'help'   => 'This will not compress nor merge assets, resulting in faster processing.'.
+            'help'   => 'This will not compress nor merge assets, resulting in faster processing. '.
                         'Processed files will be published.'
         ])
         ->create_parameter('--id/-i', [
             'type' => 'array',
             'def'  => [],
-            'help' => 'Observe only specific ID(s) (defined in map.ym).'.
+            'help' => 'Observe only specific ID(s) (defined in map.ym). '.
                       'You can specify more than one using comma.'
         ]);
 
@@ -134,6 +134,26 @@ fin;
 
                 $rebuild = $ids ? $ids : array_keys($map['includes']);
                 $changes = [];
+
+                // Now cleanup!
+                ui::info('CLEANUP:');
+                foreach ($rebuild as $id)
+                {
+                    output::line(str::cut_pad($id, 30, '...', '.'), false);
+
+                    if (dir::exists($root, $id, 'dist~'))
+                    {
+                        output::line('Dist ', false);
+                        dir::remove(fs::ds($root, $id, 'dist~'));
+                    }
+                    if ($dev && dir::exists($pubpath, $id))
+                    {
+                        output::line('Public ', false);
+                        dir::remove(fs::ds($pubpath, $id));
+                    }
+                    ui::nl();
+                }
+                ui::nl();
             }
 
             // Run through changes
@@ -258,7 +278,6 @@ fin;
      * @param string  $pubpath Public path (to publish modified file)
      */
     protected static function rebuild(array $section, $root, $dev, $pubpath)
-    // array $files, $root, $dev, $pubpath, $merged)
     {
         $buffer = '';
 
@@ -288,6 +307,8 @@ fin;
                 return true;
             }
         }
+
+        $remove_on_merge = [];
 
         foreach ($section['resolved'] as $file => $fileopt)
         {
@@ -338,18 +359,21 @@ fin;
 
             if ($dev)
             {
-                // Publish processed file
-                // Append buffer
+                // Publish processed file, append buffer
                 if (file::exists($out_file) && $section['publish'])
                 {
                     if (!dir::exists(fs::ds($pubpath, $fileopt['id'])))
                     {
                         dir::create(fs::ds($pubpath, $fileopt['id']));
                     }
+
                     output::green('Published ', false);
+
                     file::copy($out_file, fs::ds($pubpath, $fileopt['resolved']))
                         or output::red('Failed ', false);
-                    file::remove($out_file);
+
+                    $remove_on_merge[] = $out_file;
+                    // file::remove($out_file);
                 }
             }
             elseif (file::exists($out_file))
@@ -390,18 +414,21 @@ fin;
                 if (file::exists($out_file))
                 {
                     $contents = file::read($out_file);
+
                     if (trim($contents))
                     {
                         $buffer .= "\n{$contents}";
                     }
+
                     file::remove($in_file);
-                    file::remove($out_file);
+                    $remove_on_merge[] = $out_file;
+                    // file::remove($out_file);
                 }
             }
             ui::nl();
         }
 
-        if (!$dev && isset($section['merge']))
+        if (!$dev && isset($section['merge']) && $section['merge'])
         {
             output::line(
                 str::cut_pad($section['merge'], 30, '...', '.'),
@@ -411,6 +438,11 @@ fin;
             file::write(fs::ds($out_dir, $section['merge']), $buffer) !== false
                 ? ui::success('Merged')
                 : ui::error('Failed to Merge');
+
+            foreach ($remove_on_merge as $remove)
+            {
+                file::exists($remove) and file::remove($remove);
+            }
         }
 
         ui::nl();
