@@ -16,6 +16,71 @@ namespace mysli\assets; class assets
     protected static $cache = [ 'map' => [] ];
 
     /**
+     * Publish assets for particular package.
+     * --
+     * @param string $package
+     * --
+     * @throws mysli\assets\exception\assets 10 No such directory.
+     * --
+     * @return integer Count of published directories.
+     */
+    static function publish($package)
+    {
+        $map = static::map($package);
+
+        if (!isset($map['includes']))
+        {
+            return 0;
+        }
+
+        $count = 0;
+
+        $source = static::path($package);
+
+        foreach ($map['includes'] as $dir => $opt)
+        {
+            if (!isset($opt['publish']) || !$opt['publish'])
+            {
+                continue;
+            }
+
+            if (dir::exists(fs::ds($source, $dir, 'dist~')))
+            {
+                dir::copy(
+                    fs::ds($source, $dir, 'dist~'),
+                    fs::pubpath('assets', $package, $dir));
+                $count++;
+            }
+            elseif (dir::exists(fs::ds($source, $dir)))
+            {
+                dir::copy(
+                    fs::ds($source, $dir),
+                    fs::pubpath('assets', $package, $dir));
+                $count++;
+            }
+            else
+            {
+                throw new exception\assets(
+                    "No such directory: `{$dir}` in `{$source}`.", 10);
+            }
+        }
+
+        return $count;
+    }
+
+    /**
+     * Remove previously published assets.
+     * --
+     * @param string $package
+     * --
+     * @return boolean
+     */
+    static function unpublish($package)
+    {
+        return dir::remove(fs::pubpath('assets', $package));
+    }
+
+    /**
      * Get map for particular package.
      * --
      * @param string  $package
@@ -111,7 +176,8 @@ namespace mysli\assets; class assets
             $opt['use-modules'] = [];
             if (!isset($opt['publish'])) { $opt['publish'] = true; }
             if (!isset($opt['process'])) { $opt['process'] = true; }
-            if (!isset($opt['ignore']))  { $opt['ignore'] = false; }
+            if (!isset($opt['ignore']))  { $opt['ignore']  = false; }
+            if (!isset($opt['merge']))   { $opt['merge']   = false; }
 
             // No files to process
             if (!isset($opt['files'])) { continue; }
@@ -153,6 +219,11 @@ namespace mysli\assets; class assets
                 // Get modules & resolve file
                 foreach ($rsearch as $sfile => $_)
                 {
+                    if (substr($sfile, 0, 5) === 'dist~')
+                    {
+                        continue;
+                    }
+
                     if (isset($opt['resolved'][ fs::ds($dir, $sfile) ]))
                     {
                         continue;
