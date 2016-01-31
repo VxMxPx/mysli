@@ -1,9 +1,9 @@
 <?php
 
-namespace mysli\front\page; class __setup
+namespace mysli\page; class __setup
 {
     const __use = <<<fin
-        mysli.toolkit.{ router }
+        mysli.toolkit.{ route }
         mysli.toolkit.fs.{ fs, dir, file }
 fin;
 
@@ -22,7 +22,7 @@ fin;
 
         // Create router to handle pages
         route::add('mysli.page.frontend::index', 'ANY', '*index', 'low') and
-        route::add('mysli.page.frontend::page', 'ANY', '/<page|page>.html', 'low') and
+        route::add('mysli.page.frontend::page', 'ANY', '/<page:path>.html', 'low') and
         route::write()
 
         // Done
