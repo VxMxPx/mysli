@@ -5,109 +5,38 @@ Map file has two functions:
 1. it servers as an instruction for how to build assets,
 2. it's used for inserting those assets into an actual page.
 
-Bellow is the example of a map file:
+Please see `mysli.assets/config/defaults.ym` for an examples.
+
+Bellow is an example of the file itself.
 
 ```yaml
 tags:
     css:
         match: [ css ]
         tag: '<link rel="stylesheet" type="text/css" href="{link}">'
-    js:
-        match: [ js ]
-        tag: '<script type="text/javascript" src="{link}"></script>'
-    img:
-        match: [ jpg, png, gif ]
-        tag: '<img src="{link}" />'
 
-process:
+modules:
     styl:
-        match: *.styl
-        require:
-            - stylus --version | grep ^0.*$
-        process:
-            - stylus {src/file} -o {dest/file.css}
-            - {dest/file.css}
-        compress:
-            - {css/compress}
+        produce: css
+        require: stylus --version | grep ^0.*$
+        process: stylus {in/file} -o {out/file}
+        build:   $css.build
     css:
-        match: *.css
-        require:
-            - cleancss --version | grep ^3.*$
-        process:
-            - cp {src/file} {dest/file}
-            - {dest/file}
-        compress:
-            - cleancss {dest/file.css} -o {dest/file.min.css}
-            - {dest/file.min.css}
-    js:
-        match: *.js
-        require:
-            - uglifyjs --version | grep "^uglifyjs 2.*$"
-        process:
-            - cp {src/file} {dest/file}
-            - {dest/file}
-        compress:
-            - uglifyjs -c -o {dest/file.min.js} {dest/file} --screw-ie8
-            - {dest/file.min.js}
-    tplp:
-        match: *.tplp.html
-        require:
-            - mysli --self version | grep "^Mysli .*$"
-            - mysli tplp --version | grep "^Mysli .*$"
-        process:
-            - myli tplp -f {src/file} {dest/}
-            - {dest/file.php}
-    i18n:
-        match: *.lng
-        require:
-            - mysli --self version | grep "^Mysli .*$"
-            - mysli i18n --version | grep "^Mysli .*$"
-        process:
-            - mysli i18n -f {src/file} {dest/}
-            - {dest/file.json}
-    copy:
-        match: *.*
-        require:
-            - cp --version | grep "^cp .*$"
-        process:
-            - cp -r {src/file} {dest/file}
-            - {dest/file}
-    svg:
-        match: *.svg
-        require:
-            - inkscape --version | grep "^Inkscape 0.9.*$"
-            - convert --version | grep "^Version: ImageMagick 6.9.*$"
-        process:
-            - inkscape -z -f {src/file} -e {dest/file.png}
-            - convert -quality 90 {dest/file.png} {dest/file.jpg}
-            - rm {dest/file.png}
-            - {dest/file.jpg}
+        produce: css
+        require: cleancss --version | grep ^3.*$
+        process: cp {in/file} {out/file}
+        build:   cleancss {in/file} -o {out/file}
 
-files:
+includes:
     css:
-        process: [ styl, css ]
-        merge: mrg-main.min.css
-        include:
-            - toolbar.css
-            - button.css
-    js:
-        process: [ js ]
-        merge: mrg-main.min.js
-        include:
-            - button.js
-            - widget.js
-    common:
-        process: [ svg, copy ]
-        exclude: [ externals/, all.zip ]
-        include: *.*
-    tplp:
-        process: [ tplp ]
-        publish: No
-        include: *.tplp
-    i18n:
-        process: [ i18n ]
-        publish: No
-        include: *.lng
+        modules: []
+        ignore: No
+        process: Yes
+        publish: Yes
+        merge: css.min.css
+        files:
+            - variables.css !reload
+            - "*.css"
 ```
 
 This is not as complex as it seems. The above example is demonstrating
@@ -116,50 +45,45 @@ will be simpler.
 
 ## Explanation of keys
 
-### TAGS
+### tags
 
-Tags are used in template, when using: `assets.tag` to output tag(s) for
+Tags are used in template, when using: `assets.tags` to output tag(s) for
 particular assets. This section can be omitted as `css`, `javascript` and `img`
 tags are already defined in default settings.
 
 You can use it to define your own tags, or to overwrite already defined tags.
 
-### PROCESS
+Tag section includes two items: `match` which is an array and `tag`.
 
-Process section is used to process various file types.
-This is simply running various command line utilities on individual files.
-Couple of variables are available:
+Match is simply as list of all extensions, for example, for image (img) tag,
+`match` could be: `[ jpg, jpeg, png, gif ]`.
 
-```
-{src/file}  -- Source full path + filename.
-{src/}      -- Source directory.
-{dest/file} -- Destination full path + filename, this will use default
-               destination path with the same filename as a source.
-{dest/}     -- Destination directory.
-```
+Tag is an actual tag, for example, for image (img) it could be:
+`<img src="{link}" alt="" />`. There's one variable called `{link}` which
+will be replaced with an actual file URL.
 
-For both `{src/file}` and `{dest/file}` `.ext` can be used, for example, `{des/file.new}`
-will modify extension of a file to be `.new`. Actual example of this:
+### modules
 
-For this example, source filename (`{src/file}`) is `/home/www/post.txt`,
-the default destination is set to be `dist~`.
+Modules section contains instruction of how to process particular file type.
+The main key of an individual module is a file extension.
+
+Following variables can be used in modules:
 
 ```
-cp {src/file} {dest/file.md}
+{in/file}  -- Input file, full path + filename.
+{in/}      -- Input directory.
+{out/file} -- Output file, full path + filename, this will use default
+              destination path with the same filename as a source.
+{out/}     -- Destination directory.
 ```
 
-The result of above command will be `/home/www/dist~/post.md`, note
-the extension change to `md`.
+**produce** _required_
 
-**match** _required_
-
-Define file type to be matched by this processor. For example: `*.styl` will
-match all files with `styl` extension. Use an array for multiple extensions:
-`[ *.styl, *.css ]`.
+What's the final output file format (extension).
 
 **require**
 
-An optional list of required modules by this processor. This is simply a list
+An optional list of required modules. This is simply a list
 of commands, each of them should return `true` when executed.
 
 Use `grep` to match pattern or particular version if that's important.
@@ -169,42 +93,12 @@ Use `grep` to match pattern or particular version if that's important.
 List of commands to process a file. If you don't want to process a file, you
 can use just `cp` command to copy it.
 
-IMPORTANT: the last command on the list must be new (produced) filename.
+**build**
 
-**compress**
+Build will be used when assets are run, not in development mode.
+It's usually used to compressed files.
 
-Same as `process`, but used for compressing of processed file.
-This can be entirely omitted if no compression is needed.
-
-Alternatively, other sections can be referenced, use {id/action}.
-For example, if two `css` processors are using same method of compressing,
-then they can both reference 3rd party compressor:
-
-```
-process:
-    css-compressor:
-        require:
-            - cleancss --version | grep ^3.*$
-        compress:
-            - cleancss {dest/file.css} -o {dest/file.min.css}
-            - {dest/file.min.css}
-    less:
-        match: *.less
-        require: ...
-        process: ...
-        compress:
-            - {css-compressor/compress}
-    styl:
-        match: *.styl
-        require: ...
-        process: ...
-        compress:
-            - {css-compressor/compress}
-```
-
-IMPORTANT: the last command on the list must be new (compressed) filename.
-
-### FILES
+### includes
 
 Files section is used when processing and when inserting tags in template.
 This section is required, it will tell how particular files and folders should
@@ -214,36 +108,44 @@ Each key represent a directory, relative to the `map.ym` file. So a `css` key
 will look for a `css` directory.
 
 Keys are later used to acquire assets in template, for example:
-`{ 'css' | assets.tag | 'vendor.package' }` will print all `css` tags. This is
+`{ 'css' | assets.tags | 'vendor.package' }` will print all `css` tags. This is
 a bit more complex, as in case of `merge` only one tag (merged file) will be
 inserted if not in a debug mode.
 
-**process** _required_
+**modules** _[ [] ]_
 
-List of processors to be used on this directory, for example, if we have a
-`css` directory, which contains `css` and `styl` files, we'd use `[ styl, css ]`
-processors. Processors are defined in a `process` section of a map file.
+List of specific modules rewrites (or add-ons) for this particular directory.
+It will allow to set specific instructions which will apply only to this
+directory.
 
-If you'd like to simply copy files, use `copy` processor (predefined).
+**ignore** _[ False ]_
+
+Weather to ignore this directory completely. If set to true, directory will be
+completely omitted by assets all together.
+
+**process** _[ True ]_
+
+Weather to process the directory (using above defined modules). In some cases,
+processing is not required, for example, there might be a directory containing
+images which needs to be only published without any changes to its content.
+
+**publish** _[ True ]_
+
+Weather the directory (all included files) should be publicly (URL) accessible.
 
 **merge** _[ False ]_
 
-Weather all included files should be merged into one single file. This can be
+Weather all included files should be merged into a single file. This can be
 useful when having multiple `css` or `js` files which should be merged into
 one file for production. The default is false, expected value type is string,
 an actual filename of merged assets.
 
-**publish** _[ True ]_
+**files** _required_
 
-Weather this directory (all included files) should be publicly (URL) accessible.
+List of files to be processed. This can be actual list of individual files,
+a wildcard pattern (e.g. *.css) or a combination of both.
 
-**include** _[ \*.\* ]_
-
-List of files to be included. This can be a list of individual files or a filter
-in format `*.ext`. Files will be included in order specified. If merge is not
-false, files will be merged in specified order.
-
-**exclude**
-
-List of files to be excluded. Use end slash `/` to exclude whole directory, e.g.
-`.git/`.
+Files can have a special instructions attached, for example `- master.css !reload`.
+In case of `!reload`, upon changes in this specific file, all files on the
+list will be reloaded. This is useful when having a file containing variables
+used in other files.
