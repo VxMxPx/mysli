@@ -245,11 +245,12 @@ namespace mysli\toolkit\fs; class fs
         else
         {
             $collection = [];
+
             $filter = substr($filter, 0, 1) === '/'
                 ? $filter
-                : "/{$filter}/";
+                : static::filter_to_regex($filter);
 
-            foreach (scandir($directory) as $file)
+            foreach (static::ls($directory, null) as $file)
             {
                 if (preg_match($filter, $file))
                 {
