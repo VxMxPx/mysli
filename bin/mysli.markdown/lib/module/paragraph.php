@@ -11,7 +11,26 @@ namespace mysli\markdown\module; class paragraph extends std_module
         {
             if ($last_at === false)
             {
-                if (!$this->can_open($at))
+                if ($lines->get_tag($at, -1) === 'li')
+                {
+                    $lat = $at;
+                    while($lines->has($lat))
+                    {
+                        if ($lines->has_tag($lat, '/li'))
+                        {
+                            $at = $lat+1;
+                            continue 2;
+                        }
+
+                        if ($lines->is_empty($lat))
+                        {
+                            break;
+                        }
+
+                        $lat++;
+                    }
+                }
+                else if (!$this->can_open($at))
                 {
                     $at++;
                     continue;
@@ -62,14 +81,7 @@ namespace mysli\markdown\module; class paragraph extends std_module
             return false;
         }
 
-        // if (!$l->get_attr($at, 'html-tag-opened')
-        //     && $l->get_attr($at, 'html-tag-closed'))
-        // {
-        //     return false;
-        // }
-
-        if ($l->has_tag($at)
-            && !in_array($l->get_tag($at, -1), ['li', 'blockquote']))
+        if ($l->has_tag($at) && $l->get_tag($at, -1) !== 'blockquote')
         {
             return false;
         }
