@@ -10,18 +10,27 @@ namespace mysli\markdown; class markdown
      * Process a Markdown file and return HTML.
      * If you need more control, construct your own parser (and output).
      * --
-     * @param string $markdown
+     * @param mixed $md String or parser instance
      * --
      * @return string
      */
-    static function process($markdown)
+    static function process($md)
     {
         // Create default parser
-        $parser = new parser($markdown);
+        if (is_string($md))
+        {
+            $parser = new parser($md);
+        }
+        else
+        {
+            $parser = $md;
+        }
+
         $lines = $parser->process();
 
         // Create default output
         $output = new output($lines);
+
         return $output->as_string(output::readable);
     }
 }
