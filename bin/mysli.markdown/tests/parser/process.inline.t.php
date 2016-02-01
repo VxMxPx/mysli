@@ -34,6 +34,7 @@ return assert::equals(markdown::process($markdown),
 #: Test Inline, Complex
 $markdown = <<<MARKDOWN
 **b**
+An _em_.
 _i_
 `c`
 ***bold***
@@ -46,6 +47,7 @@ MARKDOWN;
 
 return assert::equals(markdown::process($markdown),
 '<p><strong>b</strong>
+    An <em>em</em>.
     <em>i</em>
     <code>c</code>
     <strong><em>bold</em></strong>
@@ -62,3 +64,15 @@ MARKDOWN;
 
 return assert::equals(markdown::process($markdown),
 '<p><code>Inline \'code\', "code", <code>, **code**, ^code^, ~code~, code!!!!!, (tm), (c)...</code></p>');
+
+#: Test Inline, Multiple Lines
+$markdown = <<<MARKDOWN
+This _em goes through
+multiple
+various lines_.
+MARKDOWN;
+
+return assert::equals(markdown::process($markdown),
+'<p>This <em>em goes through
+    multiple
+    various lines</em>.</p>');

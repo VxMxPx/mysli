@@ -2,8 +2,10 @@
 
 #: Before
 use mysli\markdown;
+use mysli\markdown\parser;
 
 #: Test Links Basic
+# -----------------
 $markdown = <<<MARKDOWN
 [Domain](http://domain.tld)
 
@@ -24,6 +26,7 @@ return assert::equals(markdown::process($markdown),
 <p><img src="http://domain.tld" alt="Image" title="Hello" /></p>');
 
 #: Test Links Advanced
+# --------------------
 $markdown = <<<MARKDOWN
 [Domain](http://domain.tld), [Domain 2](http://domain2.tld)
 
@@ -36,3 +39,16 @@ return assert::equals(markdown::process($markdown),
 '<p><a href="http://domain.tld">Domain</a>, <a href="http://domain2.tld">Domain 2</a></p>
 <p><a href="https://domain.tld/entry=1?param=[%22one%22,%22two%22,%22three%22]&amp;param2=foo_bar_baz">URL Encoded</a></p>
 <p><strong><a href="http://domain.tld" title="Domain">BOLD</a></strong></p>');
+
+#: Test Replace Local Url
+# -----------------------
+$markdown = <<<MARKDOWN
+![](/media/icon.jpg)
+MARKDOWN;
+
+$parser = new parser($markdown);
+$link = $parser->get_processor('mysli.markdown.module.link');
+$link->set_local_url('/pages/unique-id/');
+
+return assert::equals(markdown::process($parser),
+'<p><img src="/pages/unique-id/media/icon.jpg" alt="" /></p>');
