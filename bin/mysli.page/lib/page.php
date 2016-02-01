@@ -3,7 +3,7 @@
 namespace mysli\page; class page
 {
     const __use = <<<fin
-    mysli.markdown
+    mysli.markdown.{ markdown, parser }
     mysli.toolkit.{ ym, json }
     mysli.toolkit.fs.{ fs, dir, file }
 fin;
@@ -91,7 +91,7 @@ fin;
                 $source = preg_split('/^\={3,}$/m', $source, 2);
                 $page = trim($source[1]);
 
-                $this->html = markdown::process($page);
+                $this->html = $this->process_markdown($page);
             }
         }
 
@@ -138,6 +138,34 @@ fin;
         $meta = $this->get_meta();
         $meta['body'] = $this->get_html();
         return $meta;
+    }
+
+    /**
+     * Make all media (files in media directory) publicly available.
+     */
+    function publish_media()
+    {
+        $this_media = fs::ds($this->path, 'media');
+
+        if (dir::exists($this_media))
+        {
+            $public_media = fs::pubpath('pages', $this->id, 'media');
+            dir::create($public_media);
+            dir::copy($this_media, $public_media);
+        }
+    }
+
+    /**
+     * Make all media not publicly available anymore.
+     */
+    function unpublish_media()
+    {
+        $public_media = fs::pubpath('pages', $this->id);
+
+        if (dir::exists($public_media))
+        {
+            dir::remove($public_media);
+        }
     }
 
     /**
@@ -221,5 +249,21 @@ fin;
         sort($versions);
 
         return $versions;
+    }
+
+    /**
+     * Process markdown.
+     * --
+     * @param string $page
+     * --
+     * @return string
+     */
+    protected function process_markdown($page)
+    {
+        $parser = new parser($page);
+        $link = $parser->get_processor('mysli.markdown.module.link');
+        $link->set_local_url('/pages/'.$this->id);
+
+        return markdown::process($parser);
     }
 }

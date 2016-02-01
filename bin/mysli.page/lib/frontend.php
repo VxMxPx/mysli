@@ -30,6 +30,8 @@ fin;
         {
             $page->refresh_cache();
             $page->write_version();
+            $page->unpublish_media();
+            $page->publish_media();
         }
 
         if (!$page->get('published'))
