@@ -3,15 +3,36 @@
 namespace mysli\page; class __setup
 {
     const __use = <<<fin
-        mysli.toolkit.{ route }
+        mysli.toolkit.{ config, route }
         mysli.toolkit.fs.{ fs, dir, file }
 fin;
 
     static function enable()
     {
+        $c = config::select('mysli.page');
+        $c->init(
+            [
+                // Default locales code (the when file-code is absent).
+                'locale.default'            => [ 'string', 'us' ],
+                // All supported locales.
+                'locale.support'            => [ 'array', [ 'us' ] ],
+                // Reload cache if file change since last creation.
+                'cache.reload-on-access'    => [ 'boolean', true ],
+                // Re-publish media when cache is being re-loaded.
+                'media.republish-on-reload' => [ 'boolean', true ],
+                // Write version on cache reload.
+                'version.up-on-reload'      => [ 'boolean', true ],
+            ]
+        );
+
         return
 
-        // Create defaule theme directory
+        // Save config
+        $c->save()
+
+        and
+
+        // Create default pages directory
         dir::create(fs::cntpath('pages'))
 
         and
@@ -20,7 +41,7 @@ fin;
 
         and
 
-        // Create router to handle pages
+        // Create route to handle pages
         route::add('mysli.page.frontend::index', 'ANY', '*index', 'low') and
         route::add('mysli.page.frontend::page', 'ANY', '/<page:path>.html', 'low') and
         route::write()
@@ -31,10 +52,13 @@ fin;
 
     static function disable()
     {
+        // Drop Config
+        config::select('mysli.page')->destroy();
+
         return
 
         // Remove default route
-        !!router::remove('mysli.page.frontend::*')
+        !!route::remove('mysli.page.frontend::*')
 
         // Done
         ;

@@ -4,6 +4,7 @@ namespace mysli\page; class frontend
 {
     const __use = <<<fin
     .{ pages }
+    mysli.toolkit.{ config }
     mysli.frontend.{ frontend -> fe }
 fin;
 
@@ -26,12 +27,22 @@ fin;
             return false;
         }
 
-        if (!$page->is_latest_cache())
+        $c = config::select('mysli.page');
+
+        if ($c->get('cache.reload-on-access') && !$page->is_latest_cache())
         {
             $page->refresh_cache();
-            $page->write_version();
-            $page->unpublish_media();
-            $page->publish_media();
+
+            if ($c->get('version.up-on-reload'))
+            {
+                $page->write_version();
+            }
+
+            if ($c->get('media.republish-on-reload'))
+            {
+                $page->unpublish_media();
+                $page->publish_media();
+            }
         }
 
         if (!$page->get('published'))
