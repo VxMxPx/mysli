@@ -59,6 +59,7 @@ namespace mysli\markdown; class parser
     function __construct($markdown)
     {
         $this->markdown = explode("\n", str::to_unix_line_endings($markdown));
+        $this->lines = new lines($this->markdown);
     }
 
     /**
@@ -111,10 +112,9 @@ namespace mysli\markdown; class parser
      */
     function process()
     {
-        // (Re)Set lines
-        $this->lines = new lines($this->markdown);
-
         $at = 0;
+
+        $this->lines->reset();
 
         // Blocks
         foreach ($this->processors as $processor => $instance)
