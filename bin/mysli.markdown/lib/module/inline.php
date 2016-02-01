@@ -25,26 +25,6 @@ namespace mysli\markdown\module; class inline extends std_module
                 );
             },
 
-            // Match **bold**
-            '/\*\*(?! |\t)(\**.*?\**)(?<! |\t)\*\*/'
-            => '<strong>$1</strong>',
-
-            // Match __bold__
-            '/(?<![a-zA-Z0-9])__(?! |\\t)(_*.*?_*)(?<! |\\t)__(?![a-zA-Z0-9])/'
-            => '<strong>$1</strong>',
-
-            // Match *italic*
-            '/\*(?! |\t)(\**.*?\**)(?<! |\t)\*/'
-            => '<em>$1</em>',
-
-            // Match _italic_
-            '/(?<![a-zA-Z0-9])_(?! |\\t)(_*.*?_*)(?<! |\\t)_(?![a-zA-Z0-9])/'
-            => '<em>$1</em>',
-
-            // Match ~~strikethrough~~
-            '/(?<!~)~~(?! |\t|~)(.*?)(?<! |\t|~)~~(?!~)/'
-            => '<s>$1</s>',
-
             // Match ~sub~
             '/(?<!~)~(?! |\t|~)(.*?)(?<! |\t|~)~(?!~)/'
             => '<sub>$1</sub>',
@@ -52,16 +32,39 @@ namespace mysli\markdown\module; class inline extends std_module
             // Match ^sup^
             '/(?<!\^)\^(?! |\t|\^)(.*?)(?<! |\t|\^)\^(?!\^)/'
             => '<sup>$1</sup>',
+        ];
+
+        $regbag_multi = [
+            // Match **bold**
+            '/\*\*(?! |\t)(\**.*?\**)(?<!^| |\t)\*\*/sm'
+            => '<strong>$1</strong>',
+
+            // Match __bold__
+            '/(?<![a-zA-Z0-9])__(?! |\\t)(_*.*?_*)(?<!^| |\t)__(?![a-zA-Z0-9])/sm'
+            => '<strong>$1</strong>',
+
+            // Match *italic*
+            '/\*(?! |\t)(\**.*?\**)(?<!^| |\t)\*/sm'
+            => '<em>$1</em>',
+
+            // Match _italic_
+            '/(?<![a-zA-Z0-9])_(?! |\\t)(_*.*?_*)(?<!^| |\t)_(?![a-zA-Z0-9])/sm'
+            => '<em>$1</em>',
+
+            // Match ~~strikethrough~~
+            '/(?<!~)~~(?! |\t|~)(.*?)(?<!^| |\t|~)~~(?!~)/sm'
+            => '<s>$1</s>',
 
             // Match ++inserted++
-            '/(?<!\+)\+\+(?! |\t|\+)(.*?)(?<! |\t|\+)\+\+(?!\+)/'
+            '/(?<!\+)\+\+(?! |\t|\+)(.*?)(?<!^| |\t|\+)\+\+(?!\+)/sm'
             => '<ins>$1</ins>',
 
             // Match ==marked==
-            '/(?<!=)==(?! |\t|=)(.*?)(?<! |\t|=)==(?!=)/'
+            '/(?<!=)==(?! |\t|=)(.*?)(?<!^| |\t|=)==(?!=)/sm'
             => '<mark>$1</mark>',
         ];
 
         $this->process_inline($regbag, $at);
+        $this->process_inline_multi($regbag_multi, $at);
     }
 }
