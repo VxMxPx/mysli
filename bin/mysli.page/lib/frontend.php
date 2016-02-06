@@ -3,7 +3,7 @@
 namespace mysli\page; class frontend
 {
     const __use = <<<fin
-    .{ pages }
+    .{ page }
     mysli.toolkit.{ config }
     mysli.frontend.{ frontend -> fe }
 fin;
@@ -15,12 +15,12 @@ fin;
 
     static function page($path)
     {
-        if (!pages::has($path))
+        if (!page::has($path))
         {
             return false;
         }
 
-        $page = pages::by_path($path);
+        $page = page::by_path($path);
 
         if (!$page)
         {
@@ -29,13 +29,13 @@ fin;
 
         $c = config::select('mysli.page');
 
-        if ($c->get('cache.reload-on-access') && !$page->is_latest_cache())
+        if ($c->get('cache.reload-on-access') && !$page->is_cache_fresh())
         {
             $page->refresh_cache();
 
             if ($c->get('version.up-on-reload'))
             {
-                $page->write_version();
+                $page->new_version();
             }
 
             if ($c->get('media.republish-on-reload'))

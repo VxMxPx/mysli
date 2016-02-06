@@ -7,4 +7,4 @@ authors:
 require:
     mysli.toolkit:  1
     mysli.frontend: 1
-    mysli.markdown: 1
+    mysli.std.post: 1
