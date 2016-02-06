@@ -13,9 +13,9 @@ fin;
         $c->init(
             [
                 // Default locales code (the when file-code is absent).
-                'locale.default'            => [ 'string', 'us' ],
+                'locale.default'            => [ 'string', 'en' ],
                 // All supported locales.
-                'locale.support'            => [ 'array', [ 'us' ] ],
+                'locale.support'            => [ 'array', [ 'en' ] ],
                 // Reload cache if file change since last creation.
                 'cache.reload-on-access'    => [ 'boolean', true ],
                 // Re-publish media when cache is being re-loaded.
@@ -34,10 +34,6 @@ fin;
 
         // Create default pages directory
         dir::create(fs::cntpath('pages'))
-
-        and
-
-        dir::copy(fs::pkgreal('mysli.page/assets/pages'), fs::cntpath('pages'))
 
         and
 
