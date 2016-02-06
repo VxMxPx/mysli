@@ -25,9 +25,9 @@ fin;
                 // get       - http://domain.tld/?loc=si
                 'locale.at'      => [ 'string', null ],
                 // Default locale's ID
-                'locale.default' => [ 'string', 'us' ],
+                'locale.default' => [ 'string', 'en' ],
                 // Locale's URL ID to I18n File Code
-                'locale.accept'  => [ 'array',  [ 'us' => 'en-us' ] ],
+                'locale.accept'  => [ 'array',  [ 'en' => 'en-us' ] ],
                 // Currently selected theme
                 'theme.active'   => [ 'string', 'mysli.frontend' ]
             ]
