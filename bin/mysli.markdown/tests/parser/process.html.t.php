@@ -75,3 +75,17 @@ return assert::equals(markdown::process($markdown),
 <hr/>
 </div>');
 
+#: Test Multiple Tags
+$markdown = <<<MARKDOWN
+<ul class="columns-3">
+    <li>One:<br><a href="#one">A</a></li>
+    <li>Two:<br><a href="#two">B</a></li>
+    <li>Three:<br><a href="#three">C</a></li>
+</ul>
+MARKDOWN;
+return assert::equals(markdown::process($markdown),
+'<ul class="columns-3">
+<li>One:<br><a href="#one">A</a></li>
+<li>Two:<br><a href="#two">B</a></li>
+<li>Three:<br><a href="#three">C</a></li>
+</ul>');

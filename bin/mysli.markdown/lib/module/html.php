@@ -86,11 +86,17 @@ namespace mysli\markdown\module; class html extends std_module
                 continue;
             }
 
+
             for ($i = $marker[1]; $i<=$marker[2]; $i++)
             {
+                $is_block = $this->lines->get_attr($i, 'is-block');
+                $is_block = $is_block
+                    ? $is_block
+                    : !in_array($marker[0], $this->contained);
+
                 $this->lines->set_attr($i, [
                     'in-html-tag' => true,
-                    'is-block'    => !in_array($marker[0], $this->contained),
+                    'is-block'    => $is_block,
                 ]);
             }
         }
