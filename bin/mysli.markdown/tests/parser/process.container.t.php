@@ -27,6 +27,18 @@ return assert::equals(markdown::process($markdown),
     <p>Hello world!</p>
 </div>');
 
+#: Test Special Tag(s)
+$markdown = <<<MARKDOWN
+:::figure centered
+Hello world!
+:::
+MARKDOWN;
+
+return assert::equals(markdown::process($markdown),
+'<figure class="centered">
+    <p>Hello world!</p>
+</figure>');
+
 #: Test Unclosed
 $markdown = <<<MARKDOWN
 ::: big.well

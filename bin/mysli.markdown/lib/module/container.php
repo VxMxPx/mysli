@@ -32,28 +32,31 @@ namespace mysli\markdown\module; class container extends std_module
             if ($opened && preg_match('/^:::$/', $line))
             {
                 // Open tag...
-                list($pat, $classes) = $opened;
+                list($pat, $element, $classes) = $opened;
+
+                $element = $element ? $element : 'div';
+
                 $lines->erase($pat, true);
-                $lines->set_tag($pat, ['div', false]);
+                $lines->set_tag($pat, [$element, false]);
                 $lines->set_attr($pat, [
                     // 'no-process' => true,
                     'html-attributes' => [
-                        'div' => [ 'class="'.str_replace('.', ' ', $classes).'"' ]
+                        $element => [ 'class="'.str_replace('.', ' ', $classes).'"' ]
                     ]
                 ]);
 
                 // Close tag...
                 $lines->erase($at, true);
-                $lines->set_tag($at, [false, 'div']);
+                $lines->set_tag($at, [false, $element]);
                 // $lines->set_attr($at, 'no-process', true);
 
                 $opened = null;
             }
             else
             {
-                if (preg_match('/^:::\s*([a-z0-9\.]+)$/i', $line, $match))
+                if (preg_match('/^:::([a-z]*?)\s*([a-z0-9\.]+)$/i', $line, $match))
                 {
-                    $opened = [$at, $match[1]];
+                    $opened = [$at, $match[1], $match[2]];
                 }
             }
 
