@@ -2,25 +2,27 @@
 
 namespace mysli\markdown\module; class link extends std_module
 {
-    // Rewrite local url(s) (those which does not start with [a-z]://)
-    protected $local_url = '';
+    // Rewrite local url(s)
+    protected $urls = [];
+    // Missing video player message
+    protected $video_message =
+        "\n    Sorry, your browser doesn't support embedded videos,\n".
+        "    but don't worry, you can <a href=\"{{url}}\">download it</a>\n".
+        "    and watch it with your favorite video player!\n";
 
     function process($at)
     {
         $lines = $this->lines;
 
         $regbag = [
-            '/(!)?\[(.*?)\]\((.*?)(?: *"(.*?)")?\)/' => function ($match)
+            '/(!|~)?\[([^\[]*?)\]\((.*?)(?: *"(.*?)")?\)/' => function ($match)
             {
                 $title = isset($match[4]) ? " title=\"{$match[4]}\"" : '';
 
                 list($_, $_, $txt, $url) = $match;
                 $url = str_replace('"', '%22', $url);
 
-                if (!preg_match('/^[a-z]{2,5}:\/\/.*?$/', $url))
-                {
-                    $url = $this->get_local_url($url);
-                }
+                $url = $this->replace_local_url($url);
 
                 if ($match[1] === '!')
                 {
@@ -28,6 +30,16 @@ namespace mysli\markdown\module; class link extends std_module
                         $this->seal(
                             $this->at,
                             "<img src=\"{$url}\" alt=\"{$txt}\"{$title} />");
+                }
+                else if ($match[1] === '~')
+                {
+                    if (!$txt) $txt = $this->video_message;
+                    $txt = str_replace('{{url}}', $url, $txt);
+
+                    return
+                        $this->seal(
+                            $this->at,
+                            "<video src=\"{$url}\"{$title} controls>{$txt}</video>");
                 }
                 else
                 {
@@ -39,16 +51,24 @@ namespace mysli\markdown\module; class link extends std_module
         ];
 
         $this->process_inline($regbag, $at);
+        // Second nesting
+        $this->process_inline($regbag, $at);
     }
 
-    function set_local_url($url)
+    function set_local_url($match, $url)
     {
-        $this->local_url = rtrim($url, '/');
+        $this->urls[$match] = rtrim($url, '/');
     }
 
-    function get_local_url($uri=null)
+    function replace_local_url($url)
     {
-        if (!$this->local_url) return $uri;
-        return $this->local_url.'/'.ltrim($uri, '/');
+        foreach ($this->urls as $match => $prefix)
+        {
+            if (preg_match($match, $url))
+            {
+                return $prefix.'/'.ltrim($url, '/');
+            }
+        }
+        return $url;
     }
 }
