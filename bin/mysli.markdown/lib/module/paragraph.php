@@ -41,7 +41,9 @@ namespace mysli\markdown\module; class paragraph extends std_module
             }
             else
             {
-                if ($lines->has_tag($at) || $lines->is_empty($at, true))
+                if ($lines->has_tag($at) || $lines->is_empty($at, true)
+                    || $lines->get_attr($at, 'no-process')
+                    || $lines->get_attr($at, 'is-block'))
                 {
                     $lines->set_tag($last_at, [ false, 'p' ]);
                     $last_at = false;

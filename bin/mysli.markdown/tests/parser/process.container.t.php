@@ -39,6 +39,19 @@ return assert::equals(markdown::process($markdown),
     <p>Hello world!</p>
 </figure>');
 
+#: Test Special Tag, No Class
+$markdown = <<<MARKDOWN
+:::figure
+<img src="/media/image.png" />
+<figcaption>An image here!</figcaption>
+:::
+MARKDOWN;
+
+return assert::equals(markdown::process($markdown),
+'<figure>
+    <p><img src="/media/image.png" /></p>
+    <figcaption>An image here!</figcaption></figure>');
+
 #: Test Unclosed
 $markdown = <<<MARKDOWN
 ::: big.well

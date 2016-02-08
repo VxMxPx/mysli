@@ -11,8 +11,8 @@ namespace mysli\markdown\module; class html extends std_module
      */
     protected $contained = [
         'a', 'abbr', 'address', 'audio', 'b', 'br', 'button', 'caption', 'cite',
-        'code', 'del', 'dfn', 'em', 'figcaption', 'figure', 'h1', 'h2', 'h3',
-        'h4', 'h5', 'h6', 'hr', 'ins', 'img', 'sub', 'sup', 'small', 'time', 'video'
+        'code', 'del', 'dfn', 'em', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+        'hr', 'ins', 'img', 'sub', 'sup', 'small', 'time', 'video'
     ];
 
     function process($at)

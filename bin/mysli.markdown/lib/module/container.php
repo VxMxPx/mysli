@@ -38,12 +38,17 @@ namespace mysli\markdown\module; class container extends std_module
 
                 $lines->erase($pat, true);
                 $lines->set_tag($pat, [$element, false]);
-                $lines->set_attr($pat, [
-                    // 'no-process' => true,
-                    'html-attributes' => [
-                        $element => [ 'class="'.str_replace('.', ' ', $classes).'"' ]
-                    ]
-                ]);
+
+                if ($classes)
+                {
+                    $class = 'class="'.str_replace('.', ' ', $classes).'"';
+                    $lines->set_attr($pat, [
+                        // 'no-process' => true,
+                        'html-attributes' => [
+                            $element => [ $class ]
+                        ]
+                    ]);
+                }
 
                 // Close tag...
                 $lines->erase($at, true);
@@ -54,7 +59,7 @@ namespace mysli\markdown\module; class container extends std_module
             }
             else
             {
-                if (preg_match('/^:::([a-z]*?)\s*([a-z0-9\.]+)$/i', $line, $match))
+                if (preg_match('/^:::([a-z]*)?\s*?([a-z0-9\.]*)?$/i', $line, $match))
                 {
                     $opened = [$at, $match[1], $match[2]];
                 }
