@@ -111,6 +111,31 @@ fin;
     }
 
     /**
+     * Get current post's cache ID.
+     * --
+     * @param boolean $fresh Generate fresh ID.
+     * --
+     * @return string
+     */
+    function get_cache_id($fresh=false)
+    {
+        if (!$fresh && file::exists(fs::ds($this->path, 'cache~/hash.json')))
+        {
+            $hashes = json::decode_file(
+                fs::ds($this->path, 'cache~/hash.json'), true);
+            $hlang = $this->language ? $this->language : 0;
+
+            if (isset($hashes[$hlang]))
+            {
+                return $hashes[$hlang];
+            }
+            // Else pass through and get fresh cache!
+        }
+
+        return md5_file(fs::ds($this->path, $this->lfile.'.md'));
+    }
+
+    /**
      * Weather cache for this post exists.
      * --
      * @return boolean
