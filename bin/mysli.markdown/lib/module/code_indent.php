@@ -60,6 +60,7 @@ namespace mysli\markdown\module; class code_indent extends std_module
                     $lines->set($last_at, $this->unseal($last_at));
                     $lines->set_tag($last_at, [ false, 'pre' ]);
                     $lines->set_tag($last_at, [ false, 'code' ]);
+                    $opened = false;
                 }
                 else if (!$lines->is_empty($at, true))
                 {

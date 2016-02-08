@@ -19,6 +19,25 @@ return assert::equals(markdown::process($markdown),
     beep
 end tell</code></pre>');
 
+#: Test Simple Code
+# ~~~~~~~~~~~~~~~~~
+$markdown = <<<MARKDOWN
+Make at least the following changes:
+
+    local_enable=YES
+    write_enable=YES
+    chroot_local_user=YES
+
+Restart the vsftpd service.
+MARKDOWN;
+
+return assert::equals(markdown::process($markdown),
+'<p>Make at least the following changes:</p>
+<pre><code>local_enable=YES
+write_enable=YES
+chroot_local_user=YES</code></pre>
+<p>Restart the vsftpd service.</p>');
+
 #: Test No Inlne Tags in Code
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #: Expect String <pre><code>This is **bold** and _italic_ text...</code></pre>
