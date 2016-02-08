@@ -9,6 +9,8 @@ use mysli\tplp\parser;
 $template = <<<'TEMPLATE'
 ::let var_name = 'Marko'
 
+::let var_name = post[title]
+
 ::let var_multiline from
     This will act exactly the same
     as it would in HTML. This text will be displayed in single line.
@@ -41,6 +43,7 @@ return assert::equals(
     $parser->process($template),
     <<<'EXPECT'
 <?php $var_name = 'Marko'; ?>
+<?php $var_name = $post['title']; ?>
 <?php $var_multiline = 'This will act exactly the same as it would in HTML. This text will be displayed in single line. Tha\'s the thing... That\'s the escaped thing...'; ?>
 <?php $var_tags = 'one, two, three'; ?>
 <?php $var_array = unserialize('a:3:{i:0;s:8:"Item one";i:1;s:8:"Item two";i:2;s:10:"Item three";}'); ?>

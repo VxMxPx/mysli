@@ -251,7 +251,7 @@ fin;
 
                     if ($let['closed'])
                     {
-                        $p = $this->find_var_and_func($let['lines']);
+                        $p = $this->parse_variable_with_functions($let['lines']);
                         $p = $this->escape_single_quotes($p, false);
                         $p = $this->escape_curly_brackets($p, false);
                         $output[] = "<?php {$let['id']} = {$p}; ?>";
@@ -819,11 +819,12 @@ fin;
             '/\{(?=[^@])(.*?)\}/',
             function ($match)
             {
-                // no echo {((variable))}
-                if (substr($match[1], 0, 2) === '((' &&
-                    substr($match[1], -2) === '))')
+                $var = $match[1];
+
+                // no echo {;variable}
+                if (substr($var, 0, 1) === ';')
                 {
-                    $match[1] = substr($match[1], 2, -2);
+                    $var = substr($var, 1);
                     $echo = '';
                 }
                 else
@@ -831,7 +832,44 @@ fin;
                     $echo = 'echo ';
                 }
 
-                $var = $this->parse_variable_with_functions(trim($match[1]));
+                // Variable contents modifications!
+                if (!strpos($var, '|'))
+                {
+                    if (preg_match('/(\+{2}$|\-{2})$/', $var, $m))
+                    {
+                        $var = substr($var, 0, -2);
+                        $var = $this->parse_variable_with_functions(trim($var));
+                        $var = $var . $m[1];
+                    }
+                    elseif (preg_match('/\+|\=|\-(?!>)|\*|\//', $var))
+                    {
+                        $m = preg_split(
+                            '/(\+|\=|\-(?!>)|\*|\/)+/', $var, -1,
+                            PREG_SPLIT_DELIM_CAPTURE);
+                        $var = '';
+
+                        foreach ($m as $k => $v)
+                        {
+                            if ($k%2)
+                            {
+                                $var .= $v;
+                            }
+                            else
+                            {
+                                $var .= $this->parse_variable_with_functions(trim($v));
+                            }
+                        }
+                    }
+                    else
+                    {
+                        $var = $this->parse_variable_with_functions(trim($var));
+                    }
+                }
+                else
+                {
+                    $var = $this->parse_variable_with_functions(trim($var));
+                }
+
 
                 if (trim($var) === '')
                 {
@@ -939,13 +977,13 @@ fin;
     {
         if ($protect)
         {
-            $line = str_replace('\\{', '--MYSLI-CB-OPEN', $line);
-            $line = str_replace('\\}', '--MYSLI-CB-CLOSE', $line);
+            $line = str_replace('\\{', 'iiMYSLIiCBiOPENi', $line);
+            $line = str_replace('\\}', 'iiMYSLIiCBiCLOSEi', $line);
         }
         else
         {
-            $line = preg_replace('/--MYSLI-CB-OPEN/',  '{',  $line);
-            $line = preg_replace('/--MYSLI-CB-CLOSE/', '}',  $line);
+            $line = preg_replace('/iiMYSLIiCBiOPENi/',  '{',  $line);
+            $line = preg_replace('/iiMYSLIiCBiCLOSEi/', '}',  $line);
         }
 
         return $line;
@@ -964,9 +1002,9 @@ fin;
             "/'(.*?)'/",
             function ($match)
             {
-                return '--MYSLI-QUOT-ST-'.
+                return 'iiMYSLIiQUOTiSTi'.
                     base64_encode($match[1]).
-                    '-MYSLI-END-QUOT';
+                    'iiMYSLIiENDiQUOTi';
             },
             $match
         );
@@ -1008,7 +1046,7 @@ fin;
         {
             // Restore everything wrapped in ''
             $line = preg_replace_callback(
-                "/--MYSLI-QUOT-ST-(.*?)-MYSLI-END-QUOT/",
+                "/iiMYSLIiQUOTiSTi(.*?)iiMYSLIiENDiQUOTi/",
                 function ($match)
                 {
                     return '\'' . base64_decode($match[1]) . '\'';
@@ -1180,7 +1218,7 @@ fin;
         if ($variable === '')
             throw new exception\parser("Not a valid variable (empty): ``", 10);
 
-        if (substr($variable, 0, 8) === '--MYSLI-') {
+        if (substr($variable, 0, 8) === 'iiMYSLIi') {
             return $variable;
         }
 
