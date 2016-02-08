@@ -10,22 +10,33 @@ fin;
     static function enable()
     {
         $c = config::select('mysli.blog');
-        $c->init(
-            [
-                // Tags which supposed to be threated as categories
-                'tags.to-categories'        => [ 'array', [] ],
-                // Default locales code (the when file-code is absent).
-                'locale.default'            => [ 'string', 'en' ],
-                // All supported locales.
-                'locale.support'            => [ 'array', [ 'en' ] ],
-                // Reload cache if file change since last creation.
-                'cache.reload-on-access'    => [ 'boolean', true ],
-                // Re-publish media when cache is being re-loaded.
-                'media.republish-on-reload' => [ 'boolean', true ],
-                // Write version on cache reload.
-                'version.up-on-reload'      => [ 'boolean', true ],
-            ]
-        );
+        $c->init([
+            // Tags which supposed to be threated as categories
+            'tags.to-categories' => [
+                'array',
+                [
+                    'default' => [
+                        'description' => 'This is a default tag.',
+                        'language'    => [ null ],
+                    ]
+                ]
+            ],
+
+            // Default locales code (the when file-code is absent).
+            'locale.default' => [ 'string', 'en' ],
+
+            // All supported locales.
+            'locale.support' => [ 'array', [ 'en' ] ],
+
+            // Reload cache if file change since last creation.
+            'cache.reload-on-access' => [ 'boolean', true ],
+
+            // Re-publish media when cache is being re-loaded.
+            'media.republish-on-reload' => [ 'boolean', true ],
+
+            // Write version on cache reload.
+            'version.up-on-reload' => [ 'boolean', true ],
+        ]);
 
         return
 
@@ -59,7 +70,7 @@ fin;
         route::add(
             'mysli.blog.frontend::tag',
             'ANY',
-            '/r/tag/<tag:slug>/',
+            '/r/tag/<tag:slug>',
             'medium')
 
         and
