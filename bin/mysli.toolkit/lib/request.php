@@ -15,7 +15,14 @@ namespace mysli\toolkit; class request
      * --
      * @var array
      */
-    private static $segments = [];
+    protected static $segments = [];
+
+    /**
+     * Request time.
+     * --
+     * @var integer
+     */
+    protected static $time;
 
     /**
      * Set segments.
@@ -25,10 +32,56 @@ namespace mysli\toolkit; class request
      */
     static function __init($path=null)
     {
+        static::$time = isset($_SERVER['REQUEST_TIME'])
+            ? $_SERVER['REQUEST_TIME']
+            : time();
+
         $path = $path ?: static::path();
         $segments = trim($path, '/');
         static::$segments = str::split_trim($segments, '/');
-        \log::debug("Request: `{$path}`.", __CLASS__);
+
+        \log::debug(
+            "Request URL: `".static::url(true)."`, segments: `{$segments}` from: `".
+            static::ip()."`. Method: `".static::method()."`.",
+            __CLASS__);
+    }
+
+    /**
+     * Get value from $_SERVER array.
+     * --
+     * @param string $key
+     * @param mixed $default
+     * --
+     * @return mixed
+     */
+    static function server($key, $default=null)
+    {
+        $key = strtoupper($key);
+        return array_key_exists($key, $_SERVER)
+            ? $_SERVER[$key]
+            : $default;
+    }
+
+    /**
+     * Return request time.
+     * --
+     * @return integer
+     */
+    static function time()
+    {
+        return static::$time;
+    }
+
+    /**
+     * Return server port.
+     * --
+     * @return integer
+     */
+    static function port()
+    {
+        return array_key_exists('SERVER_PORT', $_SERVER)
+            ? (int) $_SERVER['SERVER_PORT']
+            : 0;
     }
 
     /**
@@ -197,10 +250,6 @@ namespace mysli\toolkit; class request
         {
             return $_SERVER['SERVER_NAME'];
         }
-        elseif (isset($_SERVER['HTTP_HOST']))
-        {
-            return $_SERVER['HTTP_HOST'];
-        }
         else
         {
             return null;
@@ -237,12 +286,22 @@ namespace mysli\toolkit; class request
      * If with_query is set to true, it will return full URL, query included.
      * --
      * @param boolean $with_query
+     * @param boolean $ns_port    Non standard post (!== 80, 443)
+     * @param string  $sub_domain Prepend sub domain!
      * --
      * @return string
      */
-    static function url($with_query=false)
+    static function url($with_query=false, $ns_port=false, $sub_domain=null)
     {
-        $url = (static::is_ssl() ? 'https://' : 'http://') . static::host();
+        $url =
+            (static::is_ssl() ? 'https://' : 'http://') .
+            ($sub_domain ? "{$sub_domain}." : '') .
+            static::host();
+
+        if ($ns_port && !in_array(static::port(), [ 80, 443 ]))
+        {
+            $url .= ':'.static::port();
+        }
 
         if ($with_query)
         {
