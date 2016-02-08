@@ -45,7 +45,7 @@ fin;
             }
         }
 
-        if (!$page->get('published'))
+        if (!$page->get('published', true))
         {
             return false;
         }
