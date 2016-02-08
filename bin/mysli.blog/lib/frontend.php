@@ -10,22 +10,30 @@ fin;
 
     static function archive()
     {
-        static::reload_cache();
+        config::select('mysli.blog', 'cache.reload-on-access') and blog::refresh_list();
+
         $list = blog::list_all();
+        krsort($list);
 
         fe::render(['blog-archive', ['mysli.blog', 'archive']], [
             'posts' => $list
         ]);
+
+        return true;
     }
 
     static function tag($id)
     {
-        static::reload_cache();
+        config::select('mysli.blog', 'cache.reload-on-access') and blog::refresh_list();
+
         $list = blog::list_by_tag($id);
+        krsort($list);
 
         fe::render(['blog-archive', ['mysli.blog', 'archive']], [
             'posts' => $list
         ]);
+
+        return true;
     }
 
     static function post($year, $id)
@@ -44,7 +52,7 @@ fin;
 
         $c = config::select('mysli.blog');
 
-        if ($c->get('cache.reload-on-access') && !$post->is_latest_cache())
+        if ($c->get('cache.reload-on-access') && !$post->is_cache_fresh())
         {
             $post->refresh_cache();
 
@@ -60,7 +68,7 @@ fin;
             }
         }
 
-        if (!$post->get('published'))
+        if (!$post->get('published', true))
         {
             return false;
         }
@@ -70,15 +78,5 @@ fin;
         ]);
 
         return true;
-    }
-
-    protected function reload_cache()
-    {
-        $c = config::select('mysli.blog');
-
-        if ($c->get('cache.reload-on-access'))
-        {
-            blog::refresh_list();
-        }
     }
 }
