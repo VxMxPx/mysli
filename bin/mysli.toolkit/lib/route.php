@@ -372,8 +372,13 @@ namespace mysli\toolkit; class route
     /**
      * Convert a route to an URL.
      * --
-     * @param string $call
-     * @param array  $parameters
+     * @param string  $call
+     *
+     * @param array   $parameters
+     *
+     * @param boolean $strict
+     *        When false, it will not check: optional, names, types...
+     *        This will run much faster, but might erroneous URL.
      * --
      * @throws mysli\toolkit\exception\route 10 Segment not found.
      * @throws mysli\toolkit\exception\route 20 Parameter not found.
@@ -381,13 +386,24 @@ namespace mysli\toolkit; class route
      * --
      * @return string
      */
-    static function to_url($call, array $parameters=[])
+    static function to_url($call, array $parameters=[], $strict=true)
     {
         list($_, $_, $route) = static::get($call);
 
         if (!$route)
         {
             return null;
+        }
+
+        // FAAAAAAST RUN!
+        if (!$strict)
+        {
+            return preg_replace_callback(
+                '/<.*?>/',
+                function () use (&$parameters)
+                {
+                    return array_shift($parameters);
+                }, $route['route']);
         }
 
         list($sroute, $segments) = static::extract_segments($route['route']);
@@ -505,7 +521,7 @@ namespace mysli\toolkit; class route
 
                 $rseg = str_replace(
                     "\"SEG_{$segid}\"",
-                    "(?'{$segid}'{$segments[$segid][1]})",
+                    "({$segments[$segid][1]})",
                     $rseg
                 );
 
