@@ -408,7 +408,9 @@ namespace mysli\i18n; class translator
     function translate($key, $variable=[])
     {
         if (!is_array($variable))
+        {
             $variable = [$variable];
+        }
 
         return $this->translate_as($key, $this->primary,   $variable)
             ?: $this->translate_as($key, $this->secondary, $variable);
