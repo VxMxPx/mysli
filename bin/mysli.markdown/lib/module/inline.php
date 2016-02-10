@@ -30,7 +30,7 @@ namespace mysli\markdown\module; class inline extends std_module
             => '<sub>$1</sub>',
 
             // Match ^sup^
-            '/(?<!\^)\^(?! |\t|\^)(.*?)(?<! |\t|\^)\^(?!\^)/'
+            '/(?<!\^|\[)\^(?! |\t|\^)(.*?)(?<! |\t|\^)\^(?!\^)/'
             => '<sup>$1</sup>',
         ];
 

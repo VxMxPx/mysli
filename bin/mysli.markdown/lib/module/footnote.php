@@ -50,12 +50,24 @@ namespace mysli\markdown\module; class footnote extends std_module
 
             $line = $lines->get($at);
 
+            // Footnote definition start
+            if (preg_match('/(?>[ \t]*|^)\[\^([a-z0-9_-]+)\]:(.*?)$/i', $line, $match))
+            {
+                $fid = $match[1];
+                $this->footnotes[$fid]['body'] = trim($match[2]);
+                $lines->erase($at, true);
+                $in_fnote = true;
+            }
+
             // In footnote definition
             if ($in_fnote)
             {
                 list($otag, $ctag) = $lines->get_tags($at);
 
-                $this->footnotes[$fid]['body'] .= ' '.trim($lines->get($at));
+                if (trim($lines->get($at)))
+                {
+                    $this->footnotes[$fid]['body'] .= ' '.trim($lines->get($at));
+                }
                 $lines->erase($at, true);
 
                 if (in_array('p', $ctag))
@@ -63,14 +75,6 @@ namespace mysli\markdown\module; class footnote extends std_module
                     $in_fnote = false;
                     $fid = null;
                 }
-            }
-            // Footnote definition start
-            else if (preg_match('/(?>[ \t]*|^)\[\^([a-z0-9_-]+)\]:(.*?)$/i', $line, $match))
-            {
-                $fid = $match[1];
-                $this->footnotes[$fid]['body'] = trim($match[2]);
-                $lines->erase($at, true);
-                $in_fnote = true;
             }
 
             $at++;
@@ -90,10 +94,7 @@ namespace mysli\markdown\module; class footnote extends std_module
             }
         ];
 
-        $this->process_inline($regbag, $at_init, [
-            // 'html-tag-opened' => true,
-            // 'html-tag-closed' => true
-        ]);
+        $this->process_inline($regbag, $at_init);
     }
 
     function as_array()
