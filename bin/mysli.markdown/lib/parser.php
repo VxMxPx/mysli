@@ -56,10 +56,25 @@ namespace mysli\markdown; class parser
      * --
      * @param string $markdown
      */
-    function __construct($markdown)
+    function __construct($markdown=null)
+    {
+        $this->lines = new lines();
+
+        if ($markdown)
+        {
+            $this->set_markdown($markdown);
+        }
+    }
+
+    /**
+     * Set markdown. This will reset lines!
+     * --
+     * @param string $markdown
+     */
+    function set_markdown($markdown)
     {
         $this->markdown = explode("\n", str::to_unix_line_endings($markdown));
-        $this->lines = new lines($this->markdown);
+        $this->lines->set_lines($this->markdown);
     }
 
     /**

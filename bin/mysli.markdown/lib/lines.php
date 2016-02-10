@@ -29,7 +29,18 @@ namespace mysli\markdown; class lines
      * --
      * @param array $lines Raw input of Markdown lines.
      */
-    function __construct(array $lines)
+    function __construct(array $lines=[])
+    {
+        $this->set_lines($lines);
+    }
+
+    /**
+     * Set lines to be used.
+     * This will reset lines.
+     * --
+     * @param array $lines
+     */
+    function set_lines(array $lines)
     {
         $this->in = $lines;
         $this->reset();
@@ -44,7 +55,6 @@ namespace mysli\markdown; class lines
     {
         return $this->lines;
     }
-
 
     /**
      * Get line's tag(s) at particular position.
