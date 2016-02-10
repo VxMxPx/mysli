@@ -35,10 +35,12 @@ namespace mysli\markdown\module; class std_module
         return $id;
     }
 
-    protected function unseal($at)
+    protected function unseal($at, $line=null)
     {
         $sealed = $this->lines->get_attr($at, 'sealed');
-        $line = $this->lines->get($at);
+
+        if (!$line)
+            $line = $this->lines->get($at);
 
         if (!is_array($sealed))
         {

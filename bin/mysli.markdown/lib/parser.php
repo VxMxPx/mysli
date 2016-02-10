@@ -32,8 +32,8 @@ namespace mysli\markdown; class parser
         'mysli.markdown.module.link'          => null,
         'mysli.markdown.module.url'           => null,
         'mysli.markdown.module.typography'    => null,
-        'mysli.markdown.module.footnote'      => null,
         'mysli.markdown.module.abbreviation'  => null,
+        'mysli.markdown.module.footnote'      => null,
         'mysli.markdown.module.unseal'        => null,
     ];
 

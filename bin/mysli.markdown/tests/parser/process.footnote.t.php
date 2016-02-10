@@ -103,3 +103,27 @@ return assert::equals(markdown::process($parser),
 <p>Hello world! <sup class="footnote-ref"><a href="#fn2" id="fnref2">[2]</a>'.
 '</sup><sup class="footnote-ref"><a href="#fn3" id="fnref3">[3]</a>'.
 '</sup><sup class="footnote-ref"><a href="#fn4" id="fnref4">[4]</a></sup>.</p>');
+
+# ------------------------------------------------------------------------------
+#: Test Footnote With Links
+$markdown = <<<MARKDOWN
+Hello world! [^first].
+
+Hello world! [^second].
+
+[^first]:  This footnote has [a link](http://domain.tld).
+[^second]: Second, http://inline-link.tld
+MARKDOWN;
+$parser = new parser($markdown);
+$parser->process();
+$footnote = $parser->get_processor('mysli.markdown.module.footnote');
+return assert::equals($footnote->as_array(), [
+    'first' => [
+        'body' => 'This footnote has <a href="http://domain.tld">a link</a>.',
+        'back' => [ 'fnref1' ]
+    ],
+    'second' => [
+        'body' => 'Second, <a href="http://inline-link.tld">http://inline-link.tld</a>',
+        'back' => [ 'fnref2' ]
+    ]
+]);

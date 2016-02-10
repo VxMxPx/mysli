@@ -51,10 +51,13 @@ namespace mysli\markdown\module; class footnote extends std_module
             $line = $lines->get($at);
 
             // Footnote definition start
-            if (preg_match('/(?>[ \t]*|^)\[\^([a-z0-9_-]+)\]:(.*?)$/i', $line, $match))
+            if (preg_match('/(?>[ \t]*|^)\[\^([a-z0-9_-]+)\]:(.*?)$/i', $line, $m))
             {
-                $fid = $match[1];
-                $this->footnotes[$fid]['body'] = trim($match[2]);
+                // Unseal!
+                $m[2] = $this->unseal($at, $m[2]);
+
+                $fid = $m[1];
+                $this->footnotes[$fid]['body'] = trim($m[2]);
                 $lines->erase($at, true);
                 $in_fnote = true;
             }
@@ -64,10 +67,13 @@ namespace mysli\markdown\module; class footnote extends std_module
             {
                 list($otag, $ctag) = $lines->get_tags($at);
 
+                $this->unseal($at);
+
                 if (trim($lines->get($at)))
                 {
                     $this->footnotes[$fid]['body'] .= ' '.trim($lines->get($at));
                 }
+
                 $lines->erase($at, true);
 
                 if (in_array('p', $ctag))
