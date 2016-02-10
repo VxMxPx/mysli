@@ -41,29 +41,39 @@ namespace mysli\i18n; class i18n
         if (is_array($id))
         {
             if (count($id) === 3)
+            {
                 list($id, $primary, $secondary) = $id;
+            }
             else
+            {
                 throw new exception\i18n(
                     "Invalid ID. Required either string or array: ".
                     "`[ string id, string primary, string secondary ]`.", 10
                 );
+            }
         }
         else
         {
             $primary = $secondary = null;
         }
 
-        if (!isset(static::$cache[$id]))
+        if (!isset(static::$cache["{$id}+{$primary}+{$secondary}"]))
         {
-            static::$cache[$id] = new translator($primary, $secondary);
+            static::$cache["{$id}+{$primary}+{$secondary}"] =
+                new translator($primary, $secondary);
         }
 
-        $translator = static::$cache[$id];
+        $translator = static::$cache["{$id}+{$primary}+{$secondary}"];
 
         if ($translate !== null)
+        {
+            $translator->load($id);
             return $translator->translate($translate, $variable);
+        }
         else
+        {
             return $translator;
+        }
     }
 
 
