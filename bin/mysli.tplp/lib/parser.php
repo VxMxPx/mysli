@@ -269,6 +269,9 @@ fin;
                 // Find inline if {var if var else 'No-var'}
                 $line = $this->find_inline_if($line);
 
+                // Find inline for {var in vars}
+                $line = $this->find_inline_for($line);
+
                 // Find variables and functions
                 $line = $this->find_var_and_func($line);
 
@@ -723,6 +726,35 @@ fin;
                 return trim($logical_before . $mod . $variable . $logical) . ' ';
             },
             $expression
+        );
+    }
+
+    /**
+     * Find inline for `{item in var}`.
+     * --
+     * @param string $line
+     * --
+     * @return string
+     */
+    protected function find_inline_for($line)
+    {
+        return preg_replace_callback(
+            '/{(.*?) in (.*?)}/i',
+            function ($match)
+            {
+                $var[0] = trim($match[1]);
+                $var[0] = explode('|', $var[0]);
+                $var[0] = $var[0][0];
+                $var[1] = trim($match[2]);
+                $var[3] = trim($match[1]);
+
+                $var[0] = $this->parse_variable($var[0]);
+                $var[1] = $this->parse_variable_with_functions($var[1]);
+                $var[3] = $this->parse_variable_with_functions($var[3]);
+
+                return "<?php foreach ({$var[1]} as {$var[0]}): echo {$var[3]}; endforeach; ?>";
+            },
+            $line
         );
     }
 
