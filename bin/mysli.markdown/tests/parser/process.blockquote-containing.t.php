@@ -22,7 +22,7 @@ MARKDOWN;
 
 return assert::equals(markdown::process($markdown),
 '<blockquote>
-    <h2>This is a header.</h2>
+    <h2 id="this-is-a-header">This is a header.</h2>
     <ol>
         <li>This is the first list item.
             <ul>
