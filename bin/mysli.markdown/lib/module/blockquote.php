@@ -1,7 +1,18 @@
 <?php
 
+/**
+ * Process blockquotes.
+ * --
+ * @example
+ * > This is a quote.
+ * > > This is a nested quote.
+ */
 namespace mysli\markdown\module; class blockquote extends std_module
 {
+    /**
+     * --
+     * @param integer $at
+     */
     function process($at)
     {
         $lines = $this->lines;

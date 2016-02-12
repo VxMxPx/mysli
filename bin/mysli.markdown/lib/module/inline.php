@@ -5,6 +5,10 @@
  */
 namespace mysli\markdown\module; class inline extends std_module
 {
+    /**
+     * --
+     * @param integer $at
+     */
     function process($at)
     {
         $regbag = [

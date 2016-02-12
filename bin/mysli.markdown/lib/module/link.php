@@ -1,15 +1,31 @@
 <?php
 
+/**
+ * Find URLs, image and video links.
+ */
 namespace mysli\markdown\module; class link extends std_module
 {
-    // Rewrite local url(s)
+    /**
+     * Rewritten local URLs.
+     * --
+     * @var array
+     */
     protected $urls = [];
-    // Missing video player message
+
+    /**
+     * Message about missing video player.
+     * --
+     * @var string
+     */
     protected $video_message =
         "\n    Sorry, your browser doesn't support embedded videos,\n".
         "    but don't worry, you can <a href=\"{{url}}\">download it</a>\n".
         "    and watch it with your favorite video player!\n";
 
+    /**
+     * --
+     * @param integer $at
+     */
     function process($at)
     {
         $lines = $this->lines;
@@ -55,12 +71,25 @@ namespace mysli\markdown\module; class link extends std_module
         $this->process_inline($regbag, $at);
     }
 
+    /**
+     * Allow URL rewrites for local sources.
+     * --
+     * @param string $match Regular expression to be matched.
+     * @param string $url   URL to be used.
+     */
     function set_local_url($match, $url)
     {
         $this->urls[$match] = rtrim($url, '/');
     }
 
-    function replace_local_url($url)
+    /**
+     * Replace locally defined URLs.
+     * --
+     * @param string $url
+     * --
+     * @return string
+     */
+    protected function replace_local_url($url)
     {
         foreach ($this->urls as $match => $prefix)
         {

@@ -1,10 +1,29 @@
 <?php
 
+/**
+ * Standard module to be extended.
+ */
 namespace mysli\markdown\module; class std_module
 {
+    /**
+     * Lines collection.
+     * --
+     * @var mysli\markdown\lines
+     */
     protected $lines;
+
+    /**
+     * Current position.
+     * --
+     * @var integer
+     */
     protected $at;
 
+    /**
+     * Instance
+     * --
+     * @param \mysli\markdown\lines $lines
+     */
     function __construct(\mysli\markdown\lines $lines)
     {
         $this->lines = $lines;
@@ -12,11 +31,21 @@ namespace mysli\markdown\module; class std_module
 
     // --- Output ---
 
+    /**
+     * Overwrite: return as array.
+     * --
+     * @return array
+     */
     function as_array()
     {
         return [];
     }
 
+    /**
+     * Overwrite: return as string.
+     * --
+     * @return string
+     */
     function as_string()
     {
         return '';
@@ -24,6 +53,15 @@ namespace mysli\markdown\module; class std_module
 
     // --- Protected ---
 
+    /**
+     * Seal particular part of the line so that it won't be further modified.
+     * --
+     * @param integer $at
+     * @param string  $string
+     * --
+     * @return string
+     *         Seal unique ID.
+     */
     protected function seal($at, $string)
     {
         $sealed = $this->lines->get_attr($at, 'sealed');
@@ -35,6 +73,14 @@ namespace mysli\markdown\module; class std_module
         return $id;
     }
 
+    /**
+     * Unseal particular line.
+     * --
+     * @param integer $at
+     * @param string  $line Unseal this string, with $at line's seal's.
+     * --
+     * @return string
+     */
     protected function unseal($at, $line=null)
     {
         $sealed = $this->lines->get_attr($at, 'sealed');

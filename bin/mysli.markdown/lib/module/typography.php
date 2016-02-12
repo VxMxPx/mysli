@@ -1,7 +1,14 @@
 <?php
 
+/**
+ * Convert typography related characters like copyright symbol and quotes.
+ */
 namespace mysli\markdown\module; class typography extends std_module
 {
+    /**
+     * --
+     * @param integer $at
+     */
     function process($at)
     {
         $regbag = [

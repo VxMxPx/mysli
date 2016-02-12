@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * Find actual HTML tags in string, i.e. user defined tags!
+ */
 namespace mysli\markdown\module; class html extends std_module
 {
     /**
@@ -15,6 +18,10 @@ namespace mysli\markdown\module; class html extends std_module
         'hr', 'ins', 'img', 'sub', 'sup', 'small', 'time', 'video'
     ];
 
+    /**
+     * --
+     * @param integer $at
+     */
     function process($at)
     {
         $lines = $this->lines;
@@ -63,7 +70,16 @@ namespace mysli\markdown\module; class html extends std_module
         $this->mark_lines($marked);
     }
 
-    protected function set_closed($tag, $at, $marked)
+    /**
+     * Set close HTML tag (set marker position).
+     * --
+     * @param string  $tag
+     * @param integer $at
+     * @param array   $marked
+     * --
+     * @return array
+     */
+    protected function set_closed($tag, $at, array $marked)
     {
         for ($i = count($marked)-1; $i>=0; $i--)
         {
@@ -77,7 +93,12 @@ namespace mysli\markdown\module; class html extends std_module
         return $marked;
     }
 
-    protected function mark_lines($marked)
+    /**
+     * Mark lines, actually set open/close tags.
+     * --
+     * @param array $marked
+     */
+    protected function mark_lines(array $marked)
     {
         foreach ($marked as $marker)
         {

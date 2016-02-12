@@ -1,7 +1,14 @@
 <?php
 
+/**
+ * Add paragraphs when appropriate.
+ */
 namespace mysli\markdown\module; class paragraph extends std_module
 {
+    /**
+     * --
+     * @param integer $at
+     */
     function process($at)
     {
         $lines = $this->lines;
@@ -69,6 +76,13 @@ namespace mysli\markdown\module; class paragraph extends std_module
         }
     }
 
+    /**
+     * Check weather paragraph can be opened.
+     * --
+     * @param integer $at
+     * --
+     * @return boolean
+     */
     protected function can_open($at)
     {
         $l = $this->lines;

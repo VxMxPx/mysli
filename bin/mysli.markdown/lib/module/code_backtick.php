@@ -1,7 +1,22 @@
 <?php
 
+/**
+ * Process code with backticks.
+ * --
+ * @example
+ * ```
+ * This is a code block
+ * ```
+ * ``` html
+ * This is another code block with syntax named.
+ * ```
+ */
 namespace mysli\markdown\module; class code_backtick extends std_module
 {
+    /**
+     * --
+     * @param integer $at
+     */
     function process($at)
     {
         $lines = $this->lines;

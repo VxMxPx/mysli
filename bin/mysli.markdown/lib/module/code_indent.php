@@ -1,7 +1,18 @@
 <?php
 
+/**
+ * Process indented code.
+ * --
+ * @example
+ *
+ *     This is an indented code.
+ */
 namespace mysli\markdown\module; class code_indent extends std_module
 {
+    /**
+     * --
+     * @param integer $at
+     */
     function process($at)
     {
         $lines = $this->lines;

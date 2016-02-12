@@ -2,12 +2,12 @@
 
 /**
  * Process footnotes.
- *
- * @example
- * Hello world! [^first].
- * Hello world ^[Woo, inline footnote!]
- * Reference back to the first one! [^first]
- * [^first]: Footnote **can have markup**!
+ * --
+ *  * @example
+ *  * Hello world! [^first].
+ *  * Hello world ^[Woo, inline footnote!]
+ *  * Reference back to the first one! [^first]
+ *  * [^first]: Footnote **can have markup**!
  */
 namespace mysli\markdown\module; class footnote extends std_module
 {
@@ -26,11 +26,8 @@ namespace mysli\markdown\module; class footnote extends std_module
     protected $footnotes_inline = [];
 
     /**
-     * Process footnotes.
      * --
      * @param  integer $at
-     * --
-     * @return void
      */
     function process($at)
     {
@@ -103,11 +100,24 @@ namespace mysli\markdown\module; class footnote extends std_module
         $this->process_inline($regbag, $at_init);
     }
 
+    /**
+     * Return all footnotes as an array.
+     * --
+     * @return array
+     */
     function as_array()
     {
         return $this->footnotes;
     }
 
+    /**
+     * Process inline references.
+     * --
+     * @param integer $at
+     * @param string  $id Ref. ID.
+     * --
+     * @return string Seal!
+     */
     protected function process_inline_ref($at, $id)
     {
         if (!isset($this->footnotes_inline[$id]))

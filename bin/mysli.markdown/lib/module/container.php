@@ -1,19 +1,22 @@
 <?php
 
 /**
- * Resolve Containers
- *
+ * Process containers.
+ * --
  * @example
- * ::: class
- * I'm in container!
+ * ::: one.two
+ * Container <div class="one two"></div>
  * :::
- *
- * Produces:
- *
- * <div class="class">I'm in container!</div>
+ * :::section
+ * Container <section></section>
+ * :::
  */
 namespace mysli\markdown\module; class container extends std_module
 {
+    /**
+     * --
+     * @param integer $at
+     */
     function process($at)
     {
         $opened = null;

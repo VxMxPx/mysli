@@ -1,7 +1,14 @@
 <?php
 
+/**
+ * Convert URLs to actual links (a elements).
+ */
 namespace mysli\markdown\module; class url extends std_module
 {
+    /**
+     * --
+     * @param integer $at
+     */
     function process($at)
     {
         $regbag = [
@@ -23,9 +30,6 @@ namespace mysli\markdown\module; class url extends std_module
             },
         ];
 
-        $this->process_inline($regbag, $at, [
-            // 'html-tag-opened' => true,
-            // 'html-tag-closed' => true
-        ]);
+        $this->process_inline($regbag, $at);
     }
 }

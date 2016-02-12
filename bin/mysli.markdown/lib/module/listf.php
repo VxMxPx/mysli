@@ -1,7 +1,22 @@
 <?php
 
+/**
+ * Find lists.
+ * --
+ * @example
+ * - This is a
+ *     - nested
+ *         - unordered list!
+ *
+ * 1. This is a nested
+ *     1. ordered list!
+ */
 namespace mysli\markdown\module; class listf extends std_module
 {
+    /**
+     * --
+     * @param integer $at
+     */
     function process($at)
     {
         $lines = $this->lines;

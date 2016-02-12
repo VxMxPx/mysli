@@ -1,5 +1,13 @@
 <?php
 
+/**
+ * Process header.
+ * --
+ * @example
+ * # This is a header
+ * So is this
+ * ----------
+ */
 namespace mysli\markdown\module; class header extends std_module
 {
     const __use = <<<fin
@@ -28,7 +36,6 @@ fin;
     protected $taken = [];
 
     /**
-     * Process called by parser.
      * --
      * @param integer $at
      */
@@ -87,7 +94,7 @@ fin;
      * --
      * @return array
      */
-    function get_toc()
+    function as_array()
     {
         return $this->toc;
     }

@@ -1,14 +1,26 @@
 <?php
 
+/**
+ * Processs abbreviations.
+ * --
+ * @example
+ *     This is HTML abbreviation. Bellow is the definition.
+ *
+ *     *[HTML]: Hyper Text Markup Language
+ */
 namespace mysli\markdown\module; class abbreviation extends std_module
 {
     /**
-     * All defined abbreviations.
+     * All abbreviations that were found.
      * --
      * @var array
      */
-    protected $abbreviations = [];
+    protected $abbreviations;
 
+    /**
+     * --
+     * @param integer $at
+     */
     function process($at)
     {
         $lines = $this->lines;
@@ -43,7 +55,9 @@ namespace mysli\markdown\module; class abbreviation extends std_module
         $abbrregex = [];
 
         foreach ($this->abbreviations as $abbr => $def)
+        {
             $abbrregex[] = preg_quote($abbr);
+        }
 
         $abbrregex = implode('|', $abbrregex);
 

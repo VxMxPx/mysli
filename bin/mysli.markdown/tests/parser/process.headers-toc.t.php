@@ -25,7 +25,7 @@ MARKDOWN;
 $parser = new parser($markdown);
 markdown::process($parser);
 $header = $parser->get_processor('mysli.markdown.module.header');
-return assert::equals($header->get_toc(),
+return assert::equals($header->as_array(),
 [
     'preface' => [
         'id' => 'preface',

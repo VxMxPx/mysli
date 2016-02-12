@@ -1,7 +1,15 @@
 <?php
 
+/**
+ * Convert entities.
+ * Convert & to &amp; (but leave &[a-z]; like for example &copy, ...)
+ */
 namespace mysli\markdown\module; class entity extends std_module
 {
+    /**
+     * --
+     * @param integer $at
+     */
     function process($at)
     {
         $lines = $this->lines;
@@ -13,18 +21,7 @@ namespace mysli\markdown\module; class entity extends std_module
 
             // Convert &, but leave &copy; ...
             $line = preg_replace('/&(?![a-z]{2,11};)/', '&amp;', $line);
-
-            // if ($lines->get_attr($at, 'convert-tags')
-            //     || (!$lines->get_attr($at, 'in-html-tag')
-            //         && !$lines->get_attr($at, 'html-tag-opened')
-            //         && !$lines->get_attr($at, 'html-tag-closed')))
-            // {
-                $line = str_replace(['<', '>'], ['&lt;', '&gt;'], $line);
-            // }
-            // else
-            // {
-            //     $line = preg_replace('/(\<(?![a-z]|\/[a-z]))/', '&lt;', $line);
-            // }
+            $line = str_replace(['<', '>'], ['&lt;', '&gt;'], $line);
 
             $lines->set($at, $line);
 
