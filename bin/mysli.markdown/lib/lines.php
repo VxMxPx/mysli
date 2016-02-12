@@ -31,17 +31,6 @@ namespace mysli\markdown; class lines
      */
     function __construct(array $lines=[])
     {
-        $this->set_lines($lines);
-    }
-
-    /**
-     * Set lines to be used.
-     * This will reset lines.
-     * --
-     * @param array $lines
-     */
-    function set_lines(array $lines)
-    {
         $this->in = $lines;
         $this->reset();
     }
