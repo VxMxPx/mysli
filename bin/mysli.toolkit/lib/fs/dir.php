@@ -40,6 +40,18 @@ namespace mysli\toolkit\fs; class dir
     }
 
     /**
+     * Return directory name, without filename.
+     * --
+     * @param string $dir
+     * --
+     * @return string
+     */
+    static function name($dir)
+    {
+        return dirname($dir);
+    }
+
+    /**
      * Copy a directory and all the content to the destination.
      * If destination doesn't exists, it will be created.
      * --
