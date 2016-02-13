@@ -17,21 +17,34 @@ fin;
     static function enable()
     {
         $c = config::select('mysli.frontend');
-        $c->init(
-            [
-                // Where locales can be found:
-                // subdomain - http://si.domain.tld/
-                // segment   - http://domain.tld/si/
-                // get       - http://domain.tld/?loc=si
-                'locale.at'      => [ 'string', null ],
-                // Default locale's ID
-                'locale.default' => [ 'string', 'en' ],
-                // Locale's URL ID to I18n File Code
-                'locale.accept'  => [ 'array',  [ 'en' => 'en-us' ] ],
-                // Currently selected theme
-                'theme.active'   => [ 'string', 'mysli.frontend' ]
-            ]
-        );
+        $c->init([
+            // Where locales can be found:
+            // null      - No language will be set
+            // subdomain - http://si.domain.tld/
+            // segment   - http://domain.tld/si/
+            // get       - http://domain.tld/?loc=si
+            'locale.at'        => [ 'string', null ],
+
+            // Default locale's ID
+            'locale.default'   => [ 'string', 'en' ],
+
+            // Locale's URL ID to I18n File Code
+            'locale.accept'    => [ 'array',  [ 'en' ] ],
+
+            // Currently selected theme
+            'theme.active'     => [ 'string', 'mysli.frontend' ],
+
+            // Default values to be used in theme
+            'front.title'       => [ 'string', null ],
+            // How to display title when subtitle is available.
+            'front.subtitle'    => [ 'string', '{subtitle} - {title}' ],
+            'front.description' => [ 'string', null ],
+            'front.keywords'    => [ 'string', null ],
+
+            // Additional headers and foooters
+            'front.headers'     => [ 'array', [] ],
+            'front.footers'     => [ 'array', [] ],
+        ]);
 
         /*
         Return...
