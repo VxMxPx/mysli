@@ -3,10 +3,12 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>{title if title|isset else ''}</title>
+    <title>{front[title]}</title>
     { 'css' | assets.tags : 'mysli.frontend' }
+    {header in front[headers]}
 </head>
 <body>
     ::print content
+    {footer in front[footers]}
 </body>
 </html>
