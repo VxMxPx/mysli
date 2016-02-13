@@ -64,11 +64,11 @@ namespace mysli\markdown\module; class footnote extends std_module
             {
                 list($otag, $ctag) = $lines->get_tags($at);
 
-                $this->unseal($at);
+                $line = trim($this->unseal($at));
 
-                if (trim($lines->get($at)))
+                if ($line)
                 {
-                    $this->footnotes[$fid]['body'] .= ' '.trim($lines->get($at));
+                    $this->footnotes[$fid]['body'] .= ' '.$line;
                 }
 
                 $lines->erase($at, true);
@@ -141,6 +141,7 @@ namespace mysli\markdown\module; class footnote extends std_module
 
         $fn = "fn{$fposition}";
 
+        $this->footnotes[$id]['id'] = $fn;
         $this->footnotes[$id]['back'][] = $fnref;
 
         return

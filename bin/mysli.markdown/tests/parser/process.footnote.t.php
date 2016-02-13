@@ -39,10 +39,12 @@ $footnote = $parser->get_processor('mysli.markdown.module.footnote');
 return assert::equals($footnote->as_array(), [
     'first' => [
         'body' => 'Footnote <strong>can have markup</strong> and multiple lines.',
+        'id'   => 'fn1',
         'back' => [ 'fnref1', 'fnref1:1' ]
     ],
     'auto-fn-1' => [
         'body' => 'Woo, inline footnote!',
+        'id'   => 'fn2',
         'back' => [ 'fnref2' ]
     ],
 ]);
@@ -67,18 +69,22 @@ $footnote = $parser->get_processor('mysli.markdown.module.footnote');
 return assert::equals($footnote->as_array(), [
     'first' => [
         'body' => 'Footnote <strong>can have markup</strong> and multiple lines.',
+        'id'   => 'fn1',
         'back' => [ 'fnref1' ]
     ],
     'second' => [
         'body' => 'Second footnote item.',
+        'id'   => 'fn2',
         'back' => [ 'fnref2' ]
     ],
     'third' => [
         'body' => 'Third with multiple lines.',
+        'id'   => 'fn3',
         'back' => [ 'fnref3' ]
     ],
     'fourth' => [
         'body' => 'Fourth footnote.',
+        'id'   => 'fn4',
         'back' => [ 'fnref4' ]
     ],
 ]);
@@ -112,7 +118,8 @@ Hello world! [^first].
 Hello world! [^second].
 
 [^first]:  This footnote has [a link](http://domain.tld).
-[^second]: Second, http://inline-link.tld
+[^second]: Second, in multiple
+    lines: http://inline-link.tld
 MARKDOWN;
 $parser = new parser($markdown);
 $parser->process();
@@ -120,10 +127,12 @@ $footnote = $parser->get_processor('mysli.markdown.module.footnote');
 return assert::equals($footnote->as_array(), [
     'first' => [
         'body' => 'This footnote has <a href="http://domain.tld">a link</a>.',
+        'id'   => 'fn1',
         'back' => [ 'fnref1' ]
     ],
     'second' => [
-        'body' => 'Second, <a href="http://inline-link.tld">http://inline-link.tld</a>',
+        'body' => 'Second, in multiple lines: <a href="http://inline-link.tld">http://inline-link.tld</a>',
+        'id'   => 'fn2',
         'back' => [ 'fnref2' ]
     ]
 ]);
