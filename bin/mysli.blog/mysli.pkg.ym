@@ -5,6 +5,7 @@ license:     GPL-3.0
 authors:
     - Marko Gajšt (Developer) <m@gaj.st>
 require:
+    mysli.i18n:     1
     mysli.toolkit:  1
     mysli.frontend: 1
     mysli.std.post: 1
