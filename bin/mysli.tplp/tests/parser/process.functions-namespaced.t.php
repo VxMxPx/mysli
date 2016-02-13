@@ -11,7 +11,7 @@ $template = <<<'TEMPLATE'
 <body>
     ::use mysli.assets
     {'css/main.css'|assets.tags:'template:default'}
-    {|assets.tags:variable.property}
+    {|assets.tags:variable->property}
 </body>
 </html>
 TEMPLATE;

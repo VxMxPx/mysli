@@ -38,9 +38,9 @@ $template = <<<'TEMPLATE'
     {variable[key][subkey]}
     {variable[key][subkey][subsubkey]}
     {variable->property}
-    {variable[key].property}
-    {variable.property[key]}
-    {variable[key.sub].property[key->sub]}
+    {variable[key]->property}
+    {variable->property[key]}
+    {variable[key->sub]->property[key->sub]}
 </body>
 </html>
 TEMPLATE;
@@ -56,7 +56,7 @@ return assert::equals(
     <?php echo $variable->property; ?>
     <?php echo $variable['key']->property; ?>
     <?php echo $variable->property['key']; ?>
-    <?php echo $variable['key.sub']->property['key->sub']; ?>
+    <?php echo $variable['key->sub']->property['key->sub']; ?>
 </body>
 </html>
 EXPECT
@@ -135,9 +135,9 @@ EXPECT
 $template = <<<'TEMPLATE'
 <html>
 <body>
-    {name+lastname}
-    {name+' '+middlename+' '+lastname}
-    {; name+' '+lastname}
+    {name.lastname}
+    {name.' '.middlename.' '.lastname}
+    {; name.' '.lastname}
 </body>
 </html>
 TEMPLATE;
@@ -147,9 +147,9 @@ return assert::equals(
     <<<'EXPECT'
 <html>
 <body>
-    <?php echo $name+$lastname; ?>
-    <?php echo $name+' '+$middlename+' '+$lastname; ?>
-    <?php $name+' '+$lastname; ?>
+    <?php echo $name.$lastname; ?>
+    <?php echo $name.' '.$middlename.' '.$lastname; ?>
+    <?php $name.' '.$lastname; ?>
 </body>
 </html>
 EXPECT
@@ -160,7 +160,7 @@ EXPECT
 $template = <<<'TEMPLATE'
 <html>
 <body>
-    {price+tax-discount+curency}
+    { price + tax - discount + curency }
 </body>
 </html>
 TEMPLATE;
@@ -181,9 +181,12 @@ EXPECT
 $template = <<<'TEMPLATE'
 <html>
 <body>
-    {; sum = price+tax-discount+curency }
+    {; sum = price + tax - discount + curency }
     {; greeting = 'Hi there!' }
     {; number = -12 }
+    {year = post[year]}
+    {;year = 0}
+    {;name = ''}
 </body>
 </html>
 TEMPLATE;
@@ -196,6 +199,34 @@ return assert::equals(
     <?php $sum=$price+$tax-$discount+$curency; ?>
     <?php $greeting='Hi there!'; ?>
     <?php $number=-12; ?>
+    <?php echo $year=$post['year']; ?>
+    <?php $year=0; ?>
+    <?php $name=''; ?>
+</body>
+</html>
+EXPECT
+);
+
+#: Test Variables Assign + Function Call
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$template = <<<'TEMPLATE'
+<html>
+<body>
+    {; name.' '.lastname|ucwords}
+    {; one+two+three+four|lower}
+    {; item.'|'.item|ucwords}
+</body>
+</html>
+TEMPLATE;
+$parser = new parser();
+return assert::equals(
+    $parser->process($template),
+    <<<'EXPECT'
+<html>
+<body>
+    <?php ucwords($name.' '.$lastname); ?>
+    <?php strtolower($one+$two+$three+$four); ?>
+    <?php ucwords($item.'|'.$item); ?>
 </body>
 </html>
 EXPECT

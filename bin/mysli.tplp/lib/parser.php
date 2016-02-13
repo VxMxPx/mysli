@@ -864,44 +864,7 @@ fin;
                     $echo = 'echo ';
                 }
 
-                // Variable contents modifications!
-                if (!strpos($var, '|'))
-                {
-                    if (preg_match('/(\+{2}$|\-{2})$/', $var, $m))
-                    {
-                        $var = substr($var, 0, -2);
-                        $var = $this->parse_variable_with_functions(trim($var));
-                        $var = $var . $m[1];
-                    }
-                    elseif (preg_match('/\+|\=|\-(?!>)|\*|\//', $var))
-                    {
-                        $m = preg_split(
-                            '/(\+|\=|\-(?!>)|\*|\/)+/', $var, -1,
-                            PREG_SPLIT_DELIM_CAPTURE);
-                        $var = '';
-
-                        foreach ($m as $k => $v)
-                        {
-                            if ($k%2)
-                            {
-                                $var .= $v;
-                            }
-                            else
-                            {
-                                $var .= $this->parse_variable_with_functions(trim($v));
-                            }
-                        }
-                    }
-                    else
-                    {
-                        $var = $this->parse_variable_with_functions(trim($var));
-                    }
-                }
-                else
-                {
-                    $var = $this->parse_variable_with_functions(trim($var));
-                }
-
+                $var = $this->parse_variable_with_functions(trim($var));
 
                 if (trim($var) === '')
                 {
@@ -916,6 +879,54 @@ fin;
         );
 
         return $line;
+    }
+
+    /**
+     * Process inline let (e.g. {number+2}, {name.' '.lastname})
+     * --
+     * @param string $var
+     * --
+     * @return string
+     */
+    protected function parse_inline_let($var)
+    {
+        if (preg_match('/(\+{2}$|\-{2})$/', $var, $m))
+        {
+            $var = substr($var, 0, -2);
+            $var = $this->parse_variable($var);
+            $var = $var . $m[1];
+        }
+        elseif (preg_match('/\+|\.|\=|\-(?!>)|\*|\//', $var))
+        {
+            $m = preg_split(
+                '/(\+|\.|\=|\-(?!>)|\*|\/)+/', $var, -1,
+                PREG_SPLIT_DELIM_CAPTURE|PREG_SPLIT_NO_EMPTY);
+
+            $var = '';
+
+            foreach ($m as $k => $v)
+            {
+                if (trim($v) === '')
+                {
+                    continue;
+                }
+
+                if (!in_array($v, ['.', '+', '-', '*', '/', '=']))
+                {
+                    $var .= $this->parse_variable($v);
+                }
+                else
+                {
+                    $var .= $v;
+                }
+            }
+        }
+        else
+        {
+            $var = $this->parse_variable($var);
+        }
+
+        return $var;
     }
 
     /**
@@ -1181,7 +1192,8 @@ fin;
         if ($has_var)
         {
             $variable = array_shift($segments);
-            $variable = $this->parse_variable($variable);
+            // $variable = $this->parse_variable($variable);
+            $variable = $this->parse_inline_let($variable);
         }
 
         $processed = '%seg';
@@ -1271,14 +1283,14 @@ fin;
         }
 
         // Find variable.one and escape it for now.
-        $variable = str_replace('.', "\x1f", $variable);
+        // $variable = str_replace('.', "\x1f", $variable);
 
         // Find variable[one][two] and convert it to variable['one']['two']
         $variable = preg_replace_callback(
             '/\[(.*?)\]/',
             function ($match)
             {
-                $match[1] = str_replace("\x1f", '.', $match[1]);
+                // $match[1] = str_replace("\x1f", '.', $match[1]);
 
                 if (substr($match[1], 0, 1) === '\\')
                 {
