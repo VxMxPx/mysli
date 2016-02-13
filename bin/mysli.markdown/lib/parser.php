@@ -58,6 +58,8 @@ namespace mysli\markdown; class parser
      */
     function __construct($markdown)
     {
+        \log::debug(
+            'I shall process: `'.mb_substr($markdown, 0, 140).'...`.', __CLASS__);
         $this->markdown = explode("\n", str::to_unix_line_endings($markdown));
         $this->lines = new lines($this->markdown);
     }
