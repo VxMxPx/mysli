@@ -10,11 +10,18 @@ namespace mysli\std\post; class post
 fin;
 
     /**
-     * Unique post's ID.
+     * Unique post ID (e.g. blog/2016/post-slug)
      * --
      * @var string
      */
     protected $quid;
+
+    /**
+     * Post's language.
+     * --
+     * @var string
+     */
+    protected $language;
 
     /**
      * Post's full absolute path.
@@ -24,84 +31,57 @@ fin;
     protected $path;
 
     /**
-     * Post's filename (no extension).
-     * --
-     * @var string
-     */
-    protected $filename;
-
-    /**
-     * Post's language, e.g. `si`.
-     * --
-     * @var string
-     */
-    protected $language;
-
-    /**
-     * Language appended to file, e.g.: `post.si` in case of default just `post`.
-     * --
-     * @var string
-     */
-    protected $lfile;
-
-    /**
-     * Meta array.
+     * Post's META array.
      * --
      * @var array
      */
-    protected $meta = null;
+    protected $meta;
 
     /**
-     * HTML version of post.
+     * Post's HTML array (containing multiple pages or _default).
      * --
-     * @var string
+     * @var array
      */
-    protected $html = null;
+    protected $html;
 
     /**
-     * Source version of post.
+     * Post's source [ meta, source ]
      * --
-     * @var string
+     * @var array
      */
-    protected $source = null;
+    protected $source;
 
     /**
-     * Construct new Std Post.
+     * New Std Post.
      * --
-     * @param string $path     Relative post's path (e.g. blog/2015/blog-post)
-     * @param string $filename Source filename.
-     * @param array  $language Post's language, [ desired, default ]
-     * --
-     * @throws mysli\std\post\exception\post 10 No post with such language.
+     * @param string $quid
+     *        E.g. blog/2016/blog-slug
+     *
+     * @param string $language
+     *        Create post instance of particular language.
+     *        Language file must exists.
      */
-    function __construct(
-        $path, $filename='post', array $language=[])
+    function __construct($quid, $language='_def')
     {
-        $this->quid     = $path;
-        $this->path     = fs::cntpath($path);
-        $this->filename = $filename;
-        $this->language = $this->set_language($language);
+        $this->quid = $quid;
+        $this->language = $language;
+        $this->path = fs::cntpath($quid);
 
-        // Set lfile
-        $this->lfile = $this->language
-            ? $this->filename.".{$this->language}"
-            : $this->filename;
-
-        // Language is specifically `false` meaning file was not found, error!
-        if ($this->language === false)
+        if (!file::exists(fs::ds($this->path, "{$language}.md")))
         {
             throw new exception\post(
-                "Post not found: `{$path}`, language: `".
-                implode(',', $language)."`.", 10);
+                "Post not found: `{$this->quid}`, language: `{$language}`.", 10);
         }
 
-        // Make dirs if not there
+        $this->reset();
+
+        // Make DIR if not there
         dir::create(fs::ds($this->path, 'cache~'));
         dir::create(fs::ds($this->path, 'versions'));
     }
 
     /**
-     * Get unique post ID.
+     * Get unique post's ID (e.g. blog/2016/blog-slug)
      * --
      * @return string
      */
@@ -111,32 +91,175 @@ fin;
     }
 
     /**
-     * Get current post's cache ID.
+     * Switch post's language.
      * --
-     * @param boolean $fresh Generate fresh ID.
-     * --
-     * @return string
+     * @param string $language
      */
-    function get_cache_id($fresh=false)
+    function switch_language($language)
     {
-        if (!$fresh && file::exists(fs::ds($this->path, 'cache~/hash.json')))
+        if (!file::exists(fs::ds($this->path, "{$language}.md")))
         {
-            $hashes = json::decode_file(
-                fs::ds($this->path, 'cache~/hash.json'), true);
-            $hlang = $this->language ? $this->language : 0;
-
-            if (isset($hashes[$hlang]))
-            {
-                return $hashes[$hlang];
-            }
-            // Else pass through and get fresh cache!
+            throw new exception\post(
+                "Post not found: `{$this->quid}`, language: `{$language}`.", 10);
         }
 
-        return md5_file(fs::ds($this->path, $this->lfile.'.md'));
+        $this->reset();
+        $this->language = $language;
     }
 
     /**
-     * Weather cache for this post exists.
+     * Reset loaded data.
+     */
+    function reset()
+    {
+        $this->meta = $this->html = $this->source = null;
+    }
+
+    /**
+     * Get meta. There are different variations of meta depending on a page,
+     * mostly sitemap and references will change, so if post has multiple pages,
+     * then specify the desired page.
+     * --
+     * @param  string $page
+     * --
+     * @return array
+     */
+    function meta($page='_default')
+    {
+        if (!$this->meta)
+        {
+            if ($this->has_cache())
+            {
+                $cachef = fs::ds($this->path, "cache~/{$this->language}.json");
+                $this->meta = json::decode_file($cachef, true);
+            }
+            else
+            {
+                $this->process();
+            }
+        }
+
+        if (!$page)
+        {
+            return $this->meta;
+        }
+
+        // Set required page
+        $meta = $this->meta;
+        $page = $page === '_default' ? $this->get_first_page_id() : $page;
+
+        foreach (['__toc', '__footnotes'] as $key)
+        {
+            $meta[$key] = (isset($meta[$key]) && isset($meta[$key][$page]))
+                ? $meta[$key][$page]
+                : [];
+        }
+
+        return $meta;
+    }
+
+    /**
+     * Return processed final version of HTML.
+     * --
+     * @param string $page If multiple pages, specify particular page.
+     * --
+     * @return string
+     */
+    function html($page='_default')
+    {
+        if (!$this->html)
+        {
+            if ($this->has_cache())
+            {
+                $cachef = fs::ds($this->path, "cache~/{$this->language}.html");
+                $html = file::read($cachef);
+                $html = preg_split(
+                    '/^===\/([a-z0-9_\-]+)\/={12}$/m', $html, -1,
+                    PREG_SPLIT_NO_EMPTY|PREG_SPLIT_DELIM_CAPTURE);
+
+                $this->html = [];
+                $lastk = null;
+                $meta = $this->meta( null );
+
+                foreach ($html as $item)
+                {
+                    if (!$lastk)
+                    {
+                        if (isset($meta['__pages'][$item]))
+                        {
+                            $lastk = $item;
+                        }
+                        else
+                        {
+                            throw new exception\page(
+                                "No such page: `{$item}`", 10);
+                        }
+                    }
+                    else
+                    {
+                        $this->html[$lastk] = trim($item);
+                        $lastk = null;
+                    }
+                }
+            }
+            else
+            {
+                $this->process();
+            }
+        }
+
+        if (!$page)
+        {
+            return $this->html;
+        }
+
+        $page = $page === '_default' ? $this->get_first_page_id() : $page;
+
+        if (isset($this->html[$page]))
+        {
+            return $this->html[$page];
+        }
+        else
+        {
+            throw new exception\post(
+                "No such page: `{$page}`, post: `{$this->quid}`.", 10);
+        }
+    }
+
+    /**
+     * Return ID of the first page (_default if only one)
+     * --
+     * @return string
+     */
+    function get_first_page_id()
+    {
+        $meta = $this->meta( null );
+        $pages = $meta['__pages'];
+        reset($pages);
+        return key($pages);
+    }
+
+    /**
+     * Get post's unqiue HASH.
+     * --
+     * @param boolean $fresh
+     * --
+     * @return string
+     */
+    function get_hash($fresh)
+    {
+        if (!$fresh)
+        {
+            return $this->get('__hash', null);
+        }
+        else
+        {
+            return hash_file('md4', fs::ds($this->path, "{$this->language}.md"));
+        }
+    }
+
+    /**
+     * Check weather cache exists.
      * --
      * @return boolean
      */
@@ -144,9 +267,8 @@ fin;
     {
         return
             dir::exists(fs::ds($this->path, 'cache~'))
-        && file::exists(fs::ds($this->path, 'cache~/hash.json'))
-        && file::exists(fs::ds($this->path, 'cache~', $this->lfile.'.html'))
-        && file::exists(fs::ds($this->path, 'cache~', 'meta_'.$this->lfile.'.json'));
+        && file::exists(fs::ds($this->path, "cache~/{$this->language}.json"))
+        && file::exists(fs::ds($this->path, "cache~/{$this->language}.html"));
     }
 
     /**
@@ -156,221 +278,36 @@ fin;
      */
     function is_cache_fresh()
     {
-        if (!$this->has_cache())
-        {
-            return false;
-        }
-
-        $hashes = json::decode_file(
-            fs::ds($this->path, 'cache~/hash.json'), true);
-
-        $hlang = $this->language ? $this->language : 0;
-
-        if (!isset($hashes[$hlang]))
-        {
-            return false;
-        }
-
-        $this_hash = md5_file(fs::ds($this->path, $this->lfile.'.md'));
-
-        if ($hashes[$hlang] !== $this_hash)
-        {
-            return false;
-        }
-
-        return true;
+        // Get cached hash !== get current hash!
+        return $this->get_hash(false) === $this->get_hash(true);
     }
 
     /**
-     * Create fresh cache for this particular post.
-     * --
-     * @param string $language
-     *        Refresh cache for particular language (false for current!)
-     * --
-     * @throws mysli\std\post\exception\post 10 File not found.
+     * Produce a new version of hash!
      * --
      * @return boolean
      */
-    function refresh_cache($language=false)
+    function make_cache()
     {
-        if ($language === false)
+        $this->process();
+
+        $cache = fs::ds($this->path, 'cache~');
+
+        $html = '';
+
+        foreach ($this->html as $index => $page)
         {
-            $language = $this->language;
+            $html .= "===/{$index}/============\n";
+            $html .= $page."\n";
         }
 
-        $lfile = $this->filename.($language?".{$language}":'');
-
-        $source_file = fs::ds($this->path, $lfile.'.md');
-        $cache_file  = fs::ds($this->path, 'cache~', $lfile.'.html');
-        $meta_file   = fs::ds($this->path, 'cache~', "meta_{$lfile}.json");
-        $hashes_file = fs::ds($this->path, 'cache~/hash.json');
-
-        if (!file::exists($source_file))
-        {
-            throw new exception\post("File not found: `{$lfile}.md`.", 10);
-        }
-
-        if (file::exists($hashes_file))
-        {
-            $hashes = json::decode_file(
-                fs::ds($this->path, 'cache~/hash.json'), true);
-        }
-        else
-        {
-            $hashes = [];
-        }
-
-        $hash = md5_file($source_file);
-        $hashes[($language?$language:0)] = $hash;
-        $html = $this->html( true );
-        $meta = $this->meta( true );
+        $meta = $this->meta;
+        $meta['__hash'] = $meta['__hash_new'];
 
         return
-            // Write HASHES
-            json::encode_file($hashes_file, $hashes)
-        and // Write post's HTML
-            file::write($cache_file, $html)
-        and // Write post's META
-            json::encode_file($meta_file, $meta);
+            file::write(fs::ds($cache, "{$this->language}.html"), $html)
+        and json::encode_file(fs::ds($cache, "{$this->language}.json"), $meta);
     }
-
-    /**
-     * Get all available languages of this post.
-     * Please note that the default language will be added as `null`, hence
-     * the result could look like this:
-     * [ file.md => null, file.si.md => si, file.ru.md => ru, ... ]
-     * --
-     * @return array
-     */
-    function list_languages()
-    {
-        $lngs = [];
-
-        foreach (fs::ls($this->path, '*.md') as $file)
-        {
-            $lang = explode('.', $file, 3);
-            $lang = count($lang) !== 3 ? null : $lang[1];
-            $lngs[$file] = $lang;
-        }
-
-        return $lngs;
-    }
-
-    /**
-     * Return current version (number).
-     * --
-     * @return integer
-     */
-    function get_current_version()
-    {
-        return $this->count_versions(false)+1;
-    }
-
-    /**
-     * Number of written versions so far.
-     * --
-     * @param string $language
-     *        For particular language, if false, current language will be used.
-     * --
-     * @return integer
-     */
-    function count_versions($language=false)
-    {
-        $versions = $this->list_versions($language);
-        return empty($versions) ? 0 : array_pop($versions);
-    }
-
-    /**
-     * Get an array list of versions.
-     * --
-     * @param string $language
-     *        For particular language, if false, current language will be used.
-     * --
-     * @return array
-     */
-    function list_versions($language=false)
-    {
-        $path = fs::ds($this->path, 'versions');
-        $versions = [];
-
-        if (!dir::exists($path))
-        {
-            return $versions;
-        }
-
-        $language = $language !== false ? $language : $this->language;
-        $lfile    = $language ? "{$this->filename}.{$language}" : $this->filename;
-        $filter   = $language ? "*.{$lfile}.md" : '*.md';
-
-        foreach (fs::ls($path, $filter) as $version)
-        {
-            $versions[] = (int) substr($version, 1, strpos($version, '.'));
-        }
-
-        sort($versions);
-        return $versions;
-    }
-
-    /**
-     * Write a new version of this post.
-     * --
-     * @return boolean
-     */
-    function new_version()
-    {
-        $version = $this->get_current_version();
-
-        return file::write(
-            fs::ds($this->path, 'versions', "v{$version}.{$this->lfile}.md"),
-            $this->source()
-        );
-    }
-
-    /**
-     * Downgrade current post!
-     * --
-     * @param integer $to
-     * @param string  $language False for current language.
-     * --
-     * @return boolean
-     */
-    function to_version($to, $language=false)
-    {
-        $vcontents = $this->get_version_source($to, $language);
-
-        if (!$vcontents)
-        {
-            return false;
-        }
-
-        return $this->write_source($vcontents);
-    }
-
-    /**
-     * Read particular version of post.
-     * --
-     * @param integer $version
-     * @param string  $language False for current language.
-     * --
-     * @return string
-     */
-    function get_version_source($version, $language=false)
-    {
-        $language = $language === false ? $this->language : $language;
-        $vfile = $language
-            ? "v{$version}.{$this->filename}.{$language}.md"
-            : "v{$version}.{$this->filename}.md";
-
-        if (file::exists($vfile))
-        {
-            return file::read($vfile);
-        }
-        else
-        {
-            return null;
-        }
-    }
-
 
     /**
      * Make all media (files in media directory) publicly available.
@@ -388,7 +325,7 @@ fin;
     }
 
     /**
-     * Make all media not publicly available anymore.
+     * Make all media NOT publicly available anymore.
      */
     function unpublish_media()
     {
@@ -422,278 +359,304 @@ fin;
      */
     function get($key, $default=null)
     {
-        $meta = $this->meta();
-
-        if (!array_key_exists($key, $meta))
+        if (!array_key_exists($key, $this->meta()))
         {
             return $default;
         }
         else
         {
-            return $meta[$key];
+            return $this->meta()[$key];
         }
     }
 
     /**
-     * Set particular meta key.
+     * Get all available languages of this post.
      * --
-     * @param string $key
-     * @param mixed $value
+     * @return array [ _def, si, ru, en, ... ]
      */
-    function set($key, $value)
+    function list_languages()
     {
-        // Load meta if not there
-        $this->meta();
-        $this->meta[$key] = $value;
+        $languages = [];
+
+        foreach (fs::ls($this->path, '*.md') as $file)
+        {
+            $languages[] = substr($file, 0, -3); // .md
+        }
+
+        return $languages;
     }
 
+    /**
+     * Get an array list of versions.
+     * --
+     * @return array
+     *         [ version => [ version, filename, hash ] ]
+     */
+    function list_versions()
+    {
+        $path = fs::ds($this->path, 'versions');
+        $versions = [];
+
+        if (!dir::exists($path))
+        {
+            return $versions;
+        }
+
+        foreach (fs::ls($path) as $filename)
+        {
+            if (preg_match('#^v([0-9]+)\.([a-z_]+)\.(.*?).md$#', $filename, $match))
+            {
+                list($_, $version, $language, $hash) = $match;
+
+                if ($language === $this->language)
+                {
+                    $versions[(int)$version] = [
+                        'version'  => (int) $version,
+                        'filename' => $filename,
+                        'hash'     => $hash
+                    ];
+                }
+            }
+        }
+
+        ksort($versions);
+        return $versions;
+    }
 
     /**
-     * Get meta data for page.
+     * Return version meta information.
+     * For this version, meta will be constructed.
+     * Last written version can be accessed with $id = -1, the one before with -2,
+     * first version with $id = 1, etc...
      * --
-     * @param boolean $fresh
-     *        Grab fresh meta from `post.md` rather than reading cached version.
-     *        This will loose all set values if not written.
+     * @param integer $id version position
      * --
      * @return array
      */
-    function meta($fresh=false)
+    function version_meta($id=0)
     {
-        if ($this->meta === null || $fresh)
-        {
-            $this->meta = $this->meta_for($this->language, $fresh);
-        }
+        $versions = $this->list_versions();
 
-        return $this->meta;
+        if ($id)
+        {
+            $version = array_slice($versions, $id, 1);
+            return array_pop($versions);
+        }
+        else
+        {
+            $version = array_pop($versions);
+            $version = $version ? ++$version['version'] : 1;
+            $hash = $this->get_hash(true);
+            return [
+                'version'  => $version,
+                'filename' => "v{$version}.{$this->language}.{$hash}.md",
+                'hash'     => $hash
+            ];
+        }
     }
 
     /**
-     * Write current meta to source file.
+     * Write a new version of this post.
+     * --
+     * @param boolean $force Write even if hash is the same as in previous version.
      * --
      * @return boolean
      */
-    function write_meta()
+    function up_version($force=false)
     {
-        return $this->write_source( $this->source(), $this->meta() );
+        $current = $this->version_meta(0);
+
+        if (!$force)
+        {
+            $previous = $this->version_meta(-1);
+            if (!empty($previous) && $previous['hash'] === $current['hash'])
+            {
+                return true;
+            }
+        }
+
+        $path = fs::ds($this->path, 'versions', $current['filename']);
+        return file::write($path, $this->source());
     }
 
     /**
-     * Get source version of the page.
+     * Downgrade current post to particular version.
+     * Don't forget to reload cache after downgrade!
      * --
-     * @param string $language
+     * @param integer $version
      * --
-     * @return string
+     * @throws mysli\std\post\exception\post 10 Cannot switch to version, not found.
+     * --
+     * @return boolean
      */
-    function source($language=false)
+    function to_version($version)
     {
-        if ($language !== false)
-        {
-            $lfile = $language ? "{$this->filename}.{$language}" : $this->filename;
-            $filename = fs::ds($this->path, "{$lfile}.md");
+        $versions = $this->list_versions();
 
-            if (file::exists($filename))
-            {
-                return file::read($filename);
-            }
-            else
-            {
-                return null;
-            }
+        if (!isset($versions[(int)$version]))
+        {
+            throw new exception\post(
+                "Cannot switch to version `{$version}`. Not found.", 10);
         }
 
-        if ($this->source === null)
-        {
-            $this->source = file::read(fs::ds($this->path, "{$this->lfile}.md"));
-        }
+        $version = $versions[$version];
+        $filename = $version['filename'];
 
-        return $this->source;
+        $source = file::read(fs::ds($this->path, 'versions', $filename));
+
+        $this->reset();
+
+        return $this->write_source($source);
     }
 
     /**
-     * Write source to file.
+     * Write source file.
      * --
      * @param string $source
-     *
-     * @param array  $meta
-     *        If meta is absent it will be assumed it's included in source
-     *        as a string and hence only source will be written.
      * --
      * @return boolean
      */
-    function write_source($source, array $meta=null)
+    function write_source($source)
     {
-        if ($meta && is_array($meta))
-        {
-            $meta = ym::encode($meta);
-            $source = $meta."\n".str_repeat('=', 80)."\n".$source;
-        }
-
-        return !! file::write(
-            fs::ds($this->path, $this->lfile.'.md'),
-            $source."\n"
-        );
+        return file::write(fs::ds($this->path, "{$this->language}.md"), $source);
     }
 
     /**
-     * Get HTML version of the page.
+     * Get post's source as a string.
      * --
-     * @param boolean $fresh
-     *        Grab fresh html from `post.md` rather than reading cached version.
+     * @param string $section
+     *        meta|body, null for both in string version!
      * --
-     * @return string
+     * @return mixed
      */
-    function html($fresh=false)
+    function source($section=null)
     {
-        if ($this->html === null || $fresh)
+        if ($this->source === null)
         {
-            $filename = fs::ds($this->path, "cache~/{$this->lfile}.html");
-
-            if (file::exists($filename) && !$fresh)
-            {
-                $this->html = file::read($filename);
-            }
-            else
-            {
-                $source = $this->source();
-                $source = preg_split('/^\={3,}$/m', $source, 2);
-                $page = trim($source[1]);
-
-                $this->html = $this->process($page, $this->meta());
-            }
+            $this->load_source();
         }
 
-        return $this->html;
+        if ($section === 'meta')
+        {
+            return $this->source['meta'];
+        }
+        elseif ($section === 'body')
+        {
+            return $this->source['body'];
+        }
+        else
+        {
+            $meta = $this->source('meta');
+            $meta = ym::encode($meta);
+            return
+                $meta."\n\n".
+                str_repeat('=', 80)."\n\n".
+                $this->source('body')."\n";
+        }
     }
 
     /**
-     * Return meta + page as an array.
+     * Return post's data as an array!
+     * --
+     * @param string $page
      * --
      * @return array
      */
-    function as_array()
+    function as_array($page='_default')
     {
-        $meta = $this->meta();
-        $meta['body'] = $this->html();
+        $meta = $this->meta($page);
+        $meta['body'] = $this->html($page);
         $meta['language'] = $this->language;
         return $meta;
     }
 
     /**
-     * Grab meta for particular language.
-     * --
-     * @param string $language
-     *
-     * @param boolean $fresh
-     *        Grab fresh meta from `post.md` rather than reading cached version.
-     *        This will loose all set values if not written.
-     *
-     * @param array $extended
-     *        Internal usage, prevent infinite loop when extending.
-     * --
-     * @return array
+     * Load source file!
      */
-    protected function meta_for($language, $fresh=false, array $extended=[])
+    function load_source()
     {
-        $lfile = $language ? "{$this->filename}.{$language}" : $this->filename;
-        $meta_file = fs::ds($this->path, "cache~/meta_{$lfile}.json");
+        $source = file::read(fs::ds($this->path, "{$this->language}.md"));
+        $source = preg_split('/^={3,}$/m', $source, 2);
 
-        if (file::exists($meta_file) && !$fresh)
-        {
-            return json::decode_file($meta_file, true);
-        }
-        else
-        {
-            $source = $this->source($language);
-            $source = preg_split('/^\={3,}$/m', $source, 2);
-            $meta = trim($source[0]);
-            $meta = ym::decode($meta);
-
-            // Need to extend?
-            if (array_key_exists('extend', $meta))
-            {
-                $extended[] = $language ? $language : '%default';
-
-                if (in_array($meta['extend'], $extended))
-                {
-                    \log::warning(
-                        "Meta is extended multiple times in `{$this->quid}`, ".
-                        "`{$lfile}`, list: `".implode(',', $extended)."`",
-                        __CLASS__
-                    );
-
-                    return $meta;
-                }
-
-                $emeta = $this->meta_for($meta['extend'], $true, $extended);
-
-                if (is_array($emeta))
-                {
-                    $meta = array_merge($emeta, $meta);
-                }
-            }
-
-            return $meta;
-        }
-    }
-
-    /**
-     * Look through languages array and return the language for which the
-     * source file exists.
-     * --
-     * @param array $languages
-     * --
-     * @return string
-     *         False if not found in any form.
-     */
-    protected function set_language(array $languages)
-    {
-        if (empty($languages))
-        {
-            $languages = [ null ];
-        }
-
-        foreach ($languages as $language)
-        {
-            $ext = $language ? ".{$language}.md" : ".md";
-
-            if (file::exists(fs::ds($this->path, $this->filename.$ext)))
-            {
-                return $language;
-            }
-        }
-
-        return false;
+        $this->source['meta'] = ym::decode($source[0]);
+        $this->source['body'] = trim($source[1]);
     }
 
     /**
      * Process.
      * --
-     * @param string $page
-     * --
      * @return string
      */
-    protected function process($page, array $meta)
+    protected function process()
     {
-        if (!isset($meta['processor'])
-            || $meta['processor'] === 'mysli.markdown.markdown::process')
+        // Get source
+        $source = $this->source('body');
+        $meta = $this->source('meta');
+
+        // Split source to multiple pages
+        $page_sources = preg_split(
+            '/^={3,}$/m', $source, -1,
+            PREG_SPLIT_NO_EMPTY|PREG_SPLIT_DELIM_CAPTURE);
+
+        // Set some defaults
+        if (!isset($meta['__footnotes'])) $meta['__footnotes'] = [];
+        if (!isset($meta['__toc']))       $meta['__toc'] = [];
+        if (!isset($meta['__pages']))     $meta['__pages'] = [];
+
+        $pages = [];
+
+        foreach ($page_sources as $k => $page)
         {
             $parser = new parser($page);
+
+            // Add costume link handling to the parser for media files.
             $link = $parser->get_processor('mysli.markdown.module.link');
             $link->set_local_url('#^/(.*?)(?<!\.html|\.php|\.htm)$#', '/'.$this->quid);
-            return markdown::process($parser);
-        }
-        else
-        {
-            $processor = '\\'.str_replace('.', '\\', $processor);
 
-            if (is_callable($processor))
+            $html = markdown::process($parser);
+
+            // Table of Contents
+            $headers = $parser->get_processor('mysli.markdown.module.header');
+            $toc = $headers->as_array();
+
+            // Page ID!
+            if (count($page_sources) === 1)
             {
-                return call_user_func_array($processor, [ $page ]);
+                $pid = '_default';
+                $ptitle = 'Default';
             }
             else
             {
-                return false;
+                if (count($toc))
+                {
+                    $title = reset($toc);
+                    $pid = $title['fid'];
+                    $ptitle = $title['title'];
+                }
+                else
+                {
+                    $pid = "page-{$k}";
+                    $ptitle = "Page: {$k}";
+                }
             }
+
+            // Footnotes
+            $footnote = $parser->get_processor('mysli.markdown.module.footnote');
+            $meta['__footnotes'][$pid] = $footnote->as_array();
+
+            // Add ToC
+            $meta['__toc'][$pid] = $toc;
+
+            // Pages
+            $meta['__pages'][$pid] = $ptitle;
+            $meta['__hash_new'] = $this->get_hash( true );
+            $pages[$pid] = $html;
+
+            // Self QUID
+            $meta['quid'] = substr($this->quid, strpos($this->quid, '/')+1);
         }
+
+        $this->meta = $meta;
+        $this->html = $pages;
     }
 }
