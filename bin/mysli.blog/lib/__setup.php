@@ -60,6 +60,14 @@ fin;
         and
 
         route::add(
+            'mysli.blog.frontend::ppost',
+            'ANY',
+            '/r/<year:digit>/<post:slug>/<page:slug>.html',
+            'medium')
+
+        and
+
+        route::add(
             'mysli.blog.frontend::post',
             'ANY',
             '/r/<year:digit>/<post:slug>.html',
