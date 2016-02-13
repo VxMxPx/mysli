@@ -12,6 +12,8 @@ namespace mysli\toolkit\fs; class fs
         }
     ';
 
+    const ds = DIRECTORY_SEPARATOR;
+
     const map_continue = '\\/map continue\\/';
 
     /**
