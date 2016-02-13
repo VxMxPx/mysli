@@ -31,11 +31,11 @@ fin;
 
         if ($c->get('cache.reload-on-access') && !$page->is_cache_fresh())
         {
-            $page->refresh_cache();
+            $page->make_cache();
 
             if ($c->get('version.up-on-reload'))
             {
-                $page->new_version();
+                $page->up_version();
             }
 
             if ($c->get('media.republish-on-reload'))
@@ -51,7 +51,8 @@ fin;
         }
 
         fe::render(['page', ['mysli.page', 'page']], [
-            'page' => $page->as_array()
+            'front' => [ 'title' => $page->get('title') ],
+            'page'  => $page->as_array()
         ]);
 
         return true;
