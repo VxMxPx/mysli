@@ -5,6 +5,10 @@
  */
 namespace mysli\toolkit; class toolkit
 {
+    const __use = <<<fin
+    .{ benchmark }
+fin;
+
     /**
      * Called when a normal shutdown happened.
      * This will load shutdown, and trigger standard shutdown event.
@@ -22,6 +26,15 @@ namespace mysli\toolkit; class toolkit
             __CLASS__);
 
         event::trigger("toolkit::shutdown", [$code]);
+
+        \log::info(
+            "Benchmark, total time: {1}, memory: {2}",
+            [
+                __CLASS__,
+                benchmark::get_time(MYSLI_BOOT_AT),
+                benchmark::get_memory_usage()
+            ]
+        );
 
         if (TOOLKIT_PRINT_LOG && !is_cli())
             echo log_to_html( \log::get() );
