@@ -22,6 +22,25 @@ namespace mysli\toolkit; class __init
     static function __init($apppath, $binpath, $pubpath)
     {
         /*
+        Start time
+         */
+        if (isset($_SERVER['REQUEST_TIME_FLOAT']))
+        {
+            define('MYSLI_BOOT_AT', $_SERVER['REQUEST_TIME_FLOAT']);
+        }
+        else
+        {
+            $mtime = microtime();
+            $mtime = explode(' ', $mtime, 2);
+            define('MYSLI_BOOT_AT', $mtime[0]+$mtime[1]);
+        }
+
+        /*
+        Start memory
+         */
+        define('MYSLI_BOOT_MEMORY', memory_get_usage());
+
+        /*
         Define full absolute paths.
          */
         define('MYSLI_APPPATH', rtrim($apppath, '/'));
@@ -140,10 +159,11 @@ namespace mysli\toolkit; class __init
          */
         \log::debug("About to apply headers and output!", __CLASS__);
         $output = output::as_html();
-        // if (!response::get_header('Content-Length'))
-        // {
-        //     response::set_header(mb_strlen($output), 'Content-Length');
-        // }
+        if (!response::get_header('Content-Length') && !TOOLKIT_PRINT_LOG)
+        {
+            // Keep strlen as we're messuring bytes
+            response::set_header(str::bytes($output), 'Content-Length');
+        }
         if (!response::get_header('Content-Type'))
         {
             response::set_header('text/html; charset=utf-8', 'Content-Type');
