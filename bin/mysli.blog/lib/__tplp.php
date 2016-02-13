@@ -8,10 +8,40 @@ namespace mysli\blog; class __tplp
 fin;
 
     /**
+     * Output table of contents.
+     * --
+     * @param array $toc
+     * --
+     * @return string
+     */
+    static function toc(array $toc, $type='ul')
+    {
+        $tocs = [];
+        $tocs[] = "<{$type}>";
+
+        foreach ($toc as $tid => $item)
+        {
+            $tocs[] = "<li>";
+            $tocs[] = "<a href=\"#{$item['fid']}\">{$item['title']}</a></li>";
+
+            if (count($item['items']))
+            {
+                $tocs[] = static::toc($item['items'], $type);
+            }
+
+            $tocs[] = "</li>";
+        }
+
+        $tocs[] = "</{$type}>";
+
+        return implode("\n", $tocs);
+    }
+
+    /**
      * Return internal blog URL.
      * --
      * @param string $uri
-     * @param string $type URI type: post|tag|archive
+     * @param string $type URI type: post|ppost|tag|archive
      * --
      * @return string
      */
@@ -22,6 +52,7 @@ fin;
             explode('/', $uri),
             false
         );
+
         return frontend\tplp::url($url);
     }
 }
