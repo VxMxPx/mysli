@@ -22,8 +22,7 @@ namespace mysli\markdown\module; class blockquote extends std_module
 
         while($lines->has($at))
         {
-            if ($lines->get_attr($at, 'no-process')
-                || $lines->get_attr($at, 'in-html-tag'))
+            if ($lines->get_attr($at, 'no-process'))
             {
                 $at++;
                 continue;
