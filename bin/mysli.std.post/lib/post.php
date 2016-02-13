@@ -94,9 +94,18 @@ fin;
      * Switch post's language.
      * --
      * @param string $language
+     * --
+     * @throws mysli\std\post\exception\post 10 Post not found.
+     * --
+     * @return boolean
      */
     function switch_language($language)
     {
+        if ($language === $this->language)
+        {
+            return true;
+        }
+
         if (!file::exists(fs::ds($this->path, "{$language}.md")))
         {
             throw new exception\post(
@@ -105,6 +114,7 @@ fin;
 
         $this->reset();
         $this->language = $language;
+        return true;
     }
 
     /**
@@ -289,6 +299,8 @@ fin;
      */
     function make_cache()
     {
+        // Up to fresh files
+        $this->load_source();
         $this->process();
 
         $cache = fs::ds($this->path, 'cache~');
@@ -311,30 +323,71 @@ fin;
 
     /**
      * Make all media (files in media directory) publicly available.
+     * --
+     * @param string $file Publish only this particular file (relative path!)
+     * --
+     * @return boolean
      */
-    function publish_media()
+    function publish_media($file=null)
     {
-        $this_media = fs::ds($this->path, 'media');
+        $this_media = fs::ds($this->path, 'media', $file);
 
-        if (dir::exists($this_media))
+        if ($file)
         {
-            $public_media = fs::pubpath($this->quid, 'media');
-            dir::create($public_media);
-            dir::copy($this_media, $public_media);
+            if (file::exists($this_media))
+            {
+                $public_media = fs::pubpath($this->quid, 'media', dir::name($file));
+
+                if (!dir::create($public_media))
+                    return false;
+
+                return file::copy($this_media, $public_media);
+            }
         }
+        else
+        {
+            if (dir::exists($this_media))
+            {
+                $public_media = fs::pubpath($this->quid, 'media');
+
+                if (!dir::create($public_media))
+                    return false;
+
+                dir::copy($this_media, $public_media);
+            }
+        }
+
+
+        return true;
     }
 
     /**
      * Make all media NOT publicly available anymore.
+     * --
+     * @param string $file Un-publish only this particular file (relative path)
+     * --
+     * @return boolean
      */
-    function unpublish_media()
+    function unpublish_media($file=null)
     {
-        $public_media = fs::pubpath($this->quid);
+        $public_media = fs::pubpath($this->quid, $file);
 
-        if (dir::exists($public_media))
+        if ($file)
         {
-            dir::remove($public_media);
+            if (file::exists($public_media))
+            {
+                return file::remove($public_media);
+            }
         }
+        else
+        {
+            if (dir::exists($public_media))
+            {
+                return dir::remove($public_media);
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -476,7 +529,7 @@ fin;
         }
 
         $path = fs::ds($this->path, 'versions', $current['filename']);
-        return file::write($path, $this->source());
+        return !! file::write($path, $this->source());
     }
 
     /**
