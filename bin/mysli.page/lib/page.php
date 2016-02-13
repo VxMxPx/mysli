@@ -23,23 +23,24 @@ fin;
 
         $id = static::page_to_id($path);
 
-        return new post("pages/{$id}", 'page');
+        return new post("pages/{$id}");
     }
 
     /**
      * Check if particular page exists.
      * --
      * @param string $path
+     * @param string $language
      * --
      * @return boolean
      */
-    static function has($path)
+    static function has($path, $language='_def')
     {
         $id = static::page_to_id($path);
 
         if (!$id) return false;
 
-        return file::exists(fs::cntpath('pages', $id, 'page.md'));
+        return file::exists(fs::cntpath('pages', $id, "{$language}.md"));
     }
 
     /**
