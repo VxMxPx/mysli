@@ -5,7 +5,7 @@ namespace mysli\blog; class frontend
     const __use = <<<fin
     .{ blog }
     mysli.i18n
-    mysli.toolkit.{ config }
+    mysli.toolkit.{ config, request }
     mysli.frontend.{ frontend -> fe }
 fin;
 
@@ -80,7 +80,12 @@ fin;
 
         if (!$post->get('published', true))
         {
-            return false;
+            // Final chance to view in dev-access
+            if (!$post->get('dev-access')
+                || request::get('access') !== $post->get('dev-access'))
+            {
+                return false;
+            }
         }
 
         fe::render(['blog-post', ['mysli.blog', 'post']], [
