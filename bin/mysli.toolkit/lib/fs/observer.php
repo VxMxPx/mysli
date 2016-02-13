@@ -3,8 +3,8 @@
 namespace mysli\toolkit\fs; class observer
 {
     const __use = '
+        .{ json, exception.observer }
         .fs.{ fs, file, dir }
-        .exception.{ observer }
     ';
 
     // Checksum methods
@@ -16,7 +16,7 @@ namespace mysli\toolkit\fs; class observer
      * --
      * @var string
      */
-    private $root;
+    protected $root;
 
     /**
      * File filter.
@@ -75,6 +75,13 @@ namespace mysli\toolkit\fs; class observer
     protected $limit = 0;
 
     /**
+     * Write cache after each run.
+     * --
+     * @var string
+     */
+    protected $write_signatures = null;
+
+    /**
      * Instance.
      * --
      * @param  string $root Root folder to observe.
@@ -111,6 +118,37 @@ namespace mysli\toolkit\fs; class observer
     function get_root()
     {
         return $this->root;
+    }
+
+    /**
+     * Write signatures cache after each run.
+     * --
+     * @throws mysli\toolkit\exception\observer 10 Cannot create signatures file.
+     * --
+     * @param string $filename
+     */
+    function set_write_signatures($filename)
+    {
+        if (!file::exists($filename))
+        {
+            if (!file::create_recursive($filename))
+            {
+                throw new exception\observer(
+                    "Cannot create cache file: `{$filename}`", 10);
+            }
+        }
+
+        $this->write_signatures = $filename;
+    }
+
+    /**
+     * Get cache filename if set.
+     * --
+     * @return string
+     */
+    function get_write_signatures()
+    {
+        return $this->write_signatures;
     }
 
     /**
@@ -153,15 +191,9 @@ namespace mysli\toolkit\fs; class observer
      * /file.ext              Absolute (based on root) path to the file
      * --
      * @param mixed   $ignore String (one item) or an array (multiple).
-     * @param boolean $empty  Empty ignore list before inserting this item.
      */
-    function set_ignore($ignore, $empty=false)
+    function set_ignore($ignore)
     {
-        if ($empty)
-        {
-            $this->ignore = [];
-        }
-
         if (!is_array($ignore))
         {
             $ignore = [ $ignore ];
@@ -178,6 +210,14 @@ namespace mysli\toolkit\fs; class observer
     function get_ignore()
     {
         return $this->ignore;
+    }
+
+    /**
+     * Clear all ignore list items.
+     */
+    function empty_ignore()
+    {
+        $this->ignore = [];
     }
 
     /**
@@ -328,7 +368,28 @@ namespace mysli\toolkit\fs; class observer
         // Collect modification times
         foreach ($files as $file)
         {
-            // TODO: Ignores!!
+            foreach ($this->ignore as $ignore)
+            {
+                $rfile = substr($file, strlen($this->root));
+                $rfile = str_replace(fs::ds, '/', ltrim($rfile, fs::ds));
+                $rfile = "/{$rfile}";
+
+                // Relative folder
+                if (substr($ignore, 0, 1) !== '/'
+                    && substr($ignore, -1) === '/'
+                    && strpos($rfile, "/{$ignore}") !== false)
+                    continue 2;
+
+                // Filename
+                if (substr($ignore, 0, 1) !== '/'
+                    && substr($ignore, -1) !== '/'
+                    && substr($rfile, -(strlen($ignore))) === $ignore)
+                    continue 2;
+
+                // Absolute path
+                if (substr($rfile, 0, strlen($ignore)) === $ignore)
+                    continue 2;
+            }
 
             $sig_new[$file] = $this->get_checksum() === static::checksum_mtime
                 ? filemtime($file)
@@ -404,6 +465,12 @@ namespace mysli\toolkit\fs; class observer
 
         // Set new to old,...
         $this->signatures = $sig_new;
+
+        // Write them?
+        if ($this->get_write_signatures())
+        {
+            json::encode_file($this->get_write_signatures(), $this->signatures);
+        }
 
         return count( $this->diff );
     }
