@@ -6,7 +6,7 @@ namespace mysli\blog; class blog
     mysli.std.post
     mysli.toolkit.{ json }
     mysli.toolkit.fs.{ fs, file, dir }
-    mysli.toolkit.type.{ str }
+    mysli.toolkit.type.{ str, arr }
 fin;
 
     /**
@@ -37,10 +37,12 @@ fin;
 
                 if (!$quid) continue;
 
-                $post = new post('blog/'.$quid, 'post');
+                $post = new post('blog/'.$quid);
                 $languages = $post->list_languages();
+                $meta = $post->source('meta');
+                $date = isset($meta['date']) ? strtotime($meta['date']) : time();
 
-                $dtime = date('YmdHis', strtotime($post->get('date')));
+                $dtime = date('YmdHis', $date);
                 $posts[$dtime.'_'.$quid] = [];
 
                 if (!is_array($languages))
@@ -50,18 +52,27 @@ fin;
 
                 foreach ($languages as $lngid)
                 {
-                    $lpost = new post('blog/'.$quid, 'post', [ $lngid ]);
-                    $lpost->meta( true ); // Grab fresh meta
-                    $ptags = $lpost->get('tags', []);
+                    $lpost = new post('blog/'.$quid, $lngid);
+                    $meta = $lpost->source('meta');
+                    $ptags = arr::get($meta, 'tags', []);
+
+                    if (!is_array($ptags))
+                    {
+                        \log::warning(
+                            "Tags format is expected to be an array: `{$quid}`.",
+                            __CLASS__
+                        );
+                        $ptags = [ $ptags ];
+                    }
 
                     $posts[$dtime.'_'.$quid][$lngid] = [
                         'quid'      => $quid,
-                        'title'     => $lpost->get('title'),
+                        'title'     => arr::get($meta, 'title'),
                         'tags'      => $ptags,
-                        'date'      => date('c', strtotime($lpost->get('date'))),
-                        'year'      => date('Y', strtotime($lpost->get('date'))),
-                        'published' => $lpost->get('published', true),
-                        'hash'      => $lpost->get_cache_id( true ) // Fresh cache ID
+                        'date'      => date('c', strtotime(arr::get($meta, 'date'))),
+                        'year'      => date('Y', strtotime(arr::get($meta, 'date'))),
+                        'published' => arr::get($meta, 'published', true),
+                        'hash'      => $lpost->get_hash(true)
                     ];
 
                     // Add tag! :)
@@ -101,12 +112,10 @@ fin;
      * Cache must exists, as this will read from cached list!
      * --
      * @param string $language
-     *        Null to use default language.
-     *        String to use any other specific language.
      * --
      * @return array
      */
-    static function list_all($language=null)
+    static function list_all($language='_def')
     {
         $cache = fs::cntpath('blog/cache~/posts.json');
 
@@ -138,12 +147,10 @@ fin;
      * --
      * @param string $tag
      * @param string $language
-     *        Null to use default language.
-     *        String to use any other specific language.
      * --
      * @return array
      */
-    static function list_by_tag($tag, $language=null)
+    static function list_by_tag($tag, $language='_def')
     {
         $list = static::list_all($language);
         $posts = [];
@@ -168,7 +175,7 @@ fin;
      * --
      * @return mysli\std\post\post
      */
-    static function get_one($year, $slug, $language=null)
+    static function get_one($year, $slug, $language='_def')
     {
         if (!static::has($year, $slug, $language))
         {
@@ -177,7 +184,7 @@ fin;
 
         $id = static::get_id($year, $slug);
 
-        return new post("blog/{$id}", 'post', [ $language ]);
+        return new post("blog/{$id}", $language);
     }
 
     /**
@@ -189,15 +196,13 @@ fin;
      * --
      * @return boolean
      */
-    static function has($year, $slug, $language=null)
+    static function has($year, $slug, $language='_def')
     {
         $id = static::get_id($year, $slug);
 
         if (!$id) return false;
 
-        $lpost = $language ? "post.{$language}.md" : 'post.md';
-
-        return file::exists(fs::cntpath('blog', $id, $lpost));
+        return file::exists(fs::cntpath('blog', $id, "{$language}.md"));
     }
 
     /**
