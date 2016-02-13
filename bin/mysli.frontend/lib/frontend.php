@@ -7,22 +7,31 @@ namespace mysli\frontend; class frontend
         mysli.tplp
         mysli.i18n
         mysli.toolkit.{ pkg, response, output, config }
+        mysli.toolkit.type.{ arr }
 fin;
+
+    /**
+     * Frontend's variables!
+     * --
+     * @var array
+     */
+    protected static $variables = [];
 
     static function __init()
     {
+        $variables = config::select('mysli.frontend')->as_array();
+
+        foreach ($variables as $key => $var)
+        {
+            if (substr($key, 0, 6) !== 'front.') continue;
+
+            $key = explode('.', $key, 2);
+            static::$variables['front'][$key[1]] = $var[1];
+        }
+
         static::find_language();
         return true;
     }
-
-    static function url($uri=null)
-    {}
-
-    static function url_by_route($uri=null)
-    {}
-
-    static function language()
-    {}
 
     static function render(array $tpls, array $variables=[])
     {
@@ -40,6 +49,25 @@ fin;
         $translator = i18n::select($theme);
         $translator->load($theme);
         $template->set_translator($translator);
+
+        // Set subtitle if there
+        if (isset($variables['front']['title']))
+        {
+            $variables['front']['title'] = str_replace(
+                [
+                    '{title}',
+                    '{subtitle}'
+                ],
+                [
+                    static::$variables['front']['title'],
+                    $variables['front']['title']
+                ],
+                static::$variables['front']['subtitle']
+            );
+        }
+
+        // Add own variables
+        $variables = arr::merge(static::$variables, $variables);
 
         // Find template
         foreach ($tpls as $tpl)
