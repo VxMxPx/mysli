@@ -4,6 +4,7 @@ namespace mysli\blog; class frontend
 {
     const __use = <<<fin
     .{ blog }
+    mysli.i18n
     mysli.toolkit.{ config }
     mysli.frontend.{ frontend -> fe }
 fin;
@@ -16,6 +17,9 @@ fin;
         krsort($list);
 
         fe::render(['blog-archive', ['mysli.blog', 'archive']], [
+            'front' => [
+                'title' => i18n::select(['mysli.blog', 'en', null], 'ARCHIVE')
+            ],
             'posts' => $list
         ]);
 
@@ -30,13 +34,19 @@ fin;
         krsort($list);
 
         fe::render(['blog-archive', ['mysli.blog', 'archive']], [
+            'front' => [ 'title' => ucfirst($id) ],
             'posts' => $list
         ]);
 
         return true;
     }
 
-    static function post($year, $id)
+    static function ppost($year, $id, $page)
+    {
+        return static::post($year, $id, $page);
+    }
+
+    static function post($year, $id, $page='_default')
     {
         if (!blog::has($year, $id))
         {
@@ -54,11 +64,11 @@ fin;
 
         if ($c->get('cache.reload-on-access') && !$post->is_cache_fresh())
         {
-            $post->refresh_cache();
+            $post->make_cache();
 
             if ($c->get('version.up-on-reload'))
             {
-                $post->new_version();
+                $post->up_version();
             }
 
             if ($c->get('media.republish-on-reload'))
@@ -74,7 +84,8 @@ fin;
         }
 
         fe::render(['blog-post', ['mysli.blog', 'post']], [
-            'post' => $post->as_array()
+            'front' => [ 'title' => $post->get('title') ],
+            'post'  => $post->as_array($page)
         ]);
 
         return true;
