@@ -16,6 +16,20 @@ namespace mysli\toolkit\type; class str
     }
 
     /**
+     * Get string length in bytes!
+     * --
+     * @param string $string
+     * --
+     * @return integer
+     */
+    static function bytes($string)
+    {
+        return ini_get('mbstring.func_overload')
+            ? mb_strlen($string , '8bit')
+            : strlen($string);
+    }
+
+    /**
      * Set/Get internal character encoding.
      * --
      * @param string $encoding
@@ -113,7 +127,8 @@ namespace mysli\toolkit\type; class str
      */
     static function length($string, $encoding=null)
     {
-        $r = mb_strlen($string, mb_internal_encoding());
+        $encoding = $encoding ? $encoding :  mb_internal_encoding();
+        $r = mb_strlen($string, $encoding);
 
         if ($r === false)
         {
