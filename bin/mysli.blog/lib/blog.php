@@ -23,16 +23,12 @@ fin;
 
         foreach (fs::ls($root) as $year)
         {
-            if (!dir::exists(fs::ds($root, $year)))
-            {
-                continue;
-            }
+            if (!dir::exists(fs::ds($root, $year))) continue;
+            if (substr($year, -1) === '~') continue;
+            if (substr($year, 0, 1) === '.') continue;
 
             foreach (fs::ls(fs::ds($root, $year)) as $slug)
             {
-                if (substr($slug, -1) === '~') continue;
-                if (substr($slug, 0, 1) === '.') continue;
-
                 $quid = static::get_id($year, $slug);
 
                 if (!$quid) continue;
