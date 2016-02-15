@@ -32,9 +32,7 @@ namespace mysli\toolkit; class request
      */
     static function __init($path=null)
     {
-        static::$time = isset($_SERVER['REQUEST_TIME'])
-            ? $_SERVER['REQUEST_TIME']
-            : time();
+        static::$time = static::server('request_time', time());
 
         $path = $path ?: static::path();
         $segments = trim($path, '/');
@@ -79,9 +77,7 @@ namespace mysli\toolkit; class request
      */
     static function port()
     {
-        return array_key_exists('SERVER_PORT', $_SERVER)
-            ? (int) $_SERVER['SERVER_PORT']
-            : 0;
+        return (int) static::server('server_port', 0);
     }
 
     /**
@@ -179,14 +175,7 @@ namespace mysli\toolkit; class request
      */
     static function protocol($default='HTTP/1.1')
     {
-        if (isset($_SERVER['SERVER_PROTOCOL']))
-        {
-            return $_SERVER['SERVER_PROTOCOL'];
-        }
-        else
-        {
-            return $default;
-        }
+        return static::server('server_protocol', $default);
     }
 
     /**
@@ -196,7 +185,7 @@ namespace mysli\toolkit; class request
      */
     static function ip()
     {
-        return $_SERVER['REMOTE_ADDR'];
+        return static::server('remote_addr');
     }
 
     /**
@@ -206,7 +195,7 @@ namespace mysli\toolkit; class request
      */
     static function agent()
     {
-        return $_SERVER['HTTP_USER_AGENT'];
+        return static::server('http_user_agent');
     }
 
     /**
@@ -218,25 +207,8 @@ namespace mysli\toolkit; class request
      */
     static function is_ssl()
     {
-        if (isset($_SERVER['HTTPS']))
-        {
-            if ('on' == strtolower($_SERVER['HTTPS']))
-            {
-                return true;
-            }
-
-            if ('1' == $_SERVER['HTTPS'])
-            {
-                return true;
-            }
-        }
-        elseif (isset($_SERVER['SERVER_PORT']) &&
-            '443' == $_SERVER['SERVER_PORT'])
-        {
-            return true;
-        }
-
-        return false;
+        return in_array(strtolower(static::server('https')), ['on', '1'])
+            || static::server('server_port') === '443';
     }
 
     /**
@@ -246,14 +218,7 @@ namespace mysli\toolkit; class request
      */
     static function host()
     {
-        if (isset($_SERVER['SERVER_NAME']))
-        {
-            return $_SERVER['SERVER_NAME'];
-        }
-        else
-        {
-            return null;
-        }
+        return static::server('server_name');
     }
 
     /**
@@ -272,22 +237,17 @@ namespace mysli\toolkit; class request
             return $_SERVER['PATH_INFO'];
         }
 
-        if (isset($_SERVER['REQUEST_URI']))
-        {
-            $path = explode('?', $_SERVER['REQUEST_URI'])[0];
-            return $path;
-        }
-
-        return null;
+        return '/'.implode('/', static::segment());
     }
 
     /**
      * Return current URL.
-     * If with_query is set to true, it will return full URL, query included.
+     * If with_query is set to true, it will return full URL,
+     * with path and query included.
      * --
      * @param boolean $with_query
-     * @param boolean $ns_port    Non standard post (!== 80, 443)
-     * @param string  $sub_domain Prepend sub domain!
+     * @param boolean $ns_port    Add non-standard port (!== 80, 443)
+     * @param string  $sub_domain Prepend sub domain
      * --
      * @return string
      */
@@ -307,10 +267,20 @@ namespace mysli\toolkit; class request
         {
             // Make sure there's ending '/'
             $url = trim($url, '/') . '/';
-            $url = $url . ltrim($_SERVER['REQUEST_URI'], '/');
+            $url = $url . ltrim(static::server('request_uri'), '/');
         }
 
         return rtrim($url, '/');
+    }
+
+    /**
+     * Return current URI (path+query)
+     * --
+     * @return string
+     */
+    static function uri()
+    {
+        return static::server('request_uri');
     }
 
     /**
@@ -404,7 +374,7 @@ namespace mysli\toolkit; class request
         }
 
         // Is it post?
-        if (static::has_post())
+        if ($_SERVER['REQUEST_METHOD'] === 'POST')
         {
             return self::method_post;
         }
