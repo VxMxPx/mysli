@@ -34,13 +34,14 @@ EXPECT
 $template = <<<'TEMPLATE'
 <html>
 <body>
-    {variable[key]}
-    {variable[key][subkey]}
-    {variable[key][subkey][subsubkey]}
+    {variable['key']}
+    {variable['key']['subkey']}
+    {variable['key']['subkey']['subsubkey']}
     {variable->property}
-    {variable[key]->property}
-    {variable->property[key]}
-    {variable[key->sub]->property[key->sub]}
+    {variable['key']->property}
+    {variable->property['key']}
+    {variable['key->sub']->property['key->sub']}
+    {variable[var][var2]}
 </body>
 </html>
 TEMPLATE;
@@ -57,6 +58,7 @@ return assert::equals(
     <?php echo $variable['key']->property; ?>
     <?php echo $variable->property['key']; ?>
     <?php echo $variable['key->sub']->property['key->sub']; ?>
+    <?php echo $variable[$var][$var2]; ?>
 </body>
 </html>
 EXPECT
@@ -107,7 +109,7 @@ $template = <<<'TEMPLATE'
     {number/34}
 
     {name|funct:'12+12'}
-    { product->price + product->tax - user[discount] }
+    { product->price + product->tax - user['discount'] }
 </body>
 </html>
 TEMPLATE;
@@ -184,7 +186,7 @@ $template = <<<'TEMPLATE'
     {; sum = price + tax - discount + curency }
     {; greeting = 'Hi there!' }
     {; number = -12 }
-    {year = post[year]}
+    {year = post['year']}
     {;year = 0}
     {;name = ''}
 </body>

@@ -12,7 +12,7 @@ $template = <<<'TEMPLATE'
     {@HELLO}
     {@COMMENTS(comments_count)}
     {@COMMENTS(comments->count)}
-    {@COMMENTS(comments[count])}
+    {@COMMENTS(comments['count'])}
     {@COMMENTS(comments|count)}
     {@HELLO_USER user1, user2, false, 'string!'}
 </body>

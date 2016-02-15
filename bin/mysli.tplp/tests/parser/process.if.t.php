@@ -17,10 +17,10 @@ $template = <<<'TEMPLATE'
         Zero.
     ::/if
 
-    ::if collection[users] &gt; 10
+    ::if collection['users'] &gt; 10
     ::/if
 
-    ::if collection[users] &gt;= 10
+    ::if collection['users'] &gt;= 10
     ::/if
 
     ::if variable AND variable > 10 AND variable &lt; 50

@@ -15,7 +15,7 @@ $template = <<<'TEMPLATE'
     ::for id,user in users
     ::/for
 
-    ::for user in collection[users]
+    ::for user in collection['users']
     ::/for
 
     ::for user in collection->users

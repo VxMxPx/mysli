@@ -9,7 +9,7 @@ use mysli\tplp\parser;
 $template = <<<'TEMPLATE'
 ::let var_name = 'Marko'
 
-::let var_name = post[title]
+::let var_name = post['title']
 
 ::let var_multiline from
     This will act exactly the same

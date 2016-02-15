@@ -8,11 +8,11 @@ use mysli\tplp\parser;
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 $template = <<<'TEMPLATE'
 {name if name else 'Anonymous'}
-{user[posts] if user[posts]|count}
+{user['posts'] if user['posts']|count}
 {'Anonymous' if !name else name}
-{'Anonymous' if !name and not user[name]}
-{@ANONYMOUS if !name and not user[name]}
-{@ANONYMOUS(count) variable[1], variable[2] if !name and not user[name]}
+{'Anonymous' if !name and not user['name']}
+{@ANONYMOUS if !name and not user['name']}
+{@ANONYMOUS(count) variable[1], variable[2] if !name and not user['name']}
 TEMPLATE;
 $parser = new parser();
 return assert::equals(
@@ -23,6 +23,6 @@ return assert::equals(
 <?php echo (!$name) ? 'Anonymous' : $name; ?>
 <?php echo (!$name and !$user['name']) ? 'Anonymous' : ''; ?>
 <?php echo (!$name and !$user['name']) ? $tplp_func_translator_service('ANONYMOUS') : ''; ?>
-<?php echo (!$name and !$user['name']) ? $tplp_func_translator_service(['ANONYMOUS', $count], [$variable['1'], $variable['2']]) : ''; ?>
+<?php echo (!$name and !$user['name']) ? $tplp_func_translator_service(['ANONYMOUS', $count], [$variable[1], $variable[2]]) : ''; ?>
 EXPECT
 );

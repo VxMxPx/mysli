@@ -17,7 +17,7 @@ $template = <<<'TEMPLATE'
     {'Hello World!'|upper}
 
     {'now'|date:'d.m.y'}
-    {user[created_on]|date:'d.m.y'}
+    {user['created_on']|date:'d.m.y'}
 
     {list|join:','}
     {list|split:','}

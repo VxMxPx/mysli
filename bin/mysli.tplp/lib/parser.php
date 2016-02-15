@@ -1046,7 +1046,7 @@ fin;
             function ($match)
             {
                 return 'iiMYSLIiQUOTiSTi'.
-                    base64_encode($match[1]).
+                    str_replace('=', '_', base64_encode($match[1])).
                     'iiMYSLIiENDiQUOTi';
             },
             $match
@@ -1092,7 +1092,10 @@ fin;
                 "/iiMYSLIiQUOTiSTi(.*?)iiMYSLIiENDiQUOTi/",
                 function ($match)
                 {
-                    return '\'' . base64_decode($match[1]) . '\'';
+                    return
+                        '\'' .
+                        base64_decode(str_replace('_', '=', $match[1])) .
+                        '\'';
                 },
                 $line
             );
@@ -1276,29 +1279,23 @@ fin;
             return $variable;
         }
 
-        // Encoded string!
-        if (substr($variable, 0, 1) === '-' && is_numeric($variable))
-        {
-            return $variable;
-        }
-
         // Find variable.one and escape it for now.
         // $variable = str_replace('.', "\x1f", $variable);
 
         // Find variable[one][two] and convert it to variable['one']['two']
         $variable = preg_replace_callback(
-            '/\[(.*?)\]/',
+            '/\[ *?(.*?) *?\]/',
             function ($match)
             {
-                // $match[1] = str_replace("\x1f", '.', $match[1]);
+                $var = $match[1];
 
-                if (substr($match[1], 0, 1) === '\\')
+                if (substr($var, 0, 1) === '\\')
                 {
-                    return '[' . substr($match[1], 1) . ']';
+                    return '['.substr($var, 1).']';
                 }
                 else
                 {
-                    return "['{$match[1]}']";
+                    return '['.$this->parse_variable($var).']';
                 }
             },
             $variable
@@ -1315,7 +1312,7 @@ fin;
         }
 
         if (!preg_match(
-            '/^[a-z0-9_]+((\\-\\>[a-z0-9_]+)|(\\[\'.+\'\\]))*?$/i', $variable))
+            '/^[a-z0-9_]+((\-\>[a-z0-9_]+)|(\[.*?\]))*?$/i', $variable))
         {
             throw new exception\parser(
                 "Not a valid variable name: `{$variable}`", 21

@@ -8,7 +8,7 @@ use mysli\tplp\parser;
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 $template = <<<'TEMPLATE'
 {post in posts}
-{header in page[headers]}
+{header in page['headers']}
 {post|upper in posts}
 TEMPLATE;
 $parser = new parser();
