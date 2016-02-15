@@ -63,7 +63,7 @@ namespace mysli\frontend; class theme
         $assets = arrp::get($meta, 'frontend.assets', 'assets');
 
         // Something to publish?
-        $publish = fs::pkgreal($package, "{$assets}/public");
+        $publish = fs::pkgreal($theme, "{$assets}/public");
 
         if (dir::exists($publish))
         {
