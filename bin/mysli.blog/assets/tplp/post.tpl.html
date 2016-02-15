@@ -2,42 +2,48 @@
 ::use mysli.blog
 
 <article class="post">
+
     <header>
-        <h2>{post[title]}</h2>
+        <h2>{post['title']}</h2>
     </header>
-    ::if post[__pages]|count > 1
+
+    ::if post['__pages']|count > 1
     <section class="page-map">
         <h2>Pages</h2>
         <ol>
-        ::for pid,page in post[__pages]
-        {; pageuri = post[quid].'/'.pid }
-        <li><a href="{pageuri|blog.url:'ppost'}">{page}</a></li>
+        ::for pid,page in post['__pages']
+            {; pageuri = post['quid'].'/'.pid }
+            <li><a href="{pageuri|blog.url:'ppost'}">{page}</a></li>
         ::/for
         </ol>
     </section>
     ::/if
-    ::if post[__toc]|count > 1
+
+    ::if post['__toc']|count > 1
     <section class="toc">
         <h2>Table of Contents</h2>
-        {post[__toc]|blog.toc}
+        {post['__toc']|blog.toc}
     </section>
     ::/if
+
     <section class="body">
-        {post[body]}
+        {post['body']}
     </section>
+
     <footer>
         <section class="tags">
-        ::for tag in post[tags]
-        <a href="{tag|blog.url:'tag'}">#{tag}</a>
+        ::for tag in post['tags']
+            <a href="{tag|blog.url:'tag'}">#{tag}</a>
         ::/for
         </section>
-        ::if post[__footnotes]|isset
+
+        ::if post['__footnotes']|isset
         <section class="references">
             <ol>
-            ::for note in post[__footnotes]
-                <li id="{note[id]}">
-                    {note[body]}
-                    ::for noteref in note[back]
+            ::for note in post['__footnotes']
+                <li id="{note['id']}">
+                    {note['body']}
+                    ::for noteref in note['back']
                         <a href="#{noteref}">↩</a>
                     ::/for
                 </li>
@@ -46,4 +52,5 @@
         </section>
         ::/if
     </footer>
+
 </article>
