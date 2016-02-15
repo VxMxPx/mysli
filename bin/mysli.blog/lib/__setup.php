@@ -16,6 +16,7 @@ fin;
                 'array',
                 [
                     'default' => [
+                        'name'        => 'Default',
                         'description' => 'This is a default tag.',
                         'language'    => [ null ],
                     ]
@@ -91,15 +92,6 @@ fin;
 
     static function disable()
     {
-        // Drop Config
-        config::select('mysli.blog')->destroy();
-
-        return
-
-        // Remove default route
-        !!route::remove('mysli.blog.frontend::*')
-
-        // Done
-        ;
+        return !!route::remove('mysli.blog.frontend::*');
     }
 }
