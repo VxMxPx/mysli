@@ -48,15 +48,6 @@ fin;
 
     static function disable()
     {
-        // Drop Config
-        config::select('mysli.page')->destroy();
-
-        return
-
-        // Remove default route
-        !!route::remove('mysli.page.frontend::*')
-
-        // Done
-        ;
+        return !!route::remove('mysli.page.frontend::*');
     }
 }
