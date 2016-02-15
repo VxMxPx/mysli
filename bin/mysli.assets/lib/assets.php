@@ -342,6 +342,11 @@ namespace mysli\assets; class assets
 
             if (!is_array($opt['files']))
             {
+                continue;
+            }
+
+            if (!is_array($opt['files']))
+            {
                 $opt['files'] = [ $opt['files'] ];
             }
 
@@ -447,6 +452,11 @@ namespace mysli\assets; class assets
         if (isset($map['includes'][$id]['modules']))
         {
             $modules = array_merge($modules, $map['includes'][$id]['modules']);
+        }
+
+        if (!isset($map['includes'][$id]['files']))
+        {
+            return $links;
         }
 
         // Need to be an array
