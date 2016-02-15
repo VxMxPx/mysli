@@ -4,7 +4,7 @@ namespace mysli\blog; class __tplp
 {
     const __use = <<<fin
     mysli.frontend.{ __tplp -> frontend.tplp }
-    mysli.toolkit.{ route }
+    mysli.toolkit.{ config, route }
 fin;
 
     /**
@@ -35,6 +35,16 @@ fin;
         $tocs[] = "</{$type}>";
 
         return implode("\n", $tocs);
+    }
+
+    /**
+     * Get list of categories.
+     * --
+     * @return array
+     */
+    static function categories()
+    {
+        return config::select('mysli.blog', 'tags.to-categories', []);
     }
 
     /**
