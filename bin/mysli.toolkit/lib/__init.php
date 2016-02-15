@@ -159,18 +159,22 @@ namespace mysli\toolkit; class __init
          */
         \log::debug("About to apply headers and output!", __CLASS__);
         $output = output::as_html();
+
         if (!response::get_header('Content-Length') && !TOOLKIT_PRINT_LOG)
         {
             // Keep strlen as we're messuring bytes
             response::set_header(str::bytes($output), 'Content-Length');
         }
+
         if (!response::get_header('Content-Type'))
         {
             response::set_header('text/html; charset=utf-8', 'Content-Type');
         }
+
         response::apply_headers();
 
         event::trigger("toolkit::web.output", [ $output ]);
+
         echo $output;
 
         /*
