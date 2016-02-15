@@ -37,4 +37,17 @@ namespace mysli\assets; class __tplp
     {
         return assets::get_links($id, $package);
     }
+
+    /**
+     * Get url to only one specific file.
+     * --
+     * @param string $filename
+     * @param string $package
+     * --
+     * @return string
+     */
+    static function file($filename, $package)
+    {
+        return "/assets/{$package}/{$filename}";
+    }
 }
