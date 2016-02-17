@@ -106,12 +106,6 @@ namespace mysli\assets; class assets
             // Decode map
             $map = ym::decode_file($filename);
 
-            // Valid map?
-            if (!is_array($map) || !isset($map['includes']))
-                throw new exception\assets(
-                    'Invalid map format `includes` section is required.', 20
-                );
-
             // Default settings
             $map_default = ym::decode_file(
                 fs::pkgreal('mysli.assets', 'config/defaults.ym')
