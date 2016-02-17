@@ -237,6 +237,12 @@ namespace mysli\toolkit; class request
             return $_SERVER['PATH_INFO'];
         }
 
+         if (isset($_SERVER['REQUEST_URI']))
+         {
+             $path = explode('?', $_SERVER['REQUEST_URI'])[0];
+             return $path;
+         }
+
         return '/'.implode('/', static::segment());
     }
 
