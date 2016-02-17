@@ -2,325 +2,222 @@
 
 namespace mysli\toolkit\cli; class ui
 {
-    const __use = '.cli.output';
+    const __use = <<<fin
+        .{ exception.cli }
+        .cli.{ output, input }
+fin;
 
     /**
-     * Ui template, allows you to fine-tune your CLI output.
+     * Unordered list.
      * --
      * @example
-     * Template:
-     * ```
-     * $template = <<<TEMPLATE
-     * <title>Hello {name}<title>
-     * Available commands:
-     * <ul>{commands}</ul>
-     * TEMPLATE;
-     * ```
-     *
-     * Then use it like this:
-     * ```
-     * ui::template(
-     *     $template,
-     *     [
-     *         'name' => 'Zitalik',
-     *         'commands' => [
-     *             'One', 'Two', 'Three'
-     *         ]
-     *     ]
-     * );
-     * ```
-     *
-     * Result:
-     * ```
-     * Hello Zitalik
-     *
-     *    - One
-     *    - Two
-     *    - Three
-     * ```
-     * --
-     * @param  string $template
-     * @param  array  $variables use associative array, and in template {varname}
+     * - item
+     * - item
+     * - item
      */
-    static function t($template, array $variables=[])
-    {
-        /*
-        Find tags and send them methods
-         */
-        $template = preg_replace_callback(
-            '/<([a-z]+)>(.*?)<\/\1>/s',
-            function ($match) use ($variables)
-            {
-                $tag = $match[1];
-                $text = $match[2];
-                $trimed = trim($text);
-
-                /*
-                If we're dealing with a plain variable, replace it right now.
-                 */
-                if (substr($trimed, 0, 1) === '{' && substr($trimed, -1) === '}')
-                {
-                    $trimed = substr($trimed, 1, -1);
-                    $text = isset($variables[$trimed]) ? $variables[$trimed] : $text;
-                }
-
-                /*
-                Lists requires special logic
-                 */
-                if (in_array($tag, ['ul', 'ol', 'al']))
-                {
-                    if (!is_array($text))
-                    {
-                        $lines = explode("\n", $text);
-
-                        if ($tag === 'al')
-                        {
-                            $nlines = [];
-
-                            foreach ($lines as $line)
-                            {
-                                list($k, $v) = explode(':', $line, 2);
-                                $nlines[trim($k)] = trim($v);
-                            }
-                        }
-                        else
-                        {
-                            foreach ($lines as &$line)
-                            {
-                                $line = trim($line);
-                            }
-                            unset($line);
-                        }
-
-                        $text = $lines;
-                    }
-                }
-
-                if (method_exists('mysli\\toolkit\\cli\\ui', $tag))
-                {
-                    return call_user_func(
-                        ['mysli\\toolkit\\cli\\ui', $tag], $text, true
-                    );
-                }
-                else
-                {
-                    return is_array($text) ? implode("\n", $text) : $text;
-                }
-            },
-            $template
-        );
-
-        /*
-        Set variables
-         */
-        foreach ($variables as $key => $var)
-        {
-            if (strpos($template, "{{$key}}") !== false)
-            {
-                if (is_array($var))
-                    $var = implode("\n", $var);
-
-                $template = str_replace("{{$key}}", $var, $template);
-            }
-        }
-
-        output::line($template);
-    }
-
-    /*
-    --- Elements ---------------------------------------------------------------
-     */
+    const list_unordered = "ul";
 
     /**
-     * Used for titles.
+     * Ordered list.
+     * --
+     * @example
+     * 1. item
+     * 2. item
+     * 3. item
+     */
+    const list_ordered = 'ol';
+
+    /**
+     * Aligned list.
+     * --
+     * @example
+     * Slovenia : Ljubljana
+     * Austria  : Vienna
+     * Russia   : Moscow
+     * Italy    : Rome
+     */
+    const list_aligned = 'al';
+
+
+    /**
+     * Indent size.
+     * --
+     * @var integer
+     */
+    protected static $indent_size = 2;
+
+    /**
+     * Buffered text so far.
+     * --
+     * @var array
+     */
+    protected static $buffer = [];
+
+    /**
+     * Is text being buffered.
+     * --
+     * @var boolean
+     */
+    protected static $is_buffering = false;
+
+
+    /**
+     * Print title.
      * --
      * @param string  $string
-     * @param boolean $return
-     *        Weather result should be return rather than output.
-     * --
-     * @return string
+     * @param integer $indent
      */
-    static function title($string, $return=false)
+    static function title($string, $indent=0)
     {
-        $f = "\e[1m{$string}\e[0m";
-        if ($return) return $f; else output::line($f);
+        static::strong("\n".$string, $indent);
     }
 
     /**
      * Make output more important.
      * --
      * @param string  $string
-     * @param boolean $return
-     *        Weather result should be return rather than output.
-     * --
-     * @return string
+     * @param integer $indent
      */
-    static function strong($string, $return=false)
+    static function strong($string, $indent=0)
     {
-        $f = "\e[1m{$string}\e[0m";
-        if ($return) return $f; else output::line($f);
+        static::add("\e[1m{$string}\e[0m", $indent);
     }
 
     /**
-     * Unordered list.
+     * Print a regular line.
      * --
-     * @example
-     * array `['One', 'Two', 'Three']` or when using format:
-     * ```
-     * <ul>
-     * One
-     * Two
-     * Three
-     * </ul>
-     * ```
-     * Result:
-     * ```
-     *    - One
-     *    - Two
-     *    - Three
-     * ```
-     * --
-     * @param array $lines
-     * @param boolean $return weather result should be return rather than output
-     * --
-     * @return string
+     * @param string  $string
+     * @param integer $indent
      */
-    static function ul(array $lines, $return=false)
+    static function line($string, $indent=0)
     {
-        $f = "";
-
-        foreach ($lines as $line)
-            $f .= "\n   - {$line}";
-
-        $f = trim($f, "\n");
-
-        if ($return) return $f; else output::line($f);
+        static::add($string, $indent);
     }
 
     /**
-     * Ordered list.
+     * Print a general information to the user.
      * --
-     * @example
-     * array `['One', 'Two', 'Three']` or when using format:
-     * ```
-     * <ol>
-     * One
-     * Two
-     * Three
-     * </ol>
-     * ```
-     * Result:
-     * ```
-     *    1. One
-     *    2. Two
-     *    3. Three
-     * ```
-     * --
-     * @param array $lines
-     * @param boolean $return weather result should be return rather than output
-     * --
-     * @return string
+     * @param string $title
+     *
+     * @param string $message
+     *        Optional, if message is not provided,
+     *        title will be used as a message.
+     *
+     * @param integer $indent
      */
-    static function ol(array $lines, $return=false)
+    static function info($title, $message=null, $indent=0)
     {
-        $f = "";
-
-        foreach ($lines as $k => $line)
-        {
-            $k = $k + 1;
-            $f .= "\n   {$k}. {$line}";
-        }
-
-        $f = trim($f, "\n");
-
-        if ($return) return $f; else output::line($f);
+        $f = "\e[34m{$title}".($message ? ":\e[39m {$message}" : "\e[39m");
+        static::add($f, $indent);
     }
 
     /**
-     * Aligned list.
+     * Print a warning.
      * --
-     * @example
-     * array `['Name' => 'Zitalik', 'Age' => 2, 'City' => 'Maribor']` or
-     * when using format:
-     * ```
-     * <al>
-     * Name: Zitalik
-     * Age: 2
-     * City: Maribor
-     * </al>
-     * ```
-     * Result:
-     * ```
-     * Name : Zitalik
-     * Age  : 2
-     * City : Maribor
-     * ```
-     * --
-     * @param array   $lines
-     * @param boolean $return Result should be return rather than outputed.
-     * @param integer $indent Starting indent.
-     * --
-     * @return string
+     * @param string $title
+     *
+     * @param string $message
+     *        Optional, if message is not provided,
+     *        title will be used as a message.
+     *
+     * @param integer $indent
      */
-    static function al(array $lines, $return=false, $indent=0)
+    static function warning($title, $message=null, $indent=0)
     {
-        $step      = 4;
-        $separator = ' : ';
-        $new_line  = "\n";
-        $valuefy   = false;
+        $f = "\e[33m{$title}".($message ? ":\e[39m {$message}" : "\e[39m");
+        static::add($f, $indent);
+    }
 
-        $long_key = 0;
-        $out = '';
+    /**
+     * Print an error.
+     * --
+     * @param string $title
+     *
+     * @param string $message
+     *        Optional, if message is not provided,
+     *        title will be used as a message.
+     *
+     * @param integer $indent
+     */
+    static function error($title, $message=null, $indent=0)
+    {
+        $f = "\e[31m{$title}".($message ? ":\e[39m {$message}" : "\e[39m");
+        static::add($f, $indent);
+    }
 
-        // Get the longest key...
-        foreach ($lines as $key => $val)
+    /**
+     * Print an information that a job was successful.
+     * --
+     * @param string $title
+     *
+     * @param string $message
+     *        Optional, if message is not provided,
+     *        title will be used as a message.
+     *
+     * @param integer $indent
+     */
+    static function success($title, $message=null, $indent=0)
+    {
+        $f = "\e[32m{$title}".($message ? ":\e[39m {$message}" : "\e[39m");
+        static::add($f, $indent);
+    }
+
+    /**
+     * Print various lists.
+     * --
+     * @param array   $list
+     * @param string  $type
+     * @param integer $indent
+     */
+    static function list(array $list, $type=self::list_unordered, $indent=0)
+    {
+        switch ($type)
         {
-            if (strlen($key) > $long_key)
-            {
-                $long_key = strlen($key);
-            }
-        }
+            case static::list_unordered:
+            case static::list_ordered:
+                $i = 0;
+                foreach ($list as $line)
+                    is_array($line)
+                        ? static::list($line, $type, $indent+1)
+                        : static::add(
+                            ($type === static::list_ordered ? (++$i).'.' : '-').
+                            " {$line}", $indent);
+            break;
 
-        foreach ($lines as $key => $value)
-        {
-            $out .= str_repeat(' ', $indent) . $key;
+            case static::list_aligned:
+                $separator = ' : ';
 
-            if (is_array($value))
-            {
-                if (!empty($value))
+                $longest = 0;
+                foreach ($list as $key => $val)
+                    $longest = strlen($key) > $longest
+                        ? strlen($key)
+                        : $longest;
+
+                foreach ($list as $key => $value)
                 {
-                    $out .= $new_line . static::al($value, true, $indent+$step);
-                }
-                else
-                {
-                    $out .= str_repeat(' ', $long_key - strlen($key)) .
-                        $separator . '[]';
-                }
-            }
-            else
-            {
-                if ($valuefy)
-                {
-                    if (is_bool($value))
+                    if (is_array($value))
                     {
+                        static::add($key, $indent);
+                        static::list($value, static::list_aligned, $indent+1);
+                        continue;
+                    }
+                    elseif (is_bool($value))
                         $value = $value ? 'true' : 'false';
-                    }
                     elseif (is_string($value))
-                    {
-                        $value = '"'.$value.'"';
-                    }
+                        $value = "\"{$value}\"";
+
+                    static::add(
+                        $key.str_repeat(' ', $longest - strlen($key)).
+                            $separator.$value,
+                        $indent);
                 }
+            break;
 
-                $out .= str_repeat(' ', $long_key - strlen($key)) .
-                    $separator . $value;
-            }
-
-            $out .= $new_line;
+            default:
+                throw new exception\cli(
+                    "Invalid list type: `{$type}`.",
+                    __CLASS__.'//invalidtype');
         }
-
-        $out = rtrim($out);
-
-        if ($return) return $out; else output::line($out);
     }
 
     /**
@@ -333,85 +230,55 @@ namespace mysli\toolkit\cli; class ui
         output::line(str_repeat(PHP_EOL, ((int) $num)-1));
     }
 
-    /*
-    --- Messages ---------------------------------------------------------------
-     */
-
     /**
-     * Used to print a plain line of text to the user.
-     * --
-     * @param string  $message
-     * @param boolean $return weather result should be return rather than output
-     * --
-     * @return string
+     * Set buffering ON.
      */
-    static function line($message, $return=false)
+    static function buffer()
     {
-        $f = $message;
-        if ($return) return $f; else output::line($f);
+        static::$is_buffering = true;
     }
 
     /**
-     * Used to print a general information to the user.
+     * Flush buffer and switch buffering off.
      * --
-     * @param string  $title  optional, if message is not provided, title will
-     *                        be used as a message.
-     * @param string  $message
-     * @param boolean $return weather result should be return rather than output
-     * --
-     * @return string
+     * @param boolean $return Return rather thna print!
      */
-    static function info($title, $message=null, $return=false)
+    static function flush($return=false)
     {
-        $f = "\e[34m{$title}".($message ? ":\e[39m {$message}" : "\e[39m");
-        if ($return) return $f; else output::line($f);
+        $buffer = implode("\n", static::$buffer);
+        static::clear();
+
+        if ($return)
+            return $buffer;
+        else
+            output::line($buffer);
     }
 
     /**
-     * Used to print a warning.
-     * --
-     * @param string  $title  optional, if message is not provided, title will
-     *                        be used as a message.
-     * @param string  $message
-     * @param boolean $return weather result should be return rather than output
-     * --
-     * @return string
+     * Clear buffer without printing anything!
      */
-    static function warning($title, $message=null, $return=false)
+    static function clear()
     {
-        $f = "\e[33m{$title}".($message ? ":\e[39m {$message}" : "\e[39m");
-        if ($return) return $f; else output::line($f);
+        static::$buffer = [];
+        static::$is_buffering = false;
     }
 
     /**
-     * Used to print an error.
+     * Add line(s) to the buffer/flush buffer, ...
      * --
-     * @param string  $title  optional, if message is not provided, title will
-     *                        be used as a message.
-     * @param string  $message
-     * @param boolean $return weather result should be return rather than output
-     * --
-     * @return string
+     * @param string  $string
+     * @param integer $indent
      */
-    static function error($title, $message=null, $return=false)
+    static function add($string, $indent=0)
     {
-        $f = "\e[31m{$title}".($message ? ":\e[39m {$message}" : "\e[39m");
-        if ($return) return $f; else output::line($f);
-    }
+        // Add indentation!
+        $string = str_repeat(' ', $indent*static::$indent_size).$string;
 
-    /**
-     * Used to print an information that a job was successful.
-     * --
-     * @param string  $title  optional, if message is not provided, title will
-     *                        be used as a message.
-     * @param string  $message
-     * @param boolean $return weather result should be return rather than output
-     * --
-     * @return string
-     */
-    static function success($title, $message=null, $return=false)
-    {
-        $f = "\e[32m{$title}".($message ? ":\e[39m {$message}" : "\e[39m");
-        if ($return) return $f; else output::line($f);
+        static::$buffer[] = $string;
+
+        if (!static::$is_buffering)
+        {
+            static::flush();
+        }
     }
 }
