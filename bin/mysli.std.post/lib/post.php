@@ -207,7 +207,7 @@ fin;
                         }
                         else
                         {
-                            throw new exception\page(
+                            throw new exception\post(
                                 "No such page: `{$item}`", 10);
                         }
                     }
