@@ -6,7 +6,7 @@ namespace mysli\frontend; class frontend
         .{ theme }
         mysli.tplp
         mysli.i18n
-        mysli.toolkit.{ pkg, response, output, config }
+        mysli.toolkit.{ pkg, output, config, request }
         mysli.toolkit.type.{ arr }
 fin;
 
@@ -17,6 +17,19 @@ fin;
      */
     protected static $variables = [];
 
+    /**
+     * Current language.
+     * --
+     * @var string
+     */
+    protected static $language = null;
+
+    /**
+     * Initialize Frontend.
+     * Set default variable from configuration.
+     * --
+     * @return boolean
+     */
     static function __init()
     {
         $variables = config::select('mysli.frontend')->as_array();
@@ -33,43 +46,59 @@ fin;
         return true;
     }
 
+    /**
+     * Render the template and set output.
+     * --
+     * @param  array  $tpls
+     * @param  array  $variables
+     * --
+     * @return boolean
+     */
     static function render(array $tpls, array $variables=[])
     {
+        // Get current theme
         $theme = theme::get_active();
         \log::debug("I shall render: `{1}`.", [ __CLASS__, var_export($tpls, true) ]);
 
+        // Check if theme is actually enabled...
         if (!pkg::is_enabled($theme))
         {
             return false;
         }
 
+        // Set theme in tplp to be used for rendering
         $template = tplp::select($theme);
 
-        // Set Translator
-        $translator = i18n::select($theme);
+        // Load and Set Translator
+        $translator = i18n::select([ $theme, 'en', null ]);
         $translator->load($theme);
         $template->set_translator($translator);
 
-        // Set subtitle if there
-        if (isset($variables['front']['title']))
-        {
-            $variables['front']['title'] = str_replace(
-                [
-                    '{title}',
-                    '{subtitle}'
-                ],
-                [
-                    static::$variables['front']['title'],
-                    $variables['front']['title']
-                ],
-                static::$variables['front']['subtitle']
-            );
-        }
+        // Add some defaults
+        $variables['front']['language'] = static::get_language();
+        $variables['front']['uri'] = request::uri();
+        $variables['front']['quid'] = md5(request::url( true, true ));
 
         // Add own variables
         $variables = arr::merge(static::$variables, $variables);
 
-        // Find template
+        // Set subtitle if there
+        if (isset($variables['front']['subtitle']))
+        {
+            $variables['front']['title'] = str_replace(
+                ['{title}', '{subtitle}'],
+                [$variables['front']['title'], $variables['front']['subtitle']],
+                $variables['front']['subtitle_format']
+            );
+        }
+
+        // Set the type of currently displayed content, e.g. blog-post, ...
+        if (!isset($variables['front']['type']))
+        {
+            $variables['front']['type'] = 'undefined';
+        }
+
+        // Find template and render it!
         foreach ($tpls as $tpl)
         {
             if (is_array($tpl))
@@ -82,6 +111,7 @@ fin;
                 $file = $tpl;
                 $root = null;
             }
+
             if ($template->has($file, $root))
             {
                 output::set($template->render($tpl, $variables));
@@ -92,17 +122,30 @@ fin;
         return false;
     }
 
+    /**
+     * Get current language.
+     * --
+     * @return string
+     */
+    static function get_language()
+    {
+        return static::$language;
+    }
+
     /*
     --- Protected --------------------------------------------------------------
      */
 
+    /**
+     * Find current language.
+     */
     protected static function find_language()
     {
         $langkey = config::select('mysli.frontend', 'locale.default');
         $locales = config::select('mysli.frontend', 'locale.accept');
 
-        $language = isset($locales[$langkey]) ? $locales[$langkey] : $langkey;
-
-        i18n::select('mysli.frontend')->primary($language);
+        static::$language = isset($locales[$langkey])
+            ? $locales[$langkey]
+            : $langkey;
     }
 }
