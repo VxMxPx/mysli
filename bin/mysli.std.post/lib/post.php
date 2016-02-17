@@ -7,6 +7,7 @@ namespace mysli\std\post; class post
     mysli.markdown.{ markdown, parser }
     mysli.toolkit.{ json, ym }
     mysli.toolkit.fs.{ fs, file, dir }
+    mysli.toolkit.type.{ arr }
 fin;
 
     /**
@@ -155,13 +156,18 @@ fin;
         }
 
         // Set required page
-        $meta = $this->meta;
         $page = $page === '_default' ? $this->get_first_page_id() : $page;
-
-        foreach (['__toc', '__footnotes'] as $key)
+        if (!isset($this->meta['pages'][$page]))
         {
-            $meta[$key] = (isset($meta[$key]) && isset($meta[$key][$page]))
-                ? $meta[$key][$page]
+            return [];
+        }
+
+        $meta = $this->meta['pages'][$page];
+
+        foreach (['table_of_contents', 'references'] as $key)
+        {
+            $meta[$key] = (isset($this->meta[$key]) && isset($this->meta[$key][$page]))
+                ? $this->meta[$key][$page]
                 : [];
         }
 
@@ -189,13 +195,13 @@ fin;
 
                 $this->html = [];
                 $lastk = null;
-                $meta = $this->meta( null );
+                $meta = $this->meta(null);
 
                 foreach ($html as $item)
                 {
                     if (!$lastk)
                     {
-                        if (isset($meta['__pages'][$item]))
+                        if (isset($meta['pages'][$item]))
                         {
                             $lastk = $item;
                         }
@@ -243,8 +249,8 @@ fin;
      */
     function get_first_page_id()
     {
-        $meta = $this->meta( null );
-        $pages = $meta['__pages'];
+        $meta = $this->meta(null);
+        $pages = $meta['pages'];
         reset($pages);
         return key($pages);
     }
@@ -412,13 +418,13 @@ fin;
      */
     function get($key, $default=null)
     {
-        if (!array_key_exists($key, $this->meta()))
+        if (!array_key_exists($key, $this->meta(null)))
         {
             return $default;
         }
         else
         {
-            return $this->meta()[$key];
+            return $this->meta(null)[$key];
         }
     }
 
@@ -612,14 +618,25 @@ fin;
      * Return post's data as an array!
      * --
      * @param string $page
+     *        Null, get full array of post.
+     *        String, get specific array for page.
      * --
      * @return array
      */
     function as_array($page='_default')
     {
-        $meta = $this->meta($page);
-        $meta['body'] = $this->html($page);
-        $meta['language'] = $this->language;
+        if ($page)
+        {
+            $meta = $this->meta($page);
+            $meta['body'] = $this->html($page);
+        }
+        else
+        {
+            $meta = $this->meta(null);
+            $meta['language'] = $this->language;
+            $meta['body'] = $this->html(null);
+        }
+
         return $meta;
     }
 
@@ -652,9 +669,12 @@ fin;
             PREG_SPLIT_NO_EMPTY|PREG_SPLIT_DELIM_CAPTURE);
 
         // Set some defaults
-        if (!isset($meta['__footnotes'])) $meta['__footnotes'] = [];
-        if (!isset($meta['__toc']))       $meta['__toc'] = [];
-        if (!isset($meta['__pages']))     $meta['__pages'] = [];
+        if (!isset($meta['references'])) $meta['references'] = [];
+        if (!isset($meta['table_of_contents'])) $meta['table_of_contents'] = [];
+        if (!isset($meta['pages'])) $meta['pages'] = [];
+
+        $meta['__hash_new'] = $this->get_hash(true);
+        $meta['quid'] = substr($this->quid, strpos($this->quid, '/')+1);
 
         $pages = [];
 
@@ -695,18 +715,36 @@ fin;
 
             // Footnotes
             $footnote = $parser->get_processor('mysli.markdown.module.footnote');
-            $meta['__footnotes'][$pid] = $footnote->as_array();
+            $meta['references'][$pid] = $footnote->as_array();
 
             // Add ToC
-            $meta['__toc'][$pid] = $toc;
+            $meta['table_of_contents'][$pid] = $toc;
+
+            // Previous
+            if ($k > 0)
+            {
+                $previous = arr::last_key($meta['pages']);
+                $meta['pages'][$previous]['next'] = [ $pid, $ptitle ];
+            }
+            else
+            {
+                $previous = null;
+            }
 
             // Pages
-            $meta['__pages'][$pid] = $ptitle;
-            $meta['__hash_new'] = $this->get_hash( true );
-            $pages[$pid] = $html;
+            $meta['pages'][$pid] = [
+                'title'    => $ptitle,
+                'quid'     => $pid,
+                'fquid'    => $meta['quid'].'/'.$pid,
+                'index'    => $k+1,
+                'next'     => null,
+                'previous' => $previous ? [ $previous, $meta['pages'][$previous]['title'] ] : null,
+                'is_first' => $k === 0,
+                'is_last'  => $k === count($page_sources)-1,
+                'is_only'  => count($page_sources) === 1,
+            ];
 
-            // Self QUID
-            $meta['quid'] = substr($this->quid, strpos($this->quid, '/')+1);
+            $pages[$pid] = $html;
         }
 
         $this->meta = $meta;
