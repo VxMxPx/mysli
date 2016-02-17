@@ -107,7 +107,7 @@ namespace mysli\frontend\root\script; class theme
         $meta = pkg::get_meta($theme);
 
         ui::title("Meta for {$theme}");
-        ui::list($meta, ui::list_aligned);
+        ui::lst($meta, ui::list_aligned);
 
         return true;
     }
@@ -132,7 +132,7 @@ namespace mysli\frontend\root\script; class theme
         }
 
         ui::title('List of themes');
-        ui::list($list, ui::list_aligned);
+        ui::lst($list, ui::list_aligned);
 
         return true;
     }

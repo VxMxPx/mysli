@@ -89,20 +89,20 @@ namespace mysli\toolkit\root\script; class pkg
             if (count($dependencies['missing']))
             {
                 ui::error('ERROR', 'Cannot proceed, packages are missing:');
-                ui::list($dependencies['missing']);
+                ui::lst($dependencies['missing']);
                 return false;
             }
             if (count($dependencies['version']))
             {
                 ui::error('ERROR', 'Cannot proceed, packages are at invalid version:');
-                ui::list($dependencies['version']);
+                ui::lst($dependencies['version']);
                 return false;
             }
             if (count($dependencies['disabled']))
             {
                 ui::nl();
                 ui::line('Following packages will also be enabled:');
-                ui::list($dependencies['disabled']);
+                ui::lst($dependencies['disabled']);
                 ui::nl();
             }
 
@@ -137,7 +137,7 @@ namespace mysli\toolkit\root\script; class pkg
             {
                 ui::nl();
                 ui::line("Following packages will also be disabled:");
-                ui::list($dependees);
+                ui::lst($dependees);
                 ui::nl();
             }
 
@@ -184,7 +184,7 @@ namespace mysli\toolkit\root\script; class pkg
         }
 
         ui::title("List of {$type} packages.");
-        ui::list($list);
+        ui::lst($list);
         return true;
     }
 
@@ -199,7 +199,7 @@ namespace mysli\toolkit\root\script; class pkg
     {
         $meta = lib\pkg::get_meta($package);
         ui::title("Meta for {$package}");
-        ui::list($meta, ui::list_aligned);
+        ui::lst($meta, ui::list_aligned);
         return true;
     }
 }

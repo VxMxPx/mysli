@@ -6,7 +6,7 @@ use \mysli\toolkit\cli\ui;
 # ------------------------------------------------------------------------------
 #: Test List Aligned
 #: Expect Output <<<CLI
-ui::list([
+ui::lst([
   'One' => 'Value One',
   'Two' => 'Value Two',
   'Three' => 'Value Three',
@@ -23,7 +23,7 @@ CLI;
 # ------------------------------------------------------------------------------
 #: Test List Aligned Indented
 #: Expect Output <<<CLI
-ui::list([
+ui::lst([
   'One' => 'Value One',
   'Two' => 'Value Two',
   'Three' => 'Value Three',
@@ -40,7 +40,7 @@ CLI;
 # ------------------------------------------------------------------------------
 #: Test List Aligned Multi Dimensions
 #: Expect Output <<<CLI
-ui::list([
+ui::lst([
   'One' => 'Value One',
   'Two' => [
     'One' => 'Value One',

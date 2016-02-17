@@ -169,7 +169,7 @@ fin;
      * @param string  $type
      * @param integer $indent
      */
-    static function list(array $list, $type=self::list_unordered, $indent=0)
+    static function lst(array $list, $type=self::list_unordered, $indent=0)
     {
         switch ($type)
         {
@@ -178,7 +178,7 @@ fin;
                 $i = 0;
                 foreach ($list as $line)
                     is_array($line)
-                        ? static::list($line, $type, $indent+1)
+                        ? static::lst($line, $type, $indent+1)
                         : static::add(
                             ($type === static::list_ordered ? (++$i).'.' : '-').
                             " {$line}", $indent);
@@ -198,7 +198,7 @@ fin;
                     if (is_array($value))
                     {
                         static::add($key, $indent);
-                        static::list($value, static::list_aligned, $indent+1);
+                        static::lst($value, static::list_aligned, $indent+1);
                         continue;
                     }
                     elseif (is_bool($value))

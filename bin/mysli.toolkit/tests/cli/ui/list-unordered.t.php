@@ -6,7 +6,7 @@ use \mysli\toolkit\cli\ui;
 # ------------------------------------------------------------------------------
 #: Test List Unordered
 #: Expect Output <<<CLI
-ui::list(['One', 'Two', 'Three', 'Four'], ui::list_unordered);
+ui::lst(['One', 'Two', 'Three', 'Four'], ui::list_unordered);
 <<<CLI
 - One
 - Two
@@ -18,7 +18,7 @@ CLI;
 # ------------------------------------------------------------------------------
 #: Test List Unordered Indented
 #: Expect Output <<<CLI
-ui::list(['One', 'Two', 'Three', 'Four'], ui::list_unordered, 1);
+ui::lst(['One', 'Two', 'Three', 'Four'], ui::list_unordered, 1);
 <<<CLI
   - One
   - Two
@@ -30,7 +30,7 @@ CLI;
 # ------------------------------------------------------------------------------
 #: Test List Unordered Multi Dimensions
 #: Expect Output <<<CLI
-ui::list([
+ui::lst([
     'One',
     [ 'A', 'B', 'C' ],
     'Two',
