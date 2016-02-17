@@ -83,7 +83,7 @@ namespace mysli\i18n\root\script; class i18n
         // Check if package // Dir exists...
         if (!$path || !dir::exists($path))
         {
-            ui::error("Invalid path: `{$path}`.");
+            ui::error('ERROR', "Invalid path: `{$path}`.");
             return false;
         }
 
@@ -110,7 +110,7 @@ namespace mysli\i18n\root\script; class i18n
                 $dspath = "{$path}/dist~/{$rpfile}";
 
                 // Print action and file...
-                ui::info(ucfirst($change['action']), $rfile);
+                ui::info(strtoupper($change['action']), $rfile);
 
                 // Finally process file...
 
@@ -119,9 +119,9 @@ namespace mysli\i18n\root\script; class i18n
                     if (file::exists($dspath))
                     {
                         if (file::remove($dspath))
-                            ui::success('Removed', $rpfile);
+                            ui::success('REMOVED', $rpfile, 1);
                         else
-                            ui::success('Failed removing', $rpfile);
+                            ui::error('REMOVE FAILED', $rpfile, 1);
                     }
                     continue;
                 }
@@ -134,13 +134,13 @@ namespace mysli\i18n\root\script; class i18n
 
                     file::create_recursive($dspath, true);
                     if (json::encode_file($dspath, $contents))
-                        ui::success('Saved', $rpfile);
+                        ui::success('SAVED', $rpfile, 1);
                     else
-                        ui::error('Failed saving', $rpfile);
+                        ui::error('SAVE FAILED', $rpfile, 1);
                 }
                 catch (\Exception $e)
                 {
-                    ui::error($e->getMessage());
+                    ui::error('ERROR', $e->getMessage(), 1);
                     continue;
                 }
             }
