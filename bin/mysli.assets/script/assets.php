@@ -109,23 +109,28 @@ fin;
             // Map Reload
             if (empty($map) || isset($changes[fs::ds($root, 'map.ym')]))
             {
-                ui::info('RELOAD', 'map.ym');
+                ui::title('Reload');
 
                 try
                 {
                     $map = lib\assets::map($package);
                     lib\assets::resolve_map($map, $root);
+
+                    if (is_array($map))
+                        ui::success('OK', 'map.ym', 1);
+                    else
+                        ui::warning('WARNING', 'map.ym', 1);
                 }
                 catch (\Exception $e)
                 {
-                    ui::error($e->getMessage());
+                    ui::error('ERROR', $e->getMessage(), 1);
                     return false;
                 }
 
                 if (!static::requirements($map, $ids))
                 {
                     ui::error(
-                        'Error',
+                        'ERROR',
                         'Your system did not meet requirements, '.
                         'please install missing modules.'
                     );
@@ -136,24 +141,23 @@ fin;
                 $changes = [];
 
                 // Now cleanup!
-                ui::info('CLEANUP:');
+                ui::title('Cleanup');
+
                 foreach ($rebuild as $id)
                 {
-                    output::line(str::cut_pad($id, 30, '...', '.'), false);
-
                     if (dir::exists($root, $id, 'dist~'))
                     {
-                        output::line('Dist ', false);
-                        dir::remove(fs::ds($root, $id, 'dist~'));
+                        dir::remove(fs::ds($root, $id, 'dist~'))
+                            ? ui::success('OK', "Removed {$id}/dist~", 1)
+                            : ui::error('ERROR', "Failed to removed {$id}/dist~", 1);
                     }
                     if ($dev && dir::exists($pubpath, $id))
                     {
-                        output::line('Public ', false);
-                        dir::remove(fs::ds($pubpath, $id));
+                        dir::remove(fs::ds($pubpath, $id))
+                            ? ui::success('OK', "Removed public:{$id}", 1)
+                            : ui::error('ERROR', "Failed to remove public:{$id}", 1);
                     }
-                    ui::nl();
                 }
-                ui::nl();
             }
 
             // Run through changes
@@ -172,16 +176,15 @@ fin;
                 }
 
                 // Output head & action
-                output::line(str::cut_pad($relative_file, 30, '...', '.'), false);
                 $oact  = ucfirst($mod['action']);
-                $ohead = "{$oact} ".date('H:i:s');
-                ui::info($ohead);
+                $ohead = "{$oact} (".date('H:i:s').") {$relative_file}";
+                ui::title($ohead);
 
                 // Removed (Also covers: moved, renamed (which will have `to` set))
                 if ($mod['action'] === 'removed' || isset($mod['to']))
                 {
                     if (!is_array($file)) continue;
-                    // ui::warning($ohead, $file['source']);
+
                     $remove = [
                         fs::ds($root, $file['id'], $file['resolved_dist']),
                         fs::ds($root, $file['id'], $file['compressed_dist']),
@@ -233,7 +236,6 @@ fin;
                 }
 
                 if (!is_array($file)) continue;
-                // ui::info($ohead, $file['source']);
 
                 // Rebuild single file or whole stack
                 if (!in_array($file['id'], $rebuild))
@@ -259,8 +261,7 @@ fin;
                     continue;
                 }
 
-                ui::nl();
-                ui::info('DIRECTORY', $rid);
+                ui::title("Dir {$rid}");
                 static::rebuild($map['includes'][$rid], $root, $dev, $pubpath);
             }
 
@@ -284,7 +285,7 @@ fin;
         // No need to process anything
         if (!$section['process'])
         {
-            output::line(str::cut_pad($section['id'], 30, '...', '.'), false);
+            ui::line($section['id'], 1);
 
             // Perhaps needs to be published
             if ($section['publish'])
@@ -292,18 +293,18 @@ fin;
 
                 if (dir::copy(fs::ds($root, $section['id']), fs::ds($pubpath, $section['id'])))
                 {
-                    ui::success("Published\n");
+                    ui::success("Published", null, 2);
                     return true;
                 }
                 else
                 {
-                    ui::error("Failed to Publish\n");
+                    ui::error("Failed to Publish", null, 2);
                     return false;
                 }
             }
             else
             {
-                ui::info("Skipped\n");
+                ui::info("Skipped", null, 2);
                 return true;
             }
         }
@@ -324,16 +325,13 @@ fin;
 
             if (!dir::exists($out_dir))
             {
-                output::line(str::cut_pad(file::name($out_dir), 30, '...', '.'), false);
+                ui::line(file::name($out_dir), 1);
                 dir::create($out_dir)
-                    ? ui::success('Created')
-                    : ui::error('Failed');
+                    ? ui::success('Created', null, 2)
+                    : ui::error('Failed', null, 2);
             }
 
-            output::line(
-                str::cut_pad(file::name($fileopt['source']), 30, '...', '.'),
-                false
-            );
+            ui::line(file::name($fileopt['source']), 1);
 
             // Process
             $command = $fileopt['module']['process'];
@@ -348,12 +346,12 @@ fin;
 
             if ($r === 0)
             {
-                output::green('Processed ', false);
+                ui::success('Processed', null, 2);
             }
             else
             {
-                output::red('Process Fail', true);
-                output::red('ERROR '.trim(implode("\n", $out)), false);
+                ui::error('Process Failed', null, 2);
+                ui::error('ERROR', trim(implode("\n", $out)), 2);
                 continue;
             }
 
@@ -367,13 +365,12 @@ fin;
                         dir::create(fs::ds($pubpath, $fileopt['id']));
                     }
 
-                    output::green('Published ', false);
+                    ui::success('Published', null, 2);
 
                     file::copy($out_file, fs::ds($pubpath, $fileopt['resolved']))
-                        or output::red('Failed ', false);
+                        or ui::error('ERROR', "Couldn't copy `{$out_file}`", 2);
 
                     $remove_on_merge[] = $out_file;
-                    // file::remove($out_file);
                 }
             }
             elseif (file::exists($out_file))
@@ -382,8 +379,6 @@ fin;
                 $in_file  = $out_file;
                 $in_dir   = $out_dir;
                 $out_file = fs::ds($root, $fileopt['compressed_dist']);
-
-                // output::blue('Build ', false);
 
                 $command = $fileopt['module']['build'];
                 $command = str_replace(
@@ -399,12 +394,12 @@ fin;
 
                     if ($r === 0)
                     {
-                        output::green('Build ', false);
+                        ui::success('Build', null, 2);
                     }
                     else
                     {
-                        output::red('Build Fail', true);
-                        output::red('ERROR '.trim(implode("\n", $out)), false);
+                        ui::error('Build Fail', null, 2);
+                        ui::error('ERROR', trim(implode("\n", $out)), 2);
                         continue;
                     }
                 }
@@ -422,30 +417,24 @@ fin;
 
                     file::remove($in_file);
                     $remove_on_merge[] = $out_file;
-                    // file::remove($out_file);
                 }
             }
-            ui::nl();
         }
 
         if (!$dev && isset($section['merge']) && $section['merge'])
         {
-            output::line(
-                str::cut_pad($section['merge'], 30, '...', '.'),
-                false
-            );
+            ui::line($section['merge'], 1);
+
             // Save buffer
             file::write(fs::ds($out_dir, $section['merge']), $buffer) !== false
-                ? ui::success('Merged')
-                : ui::error('Failed to Merge');
+                ? ui::success('Merged', null, 2)
+                : ui::error('Failed to Merge', null, 2);
 
             foreach ($remove_on_merge as $remove)
             {
                 file::exists($remove) and file::remove($remove);
             }
         }
-
-        ui::nl();
     }
 
     /**
@@ -459,8 +448,7 @@ fin;
      */
     protected static function requirements(array $rmap, $ids=null)
     {
-        ui::nl();
-        ui::line('Checking modules');
+        ui::title('Modules');
 
         $requirements = [];
 
@@ -518,12 +506,12 @@ fin;
 
             if ($r !== 0)
             {
-                ui::error("Failed", $requirement);
+                ui::error("Failed", $requirement, 1);
                 $return = false;
             }
             else
             {
-                ui::success("Ok", $requirement);
+                ui::success("Ok", $requirement, 1);
             }
 
             log::debug("Command: `{$requirement}`.", __CLASS__);

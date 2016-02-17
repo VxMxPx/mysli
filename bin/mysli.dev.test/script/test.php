@@ -72,7 +72,7 @@ namespace mysli\dev\test\root\script; class test
 
         if (!$package)
         {
-            ui::error("No tests found for: `{$pid}`");
+            ui::error('ERROR', "No tests found for: `{$pid}`");
             return false;
         }
 
@@ -82,7 +82,7 @@ namespace mysli\dev\test\root\script; class test
         // If there's no tests available, just skip...
         if (empty($testfiles))
         {
-            ui::warning("No tests for: `{$package}`.");
+            ui::warning('WARNING', "No tests for: `{$package}`.");
             return false;
         }
 

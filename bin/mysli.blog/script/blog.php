@@ -77,17 +77,14 @@ namespace mysli\blog\root\script; class blog
     protected static function clean()
     {
         $root = fs::cntpath('blog');
-        ui::info('Starting clean process...');
-        ui::nl();
+        ui::title('Cleaning');
 
         if (dir::exists(fs::ds($root, 'cache~')))
         {
             dir::remove(fs::ds($root, 'cache~'))
-                ? ui::success('    OK', 'Remove main cache~')
-                : ui::error('    FAILED', 'Remove main cache~');
+                ? ui::success('OK', 'Remove main cache~', 1)
+                : ui::error('FAILED', 'Remove main cache~', 1);
         }
-
-        ui::nl();
 
         foreach (fs::ls($root) as $year)
         {
@@ -98,21 +95,21 @@ namespace mysli\blog\root\script; class blog
             foreach (fs::ls(fs::ds($root, $year)) as $slug)
             {
                 $postd = fs::ds($root, $year, $slug);
-                ui::info("Post", "{$year}/{$slug}");
+                ui::title("Post {$year}/{$slug}");
 
                 if (dir::exists(fs::ds($postd, 'media')))
                 {
                     $post = new post("blog/{$year}/{$slug}");
                     $post->unpublish_media()
-                        ? ui::success('    OK', 'Un-publish media')
-                        : ui::error('    FAILED', 'Un-publish media');
+                        ? ui::success('OK', 'Un-publish media', 1)
+                        : ui::error('FAILED', 'Un-publish media', 1);
                 }
 
                 if (dir::exists(fs::ds($postd, 'cache~')))
                 {
                     dir::remove(fs::ds($postd, 'cache~'))
-                        ? ui::success('    OK', 'Remove cache~')
-                        : ui::error('    FAILED', 'Remove cache~');
+                        ? ui::success('OK', 'Remove cache~', 1)
+                        : ui::error('FAILED', 'Remove cache~', 1);
                 }
             }
         }
@@ -169,7 +166,7 @@ namespace mysli\blog\root\script; class blog
 
                 if ($last_quid !== $quid)
                 {
-                    ui::info("{$quid}");
+                    ui::title("{$quid}");
                     $post = new post("blog/{$quid}");
                     $last_quid = $quid;
                 }
@@ -179,7 +176,7 @@ namespace mysli\blog\root\script; class blog
                 $rrpath = array_slice($segments, 2);
                 $rrpath = implode(fs::ds, $rrpath);
 
-                ui::info("  ".ucfirst($action), $rrpath);
+                ui::title(strtoupper($action).' '.$rrpath);
 
                 if ($rdir === 'media')
                 {
@@ -189,16 +186,16 @@ namespace mysli\blog\root\script; class blog
                             && isset($options['from'])))
                     {
                         $post->publish_media(substr($rrpath, 6))
-                            ? ui::success('    PUBLISHED')
-                            : ui::error('    PUBLISH FAILED');
+                            ? ui::success('PUBLISHED', null, 1)
+                            : ui::error('PUBLISH FAILED', null, 1);
                     }
                     elseif (in_array($action, ['removed']) ||
                             (in_array($action, ['renamed', 'moved'])
                                 && isset($options['to'])))
                     {
                         $post->unpublish_media(substr($rrpath, 6))
-                            ? ui::success('    UNPUBLISHED')
-                            : ui::error('    UNPUBLISH FAILED');
+                            ? ui::success('UNPUBLISHED', null, 1)
+                            : ui::error('UNPUBLISH FAILED', null, 1);
                     }
 
                     return;
@@ -211,11 +208,11 @@ namespace mysli\blog\root\script; class blog
                     {
                         $post->switch_language(substr($rrpath, 0, -3));
                         $post->make_cache()
-                            ? ui::success('    CACHE')
-                            : ui::error('    CACHE');
+                            ? ui::success('CACHE', null, 1)
+                            : ui::error('CACHE', null, 1);
                         $post->up_version()
-                            ? ui::success('    VERSION')
-                            : ui::error('    VERSION');
+                            ? ui::success('VERSION', null, 1)
+                            : ui::error('VERSION', null, 1);
 
                         // Changes in post, refresh
                         lib\blog::refresh_list();
@@ -223,7 +220,7 @@ namespace mysli\blog\root\script; class blog
                 }
                 else
                 {
-                    ui::info('    Nothing to do...');
+                    ui::info('Nothing to do...', null, 1);
                 }
             }, true);
     }

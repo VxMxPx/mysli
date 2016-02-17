@@ -3,7 +3,7 @@
 namespace mysli\toolkit\root\script; class interactive
 {
     const __use = '
-        .cli.{ui, input -> cin}
+        .cli.{ui, output, input -> cin}
     ';
 
     /**
@@ -15,17 +15,18 @@ namespace mysli\toolkit\root\script; class interactive
         $multiline = false;
         $buffer = [];
 
-        ui::line('Hi! This is an interative console for the Mysli Project.');
+        ui::title('Mysli Interactive Console');
+        ui::nl();
 
         // See if there's code to be executed...
         $exec = array_search('--exec', $args);
+
         if (isset($args[$exec+1]))
         {
             $execute = $args[$exec+1];
             ui::line('Execute: '.$execute);
             ui::line(eval(
-                $namespace."\n".
-                'echo dump_r(' . trim($execute, ';') . ');'));
+                $namespace."\n".'echo dump_r(' . trim($execute, ';') . ');'));
         }
 
         // Now wait for the user input
@@ -33,7 +34,7 @@ namespace mysli\toolkit\root\script; class interactive
             function ($stdin) use ($namespace, &$multiline, &$buffer)
             {
                 if ($multiline)
-                    ui::line('... ', false);
+                    output::line('... ', false);
 
                 if (in_array(strtolower($stdin), ['exit', 'q']))
                     return true;
@@ -49,7 +50,7 @@ namespace mysli\toolkit\root\script; class interactive
                     $multiline = true;
                     $buffer = [$namespace];
                     ui::info('Multiline input set.');
-                    ui::line('... ', false);
+                    output::line('... ', false);
                     return;
                 }
 
@@ -64,8 +65,8 @@ namespace mysli\toolkit\root\script; class interactive
                     else
                     {
                         ui::warning(
-                            "Cannot END, you must START multiline input first."
-                        );
+                            'WARNING',
+                            "Cannot END, you must START multiline input first.");
                         return;
                     }
                 }
@@ -96,9 +97,8 @@ namespace mysli\toolkit\root\script; class interactive
      */
     private static function help()
     {
-        ui::t(<<<HELP
-<title>Mysli CLI Interactive</title>
-
+        ui::title('Mysli CLI Interactive');
+        ui::line(<<<HELP
 Normal PHP commands are accepted, example: `\$var = 'value'`.
 You don't need to enter `echo` and you can omit semicolons.
 If you want command not to be echoed automatically, prefix it with dot `.`.

@@ -66,7 +66,7 @@ namespace mysli\toolkit\root\script; class config
         {
             if (!lib\config::select($package->get_value()))
             {
-                ui::error('!!', "Package not found: `{$package}`.");
+                ui::error('ERROR', "Package not found: `{$package}`.");
                 return false;
             }
         }
@@ -104,7 +104,7 @@ namespace mysli\toolkit\root\script; class config
     {
         if ($package)
         {
-            ui::line("Available options for `{$package}`:\n");
+            ui::title("Available options for `{$package}`");
             $options = lib\config::select($package)->as_array();
 
             if (empty($options))
@@ -118,18 +118,16 @@ namespace mysli\toolkit\root\script; class config
         }
         else
         {
-            ui::line("Available packages:\n");
+            ui::title("Available packages");
 
             $list = lib\config::get_list();
 
             if (!empty($list))
             {
                 ui::ul($list);
-                ui::nl();
                 ui::line(
-                    'Use `mysli config vendor.package` to see all options '.
-                    'for particular package.'
-                );
+                    "\nUse `mysli config vendor.package` to see all options ".
+                    "for particular package.");
             }
             else
             {
@@ -152,7 +150,7 @@ namespace mysli\toolkit\root\script; class config
 
         if (!isset($options[$key]))
         {
-            ui::warning('!!', "No such key: `{$key}`.");
+            ui::warning('WARNING', "No such key: `{$key}`.");
             return false;
         }
         else
@@ -176,7 +174,7 @@ namespace mysli\toolkit\root\script; class config
 
         if (!$type)
         {
-            ui::warning("Key not found: `{$key}`.");
+            ui::warning("WARNING", "Key not found: `{$key}`.");
             return false;
         }
 
@@ -186,7 +184,9 @@ namespace mysli\toolkit\root\script; class config
             switch ($type) {
                 case 'boolean':
                     if (!in_array(strtolower($value), ['true', 'false']))
-                        ui::warning("Converting non boolean value: `{$value}` to boolean!");
+                        ui::warning(
+                            'WARNING',
+                            "Converting non boolean value: `{$value}` to boolean!");
                     $value = strtolower($value) === 'true';
                     break;
 
@@ -196,19 +196,25 @@ namespace mysli\toolkit\root\script; class config
 
                 case 'integer':
                     if (!is_numeric($value))
-                        ui::warning("Converting non numeric value: `{$value}` to integer!");
+                        ui::warning(
+                            'WARNING',
+                            "Converting non numeric value: `{$value}` to integer!");
                     $value = (integer) $value;
                     break;
 
                 case 'float':
                     if (!is_numeric($value))
-                        ui::warning("Converting non numeric value: `{$value}` to float!");
+                        ui::warning(
+                            'WARNING',
+                            "Converting non numeric value: `{$value}` to float!");
                     $value = (float) $value;
                     break;
 
                 case 'numeric':
                     if (!is_numeric($value))
-                        ui::warning("Converting non numeric value: `{$value}` to number!");
+                        ui::warning(
+                            'WARNING',
+                            "Converting non numeric value: `{$value}` to number!");
                     if (strpos($value, '.') !== false)
                         $value = (float) $value;
                     else
@@ -220,7 +226,9 @@ namespace mysli\toolkit\root\script; class config
                     break;
 
                 default:
-                    ui::error("Invalid type `{$type}` for key `{$key}`.");
+                    ui::error(
+                        'ERROR',
+                        "Invalid type `{$type}` for key `{$key}`.");
                     return false;
             }
         }
@@ -235,7 +243,7 @@ namespace mysli\toolkit\root\script; class config
         }
         else
         {
-            ui::error("!!", "Value couldn't be saved.");
+            ui::error('ERROR', "Value couldn't be saved.");
             return false;
         }
     }

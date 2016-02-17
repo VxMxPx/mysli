@@ -192,13 +192,6 @@ namespace mysli\toolkit; class __init
      */
     static function cli(array $arguments=[])
     {
-        $help =
-        "\n<title>Command Line Utility for Mysli Platform</title>\n\n".
-        "Usage: mysli <command> [options...]\n".
-        "You can always use mysli <command> -h to get help for a specific command.\n".
-        "List of available commands:\n".
-        "\n<ul>{list}</ul>\n";
-
         /*
         Define current mode to be `cli`.
          */
@@ -224,7 +217,13 @@ namespace mysli\toolkit; class __init
          */
         if (!$script || $script === '-h' || $script === '--help')
         {
-            cli\ui::t($help, ['list' => array_column($scripts, 'script')]);
+            cli\ui::title("Command Line Utility for Mysli Platform\n");
+            cli\ui::line("Usage: mysli <command> [options...]\n");
+            cli\ui::line(
+                "You can always use mysli <command> -h ".
+                "to get help for a specific command.");
+            cli\ui::line("List of available commands:");
+            cli\ui::list(array_column($scripts, 'script'));
             toolkit::shutdown();
         }
 
@@ -248,20 +247,16 @@ namespace mysli\toolkit; class __init
         // Check weather script class was found.
         if (!$script_class)
         {
-            cli\ui::nl();
             cli\ui::warning(
-                "Invalid command! Use `-h` to see list available commands."
-            );
-            cli\ui::nl();
+                'WARNING',
+                "Invalid command! Use `-h` to see list available commands.");
             toolkit::shutdown(1);
         }
 
         // Try to autoload class...
         if (!class_exists($script_class))
         {
-            cli\ui::nl();
-            cli\ui::error("Couldn't find class for: `{$script}`.");
-            cli\ui::nl();
+            cli\ui::error('ERROR', "Couldn't find class for: `{$script}`.");
             toolkit::shutdown(2);
         }
 
@@ -269,18 +264,14 @@ namespace mysli\toolkit; class __init
         // All scripts needs __run method as an entry point.
         if (!method_exists($script_class, '__run'))
         {
-            cli\ui::nl();
-            cli\ui::error("Script has no __run method: `{$script}`.");
-            cli\ui::nl();
+            cli\ui::error('ERROR', "Script has no __run method: `{$script}`.");
             toolkit::shutdown(2);
         }
 
         // Try to Run script
         try
         {
-            cli\ui::nl();
             $r = call_user_func([$script_class, '__run'], $arguments);
-            cli\ui::nl();
             // Grab result and shutdown system with it.
             // If result was false, that mean there was a problem,
             // hence exit with `1`
@@ -288,16 +279,17 @@ namespace mysli\toolkit; class __init
         }
         catch (\Exception $e)
         {
-            cli\ui::nl();
             cli\ui::error(
+                'ERROR',
                 "Error when trying to run a script `{$script}`!\n".
                 $e->getMessage()
             );
-            cli\ui::nl();
 
             // Debug mode?
             if (MYSLI_ROOT_DEBUG)
+            {
                 cli\ui::line($e->getTraceAsString());
+            }
 
             toolkit::shutdown(3);
         }

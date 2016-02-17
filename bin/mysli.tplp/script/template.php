@@ -67,7 +67,7 @@ namespace mysli\tplp\root\script; class template
 
         if (!$package && !$interactive)
         {
-            ui::warning('Package name is required.');
+            ui::warning('WARNING', 'Package name is required.');
             return false;
         }
         else if ($interactive)
@@ -99,9 +99,10 @@ namespace mysli\tplp\root\script; class template
      */
     protected static function interactive()
     {
-        ui::line('Hi! This is an interative console for the Mysli Template.');
+        ui::title('Interactive console for Mysli Template');
         ui::line('Double empty line will process and print the result.');
         ui::line('Type `!exit` to quit.');
+        ui::nl();
 
         $buffer = [];
         $parser = new parser();
@@ -120,11 +121,11 @@ namespace mysli\tplp\root\script; class template
 
                     try
                     {
-                        ui::line( $parser->process($template) );
+                        ui::line($parser->process($template));
                     }
                     catch (\Exception $e)
                     {
-                        ui::error( $e->getMessage() );
+                        ui::error('ERROR', $e->getMessage());
                     }
 
                     return;
@@ -150,7 +151,7 @@ namespace mysli\tplp\root\script; class template
         // Check if package // Dir exists...
         if (!$path || !dir::exists($path))
         {
-            ui::error("Invalid path: `{$path}`.");
+            ui::error('ERROR', "Invalid path: `{$path}`.");
             return false;
         }
 
@@ -169,8 +170,8 @@ namespace mysli\tplp\root\script; class template
         $observer->set_interval(2);
 
         return $observer->observe(
-        function ($changes) use ($parser, $extender, $static, $path, $watch) {
-
+        function ($changes) use ($parser, $extender, $static, $path, $watch)
+        {
             // Flush tmp folder
             file::remove(file::find(fs::tmppath('tplp'), '*.*'));
 
@@ -186,7 +187,8 @@ namespace mysli\tplp\root\script; class template
                 $dspath = "{$path}/dist~/{$rpfile}";
 
                 // Print action and file...
-                ui::info(ucfirst($change['action']), $rfile);
+                ui::info(strtoupper($change['action']), $rfile);
+                ui::nl();
 
                 // If static, then reload everything on any change
                 if (substr($bfile, 0, 1) === '_' && $static && $watch)
@@ -201,22 +203,22 @@ namespace mysli\tplp\root\script; class template
                     {
                         if (file::remove($dspath))
                         {
-                            ui::success('Removed', $rpfile);
+                            ui::success('REMOVED', $rpfile, 1);
                         }
                         else
                         {
-                            ui::success('Failed removing', $rpfile);
+                            ui::error('FAILED REMOVING', $rpfile, 1);
                         }
                     }
                     if (file::exists($dspath.'.composed'))
                     {
                         if (file::remove($dspath.'.composed'))
                         {
-                            ui::success('Removed', $rpfile);
+                            ui::success('REMOVED', $rpfile, 1);
                         }
                         else
                         {
-                            ui::success('Failed removing', $rpfile);
+                            ui::error('FAILED REMOVING', $rpfile, 1);
                         }
                     }
 
@@ -240,16 +242,17 @@ namespace mysli\tplp\root\script; class template
 
                     if (file::write($dspath, $template))
                     {
-                        ui::success('Saved', $rpfile);
+                        ui::success('SAVED', $rpfile, 1);
                     }
                     else
                     {
-                        ui::error('Failed saving', $rpfile);
+                        ui::error('FAILED SAVING', $rpfile, 1);
                     }
                 }
                 catch (\Exception $e)
                 {
-                    ui::error($e->getMessage());
+                    ui::error('ERROR', $e->getMessage(), 1);
+
                     if (!$watch)
                     {
                         return false;

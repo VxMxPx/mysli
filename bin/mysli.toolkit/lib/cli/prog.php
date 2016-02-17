@@ -483,21 +483,29 @@ namespace mysli\toolkit\cli; class prog
          */
         if ($style)
         {
-            $title = $title ? ui::title($title, true) : null;
+            ui::buffer();
+            ui::title($title);
+            $title = ui::flush(true);
 
             if ($dargs)
-                $dargs_title = ui::title($dargs_title, true);
+            {
+                ui::buffer();
+                ui::title($dargs_title);
+                $dargs_title = ui::flush(true);
+            }
 
-            $oargs_title = ui::title($oargs_title, true);
+            ui::buffer();
+            ui::title($oargs_title);
+            $oargs_title = ui::flush(true);
         }
 
         $output =
-            ($title ? "\n{$title}\n" : '').
+            ($title ? "{$title}\n" : '').
             ($description ? "{$description}\n" : '').
             "\nUsage: ./dot {$command} {$sargs}\n".
             ($pargs ? "\n{$pargs}\n" : '').
-            ($dargs ? "\n{$dargs_title}\n{$dargs}\n" : '').
-            "\n{$oargs_title}\n{$oargs}\n".
+            ($dargs ? "{$dargs_title}\n{$dargs}\n" : '').
+            "{$oargs_title}\n{$oargs}\n".
             ($description_long
                 ? "\n".wordwrap($description_long, $terminal_width)."\n"
                 : ''
@@ -913,7 +921,6 @@ namespace mysli\toolkit\cli; class prog
 
         if (!$prog->validate())
         {
-            ui::nl();
             ui::warning('WARNING', $prog->messages());
             return false;
         }

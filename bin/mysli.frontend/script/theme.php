@@ -55,7 +55,9 @@ namespace mysli\frontend\root\script; class theme
                 return static::meta($value);
 
             default:
-                ui::warning('Invalid command, use --help to see available commands.');
+                ui::warning(
+                    'WARNING',
+                    'Invalid command, use --help to see available commands.');
                 return false;
         }
     }
@@ -77,12 +79,12 @@ namespace mysli\frontend\root\script; class theme
         {
             if (!lib\theme::set_active($theme))
             {
-                ui::error("FAILED");
+                ui::error("FAILED", "Couldn't activate theme: `{$theme}`");
                 return false;
             }
             else
             {
-                ui::success('OK', "Theme activated.");
+                ui::success('OK', "Theme was activated: `{$theme}`");
                 return true;
             }
         }
@@ -104,10 +106,8 @@ namespace mysli\frontend\root\script; class theme
     {
         $meta = pkg::get_meta($theme);
 
-        ui::t(
-            "<title>Meta for {$theme}</title>\n\n<al>{meta}</al>",
-            ['meta' => $meta]
-        );
+        ui::title("Meta for {$theme}");
+        ui::list($meta, ui::list_aligned);
 
         return true;
     }
@@ -126,18 +126,13 @@ namespace mysli\frontend\root\script; class theme
         foreach ($all as $id => $meta)
         {
             if ($active === $id)
-                $list[$id] = ui::strong('[*] '.$meta['frontend']['name'], true);
+                $list[$id] = ui::strong('[*] '.$meta['frontend']['name']);
             else
                 $list[$id] = $meta['frontend']['name'];
         }
 
-        ui::t(
-            "<title>List of themes.</title>\n\n".
-            "<al>{list}</al>",
-            [
-                'list' => $list
-            ]
-        );
+        ui::title('List of themes');
+        ui::list($list, ui::list_aligned);
 
         return true;
     }

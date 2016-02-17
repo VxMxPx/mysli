@@ -66,8 +66,8 @@ fin;
     {
         if (pkg::exists_as($package) !== pkg::source)
         {
-            ui::error("ERROR", "Package is not valid: `{$package}`.");
-            ui::line("Make sure package exists in source format.");
+            ui::error('ERROR', "Package is not valid: `{$package}`.");
+            ui::line('Make sure package exists in source format.');
             return false;
         }
 
@@ -77,7 +77,7 @@ fin;
         // Additional validation...
         if (!file::exists("{$pkg_root}/mysli.pkg.ym"))
         {
-            ui::error("ERROR", "Not found: `{$pkg_root}/mysli.pkg.ym`.");
+            ui::error('ERROR', "Not found: `{$pkg_root}/mysli.pkg.ym`.");
             return false;
         }
 
@@ -121,11 +121,11 @@ fin;
         {
             if (dir::create($phar_root))
             {
-                ui::success('CREATED', "Directory `{$phar_root}`.");
+                ui::success('CREATED', "Directory `{$phar_root}`.", 1);
             }
             else
             {
-                ui::error("FAILED", "Cannot create directory `{$phar_root}`.");
+                ui::error("FAILED", "Cannot create directory `{$phar_root}`.", 1);
                 return false;
             }
         }
@@ -133,19 +133,19 @@ fin;
         // If File exists, remove it
         if (file::exists($phar_afile))
         {
-            ui::warning("File will be rewritten: `{$phar_afile}`");
+            ui::warning("File will be rewritten: `{$phar_afile}`", 1);
             file::remove($phar_afile);
         }
 
         // Check for stub
         if (file::exists("{$pkg_root}/__init.php"))
         {
-            ui::success("FOUND", "Stub file.");
+            ui::success("FOUND", "Stub file.", 1);
             $phar_stub = file::read("{$pkg_root}/__init.php");
         }
         else
         {
-            ui::info("NOT FOUND", "Stub file.");
+            ui::info("NOT FOUND", "Stub file.", 1);
             $phar_stub = false;
         }
 
@@ -158,20 +158,20 @@ fin;
         }
         catch (\Exception $e)
         {
-            ui::error("ERROR", $e->getMessage());
+            ui::error("ERROR", $e->getMessage(), 1);
             return false;
         }
 
         if (!$phar_instance)
         {
-            ui::error("ERROR", "Couldn't create PHAR.");
+            ui::error("ERROR", "Couldn't create PHAR.", 1);
             return false;
         }
 
         /*
         Start Adding Files
          */
-        ui::line("Adding files:");
+        ui::line("ADDING FILES:");
         $ignore = static::generate_ignore_list($pkg_meta);
 
         // Local ignore files list
@@ -190,7 +190,7 @@ fin;
         {
             if (substr(file::name($relative_path, true), 0, 1) === '.')
             {
-                ui::info("SKIP", "Hidden file {$relative_path}");
+                ui::info("SKIP", "Hidden file {$relative_path}", 1);
                 return fs::map_continue;
             }
 
@@ -202,11 +202,11 @@ fin;
                     {
                         $relative_path = str_replace('/dist~/', '/', "/{$relative_path}/");
                         $relative_path = trim($relative_path, '/');
-                        ui::info("UPDATED", "Relative path from dist~ {$relative_path}");
+                        ui::info("UPDATED", "Relative path from dist~ {$relative_path}", 1);
                     }
                     else
                     {
-                        ui::info("SKIP", "Directory is on local ignore list {$relative_path}");
+                        ui::info("SKIP", "Directory is on local ignore list {$relative_path}", 1);
                         return fs::map_continue;
                     }
                 }
@@ -215,7 +215,7 @@ fin;
             // This directory contains dist~ directory
             if (dir::exists(fs::ds($absolute_path, 'dist~')))
             {
-                ui::info("SKIP", "Directory added to local ignore list {$relative_path}");
+                ui::info("SKIP", "Directory added to local ignore list {$relative_path}", 1);
                 // Skip the whole thing...
                 $local_ignore[] = $absolute_path.'/';
                 return;
@@ -225,20 +225,20 @@ fin;
             {
                 if (in_array($relative_path.'/', $ignore))
                 {
-                    ui::info("SKIP", "Directory is on ignore list {$relative_path}");
+                    ui::info("SKIP", "Directory is on ignore list {$relative_path}", 1);
                     return fs::map_continue;
                 }
                 else
                 {
                     $phar_instance->addEmptyDir($relative_path);
-                    ui::success("ADDED", "Directory {$relative_path}");
+                    ui::success("ADDED", "Directory {$relative_path}", 1);
                 }
             }
             else
             {
                 if (in_array($relative_path, $ignore))
                 {
-                    ui::info("SKIP", "File is on ignore list {$relative_path}");
+                    ui::info("SKIP", "File is on ignore list {$relative_path}", 1);
                     return;
                 }
                 else
@@ -248,12 +248,12 @@ fin;
                         $phar_instance->addFromString(
                             $relative_path, php_strip_whitespace($absolute_path)
                         );
-                        ui::success("ADDED", "Compressed file {$relative_path}");
+                        ui::success("ADDED", "Compressed file {$relative_path}", 1);
                     }
                     else
                     {
                         $phar_instance->addFile($absolute_path, $relative_path);
-                        ui::success("ADDED", "File {$relative_path}");
+                        ui::success("ADDED", "File {$relative_path}", 1);
                     }
                 }
             }
@@ -269,12 +269,12 @@ fin;
 
         if (!$meta_write)
         {
-            ui::error("ERROR", 'Failed to write meta.');
+            ui::error("ERROR", 'Failed to write meta.', 1);
             return false;
         }
         else
         {
-            ui::success("OK", 'Meta file was written.');
+            ui::success("OK", 'Meta file was written.', 1);
         }
 
         // Trigger done event

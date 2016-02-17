@@ -60,7 +60,9 @@ namespace mysli\toolkit\root\script; class pkg
                 return static::meta($value);
 
             default:
-                ui::warning('Invalid command, use --help to see available commands.');
+                ui::warning(
+                    'WARNING',
+                    'Invalid command, use --help to see available commands.');
                 return false;
         }
     }
@@ -78,8 +80,32 @@ namespace mysli\toolkit\root\script; class pkg
      */
     private static function enable($package)
     {
+        ui::title("Enable: {$package}");
+
         try
         {
+            $dependencies = lib\pkg::get_dependencies($package, true);
+
+            if (count($dependencies['missing']))
+            {
+                ui::error('ERROR', 'Cannot proceed, packages are missing:');
+                ui::list($dependencies['missing']);
+                return false;
+            }
+            if (count($dependencies['version']))
+            {
+                ui::error('ERROR', 'Cannot proceed, packages are at invalid version:');
+                ui::list($dependencies['version']);
+                return false;
+            }
+            if (count($dependencies['disabled']))
+            {
+                ui::nl();
+                ui::line('Following packages will also be enabled:');
+                ui::list($dependencies['disabled']);
+                ui::nl();
+            }
+
             lib\pkg::enable($package);
         }
         catch (\Exception $e)
@@ -101,8 +127,20 @@ namespace mysli\toolkit\root\script; class pkg
      */
     private static function disable($package)
     {
+        ui::title("Disable: {$package}");
+
         try
         {
+            $dependees = lib\pkg::get_dependees($package, true);
+
+            if (count($dependees))
+            {
+                ui::nl();
+                ui::line("Following packages will also be disabled:");
+                ui::list($dependees);
+                ui::nl();
+            }
+
             lib\pkg::disable($package);
         }
         catch (\Exception $e)
@@ -141,18 +179,12 @@ namespace mysli\toolkit\root\script; class pkg
 
             default:
                 ui::warning(
-                    'WARN', "Invalid type, please use: all|enabled|disabled"
-                );
+                    'WARN', "Invalid type, please use: all|enabled|disabled");
                 return false;
         }
 
-        ui::t(
-            "<title>List of {$type} packages.</title>\n\n".
-            "<ul>{list}</ul>",
-            [
-                'list' => $list
-            ]
-        );
+        ui::title("List of {$type} packages.");
+        ui::list($list);
         return true;
     }
 
@@ -166,10 +198,8 @@ namespace mysli\toolkit\root\script; class pkg
     private static function meta($package)
     {
         $meta = lib\pkg::get_meta($package);
-        ui::t(
-            "<title>Meta for {$package}</title>\n\n<al>{meta}</al>",
-            ['meta' => $meta]
-        );
+        ui::title("Meta for {$package}");
+        ui::list($meta, ui::list_aligned);
         return true;
     }
 }
