@@ -7,27 +7,18 @@
         <h2>{post['title']}</h2>
     </header>
 
-    ::if post['__pages']|count > 1
-    <section class="page-map">
-        <h2>Pages</h2>
-        <ol>
-        ::for pid,page in post['__pages']
-            {; pageuri = post['quid'].'/'.pid }
-            <li><a href="{pageuri|blog.url:'ppost'}">{page}</a></li>
-        ::/for
-        </ol>
+    ::if not page['is_only']
+    <section class="sitemap map">
+        {|blog.map:post['pages'],post['table_of_contents']}
     </section>
-    ::/if
-
-    ::if post['__toc']|count > 1
-    <section class="toc">
-        <h2>Table of Contents</h2>
-        {post['__toc']|blog.toc}
+    ::elif page['table_of_contents']|count
+    <section class="sitemap toc">
+        {|blog.toc:page['table_of_contents']}
     </section>
     ::/if
 
     <section class="body">
-        {post['body']}
+        {page['body']}
     </section>
 
     <footer>
@@ -37,10 +28,10 @@
         ::/for
         </section>
 
-        ::if post['__footnotes']|isset
+        ::if page['references']|isset
         <section class="references">
             <ol>
-            ::for note in post['__footnotes']
+            ::for note in page['references']
                 <li id="{note['id']}">
                     {note['body']}
                     ::for noteref in note['back']
