@@ -8,11 +8,23 @@ namespace mysli\page; class frontend
     mysli.frontend.{ frontend -> fe }
 fin;
 
+    /**
+     * Render index page.
+     * --
+     * @return boolean
+     */
     static function index()
     {
         return static::page('index');
     }
 
+    /**
+     * Render any page.
+     * --
+     * @param string $path
+     * --
+     * @return boolean
+     */
     static function page($path)
     {
         if (!page::has($path))
@@ -29,6 +41,7 @@ fin;
 
         $c = config::select('mysli.page');
 
+        // Cache handling
         if ($c->get('cache.reload-on-access') && !$page->is_cache_fresh())
         {
             $page->make_cache();
@@ -45,14 +58,20 @@ fin;
             }
         }
 
+        // Must be published
         if (!$page->get('published', true))
         {
             return false;
         }
 
+        // Render finally
         fe::render(['page', ['mysli.page', 'page']], [
-            'front' => [ 'title' => $page->get('title') ],
-            'page'  => $page->as_array()
+            'front' => [
+                'subtitle' => $page->get('title'),
+                'type'     => 'page',
+                'quid'     => 'page-'.str_replace(['/', '.'], '-', $page->get_quid())
+            ],
+            'page' => $page->as_array()
         ]);
 
         return true;
