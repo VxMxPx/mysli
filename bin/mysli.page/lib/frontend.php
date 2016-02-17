@@ -71,7 +71,8 @@ fin;
                 'type'     => 'page',
                 'quid'     => 'page-'.str_replace(['/', '.'], '-', $page->get_quid())
             ],
-            'page' => $page->as_array()
+            'article' => $page->as_array(),
+            'post'    => $page->as_array(null),
         ]);
 
         return true;

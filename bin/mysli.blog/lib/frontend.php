@@ -151,8 +151,8 @@ fin;
                 'is_tag'     => false,
                 'tag'        => null,
             ],
-            'page' => $post->as_array($page),
-            'post' => $post->as_array(null),
+            'page'    => $post->as_array($page),
+            'article' => $post->as_array(null),
         ]);
 
         return true;

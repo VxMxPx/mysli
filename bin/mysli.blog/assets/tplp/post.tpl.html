@@ -4,12 +4,12 @@
 <article class="post">
 
     <header>
-        <h2>{post['title']}</h2>
+        <h2>{article['title']}</h2>
     </header>
 
     ::if not page['is_only']
     <section class="sitemap map">
-        {|blog.map:post['pages'],post['table_of_contents']}
+        {|blog.map:article['pages'],article['table_of_contents']}
     </section>
     ::elif page['table_of_contents']|count
     <section class="sitemap toc">
@@ -23,7 +23,7 @@
 
     <footer>
         <section class="tags">
-        ::for tag in post['tags']
+        ::for tag in article['tags']
             <a href="{tag|blog.url:'tag'}">#{tag}</a>
         ::/for
         </section>
