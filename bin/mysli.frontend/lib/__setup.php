@@ -35,11 +35,11 @@ fin;
             'theme.active'     => [ 'string', 'mysli.frontend' ],
 
             // Default values to be used in theme
-            'front.title'       => [ 'string', null ],
+            'front.title'           => [ 'string', 'Mysli Page' ],
             // How to display title when subtitle is available.
-            'front.subtitle'    => [ 'string', '{subtitle} - {title}' ],
-            'front.description' => [ 'string', null ],
-            'front.keywords'    => [ 'string', null ],
+            'front.subtitle_format' => [ 'string', '{subtitle} - {title}' ],
+            'front.description'     => [ 'string', null ],
+            'front.keywords'        => [ 'string', null ],
 
             // Additional headers and foooters
             'front.headers'     => [ 'array', [] ],
@@ -76,10 +76,6 @@ fin;
 
         // Remove published assets
         assets::unpublish('mysli.frontend');
-
-
-        // Drop Config
-        config::select('mysli.frontend')->destroy();
 
         // Done
         return true;
