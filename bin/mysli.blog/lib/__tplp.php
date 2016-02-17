@@ -7,26 +7,69 @@ namespace mysli\blog; class __tplp
     mysli.toolkit.{ config, route }
 fin;
 
+
+    /**
+     * Generate post-map (pages+table_of_contents)!
+     * --
+     * @param array  $pages
+     * @param array  $toc
+     * @param string $slug Post's slug
+     * @param string $type
+     * --
+     * @return array
+     */
+    static function map(array $pages, array $toc, $type='ul')
+    {
+        if (!count($pages))
+            return;
+
+        $map = ["<$type>"];
+
+        foreach ($pages as $pid => $page)
+        {
+            $url = static::url($page['fquid'], 'ppost');
+
+            $map[] = "<li>";
+            $map[] = "<a href=\"{$url}\">{$page['title']}</a></li>";
+            if (isset($toc[$page['quid']]))
+            {
+                $tocs = $toc[$page['quid']];
+                array_shift($tocs); // Drop first title...
+                $map[] = static::toc($tocs, $url, $type);
+            }
+            $map[] = '</li>';
+        }
+
+        $map[] = "</{$type}>";
+
+        return implode("\n", $map);
+    }
+
     /**
      * Output table of contents.
      * --
-     * @param array $toc
+     * @param array  $toc
+     * @param string $slug Post + Page slug for which TOC is being generated
+     * @param string $type
      * --
      * @return string
      */
-    static function toc(array $toc, $type='ul')
+    static function toc(array $toc, $url=null, $type='ul')
     {
+        if (!count($toc))
+            return;
+
         $tocs = [];
         $tocs[] = "<{$type}>";
 
         foreach ($toc as $tid => $item)
         {
             $tocs[] = "<li>";
-            $tocs[] = "<a href=\"#{$item['fid']}\">{$item['title']}</a></li>";
+            $tocs[] = "<a href=\"{$url}#{$item['fid']}\">{$item['title']}</a></li>";
 
             if (count($item['items']))
             {
-                $tocs[] = static::toc($item['items'], $type);
+                $tocs[] = static::toc($item['items'], $url, $type);
             }
 
             $tocs[] = "</li>";
