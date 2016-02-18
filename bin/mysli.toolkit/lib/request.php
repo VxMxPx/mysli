@@ -240,7 +240,15 @@ namespace mysli\toolkit; class request
          if (isset($_SERVER['REQUEST_URI']))
          {
              $path = explode('?', $_SERVER['REQUEST_URI'])[0];
+             $path = substr($path, strlen(static::server('script_name')));
              return $path;
+         }
+
+         if (isset($_SERVER['PHP_SELF']))
+         {
+            $path = $_SERVER['PHP_SELF'];
+            $path = substr($path, strlen(static::server('script_name')));
+            return $path;
          }
 
         return '/'.implode('/', static::segment());

@@ -12,3 +12,8 @@ return request::path();
 #: Expect String /seg1/seg2
 unset($_SERVER['PATH_INFO']);
 return request::path();
+
+#: Test Path, No PATH_INFO
+#: Expect String /seg1/seg2
+unset($_SERVER['REQUEST_URI']);
+return request::path();
