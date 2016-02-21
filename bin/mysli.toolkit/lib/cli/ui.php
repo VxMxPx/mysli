@@ -168,6 +168,8 @@ fin;
      * @param array   $list
      * @param string  $type
      * @param integer $indent
+     * --
+     * @throws mysli\toolkit\exception\cli 10 Invalid list type.
      */
     static function lst(array $list, $type=self::list_unordered, $indent=0)
     {
@@ -214,9 +216,7 @@ fin;
             break;
 
             default:
-                throw new exception\cli(
-                    "Invalid list type: `{$type}`.",
-                    __CLASS__.'//invalidtype');
+                throw new exception\cli("Invalid list type: `{$type}`.", 10);
         }
     }
 
