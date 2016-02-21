@@ -7,14 +7,21 @@ namespace mysli\toolkit; class autoloader
      * --
      * @var array
      */
-    private static $aliases = [];
+    protected static $aliases = [];
 
     /**
      * List of initialized packages.
      * --
      * @var array
      */
-    private static $initialized = ['mysli.toolkit'];
+    protected static $initialized = ['mysli.toolkit'];
+
+    /**
+     * Override classes.
+     * --
+     * @var array
+     */
+    protected static $overrides = [];
 
     /**
      * Load class, init package, load dependencies.
@@ -28,9 +35,11 @@ namespace mysli\toolkit; class autoloader
     {
         if (isset(static::$aliases[$class]))
         {
-            if (static::init_class(static::$aliases[$class]))
+            $alias = static::get_override(static::$aliases[$class], $class);
+
+            if (static::init_class($alias))
             {
-                class_alias(static::$aliases[$class], $class);
+                static::make_alias($alias, $class);
                 return true;
             }
             else
@@ -53,10 +62,12 @@ namespace mysli\toolkit; class autoloader
 
             if (preg_match($pattern, $class, $match))
             {
-                $required = str_replace('*', $match[1], $required);
-                if (static::init_class($required))
+                $alias = str_replace('*', $match[1], $required);
+                $alias = static::get_override($alias, $class);
+
+                if (static::init_class($alias))
                 {
-                    class_alias($required, $class);
+                    static::make_alias($alias, $class);
                     return true;
                 }
                 else
@@ -67,6 +78,94 @@ namespace mysli\toolkit; class autoloader
         }
 
         return false;
+    }
+
+    /**
+     * Override specific class(es) (for specific target).
+     * --
+     * @param array  $classes
+     *        [ original => override ]
+     *
+     * @param string $target
+     *        Override only when required by this specific class
+     *        Use * (default) to override all classes.
+     * --
+     * @throws \Exception 10 Cannot set override for class, target already set.
+     * --
+     * @return void
+     */
+    static function override(array $classes, $target='*')
+    {
+        $target = str_replace('.', '\\', $target);
+
+        foreach ($classes as $class => $override)
+        {
+            $class = str_replace('.', '\\', $class);
+            $override = str_replace('.', '\\', $override);
+
+            if (isset(static::$overrides[$class]))
+            {
+                if (isset(static::$override[$class][$target])
+                    && static::$override[$class][$target] !== $override)
+                {
+                    throw new \Exception(
+                        "Cannot set override for `{$class}`, target: `{$target}`, ".
+                        "override: `{$override}`, already set ".
+                        "to `".static::$override[$class][$target]."`", 10);
+                }
+
+                static::$overrides[$class][$target] = $override;
+            }
+            else
+            {
+                static::$overrides[$class] = [
+                    $target => $override
+                ];
+            }
+        }
+    }
+
+    /**
+     * Get override for particular class.
+     * If not found return $class
+     * --
+     * @param string $class
+     * @param string $target
+     * --
+     * @return string
+     */
+    static function get_override($class, $target)
+    {
+        // Nothing to do here...
+        if (!isset(static::$overrides[$class]))
+        {
+            return $class;
+        }
+
+        $overrides = static::$overrides[$class];
+
+        // Is set full target, e.g. vendor\package\path\class
+        if (isset($overrides[$target]))
+        {
+            return $overrides[$target];
+        }
+
+        // Is set package's replacement
+        $target = \pkg::by_namespace($target);
+        $target = str_replace('.', '\\', $target);
+
+        if (isset($overrides[$target]))
+        {
+            return $overrides[$target];
+        }
+
+        if (isset($overrides['*']))
+        {
+            return $overrides['*'];
+        }
+
+        // Not found, return input ...
+        return $class;
     }
 
     /**
@@ -157,7 +256,7 @@ namespace mysli\toolkit; class autoloader
                 }
 
                 $in_block = true;
-                $now_line = $line;
+                $now_line = trim($line);
 
                 continue;
             }
@@ -184,7 +283,14 @@ namespace mysli\toolkit; class autoloader
             // Are we in block right now?
             if ($in_block)
             {
-                $now_line .= ",".$line;
+                if (substr($now_line, -1) !== '{')
+                {
+                    $now_line .= ",".$line;
+                }
+                else
+                {
+                    $now_line .= ' '.$line;
+                }
                 continue;
             }
 
@@ -239,7 +345,7 @@ namespace mysli\toolkit; class autoloader
      * --
      * @return array  [ from => as, from => as, from => as ]
      */
-    private static function resolve_use_line($line, $namespace, $to=null)
+    protected static function resolve_use_line($line, $namespace, $to=null)
     {
         /*
         Do we have { } ?
@@ -308,7 +414,7 @@ namespace mysli\toolkit; class autoloader
      * @throws \Exception
      *         10 Alias is already set, cannot rewrite it.
      */
-    private static function register_alias($from, $to)
+    protected static function register_alias($from, $to)
     {
         if ($from === $to)
             return;
@@ -332,6 +438,19 @@ namespace mysli\toolkit; class autoloader
     }
 
     /**
+     * Actually alias the class in the system.
+     * --
+     * @param string $class
+     * @param string $alias
+     * --
+     * @return boolean
+     */
+    protected static function make_alias($class, $alias)
+    {
+        return class_alias($class, $alias);
+    }
+
+    /**
      * Load particular class file, if file exists.
      * Register __use, if set.
      * Call __init, for package, if available and was not called before.
@@ -344,7 +463,7 @@ namespace mysli\toolkit; class autoloader
      * --
      * @return boolean
      */
-    private static function init_class($class)
+    protected static function init_class($class)
     {
         /*
         This class already exists, nothing to do here...
@@ -453,7 +572,7 @@ namespace mysli\toolkit; class autoloader
         if ($alias)
         {
             static::register_alias($class, $alias);
-            class_alias($class, $alias);
+            static::make_alias($class, $alias);
         }
 
         /*
@@ -468,7 +587,7 @@ namespace mysli\toolkit; class autoloader
      * @param  string $package
      * @param  string $path
      */
-    private static function init($package, $path)
+    protected static function init($package, $path)
     {
         /*
         If already initialized, then return.
