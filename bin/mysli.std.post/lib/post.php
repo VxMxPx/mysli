@@ -157,18 +157,19 @@ fin;
 
         // Set required page
         $page = $page === '_default' ? $this->get_first_page_id() : $page;
-        if (!isset($this->meta['pages'][$page]))
-        {
-            return [];
-        }
+        $meta = $this->meta;
 
-        $meta = $this->meta['pages'][$page];
-
-        foreach (['table_of_contents', 'references'] as $key)
+        if (isset($this->meta['pages'][$page]))
         {
-            $meta[$key] = (isset($this->meta[$key]) && isset($this->meta[$key][$page]))
-                ? $this->meta[$key][$page]
-                : [];
+            $meta['page'] = $this->meta['pages'][$page];
+
+            foreach (['table_of_contents', 'references'] as $key)
+            {
+                $meta['page'][$key] = (isset($this->meta[$key])
+                    && isset($this->meta[$key][$page]))
+                        ? $this->meta[$key][$page]
+                        : [];
+            }
         }
 
         return $meta;
@@ -625,18 +626,9 @@ fin;
      */
     function as_array($page='_default')
     {
-        if ($page)
-        {
-            $meta = $this->meta($page);
-            $meta['body'] = $this->html($page);
-        }
-        else
-        {
-            $meta = $this->meta(null);
-            $meta['language'] = $this->language;
-            $meta['body'] = $this->html(null);
-        }
-
+        $meta = $this->meta($page);
+        $meta['language'] = $this->language;
+        $meta['body'] = $this->html($page);
         return $meta;
     }
 
@@ -692,25 +684,21 @@ fin;
             $headers = $parser->get_processor('mysli.markdown.module.header');
             $toc = $headers->as_array();
 
-            // Page ID!
-            if (count($page_sources) === 1)
+            if (count($toc))
             {
-                $pid = '_default';
-                $ptitle = 'Default';
+                $title = reset($toc);
+                $pid = $title['fid'];
+                $ptitle = $title['title'];
             }
             else
             {
-                if (count($toc))
-                {
-                    $title = reset($toc);
-                    $pid = $title['fid'];
-                    $ptitle = $title['title'];
-                }
-                else
-                {
-                    $pid = "page-{$k}";
-                    $ptitle = "Page: {$k}";
-                }
+                $pid = "page-{$k}";
+                $ptitle = "Page: {$k}";
+            }
+
+            if (count($page_sources) === 1)
+            {
+                $pid = '_default';
             }
 
             // Footnotes
@@ -733,15 +721,15 @@ fin;
 
             // Pages
             $meta['pages'][$pid] = [
-                'title'    => $ptitle,
-                'quid'     => $pid,
-                'fquid'    => $meta['quid'].'/'.$pid,
-                'index'    => $k+1,
-                'next'     => null,
-                'previous' => $previous ? [ $previous, $meta['pages'][$previous]['title'] ] : null,
-                'is_first' => $k === 0,
-                'is_last'  => $k === count($page_sources)-1,
-                'is_only'  => count($page_sources) === 1,
+                'title'      => $ptitle,
+                'quid'       => $pid,
+                'fquid'      => $meta['quid'].'/'.$pid,
+                'index'      => $k+1,
+                'next'       => null,
+                'previous'   => $previous ? [ $previous, $meta['pages'][$previous]['title'] ] : null,
+                'is_first'   => $k === 0,
+                'is_last'    => $k === count($page_sources)-1,
+                'is_single'  => count($page_sources) === 1,
             ];
 
             $pages[$pid] = $html;
