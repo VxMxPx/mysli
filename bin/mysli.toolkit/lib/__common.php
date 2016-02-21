@@ -49,6 +49,11 @@ function dump_e()
  */
 function dump_s()
 {
+    if (!defined('STDOUT'))
+    {
+        trigger_error(
+            "Cannot use `dump_s` when not running in CLI!", E_USER_ERROR);
+    }
     fwrite(STDOUT, call_user_func_array('dump_r', func_get_args()));
     fwrite(STDOUT, PHP_EOL);
     flush();
