@@ -8,8 +8,9 @@ namespace mysli\dev\test; class diff
      * It will return an array in which each item represent a line:
      * [ boolean $is_diff, integer $level, string $arr1_line, string $arr2_line ]
      * --
-     * @param array $expect
-     * @param array $result
+     * @param array   $arr1
+     * @param array   $arr2
+     * @param integer $level
      * --
      * @return array
      */
@@ -41,7 +42,7 @@ namespace mysli\dev\test; class diff
                     (isset($arr2[$id]) ? $arr2[$id] : null),
                     $level,
                     $printable_id,
-                    !isset($arr2[$id])
+                    !array_key_exists($id, $arr2)
                 );
             }
 
@@ -66,12 +67,17 @@ namespace mysli\dev\test; class diff
     /**
      * Generate a plain representation of an array. This will generate same
      * output as static::generate() does, but without comparison.
-     * Return an array, each item representing a line:
-     * [ integer $level, string $line ]
      * --
-     * @param array  $arr
+     * @param array   $arr
+     * @param integer $level
      * --
      * @return array
+     *         [
+     *             boolean (false) $is_diff,
+     *             integer $level,
+     *             string $arr1_line,
+     *             string (null) $arr2_line
+     *         ]
      */
     static function plain(array $arr, $level=1)
     {
@@ -152,25 +158,14 @@ namespace mysli\dev\test; class diff
     private static function diff_line(
         $line1, $line2, $level, $id=null, $was_miss=false)
     {
-        // Get line1 type
-        $l1_type = gettype($line1);
-        if ($l1_type === 'object')
-            $l1_type = get_class($line1);
-
-
         // Miss? Quit...
         if ($was_miss)
         {
             $line1 = static::stringify($line1);
-            $line1 = "[{$l1_type}] {$line1}";
+            // $line1 = "[{$l1_type}] {$line1}";
             $line1 = $id !== null ? "{$id}: {$line1}" : $line1;
             return [ true, $level, $line1, null ];
         }
-
-        // Get line2 type
-        $l2_type = gettype($line2);
-        if ($l2_type === 'object')
-            $l2_type = get_class($line2);
 
         // They're the same...
         if ($line1 === $line2)
@@ -184,13 +179,6 @@ namespace mysli\dev\test; class diff
 
         $line1 = static::stringify($line1);
         $line2 = static::stringify($line2);
-
-        // Type diff?
-        if ($l1_type !== $l2_type)
-        {
-            $line1 = "[{$l1_type}] {$line1}";
-            $line2 = "[{$l2_type}] {$line2}";
-        }
 
         // Append id if there...
         $line1 = $id !== null ? "{$id}: {$line1}" : $line1;
@@ -214,11 +202,15 @@ namespace mysli\dev\test; class diff
         }
         elseif (is_object($value))
         {
-            return '[object]';
+            return '[object:'.get_class($value).']';
         }
         elseif (is_resource($value))
         {
             return '[resource]';
+        }
+        elseif (is_null($value))
+        {
+            return '[null]';
         }
         elseif (is_string($value))
         {
@@ -232,7 +224,7 @@ namespace mysli\dev\test; class diff
         }
         elseif (is_bool($value))
         {
-            return $value ? 'True' : 'False';
+            return $value ? '[true]' : '[false]';
         }
         else
         {
