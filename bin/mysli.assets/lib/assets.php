@@ -2,11 +2,11 @@
 
 namespace mysli\assets; class assets
 {
-    const __use = '
+    const __use = <<<fin
         .{ map, exception.assets }
         mysli.toolkit.{ request, pkg, ym, type.arr -> arr }
         mysli.toolkit.fs.{ fs, file, dir }
-    ';
+fin;
 
     /**
      * Cached maps.
@@ -174,8 +174,7 @@ namespace mysli\assets; class assets
             if (!isset($opt['merge']))   { $opt['merge']   = false; }
 
             // No files to process
-            if (!isset($opt['files'])) { continue; }
-
+            if (!isset($opt['files'])) { $opt['files'] = [ '*.*' ]; }
             if (is_string($opt['files'])) { $opt['files'] = [ $opt['files'] ]; }
 
             // Process & publish explicity turned off, ignore directory
@@ -232,9 +231,9 @@ namespace mysli\assets; class assets
                     }
 
                     $opt['resolved'][ fs::ds($dir, $sfile) ] = [
-                        'id'         => $dir,
-                        'module'     => $modules[$module],
-                        'flags'      => $flags,
+                        'id'     => $dir,
+                        'module' => $modules[$module],
+                        'flags'  => $flags,
                         // File in source directory
                         'compressed' => fs::ds($dir, $cfile),
                         'source'     => fs::ds($dir, $sfile),
@@ -334,9 +333,9 @@ namespace mysli\assets; class assets
                 continue;
             }
 
-            if (!is_array($opt['files']))
+            if (!isset($opt['files']))
             {
-                continue;
+                $opt['files'] = [ '*.*' ];
             }
 
             if (!is_array($opt['files']))
@@ -450,7 +449,7 @@ namespace mysli\assets; class assets
 
         if (!isset($map['includes'][$id]['files']))
         {
-            return $links;
+            $map['includes'][$id]['files'] = [ '*.*' ];
         }
 
         // Need to be an array
