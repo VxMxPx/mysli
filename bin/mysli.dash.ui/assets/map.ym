@@ -1,6 +1,12 @@
 includes:
-    ui/css/:
-        merge: mrg-ui.css
+    external:
+        merge: external.js
+        files: "*.ts"
+    common/js:
+        merge: common.js
+        files: "*.ts"
+    ui/css:
+        merge: ui.css
         files:
             - variables.styl !reload
             - mixins.styl !reload
@@ -9,15 +15,9 @@ includes:
             - font-awesome.css
             - "*.styl"
             - "*.css"
-    ui/js/:
-        merge: mrg-ui.js
+    ui/js:
+        merge: ui.js
         files: [ "*.ts", "*.js" ]
-    common/js/:
-        merge: mrg-common.js
-        files: "*.ts"
-    external/:
-        merge: mrg-external.js
-        files: "*.ts"
-    fonts/:
-        publish: All
+    fonts:
+        publish: Yes
         process: No

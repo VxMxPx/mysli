@@ -1,4 +1,4 @@
-/// <reference path="_jquery.d.ts" />
+/// <reference path="../../external/_jquery.d.ts" />
 
 module mysli.js.common
 {
