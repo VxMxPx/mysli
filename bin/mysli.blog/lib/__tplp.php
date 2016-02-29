@@ -13,12 +13,13 @@ fin;
      * --
      * @param array  $pages
      * @param array  $toc
-     * @param string $slug Post's slug
+     * @param string $slug    Post's slug
+     * @param string $current Current page's QUID
      * @param string $type
      * --
      * @return array
      */
-    static function map(array $pages, array $toc, $type='ul')
+    static function map(array $pages, array $toc, $current=null, $type='ul')
     {
         if (!count($pages))
             return;
@@ -28,8 +29,9 @@ fin;
         foreach ($pages as $pid => $page)
         {
             $url = static::url($page['fquid'], 'ppost');
+            $class = $current === $page['quid'] ? 'current' : 'not-current';
 
-            $map[] = "<li>";
+            $map[] = "<li class=\"{$class}\">";
             $map[] = "<a href=\"{$url}\">{$page['title']}</a></li>";
             if (isset($toc[$page['quid']]))
             {
