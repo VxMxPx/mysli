@@ -66,7 +66,7 @@ namespace mysli\markdown\module; class std_module
     {
         $sealed = $this->lines->get_attr($at, 'sealed');
         $sealed = is_array($sealed) ? $sealed : [];
-        $id = 'S{/'.(count($sealed)+1).'/}';
+        $id = '/S/'.(count($sealed)+1).'/F/';
         $sealed[$id] = $string;
         $this->lines->set_attr($at, 'sealed', $sealed);
 

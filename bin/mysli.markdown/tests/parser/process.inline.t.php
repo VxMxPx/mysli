@@ -87,3 +87,13 @@ return assert::equals(markdown::process($markdown),
 '<p>This <em>em goes through
     multiple
     various lines</em>.</p>');
+
+# ------------------------------------------------------------------------------
+#: Test Inline, Multiple Lines, In Tag
+$markdown = <<<MARKDOWN
+<del>This is _deleted text_</del>
+<ins>This is _inserted_ text.</ins>
+MARKDOWN;
+return assert::equals(markdown::process($markdown),
+'<p><del>This is <em>deleted text</em></del>
+    <ins>This is <em>inserted</em> text.</ins></p>');
