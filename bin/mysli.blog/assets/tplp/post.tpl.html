@@ -4,34 +4,34 @@
 <article class="post">
 
     <header>
-        <h2>{article['title']}</h2>
+        <h2>{post['title']}</h2>
     </header>
 
-    ::if not page['is_only']
+    ::if not post['page']['is_single']
     <section class="sitemap map">
-        {|blog.map:article['pages'],article['table_of_contents']}
+        {|blog.map:post['pages'],post['table_of_contents']}
     </section>
-    ::elif page['table_of_contents']|count
+    ::elif post['page']['table_of_contents']|count
     <section class="sitemap toc">
-        {|blog.toc:page['table_of_contents']}
+        {|blog.toc:post['page']['table_of_contents']}
     </section>
     ::/if
 
     <section class="body">
-        {page['body']}
+        {post['body']}
     </section>
 
     <footer>
         <section class="tags">
-        ::for tag in article['tags']
+        ::for tag in post['tags']
             <a href="{tag|blog.url:'tag'}">#{tag}</a>
         ::/for
         </section>
 
-        ::if page['references']|isset
+        ::if post['page']['references']|isset
         <section class="references">
             <ol>
-            ::for note in page['references']
+            ::for note in post['page']['references']
                 <li id="{note['id']}">
                     {note['body']}
                     ::for noteref in note['back']
