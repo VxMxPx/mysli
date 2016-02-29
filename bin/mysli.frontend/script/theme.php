@@ -126,13 +126,13 @@ namespace mysli\frontend\root\script; class theme
         foreach ($all as $id => $meta)
         {
             if ($active === $id)
-                $list[$id] = ui::strong('[*] '.$meta['frontend']['name']);
+                $list[$id] = '[*] '.$meta['frontend']['name'];
             else
                 $list[$id] = $meta['frontend']['name'];
         }
 
         ui::title('List of themes');
-        ui::lst($list, ui::list_aligned);
+        ui::lst($list, ui::list_aligned, 1);
 
         return true;
     }
