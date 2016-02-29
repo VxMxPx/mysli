@@ -171,7 +171,7 @@ fin;
         /*
         Start Adding Files
          */
-        ui::line("ADDING FILES:");
+        ui::info("ADDING FILES", null, 1);
         $ignore = static::generate_ignore_list($pkg_meta);
 
         // Local ignore files list
@@ -190,7 +190,7 @@ fin;
         {
             if (substr(file::name($relative_path, true), 0, 1) === '.')
             {
-                ui::info("SKIP", "Hidden file {$relative_path}", 1);
+                ui::info("SKIP", "Hidden file {$relative_path}", 2);
                 return fs::map_continue;
             }
 
@@ -202,11 +202,11 @@ fin;
                     {
                         $relative_path = str_replace('/dist~/', '/', "/{$relative_path}/");
                         $relative_path = trim($relative_path, '/');
-                        ui::info("UPDATED", "Relative path from dist~ {$relative_path}", 1);
+                        ui::info("UPDATED", "Relative path from dist~ {$relative_path}", 2);
                     }
                     else
                     {
-                        ui::info("SKIP", "Directory is on local ignore list {$relative_path}", 1);
+                        ui::info("SKIP", "Directory is on local ignore list {$relative_path}", 2);
                         return fs::map_continue;
                     }
                 }
@@ -215,7 +215,7 @@ fin;
             // This directory contains dist~ directory
             if (dir::exists(fs::ds($absolute_path, 'dist~')))
             {
-                ui::info("SKIP", "Directory added to local ignore list {$relative_path}", 1);
+                ui::info("SKIP", "Directory added to local ignore list {$relative_path}", 2);
                 // Skip the whole thing...
                 $local_ignore[] = $absolute_path.'/';
                 return;
@@ -225,20 +225,20 @@ fin;
             {
                 if (in_array($relative_path.'/', $ignore))
                 {
-                    ui::info("SKIP", "Directory is on ignore list {$relative_path}", 1);
+                    ui::info("SKIP", "Directory is on ignore list {$relative_path}", 2);
                     return fs::map_continue;
                 }
                 else
                 {
                     $phar_instance->addEmptyDir($relative_path);
-                    ui::success("ADDED", "Directory {$relative_path}", 1);
+                    ui::success("ADDED", "Directory {$relative_path}", 2);
                 }
             }
             else
             {
                 if (in_array($relative_path, $ignore))
                 {
-                    ui::info("SKIP", "File is on ignore list {$relative_path}", 1);
+                    ui::info("SKIP", "File is on ignore list {$relative_path}", 2);
                     return;
                 }
                 else
@@ -248,12 +248,12 @@ fin;
                         $phar_instance->addFromString(
                             $relative_path, php_strip_whitespace($absolute_path)
                         );
-                        ui::success("ADDED", "Compressed file {$relative_path}", 1);
+                        ui::success("ADDED", "Compressed file {$relative_path}", 2);
                     }
                     else
                     {
                         $phar_instance->addFile($absolute_path, $relative_path);
-                        ui::success("ADDED", "File {$relative_path}", 1);
+                        ui::success("ADDED", "File {$relative_path}", 2);
                     }
                 }
             }
@@ -285,11 +285,8 @@ fin;
 
         // Print PHAR's signature
         $phar_signature = $phar_instance->getSignature();
-        ui::nl();
-        output::format(
-            "<bold>Signature</bold> %s/%s\n",
-            [ $phar_signature['hash_type'], $phar_signature['hash'] ]
-        );
+
+        ui::strong("Signature: {$phar_signature['hash_type']}/{$phar_signature['hash']}", 1);
 
         return true;
     }
