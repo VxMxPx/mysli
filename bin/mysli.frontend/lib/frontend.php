@@ -58,7 +58,9 @@ fin;
     {
         // Get current theme
         $theme = theme::get_active();
-        \log::debug("I shall render: `{1}`.", [ __CLASS__, var_export($tpls, true) ]);
+        \log::debug(
+            "I shall render: `{1}`.",
+            [ __CLASS__, var_export($tpls, true) ]);
 
         // Check if theme is actually enabled...
         if (!pkg::is_enabled($theme))
@@ -71,13 +73,22 @@ fin;
 
         // Load and Set Translator
         $translator = i18n::select([ $theme, 'en', null ]);
-        $translator->load($theme);
-        $template->set_translator($translator);
+        try
+        {
+            $translator->load($theme);
+            $template->set_translator($translator);
+        }
+        catch (\Exception $e)
+        {
+            // Pass, simply there's no translations in current theme...
+        }
 
         // Add some defaults
         $variables['front']['language'] = static::get_language();
         $variables['front']['uri'] = request::uri();
-        $variables['front']['quid'] = md5(request::url( true, true ));
+
+        if (!isset($variables['front']['quid']))
+            $variables['front']['quid'] = md5(request::url( true, true ));
 
         // Add own variables
         $variables = arr::merge(static::$variables, $variables);
