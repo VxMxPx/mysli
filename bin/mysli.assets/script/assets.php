@@ -178,7 +178,9 @@ fin;
                 // Output head & action
                 $oact  = ucfirst($mod['action']);
                 $ohead = "{$oact} (".date('H:i:s').") {$relative_file}";
-                ui::title($ohead);
+
+                ui::nl();
+                ui::strong($ohead);
 
                 // Removed (Also covers: moved, renamed (which will have `to` set))
                 if ($mod['action'] === 'removed' || isset($mod['to']))
@@ -215,23 +217,27 @@ fin;
                     if (!is_array($file))
                     {
                         // Anyone cares about this file?
-                        if ( ! ($id = lib\assets::id_from_file($file, $root, $map)))
+                        if (!($id = lib\assets::id_from_file($file, $root, $map)))
                         {
+                            ui::info("No one cares about this file.", null, 1);
                             continue;
                         }
 
                         // Care only about target ID
-                        if (!isset($ids[$id]))
+                        if ($ids && !isset($ids[$id]))
                         {
+                            ui::info(
+                                "Not in target: `{$id}`, watching: ".
+                                implode(', ', array_keys($ids)).".", null, 1);
                             continue;
                         }
 
                         // Copy map & find newly added file.
                         // Some optimization is possible at this point.
-                        $cp_map = $map;
-                        lib\assets::resolve_map($cp_map, $root);
+                        lib\assets::resolve_map($map, $root);
 
-                        $file = $cp_map['includes'][$id]['resolved'][$relative_file];
+                        // ui::line($relative_file); dump_s($cp_map);
+                        $file = $map['includes'][$id]['resolved'][$relative_file];
                     }
                 }
 
