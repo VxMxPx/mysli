@@ -10,6 +10,11 @@ namespace mysli\std\post; class post
     mysli.toolkit.type.{ arr }
 fin;
 
+    // Cache, versions, media directories
+    const cache    = 'cache~';
+    const versions = '@versions';
+    const media    = '@media';
+
     /**
      * Unique post ID (e.g. blog/2016/post-slug)
      * --
@@ -77,8 +82,8 @@ fin;
         $this->reset();
 
         // Make DIR if not there
-        dir::create(fs::ds($this->path, 'cache~'));
-        dir::create(fs::ds($this->path, 'versions'));
+        dir::create(fs::ds($this->path, static::cache));
+        dir::create(fs::ds($this->path, static::versions));
     }
 
     /**
@@ -141,7 +146,8 @@ fin;
         {
             if ($this->has_cache())
             {
-                $cachef = fs::ds($this->path, "cache~/{$this->language}.json");
+                $cachef = fs::ds(
+                    $this->path, static::cache, "{$this->language}.json");
                 $this->meta = json::decode_file($cachef, true);
             }
             else
@@ -188,7 +194,9 @@ fin;
         {
             if ($this->has_cache())
             {
-                $cachef = fs::ds($this->path, "cache~/{$this->language}.html");
+                $cachef = fs::ds(
+                    $this->path, static::cache, "{$this->language}.html");
+
                 $html = file::read($cachef);
                 $html = preg_split(
                     '/^===\/([a-z0-9_\-]+)\/={12}$/m', $html, -1,
@@ -283,9 +291,9 @@ fin;
     function has_cache()
     {
         return
-            dir::exists(fs::ds($this->path, 'cache~'))
-        && file::exists(fs::ds($this->path, "cache~/{$this->language}.json"))
-        && file::exists(fs::ds($this->path, "cache~/{$this->language}.html"));
+            dir::exists(fs::ds($this->path, static::cache))
+        && file::exists(fs::ds($this->path, static::cache, "{$this->language}.json"))
+        && file::exists(fs::ds($this->path, static::cache, "{$this->language}.html"));
     }
 
     /**
@@ -310,7 +318,7 @@ fin;
         $this->load_source();
         $this->process();
 
-        $cache = fs::ds($this->path, 'cache~');
+        $cache = fs::ds($this->path, static::cache);
 
         $html = '';
 
@@ -337,7 +345,7 @@ fin;
      */
     function publish_media($file=null)
     {
-        $this_media = fs::ds($this->path, 'media', $file);
+        $this_media = fs::ds($this->path, static::media, $file);
 
         if ($file)
         {
@@ -454,7 +462,7 @@ fin;
      */
     function list_versions()
     {
-        $path = fs::ds($this->path, 'versions');
+        $path = fs::ds($this->path, static::versions);
         $versions = [];
 
         if (!dir::exists($path))
@@ -535,7 +543,7 @@ fin;
             }
         }
 
-        $path = fs::ds($this->path, 'versions', $current['filename']);
+        $path = fs::ds($this->path, static::versions, $current['filename']);
         return !! file::write($path, $this->source());
     }
 
@@ -545,7 +553,8 @@ fin;
      * --
      * @param integer $version
      * --
-     * @throws mysli\std\post\exception\post 10 Cannot switch to version, not found.
+     * @throws mysli\std\post\exception\post
+     *         10 Cannot switch to version, not found.
      * --
      * @return boolean
      */
@@ -562,7 +571,7 @@ fin;
         $version = $versions[$version];
         $filename = $version['filename'];
 
-        $source = file::read(fs::ds($this->path, 'versions', $filename));
+        $source = file::read(fs::ds($this->path, static::versions, $filename));
 
         $this->reset();
 
@@ -721,15 +730,15 @@ fin;
 
             // Pages
             $meta['pages'][$pid] = [
-                'title'      => $ptitle,
-                'quid'       => $pid,
-                'fquid'      => $meta['quid'].'/'.$pid,
-                'index'      => $k+1,
-                'next'       => null,
-                'previous'   => $previous ? [ $previous, $meta['pages'][$previous]['title'] ] : null,
-                'is_first'   => $k === 0,
-                'is_last'    => $k === count($page_sources)-1,
-                'is_single'  => count($page_sources) === 1,
+                'title'     => $ptitle,
+                'quid'      => $pid,
+                'fquid'     => $meta['quid'].'/'.$pid,
+                'index'     => $k+1,
+                'next'      => null,
+                'previous'  => $previous ? [ $previous, $meta['pages'][$previous]['title'] ] : null,
+                'is_first'  => $k === 0,
+                'is_last'   => $k === count($page_sources)-1,
+                'is_single' => count($page_sources) === 1,
             ];
 
             $pages[$pid] = $html;

@@ -69,10 +69,9 @@ fin;
             'front' => [
                 'subtitle' => $page->get('title'),
                 'type'     => 'page',
-                'quid'     => 'page-'.str_replace(['/', '.'], '-', $page->get_quid())
+                'quid'     => 'page-'.str_replace(['/', '.'], '-', $page->get('quid'))
             ],
-            'article' => $page->as_array(),
-            'post'    => $page->as_array(null),
+            'page' => $page->as_array()
         ]);
 
         return true;

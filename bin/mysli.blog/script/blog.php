@@ -22,7 +22,7 @@ namespace mysli\blog\root\script; class blog
         /*
         Set params.
          */
-        $prog = new prog('Mysli Blog Tplp', __CLASS__);
+        $prog = new prog('Mysli Blog', __CLASS__);
 
         $prog->set_help(true);
         $prog->set_version('mysli.blog', true);
@@ -82,8 +82,8 @@ namespace mysli\blog\root\script; class blog
         if (dir::exists(fs::ds($root, 'cache~')))
         {
             dir::remove(fs::ds($root, 'cache~'))
-                ? ui::success('OK', 'Remove main cache~', 1)
-                : ui::error('FAILED', 'Remove main cache~', 1);
+                ? ui::success('Main removed cache~')
+                : ui::error('Failed to remove main cache~');
         }
 
         foreach (fs::ls($root) as $year)
@@ -97,19 +97,19 @@ namespace mysli\blog\root\script; class blog
                 $postd = fs::ds($root, $year, $slug);
                 ui::title("Post {$year}/{$slug}");
 
-                if (dir::exists(fs::ds($postd, 'media')))
+                if (dir::exists(fs::ds($postd, '@media')))
                 {
                     $post = new post("blog/{$year}/{$slug}");
                     $post->unpublish_media()
-                        ? ui::success('OK', 'Un-publish media', 1)
-                        : ui::error('FAILED', 'Un-publish media', 1);
+                        ? ui::success('Media Unpublished', null, 1)
+                        : ui::error('Failed to unpublish media', null, 1);
                 }
 
                 if (dir::exists(fs::ds($postd, 'cache~')))
                 {
                     dir::remove(fs::ds($postd, 'cache~'))
-                        ? ui::success('OK', 'Remove cache~', 1)
-                        : ui::error('FAILED', 'Remove cache~', 1);
+                        ? ui::success('Removed cache~', null, 1)
+                        : ui::error('Failed to remove cache~', null, 1);
                 }
             }
         }
@@ -134,7 +134,7 @@ namespace mysli\blog\root\script; class blog
         // Setup observer
         $observer = new observer($root);
         $observer->set_interval(2);
-        $observer->set_ignore(['cache~/', 'versions/']);
+        $observer->set_ignore(['cache~/', '@versions/']);
 
         $sigfile = fs::cntpath('blog/cache~/observer.json');
         if (file::exists($sigfile))
@@ -176,9 +176,9 @@ namespace mysli\blog\root\script; class blog
                 $rrpath = array_slice($segments, 2);
                 $rrpath = implode(fs::ds, $rrpath);
 
-                ui::title(strtoupper($action).' '.$rrpath);
+                ui::info(ucfirst($action), $rrpath, 1);
 
-                if ($rdir === 'media')
+                if ($rdir === '@media')
                 {
                     // `added|removed|modified|renamed|moved`
                     if (in_array($action, ['modified', 'added']) ||
@@ -186,16 +186,16 @@ namespace mysli\blog\root\script; class blog
                             && isset($options['from'])))
                     {
                         $post->publish_media(substr($rrpath, 6))
-                            ? ui::success('PUBLISHED', null, 1)
-                            : ui::error('PUBLISH FAILED', null, 1);
+                            ? ui::success('Published', null, 2)
+                            : ui::error('Publih Failed', null, 2);
                     }
                     elseif (in_array($action, ['removed']) ||
                             (in_array($action, ['renamed', 'moved'])
                                 && isset($options['to'])))
                     {
                         $post->unpublish_media(substr($rrpath, 6))
-                            ? ui::success('UNPUBLISHED', null, 1)
-                            : ui::error('UNPUBLISH FAILED', null, 1);
+                            ? ui::success('Unpublished', null, 2)
+                            : ui::error('Unpublish Failed', null, 2);
                     }
 
                     return;
@@ -208,11 +208,11 @@ namespace mysli\blog\root\script; class blog
                     {
                         $post->switch_language(substr($rrpath, 0, -3));
                         $post->make_cache()
-                            ? ui::success('CACHE', null, 1)
-                            : ui::error('CACHE', null, 1);
+                            ? ui::success('Cache', null, 2)
+                            : ui::error('Cache Failed', null, 2);
                         $post->up_version()
-                            ? ui::success('VERSION', null, 1)
-                            : ui::error('VERSION', null, 1);
+                            ? ui::success('Version', null, 2)
+                            : ui::error('Version Failed', null, 2);
 
                         // Changes in post, refresh
                         lib\blog::refresh_list();
