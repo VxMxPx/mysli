@@ -53,6 +53,7 @@ fin;
     static private function page_to_id($page)
     {
         if (strpos($page, '.') !== false) { return false; }
-        return str_replace('/', '.', $page);
+        return $page;
+        // return str_replace('/', '.', $page);
     }
 }
