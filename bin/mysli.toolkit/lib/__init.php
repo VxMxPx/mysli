@@ -217,13 +217,14 @@ namespace mysli\toolkit; class __init
          */
         if (!$script || $script === '-h' || $script === '--help')
         {
-            cli\ui::title("Command Line Utility for Mysli Platform\n");
+            cli\ui::title("Command Line Utility for Mysli Platform");
             cli\ui::line("Usage: mysli <command> [options...]\n");
             cli\ui::line(
                 "You can always use mysli <command> -h ".
-                "to get help for a specific command.");
-            cli\ui::line("List of available commands:");
-            cli\ui::lst(array_column($scripts, 'script'));
+                "to get help for a specific command.\n");
+            cli\ui::line("List of available commands:\n");
+            cli\ui::lst(
+                array_column($scripts, 'script'), cli\ui::list_unordered, 1);
             toolkit::shutdown();
         }
 

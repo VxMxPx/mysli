@@ -2,9 +2,9 @@
 
 namespace mysli\toolkit\root\script; class interactive
 {
-    const __use = '
+    const __use = <<<fin
         .cli.{ui, output, input -> cin}
-    ';
+fin;
 
     /**
      * Run the intective mode.
@@ -16,7 +16,6 @@ namespace mysli\toolkit\root\script; class interactive
         $buffer = [];
 
         ui::title('Mysli Interactive Console');
-        ui::nl();
 
         // See if there's code to be executed...
         $exec = array_search('--exec', $args);

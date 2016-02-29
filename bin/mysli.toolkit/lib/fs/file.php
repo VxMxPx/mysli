@@ -2,14 +2,10 @@
 
 namespace mysli\toolkit\fs; class file
 {
-    const __use = '
-        .{
-            log,
-            fs.fs  -> fs,
-            fs.dir -> dir,
-            exception.file
-        }
-    ';
+    const __use = <<<fin
+        .{ log, exception.file }
+        .fs.{ fs, dir }
+fin;
 
     const prepend = 0;
     const append = 1;

@@ -69,7 +69,7 @@ fin;
      */
     static function title($string, $indent=0)
     {
-        static::strong("\n".$string, $indent);
+        static::strong("\n{$string}\n", $indent);
     }
 
     /**

@@ -431,7 +431,7 @@ namespace mysli\toolkit\type; class str
     /**
      * Convert string to unique slug.
      * You must provide list of existing slugs.
-     * 00
+     * --
      * @param string $string
      * @param array  $slugs
      * @param string $delimiter

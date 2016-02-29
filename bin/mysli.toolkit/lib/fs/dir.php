@@ -2,14 +2,10 @@
 
 namespace mysli\toolkit\fs; class dir
 {
-    const __use = '
-        .{
-            log,
-            fs.fs   -> fs,
-            fs.file -> file,
-            exception.dir
-        }
-    ';
+    const __use = <<<fin
+        .{ log, exception.dir }
+        .fs.{ fs, file }
+fin;
 
     /**
      * Create a new directory.

@@ -2,13 +2,10 @@
 
 namespace mysli\toolkit\type; class arr
 {
-    const __use = '
-        .{
-            type.str       -> str,
-            type.validate -> validate,
-            exception.arr
-        }
-    ';
+    const __use = <<<fin
+        .{ exception.arr }
+        .type.{ str, validate }
+fin;
 
     const pad_left  = 'arr::pad_left';
     const pad_right = 'arr::pad_right';

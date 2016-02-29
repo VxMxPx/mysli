@@ -124,7 +124,7 @@ namespace mysli\toolkit\root\script; class config
 
             if (!empty($list))
             {
-                ui::ul($list);
+                ui::lst($list);
                 ui::line(
                     "\nUse `mysli config vendor.package` to see all options ".
                     "for particular package.");

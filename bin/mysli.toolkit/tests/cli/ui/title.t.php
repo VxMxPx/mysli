@@ -9,6 +9,7 @@ use \mysli\toolkit\cli\ui;
 ui::title('Title');
 <<<CLI
 [1m
-Title[0m
+Title
+[0m
 
 CLI;

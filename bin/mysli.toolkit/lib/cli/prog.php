@@ -2,10 +2,11 @@
 
 namespace mysli\toolkit\cli; class prog
 {
-    const __use = '
+    const __use = <<<fin
+        .{ pkg }
         .cli.{ util, ui }
-        .{ pkg, type.arr -> arr, type.str -> str }
-    ';
+        .type.{ arr, str }
+fin;
 
     /**
      * This is meta data for this particular CLI program.

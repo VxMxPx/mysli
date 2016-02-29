@@ -2,18 +2,12 @@
 
 namespace mysli\toolkit\fs; class fs
 {
-    const __use = '
-        .{
-            pkg,
-            fs.file -> file,
-            fs.dir  -> dir,
-            log,
-            exception.fs
-        }
-    ';
+    const __use = <<<fin
+        .{ pkg, log, exception.fs }
+        .fs.{ file, dir }
+fin;
 
     const ds = DIRECTORY_SEPARATOR;
-
     const map_continue = '\\/map continue\\/';
 
     /**
@@ -354,17 +348,17 @@ namespace mysli\toolkit\fs; class fs
     static function ds()
     {
         $path = func_get_args();
+        $path = array_filter($path, 'strlen');
         $path = implode(DIRECTORY_SEPARATOR, $path);
 
         if ($path)
         {
             return preg_replace(
-                '/(?<![:\/])[\/\\\\]+/', DIRECTORY_SEPARATOR, $path
-            );
+                '/(?<![:\/])[\/\\\\]+/', DIRECTORY_SEPARATOR, $path);
         }
         else
         {
-            return null;
+            return '';
         }
     }
 
