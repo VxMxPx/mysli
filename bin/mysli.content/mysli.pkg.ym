@@ -1,0 +1,9 @@
+package:     mysli.content
+version:     1
+description: "Content creation related utilities."
+license:     GPL-3.0
+authors:
+    - Marko Gajšt (Developer) <m@gaj.st>
+require:
+    mysli.toolkit:  1
+    mysli.markdown: 1
