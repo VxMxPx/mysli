@@ -5,6 +5,7 @@ namespace mysli\toolkit\cli; class ui
     const __use = <<<fin
         .{ exception.cli }
         .cli.{ output, input }
+        .type.{ intg }
 fin;
 
     /**
@@ -221,6 +222,39 @@ fin;
     }
 
     /**
+     * Output a progress bar.
+     * --
+     * @param integer $current Current position
+     * @param integer $max     Maximum position
+     * @param string  $title   Progress bar title
+     * @param array   $markers Markers [ filled, empty ]
+     */
+    static function progress($current, $max, $title, $markers=['#', ' '])
+    {
+        $percent = (int) floor(intg::get_percent($current, $max));
+        $paint   = (int) floor( $percent / 2 );
+
+        $bar = '';
+        if ($paint > 0)  $bar .= str_repeat($markers[0], $paint);
+        if ($paint < 50) $bar .= str_repeat($markers[1], 50-$paint);
+
+        $title = $title ? "{$title} " : '';
+
+        static::progress_f('%s[%s] (%s%%)', [$title, $bar, $percent]);
+    }
+
+    /**
+     * Output formatted progress bar.
+     * --
+     * @param string $format
+     * @param array  $variables
+     */
+    static function progress_f($format, array $variables)
+    {
+        output::line(vsprintf($format, $variables)."\r", false);
+    }
+
+    /**
      * Insert an empty line(s).
      * --
      * @param integer $num number of new lines
@@ -248,10 +282,8 @@ fin;
         $buffer = implode("\n", static::$buffer);
         static::clear();
 
-        if ($return)
-            return $buffer;
-        else
-            output::line($buffer);
+        if ($return) return $buffer;
+        else         output::line($buffer);
     }
 
     /**
