@@ -33,11 +33,3 @@ return assert::equals(
     arr::pad($array, '+', 3, arr::pad_right),
     [ '#', '#', '#' ]
 );
-
-#: Test Exception, For Size Expecting an Integer
-#: Expect Exception mysli\toolkit\exception\validate
-arr::pad([], '+', ':<');
-
-#: Test Exception, Invalid Type
-#: Expect Exception mysli\toolkit\exception\arr 10
-arr::pad([], '+', 2, 3);

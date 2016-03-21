@@ -17,10 +17,6 @@ return assert::equals(
     ['maribor' => 2, 'koper' => 2, 'ptuj' => 1]
 );
 
-#: Test Count Value Exception, MultiDimensional Array
-#: Expect Exception mysli\toolkit\exception\validate
-arr::count_values([[], []], false);
-
 #: Test Numeric Values
 $values = ['Domžale', 30, 'Škofja Loka', 30, 'Šoštanj', 'Domžale', 'škofja Loka', 30];
 return assert::equals(

@@ -53,7 +53,3 @@ return arr_path::get($array, 'main.pets.cat.1');
 #: Test Empty
 #: Expect Null
 return arr_path::get([], 'main.pets.cat.0');
-
-#: Test Exception, Invalid Path
-#: Expect Exception mysli\toolkit\exception\validate
-return arr_path::get([], []);

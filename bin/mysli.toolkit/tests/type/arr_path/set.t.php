@@ -74,8 +74,3 @@ $modified['main']['settings']['timezone'] = 'GMT+2';
 $modified['main']['settings']['debug']    = -1;
 arr_path::set($array, 'main.settings', [ 'timezone' => 'GMT+2', 'debug' => -1 ]);
 return assert::equals($array, $modified);
-
-#: Test Exception
-#: Expect Exception mysli\toolkit\exception\validate
-$arr = [];
-arr_path::set($arr, [], false);

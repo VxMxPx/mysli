@@ -2,7 +2,7 @@
 
 namespace mysli\toolkit\type; class str
 {
-    const __use = '.{ log, exception.str }, .type.{ validate, intg }';
+    const __use = '.{ log, exception.str }, .type.{ intg }';
 
     /**
      * Set the default encoding, which can be changed later.
@@ -58,12 +58,6 @@ namespace mysli\toolkit\type; class str
     /**
      * Split and trim data.
      * --
-     * @throws mysli\toolkit\exception\validate
-     *         723 Unexpected type, expected a string.
-     *
-     * @throws mysli\toolkit\exception\validate
-     *         720 Unexpected type, expected an integer.
-     * --
      * @param string  $string
      * @param mixed   $separator array or string
      * @param integer $limit
@@ -73,8 +67,6 @@ namespace mysli\toolkit\type; class str
      */
     static function split_trim($string, $separator, $limit=null, $mask=null)
     {
-        validate::need_str($string);
-
         if (is_array($separator))
         {
             $first = array_shift($separator);
@@ -89,7 +81,6 @@ namespace mysli\toolkit\type; class str
 
         if ($limit !== null)
         {
-            validate::need_int($limit);
             $segments = explode($separator, $string, $limit);
         }
         else
@@ -157,12 +148,6 @@ namespace mysli\toolkit\type; class str
      *     $limit = 2
      *     return   hello  world!!
      * --
-     * @throws mysli\toolkit\exception\validate
-     *         723 Unexpected type, expected a string.
-     *
-     * @throws mysli\toolkit\exception\validate
-     *         720 Unexpected type, expected an integer.
-     * --
      * @param string  $input
      *
      * @param mixed   $char
@@ -185,10 +170,6 @@ namespace mysli\toolkit\type; class str
             return $input;
         }
 
-        validate::need_str($char);
-        validate::need_str($input);
-        validate::need_int($limit);
-
         $char_escaped = preg_quote($char, '/');
         $regex = "([{$char_escaped}]{{$limit},})";
         $input = preg_replace($regex, str_repeat($char, $limit), $input);
@@ -198,12 +179,6 @@ namespace mysli\toolkit\type; class str
 
     /**
      * Generate a random string.
-     * --
-     * @throws mysli\toolkit\exception\validate
-     *         720 Unexpected type, expected an integer.
-     *
-     * @throws mysli\toolkit\exception\validate
-     *         723 Unexpected type, expected a string.
      * --
      * @param integer $length
      * @param string $mask
@@ -217,9 +192,6 @@ namespace mysli\toolkit\type; class str
      */
     static function random($length, $mask='aA1s')
     {
-        validate::need_int($length);
-        validate::need_str($mask);
-
         $a = 'qwertzuiopasdfghjklyxcvbnm';
         $A = 'QWERTZUIOPASDFGHJKLYXCVBNM';
         $n = '0123456789';
@@ -304,12 +276,6 @@ namespace mysli\toolkit\type; class str
     /**
      * Slice string (unicode).
      * --
-     * @throws mysli\toolkit\exception\validate
-     *         723 Unexpected type, expected a string.
-     *
-     * @throws mysli\toolkit\exception\validate
-     *         720 Unexpected type, expected an integer.
-     * --
      * @param string  $string
      * @param integer $start
      * @param integer $length
@@ -318,12 +284,8 @@ namespace mysli\toolkit\type; class str
      */
     static function slice($string, $start, $length=null)
     {
-        validate::need_str($string);
-        validate::need_int($start);
-
         if ($length !== null)
         {
-            validate::need_int($length);
             return mb_substr($string, $start, $length);
         }
         else
@@ -350,18 +312,11 @@ namespace mysli\toolkit\type; class str
      * --
      * @throws mysli\toolkit\exception\str
      *         10 Invalid $mask parameter.
-     *
-     * @throws mysli\toolkit\exception\validate
-     *         723 Unexpected type, expected a string.
      * --
      * @return string
      */
     static function clean($string, $mask='alphanum')
     {
-        // Make sure string and mask are actually for a valid type...
-        validate::need_str($string);
-        validate::need_str($mask);
-
         // Nothing to do here...
         if (empty($string))
             return '';
@@ -401,9 +356,6 @@ namespace mysli\toolkit\type; class str
     /**
      * Convert string to a slug "Hello world" => "hello-world".
      * --
-     * @throws mysli\toolkit\exception\validate
-     *         723 Unexpected type, expected a string.
-     * --
      * @param string $string
      * @param array  $delimiter
      * --
@@ -411,9 +363,6 @@ namespace mysli\toolkit\type; class str
      */
     static function slug($string, $delimiter='-')
     {
-        validate::need_str($string);
-        validate::need_str($delimiter);
-
         if (empty($string))
         {
             return '';
@@ -456,9 +405,6 @@ namespace mysli\toolkit\type; class str
     /**
      * Get desired number of words, shorten string nicely.
      * --
-     * @throws mysli\toolkit\exception\validate
-     *         720 Unexpected type, expected an integer.
-     * --
      * @param string  $string
      *
      * @param integer $limit
@@ -471,7 +417,6 @@ namespace mysli\toolkit\type; class str
      */
     static function limit_words($string, $limit, $ending=null)
     {
-        validate::need_int($limit);
         $string = (string) $string;
         $string_initial_length = static::length($string);
 
@@ -493,9 +438,6 @@ namespace mysli\toolkit\type; class str
     /**
      * Get desired number of characters.
      * --
-     * @throws mysli\toolkit\exception\validate
-     *         720 Unexpected type, expected an integer.
-     * --
      * @param string $string
      *
      * @param integer $limit
@@ -509,8 +451,6 @@ namespace mysli\toolkit\type; class str
      */
     static function limit_length($string, $limit, $ending=null)
     {
-        validate::need_int($limit);
-
         $string = (string) $string;
         $string_initial_length = static::length($string);
 
@@ -568,7 +508,7 @@ namespace mysli\toolkit\type; class str
         $string, $separator, $index, $default=null, $mask=null, $limit=null)
     {
         $return = static::split_trim($string, $separator, $limit, $mask);
-        return arr::key_in($return, $index) ? $return[$index] : $default;
+        return arr::has($return, $index) ? $return[$index] : $default;
     }
 
     /**
@@ -584,9 +524,6 @@ namespace mysli\toolkit\type; class str
      *
      * @throws mysli\toolkit\exception\str
      *         20 `$protected` need to have exactly 2 elements.
-     *
-     * @throws mysli\toolkit\exception\validate
-     *         723 Unexpected type, expected a string.
      * --
      * @param string $input
      * @param string $separator
@@ -598,8 +535,6 @@ namespace mysli\toolkit\type; class str
      */
     static function tokenize($input, $separator, $protected)
     {
-        validate::need_str($input);
-
         if ($separator === '\\')
         {
             throw new exception\str("Separator can't be backslash.", 10);
@@ -701,12 +636,6 @@ namespace mysli\toolkit\type; class str
     /**
      * Find position of first occurrence of string in a string.
      * --
-     * @throws mysli\toolkit\exception\validate
-     *         723 Unexpected type, expected a string.
-     *
-     * @throws mysli\toolkit\exception\validate
-     *         720 Unexpected type, expected an integer.
-     * --
      * @param string  $string
      * @param string  $find
      * @param integer $offset
@@ -716,10 +645,6 @@ namespace mysli\toolkit\type; class str
      */
     static function find($string, $find, $offset=0, $encoding=null)
     {
-        validate::need_str($string);
-        validate::need_str($find);
-        validate::need_int($offset);
-
         if ($encoding === null)
         {
             $encoding = static::encoding();
@@ -731,9 +656,6 @@ namespace mysli\toolkit\type; class str
     /**
      * Convert to camel case.
      * --
-     * @throws mysli\toolkit\exception\validate
-     *         723 Unexpected type, expected a string.
-     * --
      * @param  string  $string
      * @param  boolean $uc_first Upper case first letter also?
      * --
@@ -741,8 +663,6 @@ namespace mysli\toolkit\type; class str
      */
     static function to_camelcase($string, $uc_first=true)
     {
-        validate::need_str($string);
-
         // Convert _
         if (static::find($string, '_') !== false)
         {
@@ -782,16 +702,12 @@ namespace mysli\toolkit\type; class str
     /**
      * Convert camel case to underscores.
      * --
-     * @throws mysli\toolkit\exception\validate
-     *         723 Unexpected type, expected a string.
-     * --
      * @param string $string
      * --
      * @return string
      */
     static function to_underscore($string)
     {
-        validate::need_str($string);
         return static::to_lower(
             preg_replace('/(?<=[a-z])([A-Z])/', '_$1', $string)
         );
@@ -800,24 +716,17 @@ namespace mysli\toolkit\type; class str
     /**
      * Convert string to lowercase (unicode).
      * --
-     * @throws mysli\toolkit\exception\validate
-     *         723 Unexpected type, expected a string.
-     * --
      * @param string $string
      * --
      * @return string
      */
     static function to_lower($string)
     {
-        validate::need_str($string);
         return mb_strtolower($string);
     }
 
     /**
      * Convert string to uppercase (unicode).
-     * --
-     * @throws mysli\toolkit\exception\validate
-     *         723 Unexpected type, expected a string.
      * --
      * @param  string $string
      * --
@@ -825,18 +734,11 @@ namespace mysli\toolkit\type; class str
      */
     static function to_upper($string)
     {
-        validate::need_str($string);
         return mb_strtoupper($string);
     }
 
     /**
      * Split string to segments (by string).
-     * --
-     * @throws mysli\toolkit\exception\validate
-     *         723 Unexpected type, expected a string.
-     *
-     * @throws mysli\toolkit\exception\validate
-     *         720 Unexpected type, expected an integer.
      * --
      * @param string  $string
      * @param string  $separator
@@ -846,12 +748,8 @@ namespace mysli\toolkit\type; class str
      */
     static function split($string, $separator, $limit=null)
     {
-        validate::need_str($string);
-        validate::need_str($separator);
-
         if ($limit !== null)
         {
-            validate::need_int($limit);
             return explode($separator, $string, $limit);
         }
         else
