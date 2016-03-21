@@ -175,11 +175,7 @@ fin;
 
         // Assign variables...
         $variables = array_merge($this->variables, $variables);
-
-        foreach($variables as $_tplpvar => $_tplpval)
-        {
-            $$_tplpvar = $_tplpval;
-        }
+        extract($variables, EXTR_SKIP);
 
         ob_start();
         include($filename);
