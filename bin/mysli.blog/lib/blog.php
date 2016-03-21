@@ -3,219 +3,180 @@
 namespace mysli\blog; class blog
 {
     const __use = <<<fin
-    mysli.std.post
-    mysli.toolkit.{ json }
-    mysli.toolkit.fs.{ fs, file, dir }
-    mysli.toolkit.type.{ str, arr }
+        .{ processor }
+        mysli.content.{ source, collection }
+        mysli.toolkit.{ ym }
+        mysli.toolkit.fs.{ fs, file, dir }
 fin;
 
-    /**
-     * Refresh posts list, and create cache!
-     * --
-     * @return boolean
-     */
-    static function refresh_list()
-    {
-        $root = fs::cntpath('blog');
-
-        $posts = [];
-        $tags = [];
-
-        foreach (fs::ls($root) as $year)
-        {
-            if (!dir::exists(fs::ds($root, $year))) continue;
-            if (substr($year, -1) === '~') continue;
-            if (substr($year, 0, 1) === '.') continue;
-
-            foreach (fs::ls(fs::ds($root, $year)) as $slug)
-            {
-                $quid = static::get_id($year, $slug);
-
-                if (!$quid) continue;
-
-                $post = new post('blog/'.$quid);
-                $languages = $post->list_languages();
-                $meta = $post->source('meta');
-                $date = isset($meta['date']) ? strtotime($meta['date']) : time();
-
-                $dtime = date('YmdHis', $date);
-                $posts[$dtime.'_'.$quid] = [];
-
-                if (!is_array($languages))
-                {
-                    continue;
-                }
-
-                foreach ($languages as $lngid)
-                {
-                    $lpost = new post('blog/'.$quid, $lngid);
-                    $meta = $lpost->source('meta');
-                    $ptags = arr::get($meta, 'tags', []);
-
-                    if (!is_array($ptags))
-                    {
-                        \log::warning(
-                            "Tags format is expected to be an array: `{$quid}`.",
-                            __CLASS__
-                        );
-                        $ptags = [ $ptags ];
-                    }
-
-                    $posts[$dtime.'_'.$quid][$lngid] = [
-                        'quid'      => $quid,
-                        'title'     => arr::get($meta, 'title'),
-                        'tags'      => $ptags,
-                        'date'      => date('c', strtotime(arr::get($meta, 'date'))),
-                        'year'      => date('Y', strtotime(arr::get($meta, 'date'))),
-                        'published' => arr::get($meta, 'published', true),
-                        'hash'      => $lpost->get_hash(true)
-                    ];
-
-                    // Add tag! :)
-                    foreach ($ptags as $tag)
-                    {
-                        if (isset($tags[$tag]))
-                        {
-                            if (in_array($quid, $tags[$tag]))
-                            {
-                                continue;
-                            }
-                        }
-                        else
-                        {
-                            $tags[$tag] = [];
-                        }
-
-                        $tags[$tag][] = $quid;
-                    }
-                }
-            }
-        }
-
-        $cache_dir = fs::cntpath('blog/cache~');
-
-        if (!dir::exists($cache_dir))
-        {
-            dir::create($cache_dir);
-        }
-
-        return json::encode_file(fs::ds($cache_dir, 'posts.json'), $posts)
-            && json::encode_file(fs::ds($cache_dir, 'tags.json'), $tags);
-    }
+    const cid = 'blog';
 
     /**
-     * Get list of all posts. Can filter by language.
-     * Cache must exists, as this will read from cached list!
-     * --
-     * @param string $language
+     * Get all blog categories.
      * --
      * @return array
      */
-    static function list_all($language='_def')
+    static function categories()
     {
-        $cache = fs::cntpath('blog/cache~/posts.json');
+        $categories = fs::cntpath(static::cid, 'categories.ym');
 
-        if (!file::exists($cache))
+        if (file::exists($categories))
         {
-            return [];
+            return ym::decode_file($categories);
         }
         else
         {
-            $list = json::decode_file($cache, true);
+            return [];
         }
-
-        $posts = [];
-
-        foreach ($list as $quid => $post)
-        {
-            if (array_key_exists($language, $post))
-            {
-                $posts[$quid] = $post[$language];
-            }
-        }
-
-        return $posts;
     }
 
     /**
-     * Get list of posts per tag.
-     * Cache must exists, as this will read from cached list!
-     * --
-     * @param string $tag
-     * @param string $language
+     * Get all posts.
+     * This will NOT process includes!
+     * Slow, should be cached!
      * --
      * @return array
      */
-    static function list_by_tag($tag, $language='_def')
+    static function all()
     {
-        $list = static::list_all($language);
-        $posts = [];
-
-        foreach ($list as $quid => $post)
-        {
-            if (in_array($tag, $post['tags']))
-            {
-                $posts[$quid] = $post;
-            }
-        }
-
-        return $posts;
+        return static::filter(null);
     }
 
     /**
-     * Get one post by year+slug (e.g. 2015, blog-post).
+     * Get all posts.
+     * This will NOT process includes!
+     * Slow, should be cached!
      * --
-     * @param integer $year
-     * @param string  $path
-     * @param string  $language
+     * @param callable $call
+     *        Function call for each item, if return false, item will not be
+     *        included on a list.
+     *        function ($meta) {}
+     *        Null = no filter (the same as ::all)
+     *
+     * @param string $language
+     *        List of posts of specific language.
      * --
-     * @return mysli\std\post\post
+     * @return array
      */
-    static function get_one($year, $slug, $language='_def')
+    static function filter($call, $language='_def')
     {
-        if (!static::has($year, $slug, $language))
-        {
-            return false;
-        }
+        return collection::filter(
+            static::cid,
+            function ($iid, $language) use ($call)
+            {
+                list($item) = processor::slice_source(
 
-        $id = static::get_id($year, $slug);
+                    file::read(fs::cntpath(static::cid, $iid, "{$language}.post")),
 
-        return new post("blog/{$id}", $language);
+                    function ($section, $position) {
+                        if ($position === 0)
+                        {
+                            return ym::decode($section);
+                        }
+                        return false;
+                    });
+
+                $item['iid'] = $iid;
+                $item['language'] = $language;
+                $item = array_merge(static::get_defaults(), $item);
+                $item['time'] = strtotime($item['date']);
+                $item['year'] = gmdate('Y', $item['time']);
+
+                return !$call || $call($item) !== false ? $item : false;
+
+            }, $language);
     }
 
     /**
-     * Check if particular post exists.
+     * Get one blog post.
      * --
-     * @param integer $year
-     * @param string  $slug
-     * @param string  $language
+     * @param string $iid
+     * @param string $language
+     * --
+     * @return post
+     */
+    static function get($iid, $language='_def')
+    {
+        // Not found, nothing to do
+        if (!static::exists($iid, $language)) return;
+
+        // Sources
+        $sources = new source(static::cid, $iid);
+        $sources->load("{$language}.post");
+
+        // Slice main source file
+        list($meta, $pages) = processor::slice_source(
+            $sources->get("{$language}.post"),
+            function ($section, $position) use ($iid)
+            {
+                // First section is always META
+                if ($position === 0) return ym::decode($section);
+
+                // Second section is actual MARKDOWN post
+                if ($position === 1)
+                {
+                    return processor::body(
+                        $section,
+                        function ($parser) use ($iid)
+                        {
+                            // Add costume link handling to the parser for media files.
+                            $link = $parser->get_processor('mysli.markdown.module.link');
+                            $link->set_local_url(
+                                '#^/(.*?)(?<!\.html|\.php|\.htm)$#',
+                                '/'.static::cid.'/'.$iid);
+                        });
+                }
+
+                // Any additional sections would be discarded
+                return false;
+            });
+
+        // Find includes in meta
+        $meta = processor::includes(
+            $meta,
+            function ($filename) use ($sources) {
+                if ($sources->exists($filename))
+                {
+                    return ym::decode($sources->load($filename));
+                }
+            });
+
+        // Construct post item and return it
+        return array_merge(static::get_defaults(), $meta, [
+            'iid'       => $iid,
+            'fid'       => preg_replace('/[^a-z0-9]/', '_', $iid),
+            'pages'     => $pages,
+            '.sources'  => $sources,
+            '.includes' => $sources->files(),
+            '.hash'     => $sources->hash()
+        ]);
+    }
+
+    /**
+     * Check weather blog post exists.
+     * --
+     * @param string $iid
+     * @param string $language
      * --
      * @return boolean
      */
-    static function has($year, $slug, $language='_def')
+    static function exists($iid, $language='_def')
     {
-        $id = static::get_id($year, $slug);
-
-        if (!$id) return false;
-
-        return file::exists(fs::cntpath('blog', $id, "{$language}.md"));
+        return file::exists(fs::cntpath(static::cid, $iid, "{$language}.post"));
     }
 
     /**
-     * Year+slug to post ID, e.g. 2015, blog-post-slug => 2015/blog-post-slug
+     * Get default values for an item.
      * --
-     * @param integer $year
-     * @param string  $slug
-     * --
-     * @return string
+     * @return array
      */
-    static function get_id($year, $slug)
+    static function get_defaults()
     {
-        $year = (int) $year;
-        $slug = str::clean($slug, 'slug');
-
-        if (!$year) return false;
-
-        return "{$year}/{$slug}";
+        return [
+            'title'     => null,
+            'date'      => '1990-04-16',
+            'published' => true,
+            'tags'      => [],
+        ];
     }
 }

@@ -4,8 +4,11 @@ namespace mysli\blog; class frontend
 {
     const __use = <<<fin
     .{ blog }
+    mysli.content.{ cache }
     mysli.i18n
-    mysli.toolkit.{ config, request }
+    mysli.toolkit.{ request, json }
+    mysli.toolkit.fs.{ fs, file, dir }
+    mysli.toolkit.type.{ arr }
     mysli.frontend.{ frontend -> fe }
 fin;
 
@@ -16,10 +19,27 @@ fin;
      */
     static function archive()
     {
-        config::select('mysli.blog', 'cache.reload-on-access') and blog::refresh_list();
+        $cache_filename = fs::cntpath(blog::cid, cache::dir, '_list_archive.json');
 
-        $list = blog::list_all();
-        krsort($list);
+        // Cache
+        if (file::exists($cache_filename))
+        {
+            $list = json::decode_file($cache_filename, true);
+        }
+        else
+        {
+            $list = blog::all();
+
+            // Sort by date!
+            uasort($list, function ($a, $b) {
+                $a = strtotime($a['date']);
+                $b = strtotime($b['date']);
+                if ($a === $b) return 0;
+                return ($a > $b) ? -1 : 1;
+            });
+
+            json::encode_file($cache_filename, $list);
+        }
 
         fe::render(['blog-archive', ['mysli.blog', 'archive']], [
             'front' => [
@@ -27,7 +47,7 @@ fin;
                 'type'     => 'blog-archive'
             ],
             'blog' => [
-                'categories' => config::select('mysli.blog', 'tags.to-categories'),
+                'categories' => blog::categories(),
                 'is_archive' => true,
                 'is_tag'     => false,
                 'tag'        => null,
@@ -47,12 +67,30 @@ fin;
      */
     static function tag($id)
     {
-        config::select('mysli.blog', 'cache.reload-on-access') and blog::refresh_list();
+        $cache_filename = fs::cntpath(
+            blog::cid, cache::dir, "_list_tag_{$id}.json");
 
-        $list = blog::list_by_tag($id);
-        krsort($list);
+        // Cache
+        if (file::exists($cache_filename))
+        {
+            $list = json::decode_file($cache_filename, true);
+        }
+        else
+        {
+            $list = blog::filter(function ($item) use ($id) {
+                if (!in_array($id, $item['tags'])) return false;
+            });
 
-        $categories = config::select('mysli.blog', 'tags.to-categories');
+            // Sort by date!
+            uasort($list, function ($a, $b) {
+                $a = strtotime($a['date']);
+                $b = strtotime($b['date']);
+                if ($a === $b) return 0;
+                return ($a > $b) ? -1 : 1;
+            });
+
+            json::encode_file($cache_filename, $list);
+        }
 
         fe::render(['blog-archive', ['mysli.blog', 'archive']], [
             'front' => [
@@ -61,7 +99,7 @@ fin;
                 'quid'     => 'blog-tag-'.$id,
             ],
             'blog' => [
-                'categories' => $categories,
+                'categories' => blog::categories(),
                 'is_archive' => false,
                 'is_tag'     => true,
                 'tag'        => $id
@@ -97,61 +135,67 @@ fin;
      */
     static function post($year, $id, $page='_default')
     {
-        if (!blog::has($year, $id))
+        $iid = "{$year}/{$id}";
+        $language = '_def';
+
+        $cache = new cache(blog::cid, $iid, $language);
+
+        // Has cached version?
+        if ($cache->exists())
         {
-            return false;
-        }
-
-        $post = blog::get_one($year, $id);
-
-        if (!$post)
-        {
-            return false;
-        }
-
-        $c = config::select('mysli.blog');
-
-        // Do cache
-        if ($c->get('cache.reload-on-access') && !$post->is_cache_fresh())
-        {
-            $post->make_cache();
-
-            if ($c->get('version.up-on-reload'))
+            if ($cache->is_fresh())
             {
-                $post->up_version();
+                $post = $cache->get();
             }
-
-            if ($c->get('media.republish-on-reload'))
-            {
-                $post->unpublish_media();
-                $post->publish_media();
-            }
+        }
+        else
+        {
+            $post = blog::get($iid, $language);
+            unset($post['.sources']);
+            // Produce cache!
+            $cache->write($post);
         }
 
         // Check publish status
-        if (!$post->get('published', true))
+        if (!arr::get($post, 'published', true))
         {
             // Final chance to view in dev-access
-            if (!$post->get('dev-access')
-                || request::get('access') !== $post->get('dev-access'))
+            if (!arr::get($post, 'dev-access')
+                || request::get('access') !== arr::get($post, 'dev-access'))
             {
                 return false;
             }
         }
 
+        // Default page, multiple pages...
+        if ($page === '_default' && count($post['pages']) > 1)
+        {
+            reset($post['pages']);
+            $page = key($post['pages']);
+        }
+
+        if (!isset($post['pages'][$page]))
+        {
+            return false;
+        }
+        else
+        {
+            $post['page'] = $post['pages'][$page];
+        }
+
         fe::render(['blog-post', ['mysli.blog', 'post']], [
             'front' => [
-                'subtitle' => $post->get('title'),
+                'subtitle' => arr::get_deep($post, ['meta', 'title'], ''),
                 'type'     => 'blog-post',
-                'quid'     => 'post-'.str_replace(['/', '.'], '-', $post->get_quid())
+                'quid'     => 'post-'.$post['fid']
             ],
             'blog' => [
-                'categories' => config::select('mysli.blog', 'tags.to-categories'),
+                'categories' => blog::categories(),
                 'is_archive' => false,
                 'is_tag'     => false,
                 'tag'        => null,
             ],
-            'post' => $post->as_array($page),
+            'post' => $post
         ]);
 
         return true;

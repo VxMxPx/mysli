@@ -8,4 +8,4 @@ require:
     mysli.i18n:     1
     mysli.toolkit:  1
     mysli.frontend: 1
-    mysli.std.post: 1
+    mysli.content:  1
