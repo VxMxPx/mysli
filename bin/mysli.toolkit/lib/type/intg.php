@@ -39,4 +39,32 @@ namespace mysli\toolkit\type; class intg
 
         return $min + $rnd;
     }
+
+    /**
+     * Get X% by Y of Z.
+     * --
+     * @param integer $amount
+     * @param integer $total
+     * --
+     * @return integer
+     */
+    static function get_percent($amount, $total)
+    {
+        if (!$amount || !$total) return $amount;
+        return $count = ($amount / $total) * 100;
+    }
+
+    /**
+     * Get X by Y% of Z
+     * --
+     * @param integer $percent
+     * @param integer $total
+     * --
+     * @return integet
+     */
+    static function set_percent($percent, $total)
+    {
+        if (!$percent || !$total) return 0;
+        return ($total / 100) * $percent;
+    }
 }
