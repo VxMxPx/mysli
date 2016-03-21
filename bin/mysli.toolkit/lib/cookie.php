@@ -451,7 +451,7 @@ namespace mysli\toolkit; class cookie
         {
             $cookie = $name;
 
-            if (arr::key_in($_COOKIE, $cookie->get_name()))
+            if (arr::has($_COOKIE, $cookie->get_name()))
                 $value = $_COOKIE[$name];
             else
                 return $default;
@@ -491,7 +491,7 @@ namespace mysli\toolkit; class cookie
          */
         $name = config::select('mysli.toolkit', 'cookie.prefix', '').$name;
 
-        if (arr::key_in($_COOKIE, $name))
+        if (arr::has($_COOKIE, $name))
             return $_COOKIE[$name];
         else
             return $default;

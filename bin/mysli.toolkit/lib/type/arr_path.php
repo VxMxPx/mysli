@@ -2,7 +2,7 @@
 
 namespace mysli\toolkit\type; class arr_path
 {
-    const __use = '.type.{ validate, str, arr }';
+    const __use = '.type.{ str, arr }';
 
     /**
      * Get an array value by path.
@@ -16,22 +16,17 @@ namespace mysli\toolkit\type; class arr_path
      * @param string $path
      * @param mixed  $default
      * --
-     * @throws mysli\toolkit\exception\validate
-     *         723 Unexpected type, expected a string.
-     * --
      * @return mixed
      */
     static function get(array $array, $path, $default=null)
     {
-        validate::need_str($path);
-
         $path = trim($path, '.');
         $path = str::split($path, '.');
         $get  = $array;
 
         foreach ($path as $w)
         {
-            if (is_array($get) && arr::key_in($get, $w))
+            if (is_array($get) && arr::has($get, $w))
             {
                 $get = $get[$w];
             }
@@ -57,15 +52,10 @@ namespace mysli\toolkit\type; class arr_path
      * @param string $path
      * @param mixed  $value
      * --
-     * @throws mysli\toolkit\exception\validate
-     *         723 Unexpected type, expected a string.
-     * --
      * @return null
      */
     static function set(array &$array, $path, $value)
     {
-        validate::need_str($path);
-
         $path = trim($path, '.');
         $path = str::split($path, '.');
         $previous = $value;
@@ -90,9 +80,6 @@ namespace mysli\toolkit\type; class arr_path
      *     path   => user/address
      *     result => ['user' => []]
      * --
-     * @throws mysli\toolkit\exception\validate
-     *         723 Unexpected type, expected a string.
-     * --
      * @param array  $array
      * @param string $path
      * --
@@ -100,7 +87,6 @@ namespace mysli\toolkit\type; class arr_path
      */
     static function remove(array &$array, $path)
     {
-        validate::need_str($path);
         $array = static::remove_helper($array, $path, null);
     }
 

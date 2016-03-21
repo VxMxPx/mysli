@@ -4,7 +4,7 @@ namespace mysli\toolkit\type; class arr
 {
     const __use = <<<fin
         .{ exception.arr }
-        .type.{ str, validate }
+        .type.{ str }
 fin;
 
     const pad_left  = 'arr::pad_left';
@@ -23,9 +23,6 @@ fin;
      * @param  array   $array
      * @param  boolean $case_sensitive
      * --
-     * @throws mysli\toolkit\exception\validate
-     *         724 Unexpected type, expected an integer or a string.
-     * --
      * @return array
      */
     static function count_values(array $array, $case_sensitive=true)
@@ -39,14 +36,12 @@ fin;
 
         foreach ($array as $value)
         {
-            validate::need_str_or_int($value);
-
             if (!$case_sensitive && is_string($value))
             {
                 $value = mb_strtolower($value, 'UTF-8');
             }
 
-            $count[$value] = static::key_in($count, $value)
+            $count[$value] = static::has($count, $value)
                 ? $count[$value]+1
                 : 1;
         }
@@ -229,16 +224,11 @@ fin;
      * @throws mysli\toolkit\exception\arr
      *         10 Invalid type, required:
      *         arr::pad_left | arr::pad_right | arr::pad_both.
-     *
-     * @throws mysli\toolkit\exception\validate
-     *         720 Unexpected type, expected an integer.
      * --
      * @return array
      */
     static function pad(array $array, $value, $size, $type=self::pad_right)
     {
-        validate::need_int($size, 1);
-
         switch ($type)
         {
             case self::pad_left:
@@ -297,12 +287,9 @@ fin;
      *        string (check key),
      *        array (check multiple keys)
      * --
-     * @throws mysli\toolkit\exception\validate
-     *         724 Unexpected type, expected an integer or a string.
-     * --
      * @return boolean
      */
-    static function key_in(array $array, $key)
+    static function has(array $array, $key)
     {
         if (empty($array))
         {
@@ -311,16 +298,43 @@ fin;
 
         if (!is_array($key))
         {
-            validate::need_str_or_int($key);
             return array_key_exists($key, $array);
         }
 
         foreach ($key as $ck)
         {
-            validate::need_str_or_int($ck);
             if (!array_key_exists($ck, $array))
             {
                 return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Check multidimensional array for a key.
+     * --
+     * @param  array  $array
+     * @param  array  $key
+     * --
+     * @return boolean
+     */
+    static function has_deep(array $array, array $key)
+    {
+        $last = $array;
+
+        while (count($key))
+        {
+            $find = array_shift($key);
+
+            if (!is_array($last) || !array_key_exists($find, $last))
+            {
+                return false;
+            }
+            else
+            {
+                $last = $last[$find];
             }
         }
 
@@ -416,7 +430,7 @@ fin;
      */
     static function get(array $array, $key, $default=null)
     {
-        if (!static::key_in($array, $key))
+        if (!static::has($array, $key))
         {
             return $default;
         }
@@ -424,6 +438,36 @@ fin;
         {
             return $array[$key];
         }
+    }
+
+    /**
+     * Get item from multidimensional array.
+     * --
+     * @param array $array
+     * @param array $key
+     * @param mixed $default
+     * --
+     * @return mixed
+     */
+    static function get_deep(array $array, array $key, $default=null)
+    {
+        $last = $array;
+
+        while (count($key))
+        {
+            $find = array_shift($key);
+
+            if (!is_array($last) || !array_key_exists($find, $last))
+            {
+                return $default;
+            }
+            else
+            {
+                $last = $last[$find];
+            }
+        }
+
+        return $last;
     }
 
     /**
@@ -533,9 +577,6 @@ fin;
      * Insert an item into array at particular position.
      * This will modify original array!
      * --
-     * @throws mysli\toolkit\exception\validate
-     *         720 Unexpected type, expected an integer.
-     * --
      * @param array   $array
      * @param mixed   $value
      * @param integer $position
@@ -544,8 +585,6 @@ fin;
      */
     static function insert(array &$array, $value, $position)
     {
-        validate::need_int($position);
-
         if ($position < 0)
         {
             $position = count($array) + $position;
@@ -573,14 +612,10 @@ fin;
      * @param array  $array
      * @param string $glue
      * --
-     * @throws mysli\toolkit\exception\validate
-     *         724 Unexpected type, expected an integer or a string.
-     * --
      * @return string
      */
     static function implode_keys(array $array, $glue)
     {
-        validate::need_str_or_int($glue);
         return implode($glue, array_keys($array));
     }
 
@@ -588,12 +623,6 @@ fin;
      * Return array as a nicely formatted string. Example:
      * key      : value
      * long_key : value
-     * --
-     * @throws mysli\toolkit\exception\validate
-     *         720 Unexpected type, expected an integer.
-     *
-     * @throws mysli\toolkit\exception\validate
-     *         723 Unexpected type, expected a string.
      * --
      * @param array $array
      *
@@ -622,11 +651,6 @@ fin;
         $new_line="\n",
         $valuefy=false)
     {
-        validate::need_int($indent, 0);
-        validate::need_int($step, 0, null, 1);
-        validate::need_str($separator, 2);
-        validate::need_str($new_line, 3);
-
         $long_key = 0;
         $out = '';
 
@@ -691,12 +715,6 @@ fin;
      *     - sub-value
      *     - sub-value
      * --
-     * @throws mysli\toolkit\exception\validate
-     *         720 Unexpected type, expected an integer.
-     *
-     * @throws mysli\toolkit\exception\validate
-     *         723 Unexpected type, expected a string.
-     * --
      * @param array $array
      *
      * @param integer $indent
@@ -724,11 +742,6 @@ fin;
         $new_line="\n",
         $valuefy=false)
     {
-        validate::need_int($indent, 0);
-        validate::need_int($step, 0, null, 1);
-        validate::need_str($marker, 2);
-        validate::need_str($new_line, 3);
-
         $out = '';
 
         foreach ($array as $value)
@@ -776,20 +789,16 @@ fin;
      *        If no key found, skip item rather than adding it the list
      *        with default (numeric) id.
      * --
-     * @throws mysli\toolkit\exception\validate
-     *         723 Unexpected type, expected a string.
-     * --
      * @return array
      */
     static function split_to_key(array $array, $separator=':', $skip_missing=true)
     {
-        validate::need_str($separator);
         $return = [];
 
         foreach($array as $val)
         {
             $value = explode($separator, $val, 2);
-            if (static::key_in($value, 0) && static::key_in($value, 1))
+            if (static::has($value, 0) && static::has($value, 1))
             {
                 $return[trim($value[0])] = trim($value[1]);
             }
@@ -805,9 +814,6 @@ fin;
     /**
      * Trim values.
      * --
-     * @throws mysli\toolkit\exception\validate
-     *         723 Unexpected type, expected a string.
-     * --
      * @param array  $array
      * @param string $mask
      * --
@@ -815,11 +821,6 @@ fin;
      */
     static function trim_values(array $array, $mask=null)
     {
-        if (!is_null($mask))
-        {
-            validate::need_str($mask);
-        }
-
         foreach ($array as $key => $val)
         {
             if ($mask)
