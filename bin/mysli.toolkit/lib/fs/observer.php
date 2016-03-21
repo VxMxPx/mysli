@@ -525,9 +525,13 @@ namespace mysli\toolkit\fs; class observer
             {
                 if ($for_each_file)
                 {
+                    $stat['count'] = count($this->diff);
+                    $stat['position'] = 0;
+
                     foreach ($this->diff as $filename => $opt)
                     {
-                        $r = $callback( $filename, $opt['action'], $opt );
+                        $stat['position']++;
+                        $r = $callback( $filename, $opt['action'], $opt, $stat );
                     }
                 }
                 else
