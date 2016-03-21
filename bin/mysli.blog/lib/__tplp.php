@@ -3,23 +3,23 @@
 namespace mysli\blog; class __tplp
 {
     const __use = <<<fin
-    mysli.frontend.{ __tplp -> frontend.tplp }
-    mysli.toolkit.{ config, route }
+        .{ blog }
+        mysli.frontend.{ __tplp -> frontend.tplp }
+        mysli.toolkit.{ config, route }
 fin;
 
 
     /**
      * Generate post-map (pages+table_of_contents)!
      * --
+     * @param string $iid
      * @param array  $pages
-     * @param array  $toc
-     * @param string $slug    Post's slug
-     * @param string $current Current page's QUID
+     * @param string $current Current page's iid
      * @param string $type
      * --
      * @return array
      */
-    static function map(array $pages, array $toc, $current=null, $type='ul')
+    static function map($iid, array $pages, $current=null, $type='ul')
     {
         if (!count($pages))
             return;
@@ -28,14 +28,14 @@ fin;
 
         foreach ($pages as $pid => $page)
         {
-            $url = static::url($page['fquid'], 'ppost');
-            $class = $current === $page['quid'] ? 'current' : 'not-current';
+            $url = static::url($iid.'/'.$page['pid'], 'ppost');
+            $class = $current === $page['pid'] ? 'current' : 'not-current';
 
             $map[] = "<li class=\"{$class}\">";
             $map[] = "<a href=\"{$url}\">{$page['title']}</a></li>";
-            if (isset($toc[$page['quid']]))
+            if (isset($page['toc']) && count($page['toc']))
             {
-                $tocs = $toc[$page['quid']];
+                $tocs = $page['toc'];
                 array_shift($tocs); // Drop first title...
                 $map[] = static::toc($tocs, $url, $type);
             }
@@ -89,7 +89,7 @@ fin;
      */
     static function categories()
     {
-        return config::select('mysli.blog', 'tags.to-categories', []);
+        return blog::categories();
     }
 
     /**

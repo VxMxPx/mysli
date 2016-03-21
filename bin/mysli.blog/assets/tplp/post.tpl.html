@@ -9,16 +9,16 @@
 
     ::if not post['page']['is_single']
     <section class="sitemap map">
-        {|blog.map:post['pages'],post['table_of_contents']}
+        { |blog.map: post['iid'], post['pages'], post['page']['pid'] }
     </section>
-    ::elif post['page']['table_of_contents']|count
+    ::elif post['page']['toc']|count
     <section class="sitemap toc">
-        {|blog.toc:post['page']['table_of_contents']}
+        {|blog.toc:post['page']['toc']}
     </section>
     ::/if
 
     <section class="body">
-        {post['body']}
+        {post['page']['body']}
     </section>
 
     <footer>

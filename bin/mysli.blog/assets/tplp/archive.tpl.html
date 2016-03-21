@@ -12,8 +12,8 @@
         <h2>{year = post['year']}</h2>
     ::/if
     <div class="post-item">
-        <time class="entry-meta" datetime="{post['date']}">{post['date']|date:'Y-m-d'}</time>
-        <a href="{post['quid']|blog.url:'post'}" class="post-link">{post['title']}</a>
+        <time class="entry-meta" datetime="{post['time']|date:'c'}">{post['time']|date:'Y-m-d'}</time>
+        <a href="{post['iid']|blog.url:'post'}" class="post-link">{post['title']}</a>
         <div class="tag-list">
         ::for tag in post['tags']
             <a href="{tag|blog.url:'tag'}">#{tag}</a>
