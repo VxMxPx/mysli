@@ -3,53 +3,27 @@
 namespace mysli\blog; class __setup
 {
     const __use = <<<fin
-        mysli.toolkit.{ config, route }
+        mysli.toolkit.{ route }
         mysli.toolkit.fs.{ fs, dir, file }
 fin;
 
     static function enable()
     {
-        $c = config::select('mysli.blog');
-        $c->init([
-            // Tags which supposed to be threated as categories
-            'tags.to-categories' => [
-                'array',
-                [
-                    'default' => [
-                        'name'        => 'Default',
-                        'description' => 'This is a default tag.',
-                        'language'    => [ null ],
-                    ]
-                ]
-            ],
+        $categories = <<<cat
+default:
+    name: Default Categoy
+    description: Default category.
+    language: [ null ]
+cat;
 
-            // Default locales code (the when file-code is absent).
-            'locale.default' => [ 'string', 'en' ],
-
-            // All supported locales.
-            'locale.support' => [ 'array', [ 'en' ] ],
-
-            // Reload cache if file change since last creation.
-            'cache.reload-on-access' => [ 'boolean', true ],
-
-            // Re-publish media when cache is being re-loaded.
-            'media.republish-on-reload' => [ 'boolean', true ],
-
-            // Write version on cache reload.
-            'version.up-on-reload' => [ 'boolean', true ],
-        ]);
+        if (!file::exists(fs::cntpath('blog', 'categories.ym')))
+        {
+            // Default directories and
+            dir::create(fs::cntpath('blog'));
+            file::write(fs::cntpath('blog', 'categories.ym'), $categories);
+        }
 
         return
-
-        // Save config
-        $c->save()
-
-        and
-
-        // Default directories and
-        dir::create(fs::cntpath('blog'))
-
-        and
 
         // Add Routes
         route::add(
