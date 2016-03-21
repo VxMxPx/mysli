@@ -119,7 +119,6 @@ namespace mysli\toolkit; class pkg
      *         // ...
      *     ]
      * --
-     * @throws mysli\toolkit\exception\pkg 10 Package not found.
      * @throws mysli\toolkit\exception\pkg 20 Cannot construct package's unique ID.
      * --
      * @return array
@@ -132,7 +131,10 @@ namespace mysli\toolkit; class pkg
         foreach ($enabled as $package)
         {
             if (!($path = static::get_path($package)))
-                throw new exception\pkg("Package not found: `{$package}`.", 10);
+            {
+                continue;
+                \log::warning("Package not found: `{$package}`.", __CLASS__);
+            }
 
             /*
             Does this package contain `script` folder
