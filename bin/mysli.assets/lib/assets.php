@@ -232,7 +232,7 @@ fin;
 
                     $opt['resolved'][ fs::ds($dir, $sfile) ] = [
                         'id'     => $dir,
-                        'module' => $modules[$module],
+                        'module' => $module ? $modules[$module] : [],
                         'flags'  => $flags,
                         // File in source directory
                         'compressed' => fs::ds($dir, $cfile),
