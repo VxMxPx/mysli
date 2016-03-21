@@ -283,7 +283,7 @@ fin;
         $positional = 1;
 
         // Match parameter name (including parameter with values e.g. --foo=bar)
-        $vp_name = '/^((?:--[a-z]+[a-z0-9]+)|(?:-[a-z]+))(?:\=(.*?))?$/i';
+        $vp_name = '/^((?:--[a-z]{1}(?:\-{0,1}[a-z0-9]+)+)|(?:-[a-z]+))(?:\=(.*?))?$/i';
 
         /*
         Go through list of arguments.
@@ -491,22 +491,22 @@ fin;
             if ($dargs)
             {
                 ui::buffer();
-                ui::title($dargs_title);
+                ui::strong($dargs_title);
                 $dargs_title = ui::flush(true);
             }
 
             ui::buffer();
-            ui::title($oargs_title);
+            ui::strong($oargs_title);
             $oargs_title = ui::flush(true);
         }
 
         $output =
-            ($title ? "{$title}\n" : '').
+            ($title ? "{$title}" : '').
             ($description ? "{$description}\n" : '').
             "\nUsage: ./dot {$command} {$sargs}\n".
             ($pargs ? "\n{$pargs}\n" : '').
-            ($dargs ? "{$dargs_title}\n{$dargs}\n" : '').
-            "{$oargs_title}\n{$oargs}\n".
+            ($dargs ? "\n{$dargs_title}\n{$dargs}\n" : '').
+            "\n{$oargs_title}\n{$oargs}\n".
             ($description_long
                 ? "\n".wordwrap($description_long, $terminal_width)."\n"
                 : ''
