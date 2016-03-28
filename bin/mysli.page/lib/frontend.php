@@ -4,8 +4,10 @@ namespace mysli\page; class frontend
 {
     const __use = <<<fin
     .{ page }
-    mysli.toolkit.{ config }
+    mysli.content.{ cache }
     mysli.frontend.{ frontend -> fe }
+    mysli.toolkit.fs.{ fs, file, dir }
+    mysli.toolkit.type.{ arr }
 fin;
 
     /**
@@ -25,53 +27,58 @@ fin;
      * --
      * @return boolean
      */
-    static function page($path)
+    static function page($iid)
     {
-        if (!page::has($path))
+        $language = '_def';
+
+        // Not found, nothing to do
+        if (!page::exists($iid, $language)) return false;
+
+        $cache = new cache(page::cid, $iid, $language);
+
+        // Has cached version?
+        if ($cache->exists() && $cache->is_fresh())
         {
-            return false;
+            $page = $cache->get();
+        }
+        else
+        {
+            $page = page::get($iid, $language);
+            unset($page['.sources']);
+            // Produce cache!
+            $cache->write($page);
         }
 
-        $page = page::by_path($path);
-
-        if (!$page)
+        // Check publish status
+        if (!arr::get($page, 'published', true))
         {
-            return false;
-        }
-
-        $c = config::select('mysli.page');
-
-        // Cache handling
-        if ($c->get('cache.reload-on-access') && !$page->is_cache_fresh())
-        {
-            $page->make_cache();
-
-            if ($c->get('version.up-on-reload'))
+            // Final chance to view in dev-access
+            if (!arr::get($page, 'dev-access')
+                || request::get('access') !== arr::get($page, 'dev-access'))
             {
-                $page->up_version();
-            }
-
-            if ($c->get('media.republish-on-reload'))
-            {
-                $page->unpublish_media();
-                $page->publish_media();
+                return false;
             }
         }
 
-        // Must be published
-        if (!$page->get('published', true))
+        // Set template(s) to render
+        $templates = ['page', ['mysli.page', 'page']];
+        if (isset($page['template']))
         {
-            return false;
+            array_unshift($templates, $page['template']);
         }
+
+        // Merge with self
+        $page = array_merge($page, $page['page']);
+        unset($page['page']);
 
         // Render finally
-        fe::render(['page', ['mysli.page', 'page']], [
+        fe::render($templates, [
             'front' => [
-                'subtitle' => $page->get('title'),
+                'subtitle' => arr::get($page, 'title', ''),
                 'type'     => 'page',
-                'quid'     => 'page-'.str_replace(['/', '.'], '-', $page->get('quid'))
+                'quid'     => 'page-'.str_replace('_', '-', $page['fid'])
             ],
-            'page' => $page->as_array()
+            'page' => $page
         ]);
 
         return true;

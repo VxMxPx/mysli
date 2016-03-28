@@ -4,14 +4,14 @@ namespace mysli\page\root\script; class page
 {
     const __use = '
         .{ page -> lib.page }
-        mysli.std.post
+        mysli.content.{ collection, state, cache, media, version }
         mysli.toolkit.{ json }
-        mysli.toolkit.fs.{ fs, file, dir, observer }
+        mysli.toolkit.fs.{ fs, file, dir }
         mysli.toolkit.cli.{ prog, ui, input }
     ';
 
     /**
-     * Run Blog CLI.
+     * Run Page CLI.
      * --
      * @param array $args
      * --
@@ -31,40 +31,46 @@ namespace mysli\page\root\script; class page
         ->create_parameter('--build/-b', [
             'type' => 'boolean',
             'def'  => false,
-            'help' => 'Process all pages without cache and create list(s).'
+            'help' => 'Process and cache all pages and create main list.'
         ])
         ->create_parameter('--clean/-c', [
             'type' => 'boolean',
             'def'  => false,
-            'help' => 'Clear all cache and un-publish media.'
+            'help' => 'Remove all cache and un-publish media.'
+        ])
+        ->create_parameter('--clean-versions', [
+            'type' => 'boolean',
+            'def'  => false,
+            'help' => 'Remove versions for all posts.'
         ])
         ->create_parameter('--watch/-w', [
             'type' => 'boolean',
             'def'  => false,
-            'help' => 'Watch directory and re-process when changes occurs.'
+            'help' => 'Watch directory and process individual page(s) when changes occurs.'
         ]);
 
         if (null !== ($r = prog::validate_and_print($prog, $args)))
             return $r;
 
-        list($build, $clean, $watch) = $prog->get_values('-b', '-c', '-w');
+        list($build, $clean, $clean_versions, $watch) =
+            $prog->get_values('-b', '-c', '--clean-versions', '-w');
 
         if ($clean)
+        {
             static::clean();
-
-        if ($build)
-        {
-            static::build(false);
         }
 
-        if ($watch)
+        if ($clean_versions)
         {
-            return static::build(true);
+            static::clean_versions();
         }
-        else
+
+        if ($build || $watch)
         {
-            return true;
+            return static::build($watch);
         }
+
+        return true;
     }
 
     /*
@@ -72,61 +78,40 @@ namespace mysli\page\root\script; class page
      */
 
     /**
-     * Clean page's cache!
-     * --
-     * @param string $path
+     * Clean pages' cache.
      */
-    protected static function clean($path=null)
+    protected static function clean()
     {
-        $root = fs::cntpath('pages', $path);
+        ui::nl(); ui::info('Cleaning...');
 
+        $cache_dir = fs::cntpath(lib\page::cid, cache::dir);
 
-        if (!$path && dir::exists(fs::ds($root, 'cache~')))
+        if (dir::exists($cache_dir))
+            dir::remove($cache_dir)
+                ? ui::success('Cache cleaned.')
+                : ui::error('Failed to clean cache.');
+        else ui::info('No cache found.');
+
+        ui::nl();
+    }
+
+    /**
+     * Clean post's versions.
+     */
+    protected static function clean_versions()
+    {
+        collection::filter(lib\page::cid, function ($iid, $_, $stat)
         {
-            dir::remove(fs::ds($root, 'cache~'))
-                ? ui::success('Main cache~ removed')
-                : ui::error('Failed to remove main cache~');
-        }
-
-        foreach (fs::ls($root) as $page)
-        {
-            if (!dir::exists(fs::ds($root, $page))
-            || substr($page, -1) === '~'
-            || substr($page, 0, 1) === '.'
-            || $page === '@versions' || $page === '@media')
+            ui::progress($stat['position'], $stat['count'], 'Versions');
+            $path = fs::cntpath(lib\page::cid, $iid, version::dir);
+            if (dir::exists($path))
             {
-                continue;
+                if (!dir::remove($path))
+                    ui::error('Failed to remove version', null);
             }
+        }, '_def');
 
-            $paged = fs::ds($root, $page);
-            ui::title("Page ".fs::ds($path, $page));
-
-            if (!lib\page::has(fs::ds($path, $page)))
-            {
-                ui::info('No post found in this directory.', null, 1);
-            }
-            else
-            {
-                if (dir::exists(fs::ds($paged, '@media')))
-                {
-                    $post = new post(fs::ds('pages', $path, $page));
-                    $post->unpublish_media()
-                        ? ui::success('Unpublished', null, 1)
-                        : ui::error('Unpublish Failed', null, 1);
-                }
-                if (dir::exists(fs::ds($paged, 'cache~')))
-                {
-                    dir::remove(fs::ds($paged, 'cache~'))
-                        ? ui::success('Removed cache~', null, 1)
-                        : ui::error('Failed to remove cache~', null, 1);
-                }
-            }
-
-            ui::info('All Done', null, 1);
-            static::clean(fs::ds($path, $page));
-        }
-
-        return true;
+        ui::nl();
     }
 
     /**
@@ -136,98 +121,110 @@ namespace mysli\page\root\script; class page
     */
     protected static function build($watch)
     {
-        // Root of pages
-        $root = fs::cntpath('pages');
-
-        // Setup observer
-        $observer = new observer($root);
-        $observer->set_interval(2);
-        $observer->set_ignore(['cache~/', '@versions/']);
-
-        $sigfile = fs::cntpath('pages/cache~/observer.json');
-        if (file::exists($sigfile))
+        if ($watch)
         {
-            $signatures = json::decode_file($sigfile, true);
-            $observer->set_signatures($signatures);
+            ui::nl();
+            ui::info('Watching');
         }
 
-        $observer->set_write_signatures($sigfile);
+        $cache_root = fs::cntpath(lib\page::cid, cache::dir);
+        !dir::exists($cache_root) and dir::create($cache_root);
 
-        if (!$watch)
-            $observer->set_limit(1);
-
-        $last_quid = null;
-        $page = null;
-
-        // Observe files
-        return $observer->observe(
-            function ($fpath, $action, $options) use ($root, &$last_quid, &$page)
+        state::observe(
+        lib\page::cid,
+        function ($iid, $action, array $options, array $stat, $file, $is_media) use ($watch)
+        {
+            if (!$watch)
             {
-                $rpath = substr($fpath, strlen($root)+1);
-                $media = strpos($rpath, fs::ds.'@media'.fs::ds);
+                ui::progress($stat['position'], $stat['count'], 'Building');
+            }
+            else
+            {
+                ui::info(ucfirst($action), $iid.': '.$file);
+            }
 
-                if ($media !== false)
+            // It seems we're dealing with a temporary file
+            if (substr($file, 0, 1) === '.' || substr($file, -1) === '~')
+                return;
+
+            // MEDIA
+            if ($is_media)
+            {
+                $media = new media(lib\page::cid, $iid);
+
+                if (in_array($action, ['modified', 'added']) ||
+                    (in_array($action, ['renamed', 'moved'])
+                        && isset($options['from'])))
                 {
-                    $quid = substr($rpath, 0, $media);
-                    $file = substr($rpath, $media+8);
+                    if (!$media->publish($file))
+                        ui::error('Publish Failed', null, 1);
                 }
-                else
-                {
-                    $quid = dir::name($rpath);
-                    $file = file::name($rpath);
-                }
-
-                if ($last_quid !== $quid && lib\page::has($quid))
-                {
-                    ui::title("{$quid}");
-                    $page = new post("pages/{$quid}");
-                    $last_quid = $quid;
-                }
-
-                ui::info(ucfirst($action), $file, 1);
-
-                if ($media !== false)
-                {
-                    // `added|removed|modified|renamed|moved`
-                    if (in_array($action, ['modified', 'added']) ||
+                elseif (in_array($action, ['removed']) ||
                         (in_array($action, ['renamed', 'moved'])
-                            && isset($options['from'])))
-                    {
-                        $page->publish_media($file)
-                            ? ui::success('Published', null, 2)
-                            : ui::error('Publish Failed', null, 2);
-                    }
-                    elseif (in_array($action, ['removed']) ||
-                            (in_array($action, ['renamed', 'moved'])
-                                && isset($options['to'])))
-                    {
-                        $page->unpublish_media($file)
-                            ? ui::success('Unpublished', null, 2)
-                            : ui::error('Unpublish Failed', null, 2);
-                    }
-
-                    return;
+                            && isset($options['to'])))
+                {
+                    if (!$media->unpublish($file))
+                        ui::error('Unpublish Failed', null, 2);
                 }
 
-                // Cache page!
-                if (substr($file, -3) === '.md')
+                return;
+            }
+
+            // POST
+            if (substr($file, -5) === '.post')
+            {
+                if ($action !== 'removed' && !isset($options['to']))
                 {
-                    if ($action !== 'removed' && !isset($options['to']))
+                    $language = substr($file, 0, -5);
+
+                    if (lib\page::exists($iid, $language))
                     {
-                        $page->switch_language(substr($file, 0, -3));
-                        $page->make_cache()
-                            ? ui::success('Cache', null, 2)
-                            : ui::error('Cache Failed', null, 2);
-                        $page->up_version()
-                            ? ui::success('Version', null, 2)
-                            : ui::error('Version Failed', null, 2);
-                        // Changes in page, refresh
+                        $cache = new cache(lib\page::cid, $iid, $language);
+
+                        if (!$cache->is_fresh())
+                        {
+                            // Fully load post ... :]
+                            $post = lib\page::get($iid, $language);
+                            $sources = $post['.sources'];
+                            unset($post['.sources']);
+
+                            // Write post's cache
+                            $cache->write($post);
+
+                            // Write new post version
+                            $version = new version(lib\page::cid, $iid, $language);
+                            $version->up($sources);
+                        }
                     }
                 }
-                else
-                {
-                    ui::info('Nothing to do...', null, 1);
-                }
-            }, true);
+            }
+
+            $watch and static::create_list();
+
+        }, $watch);
+
+        static::create_list();
+    }
+
+    protected static function create_list()
+    {
+        ui::nl(2);
+        ui::info('Creating list');
+
+        $cache_filename = fs::cntpath(lib\page::cid, cache::dir, '_list_archive.json');
+        $list = lib\page::all();
+
+        // Sort by date!
+        uasort($list, function ($a, $b)
+        {
+            $a = strtotime($a['date']);
+            $b = strtotime($b['date']);
+            if ($a === $b) return 0;
+            return ($a > $b) ? -1 : 1;
+        });
+
+        json::encode_file($cache_filename, $list)
+            ? ui::success('List was written', null)
+            : ui::error('Failed to write list', null);
     }
 }
