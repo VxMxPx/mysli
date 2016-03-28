@@ -55,7 +55,8 @@ fin;
         "sum"           => "array_sum(%seg)",
         "unique"        => "array_unique(%seg)",
         "range"         => "range(%1, %2, ...)",
-        "random"        => "rand(%1, %2)"
+        "random"        => "rand(%1, %2)",
+        "type"          => "gettype(%seg)",
     ];
 
     /**
