@@ -112,6 +112,7 @@ fin;
      */
     function write(array $post)
     {
+        if (!dir::exists($this->path())) dir::create($this->path());
         return json::encode_file($this->path(true), $post);
     }
 }

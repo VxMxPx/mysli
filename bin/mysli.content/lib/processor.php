@@ -42,7 +42,7 @@ fin;
      * --
      * @param string $input
      * @param string $call
-     *        Called for each individual page in post's body.
+     *        Called for body.
      *        function ($parser, $input) {}
      *        Markdown parser will be send as an argument.
      *        Individual markdown processors can be extracted from parser,
@@ -53,7 +53,7 @@ fin;
     static function body($input, $call)
     {
         // New markdown parser
-        $parser = new markdown\parser($page);
+        $parser = new markdown\parser($input);
 
         // Callback, to modify markdown processors
         $call($parser, $input);
