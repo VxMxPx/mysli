@@ -161,19 +161,15 @@ namespace mysli\toolkit; class ym
                     ];
                     continue;
                 }
-                else
+                elseif (trim($value) !== '')
                 {
                     $value = static::valufy($value);
+                    $stack[$level][$key] = $value;
                 }
-
-                if ($value === null)
+                else
                 {
                     $stack[$level][$key] = [];
                     $stack[] = &$stack[$level][$key];
-                }
-                else
-                {
-                    $stack[$level][$key] = $value;
                 }
             }
             catch (\Exception $e)
@@ -260,6 +256,8 @@ namespace mysli\toolkit; class ym
                 $value = '"Yes"';
             elseif (in_array(strtolower($value), ['no', 'false']))
                 $value = '"No"';
+            elseif (is_null($value))
+                $value = 'null';
             elseif ($value === true)
                 $value = 'Yes';
             elseif ($value === false)
@@ -524,8 +522,7 @@ namespace mysli\toolkit; class ym
      */
     protected static function valufy($value)
     {
-        if (empty($value))
-            return null;
+        if (empty($value)) return '';
 
         if (is_numeric($value))
         {
@@ -552,6 +549,10 @@ namespace mysli\toolkit; class ym
         elseif (in_array(strtolower($value), ['no', 'false']))
         {
             return false;
+        }
+        elseif (strtolower($value) === 'null')
+        {
+            return null;
         }
         else
         {
