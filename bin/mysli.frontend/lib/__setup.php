@@ -35,6 +35,7 @@ fin;
             'theme.active'     => [ 'string', 'mysli.frontend' ],
 
             // Default values to be used in theme
+            'front.name'            => [ 'string', 'Mysli Page' ],
             'front.title'           => [ 'string', 'Mysli Page' ],
             // How to display title when subtitle is available.
             'front.subtitle_format' => [ 'string', '{subtitle} - {title}' ],
