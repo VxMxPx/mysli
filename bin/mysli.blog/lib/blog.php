@@ -7,6 +7,7 @@ namespace mysli\blog; class blog
         mysli.content.{ source, collection }
         mysli.toolkit.{ ym }
         mysli.toolkit.fs.{ fs, file, dir }
+        mysli.toolkit.type.{ arr }
 fin;
 
     const cid = 'blog';
@@ -92,10 +93,11 @@ fin;
      * --
      * @param string $iid
      * @param string $language
+     * @param string $url      How to resolve url.
      * --
      * @return post
      */
-    static function get($iid, $language='_def')
+    static function get($iid, $language='_def', $url='')
     {
         // Not found, nothing to do
         if (!static::exists($iid, $language)) return;
@@ -107,7 +109,7 @@ fin;
         // Slice main source file
         list($meta, $pages) = processor::slice_source(
             $sources->get("{$language}.post"),
-            function ($section, $position) use ($iid)
+            function ($section, $position) use ($iid, $url)
             {
                 // First section is always META
                 if ($position === 0) return ym::decode($section);
@@ -117,13 +119,13 @@ fin;
                 {
                     return processor::body(
                         $section,
-                        function ($parser) use ($iid)
+                        function ($parser) use ($iid, $url)
                         {
                             // Add costume link handling to the parser for media files.
                             $link = $parser->get_processor('mysli.markdown.module.link');
                             $link->set_local_url(
                                 '#^/(.*?)(?<!\.html|\.php|\.htm)$#',
-                                '/'.static::cid.'/'.$iid);
+                                $url.'/'.static::cid.'/'.$iid);
                         });
                 }
 
@@ -166,17 +168,27 @@ fin;
     }
 
     /**
+     * Get settings array.
+     * --
+     * @return array
+     */
+    static function settings()
+    {
+        static $cache = null;
+
+        if (!$cache)
+            $cache = ym::decode_file(fs::cntpath(static::cid, 'settings.ym'));
+
+        return $cache;
+    }
+
+    /**
      * Get default values for an item.
      * --
      * @return array
      */
     static function get_defaults()
     {
-        return [
-            'title'     => null,
-            'date'      => '1990-04-16',
-            'published' => true,
-            'tags'      => [],
-        ];
+        return arr::get(static::settings(), 'default', []);
     }
 }

@@ -9,18 +9,36 @@ fin;
 
     static function enable()
     {
-        $categories = <<<cat
+        $settings = <<<fin
 default:
-    name: Default Categoy
-    description: Default category.
+    title: null
+    author: Anonymous
+    date: 1984-04-16
+    tags: []
+    published: Yes
+feed:
+    title: null
+    limit: 20
+fin;
+        $categories = <<<fin
+default:
+    name: Default Category
+    description: This is a description of a default category.
     language: [ null ]
-cat;
+fin;
+
+        if (!dir::create(fs::cntpath('blog'))) return false;
 
         if (!file::exists(fs::cntpath('blog', 'categories.ym')))
         {
-            // Default directories and
-            dir::create(fs::cntpath('blog'));
-            file::write(fs::cntpath('blog', 'categories.ym'), $categories);
+            if (!file::write(fs::cntpath('blog', 'categories.ym'), $categories))
+                return false;
+        }
+
+        if (!file::exists(fs::cntpath('blog', 'settings.ym')))
+        {
+            if (!file::write(fs::cntpath('blog', 'settings.ym'), $settings))
+                return false;
         }
 
         return
@@ -58,6 +76,14 @@ cat;
 
         and
 
+        route::add(
+            'mysli.blog.frontend::feed',
+            'GET',
+            '/r/feed',
+            'medium')
+
+        and
+
         route::write()
 
         // Done
@@ -66,6 +92,7 @@ cat;
 
     static function disable()
     {
-        return !!route::remove('mysli.blog.frontend::*');
+        return route::remove('mysli.blog.frontend::*')
+        and route::write();
     }
 }

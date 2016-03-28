@@ -13,6 +13,76 @@ namespace mysli\blog; class frontend
 fin;
 
     /**
+     * Get RSS output.
+     * --
+     * @return boolean
+     */
+    static function feed()
+    {
+        $settings = blog::settings();
+        $cache_filename = fs::cntpath(blog::cid, cache::dir, '_list_feed.json');
+
+        // Cache
+        if (file::exists($cache_filename))
+        {
+            $list = json::decode_file($cache_filename, true);
+        }
+        else
+        {
+            $list = blog::all();
+
+            // Sort by date!
+            uasort($list, function ($a, $b) {
+                $a = strtotime($a['date']);
+                $b = strtotime($b['date']);
+                if ($a === $b) return 0;
+                return ($a > $b) ? -1 : 1;
+            });
+
+            // Limit number of posts
+            $list = array_slice(
+                $list,
+                0,
+                (int) arr::get_deep($settings, ['feed', 'limit'], 20));
+
+            foreach ($list as $iid => &$post)
+            {
+                $post = blog::get($iid, '_def', request::url());
+                reset($post['pages']);
+                $page = key($post['pages']);
+                if (isset($post['pages'][$page])) $post['page'] = $post['pages'][$page];
+                unset($post['pages']);
+            }
+
+            json::encode_file($cache_filename, $list);
+        }
+
+        // Get updated timestamp
+        $last = arr::first($list);
+        $updated = date('c', strtotime(arr::get($last, 'date', time())));
+
+        fe::render(['blog-feed', ['mysli.blog', 'feed']], [
+            'front' => [
+                'subtitle' => arr::get_deep($settings, ['feed', 'title'], ''),
+                'type'     => 'blog-feed'
+            ],
+            'feed' => [
+                'title'   => arr::get_deep($settings, ['feed', 'title'], ''),
+                'updated' => $updated,
+            ],
+            'blog' => [
+                'categories' => blog::categories(),
+                'is_archive' => false,
+                'is_tag'     => false,
+                'tag'        => null,
+            ],
+            'posts' => $list
+        ]);
+
+        return true;
+    }
+
+    /**
      * Render blog archive.
      * --
      * @return boolean
@@ -138,15 +208,15 @@ fin;
         $iid = "{$year}/{$id}";
         $language = '_def';
 
+        // Not found, nothing to do
+        if (!blog::exists($iid, $language)) return false;
+
         $cache = new cache(blog::cid, $iid, $language);
 
         // Has cached version?
-        if ($cache->exists())
+        if ($cache->exists() && $cache->is_fresh())
         {
-            if ($cache->is_fresh())
-            {
-                $post = $cache->get();
-            }
+            $post = $cache->get();
         }
         else
         {
@@ -183,11 +253,18 @@ fin;
             $post['page'] = $post['pages'][$page];
         }
 
-        fe::render(['blog-post', ['mysli.blog', 'post']], [
+        // Set template(s) to render
+        $templates = ['blog-post', ['mysli.blog', 'post']];
+        if (isset($post['template']))
+        {
+            array_unshift($templates, $post['template']);
+        }
+
+        fe::render($templates, [
             'front' => [
-                'subtitle' => arr::get_deep($post, ['meta', 'title'], ''),
+                'subtitle' => arr::get($post, 'title', ''),
                 'type'     => 'blog-post',
-                'quid'     => 'post-'.$post['fid']
+                'quid'     => 'post-'.str_replace('_', '-', $post['fid'])
             ],
             'blog' => [
                 'categories' => blog::categories(),

@@ -87,9 +87,14 @@ namespace mysli\blog\root\script; class blog
         $cache_dir = fs::cntpath(lib\blog::cid, cache::dir);
 
         if (dir::exists($cache_dir))
+        {
             dir::remove($cache_dir)
                 ? ui::success('Cache cleaned.')
                 : ui::error('Failed to clean cache.');
+            dir::create($cache_dir)
+                ? ui::success('Cache directory created.')
+                : ui::error('Failed to create cache directory.');
+        }
         else ui::info('No cache found.');
 
         ui::nl();
@@ -198,8 +203,17 @@ namespace mysli\blog\root\script; class blog
                     }
                 }
             }
+
+            // Re-create list if watching
+            if ($watch) static::create_list();
+
         }, $watch);
 
+        static::create_list();
+    }
+
+    protected static function create_list()
+    {
         ui::nl(2);
         ui::info('Creating list');
 

@@ -95,19 +95,20 @@ fin;
     /**
      * Return internal blog URL.
      * --
-     * @param string $uri
-     * @param string $type URI type: post|ppost|tag|archive
+     * @param string  $path
+     * @param string  $type     URI type: post|ppost|tag|archive|feed
+     * @param boolean $absolute Return full absolute URL (inc. domain)
      * --
      * @return string
      */
-    static function url($uri='', $type='post')
+    static function url($path='', $type='post', $absolute=false)
     {
         $url = route::to_url(
             "mysli.blog.frontend::{$type}",
-            explode('/', $uri),
+            explode('/', $path),
             false
         );
 
-        return frontend\tplp::url($url);
+        return frontend\tplp::url($url, $absolute);
     }
 }

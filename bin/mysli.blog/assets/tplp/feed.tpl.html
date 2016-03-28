@@ -1,0 +1,25 @@
+::use mysli.blog
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <title>{feed['title']}</title>
+    <link href="{''|blog.url:'feed',true}" rel="self" />
+    <link href="{''|blog.url:'archive',true}" />
+    <updated>{feed['updated']}</updated>
+    <id>{''|blog.url:'archive',true}</id>
+    ::for entry in posts
+    <entry>
+        <title type="html"><![CDATA[{entry['title']}]]></title>
+        <author><name>{entry['author']}</name></author>
+        <link href="{entry['iid']|blog.url:'post',true}"/>
+        <published>{entry['date']|date:'c'}</published>
+        <updated>{entry['date']|date:'c'}</updated>
+        <id>{entry['iid']|blog.url:'post',true}</id>
+        ::for tag in entry['tags']
+        <category scheme="{tag|blog.url:'tag',true}" term="{tag}" label="{tag}" />
+        ::/for
+        <content type="html" xml:base="{''|blog.url:'archive',true}" xml:lang="en">
+            <![CDATA[{entry['page']['body']}]]>
+        </content>
+    </entry>
+    ::/for
+</feed>
