@@ -9,7 +9,7 @@ __test_set_server();
 return request::path();
 
 #: Test Path, No PATH_INFO
-#: Expect String /seg1/seg2
+#: Expect String /index.php/seg1/seg2
 unset($_SERVER['PATH_INFO']);
 return request::path();
 
