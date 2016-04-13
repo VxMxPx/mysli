@@ -238,7 +238,8 @@ namespace mysli\toolkit; class request
         }
 
         $script = static::server('script_name');
-        $slen   = $script === '/index.php' ? strlen($script) : 0;
+        $slen = 0;
+        // $slen   = $script === '/index.php' ? strlen($script) : 0;
 
         if (isset($_SERVER['REQUEST_URI']))
         {
