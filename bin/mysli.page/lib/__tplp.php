@@ -11,7 +11,6 @@ fin;
      * Return internal blog URL.
      * --
      * @param string $uri
-     * @param string $type URI type: post|ppost|tag|archive
      * --
      * @return string
      */

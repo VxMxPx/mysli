@@ -55,9 +55,6 @@ fin;
             $observer->set_limit(1);
         }
 
-        // Last item id
-        $last_iid = null;
-
         // Observe files
         return $observer->observe(
         function ($fpath, $action, $options, $stat) use ($root, $call)

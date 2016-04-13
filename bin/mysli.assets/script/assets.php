@@ -61,10 +61,6 @@ fin;
         return static::process($package, $dev, $ids, $watch);
     }
 
-    /*
-    --- Protected --------------------------------------------------------------
-     */
-
     /**
      * Process assets.
      * --
