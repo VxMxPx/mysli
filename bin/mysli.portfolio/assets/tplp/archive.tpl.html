@@ -1,0 +1,15 @@
+::extend _layout set content
+::use mysli.portfolio
+
+<div class="portfolio">
+::for art in portfolio
+    ::if not art['published']
+        ::continue
+    ::/if
+    <div class="art-item">
+        <a href="{art['iid']|portfolio.url:'full'}" class="art-link">
+            <img src="{art['iid']|portfolio.url:'clip'}">
+        </a>
+    </div>
+::/for
+</div>
