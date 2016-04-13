@@ -47,7 +47,7 @@ fin;
 
             foreach ($list as $iid => &$post)
             {
-                $post = blog::get($iid, '_def', request::url());
+                $post = blog::get($iid, '_def');
                 reset($post['pages']);
                 $page = key($post['pages']);
                 if (isset($post['pages'][$page])) $post['page'] = $post['pages'][$page];

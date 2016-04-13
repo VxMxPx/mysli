@@ -93,11 +93,10 @@ fin;
      * --
      * @param string $iid
      * @param string $language
-     * @param string $url      How to resolve url.
      * --
      * @return post
      */
-    static function get($iid, $language='_def', $url='')
+    static function get($iid, $language='_def')
     {
         // Not found, nothing to do
         if (!static::exists($iid, $language)) return;
@@ -109,7 +108,7 @@ fin;
         // Slice main source file
         list($meta, $pages) = processor::slice_source(
             $sources->get("{$language}.post"),
-            function ($section, $position) use ($iid, $url)
+            function ($section, $position) use ($iid)
             {
                 // First section is always META
                 if ($position === 0) return ym::decode($section);
@@ -119,13 +118,13 @@ fin;
                 {
                     return processor::body(
                         $section,
-                        function ($parser) use ($iid, $url)
+                        function ($parser) use ($iid)
                         {
                             // Add costume link handling to the parser for media files.
                             $link = $parser->get_processor('mysli.markdown.module.link');
                             $link->set_local_url(
                                 '#^/(.*?)(?<!\.html|\.php|\.htm)$#',
-                                $url.'/'.static::cid.'/'.$iid);
+                                '/'.static::cid.'/'.$iid);
                         });
                 }
 
